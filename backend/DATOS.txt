@@ -1,0 +1,102 @@
+Borra todos los datos previos.
+
+Datos que quiero crear:
+
+Usuarios: 
+
+Sonia:
+telefono 606014680
+Miquel:
+telefono 626034421
+Ada:
+telefono 623949193
+Sara:
+telefono 611223344
+
+Se crean los siguientes calendarios:
+- Family.
+    - El owner del calendario es Sonia.
+    - Son administradores: Miquel.
+- Cumpleaños.
+    - Todos los cumpleaños descritos posteriormente se agregan a este calendario.
+
+Eventos:
+- Sincro.
+    - Es un evento recurrente.
+    - Lo hacen todos los lunes y miércoles a las 17:30h
+    - La fecha final es el 23 de Junio de 2026.
+    - Sonia es la propietaria de este evento.
+    - Este evento recurrente se agrega al calendario Family.
+- DJ.
+    - Es un evento recurrente.
+    - Lo hacen todos los viernes a las 17:30h
+    - La fecha final es  el 23 de Junio de 2026.
+    - Sonia es la propietaria de este evento.
+    - Este evento recurrente se agrega al calendario Family.
+- Baile KDN.
+    - Es un evento recurrente.
+    - Lo hacen todos los jueves a las 17:30h
+    - La fecha final es el 23 de Junio de 2026.
+    - Sonia es la propietaria de este evento.
+    - Este evento recurrente se agrega al calendario Family.
+
+- Cumpleaños de Miquel.
+    - Fecha: 30 de abril.
+- Cumpleaños de Ada.
+    - Fecha: 6 de Septiembre.
+- Cumpleaños de Sonia.
+    - Fecha: 31 de Enero.
+- Cumpleaños de Sara.
+    - Fecha: 2 de Diciembre.
+
+Eventos:
+- Concierto de Katy Perry.
+    - Fecha: 9 de noviembre de 2025 a las 20:00h.
+    - Lugar: Palau Sant Jordi, Barcelona.
+- Festa del Codony.
+    - Fecha: 1 de noviembre de 2025 a las 9:00h.
+    - Lugar: Tremp.
+
+Voy a crear un usuario publico llamado fcbarelona.
+Estos son sus eventos.
+- FC Barcelona vs Girona - 18 de octubre de 2025 - 16:15
+- FC Barcelona vs Olympiakos - 21 de octubre de 2025 - 18:45
+- Real Madrid vs FC Barcelona - 26 de octubre de 2025 - 16:15
+- FC Barcelona vs Elche - 2 de noviembre de 2025 - 18:30
+- Club Brugge vs FC Barcelona - 5 de noviembre de 2025 - 21:00
+- Celta de Vigo vs FC Barcelona - 9 de noviembre de 2025 - 21:00
+- FC Barcelona vs Athletic Club - 23 de noviembre de 2025 - Por confirmar
+- Chelsea vs FC Barcelona - 25 de noviembre de 2025 - 21:00
+- FC Barcelona vs Alavés - 30 de noviembre de 2025 - Por confirmar
+- Real Betis vs FC Barcelona - 7 de diciembre de 2025 - Por confirmar
+- FC Barcelona vs Eintracht Frankfurt - 9 de diciembre de 2025 - 21:00
+- FC Barcelona vs Osasuna - 14 de diciembre de 2025 - Por confirmar
+- Villarreal vs FC Barcelona - 21 de diciembre de 2025 - Por confirmar
+- Espanyol vs FC Barcelona - 4 de enero de 2026 - Por confirmar
+- FC Barcelona vs Athletic Club - 7 de enero de 2026 - 20:00
+- FC Barcelona vs Atlético Madrid - 11 de enero de 2026 - Por confirmar
+- Real Sociedad vs FC Barcelona - 18 de enero de 2026 - Por confirmar
+- FC Barcelona vs Real Oviedo - 25 de enero de 2026 - Por confirmar
+- Slavia Prague vs FC Barcelona - 21 de enero de 2026 - Por confirmar
+- FC Barcelona vs FC København - 28 de enero de 2026 - Por confirmar
+
+Miquel está suscrito al usuario fcbarcelona.
+
+En la lista de eventos para un usuario me interesan:
+- Que los eventos tengan dia y hora, hora en formato de multiples de 5 minutos. No me interesan los segundos.
+- Me interesan los eventos a partir del día actual a las 12 de la noche para los proximos 30 meses.
+- por defecro solo se muestran los eventos a partir de estas fechas, el endpoint tendrá por defecto la opción de mostrar eventos pasados, pero por defecto solo se muestran los de la fecha actual desde las 12 de la noche hacia adelante.
+- Un listado de eventos de un usuario tiene:
+    - Sus eventos privados.
+    - Eventos a los que se ha suscrito.
+    - Eventos a los que ha sido invitado.
+- Eventos prioritarios:
+    - Eventos recurrentes.
+    - Cumpleaños.
+    - Calendarios.
+
+- Si un usuario ha sido invitado a un evento recurrente, cumpleaños o calendario.
+- Si es un cumpleaños, decide si agregarlo o no a su listado de eventos.
+- Lo mismo para los otros, con la diferencia que un evento recurrente o un calendario incluyen más de un evento asociado, con lo que primero se invita al usuario a aceptar o no el calendario o el evento recurrente, si lo acepta, se le agregarán todos los eventos a su listado, que ya se tratarán como eventos normales que podrá aceptar o rechazar.
+
+Dime como vas a implementar todos estos cambios antes de implementarlos.
