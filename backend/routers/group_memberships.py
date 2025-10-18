@@ -22,14 +22,26 @@ router = APIRouter(
 async def get_group_memberships(
     group_id: Optional[int] = None,
     user_id: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: str = "id",
+    order_dir: str = "asc",
     db: Session = Depends(get_db)
 ):
-    """Get all group memberships, optionally filtered by group_id and/or user_id"""
+    """Get all group memberships, optionally filtered by group_id and/or user_id, with pagination and ordering"""
     query = db.query(GroupMembership)
     if group_id:
         query = query.filter(GroupMembership.group_id == group_id)
     if user_id:
         query = query.filter(GroupMembership.user_id == user_id)
+
+    order_col = getattr(GroupMembership, order_by) if order_by and hasattr(GroupMembership, str(order_by)) else GroupMembership.id
+    if order_dir and order_dir.lower() == "desc":
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
     memberships = query.all()
     return memberships
 

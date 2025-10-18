@@ -56,6 +56,18 @@ class UserResponse(UserBase):
         from_attributes = True
 
 
+class UserEnrichedResponse(UserBase):
+    """User response with enriched contact information"""
+    id: int
+    contact_id: Optional[int]
+    contact_name: Optional[str]  # From Contact table
+    contact_phone: Optional[str]  # From Contact table
+    display_name: str  # Computed display name
+    last_login: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
+
+
 # ============================================================================
 # EVENT SCHEMAS
 # ============================================================================
@@ -86,6 +98,10 @@ class EventResponse(EventBase):
     created_at: datetime
     updated_at: datetime
     source: Optional[str] = None  # For /users/{user_id}/events endpoint
+    start_date_formatted: Optional[str] = None  # Pre-formatted date for UI
+    end_date_formatted: Optional[str] = None  # Pre-formatted date for UI
+    is_owner: Optional[bool] = None  # Whether current user is owner
+    owner_display: Optional[str] = None  # "Yo" or "Usuario #X"
 
     class Config:
         from_attributes = True
@@ -108,6 +124,13 @@ class EventInteractionCreate(EventInteractionBase):
     invited_via_group_id: Optional[int] = None
 
 
+class EventInteractionUpdate(BaseModel):
+    """Schema for updating an event interaction (all fields optional)"""
+    interaction_type: Optional[str] = None
+    status: Optional[str] = None
+    role: Optional[str] = None
+
+
 class EventInteractionResponse(EventInteractionBase):
     id: int
     event_id: int
@@ -119,6 +142,46 @@ class EventInteractionResponse(EventInteractionBase):
 
     class Config:
         from_attributes = True
+
+
+class EventInteractionEnrichedResponse(EventInteractionBase):
+    """Enriched interaction response with user information"""
+    id: int
+    event_id: int
+    user_id: int
+    user_name: str  # Display name (username or contact name)
+    user_username: Optional[str]
+    user_contact_name: Optional[str]
+    invited_by_user_id: Optional[int]
+    invited_via_group_id: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+
+
+class AvailableInviteeResponse(BaseModel):
+    """User available to be invited to an event"""
+    id: int
+    username: Optional[str]
+    contact_name: Optional[str]
+    display_name: str  # Computed display name
+
+
+class EventInteractionWithEventResponse(EventInteractionBase):
+    """Interaction response with event information included"""
+    id: int
+    event_id: int
+    user_id: int
+    invited_by_user_id: Optional[int]
+    invited_via_group_id: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+    # Event information
+    event_name: str
+    event_start_date: datetime
+    event_end_date: Optional[datetime]
+    event_type: str
+    event_start_date_formatted: Optional[str] = None
+    event_end_date_formatted: Optional[str] = None
 
 
 # ============================================================================
@@ -146,6 +209,15 @@ class CalendarResponse(CalendarBase):
         from_attributes = True
 
 
+class CalendarEnrichedResponse(CalendarBase):
+    """Calendar response with enriched display fields"""
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+    calendar_type_display: str  # "Cumpleaños" or "Normal"
+
+
 # ============================================================================
 # CALENDAR MEMBERSHIP SCHEMAS
 # ============================================================================
@@ -171,6 +243,22 @@ class CalendarMembershipResponse(CalendarMembershipBase):
 
     class Config:
         from_attributes = True
+
+
+class CalendarMembershipEnrichedResponse(CalendarMembershipBase):
+    """Calendar membership with enriched calendar information"""
+    id: int
+    calendar_id: int
+    user_id: int
+    invited_by_user_id: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+    # Calendar information
+    calendar_name: str
+    calendar_color: str
+    calendar_is_default: bool
+    calendar_is_private_birthdays: bool
+    calendar_user_id: int  # Calendar owner
 
 
 # ============================================================================

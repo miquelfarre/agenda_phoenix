@@ -22,14 +22,26 @@ router = APIRouter(
 async def get_user_blocks(
     blocker_user_id: Optional[int] = None,
     blocked_user_id: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: str = "id",
+    order_dir: str = "asc",
     db: Session = Depends(get_db)
 ):
-    """Get all user blocks, optionally filtered by blocker or blocked user"""
+    """Get all user blocks, optionally filtered by blocker or blocked user, with pagination and ordering"""
     query = db.query(UserBlock)
     if blocker_user_id:
         query = query.filter(UserBlock.blocker_user_id == blocker_user_id)
     if blocked_user_id:
         query = query.filter(UserBlock.blocked_user_id == blocked_user_id)
+
+    order_col = getattr(UserBlock, order_by) if order_by and hasattr(UserBlock, str(order_by)) else UserBlock.id
+    if order_dir and order_dir.lower() == "desc":
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
     blocks = query.all()
     return blocks
 

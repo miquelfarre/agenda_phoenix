@@ -22,14 +22,26 @@ router = APIRouter(
 async def get_event_bans(
     event_id: Optional[int] = None,
     user_id: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: str = "id",
+    order_dir: str = "asc",
     db: Session = Depends(get_db)
 ):
-    """Get all event bans, optionally filtered by event_id and/or user_id"""
+    """Get all event bans, optionally filtered by event_id and/or user_id, with pagination and ordering"""
     query = db.query(EventBan)
     if event_id:
         query = query.filter(EventBan.event_id == event_id)
     if user_id:
         query = query.filter(EventBan.user_id == user_id)
+
+    order_col = getattr(EventBan, order_by) if order_by and hasattr(EventBan, str(order_by)) else EventBan.id
+    if order_dir and order_dir.lower() == "desc":
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
     bans = query.all()
     return bans
 

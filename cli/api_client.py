@@ -2,6 +2,7 @@
 API Client with automatic logging
 Wraps all HTTP requests to log URL, method, response, and JSON data
 """
+
 import requests
 import json
 import logging
@@ -10,21 +11,14 @@ from typing import Optional, Dict, Any
 
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('cli_api_calls.log', encoding='utf-8'),
-        logging.StreamHandler()  # Also print to console if needed
-    ]
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", handlers=[logging.FileHandler("cli_api_calls.log", encoding="utf-8"), logging.StreamHandler()])  # Also print to console if needed
 
 logger = logging.getLogger(__name__)
 
 
 def _log_request(method: str, url: str, data: Optional[Dict] = None, params: Optional[Dict] = None):
     """Log the outgoing request"""
-    logger.info("="*80)
+    logger.info("=" * 80)
     logger.info(f"REQUEST: {method} {url}")
     if params:
         logger.info(f"PARAMS: {json.dumps(params, indent=2, ensure_ascii=False)}")
@@ -43,7 +37,7 @@ def _log_response(response: requests.Response):
     except:
         logger.info(f"BODY: {response.text[:500]}")  # First 500 chars if not JSON
 
-    logger.info("="*80)
+    logger.info("=" * 80)
     logger.info("")  # Empty line for readability
 
 

@@ -19,11 +19,26 @@ router = APIRouter(
 
 
 @router.get("", response_model=List[RecurringEventConfigResponse])
-async def get_recurring_configs(event_id: Optional[int] = None, db: Session = Depends(get_db)):
-    """Get all recurring event configs, optionally filtered by event_id"""
+async def get_recurring_configs(
+    event_id: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: str = "id",
+    order_dir: str = "asc",
+    db: Session = Depends(get_db)
+):
+    """Get all recurring event configs, optionally filtered by event_id, with pagination and ordering"""
     query = db.query(RecurringEventConfig)
     if event_id:
         query = query.filter(RecurringEventConfig.event_id == event_id)
+
+    order_col = getattr(RecurringEventConfig, order_by) if order_by and hasattr(RecurringEventConfig, str(order_by)) else RecurringEventConfig.id
+    if order_dir and order_dir.lower() == "desc":
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
     configs = query.all()
     return configs
 

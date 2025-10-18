@@ -19,11 +19,26 @@ router = APIRouter(
 
 
 @router.get("", response_model=List[GroupResponse])
-async def get_groups(created_by: Optional[int] = None, db: Session = Depends(get_db)):
-    """Get all groups, optionally filtered by creator"""
+async def get_groups(
+    created_by: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: str = "id",
+    order_dir: str = "asc",
+    db: Session = Depends(get_db)
+):
+    """Get all groups, optionally filtered by creator, with pagination and ordering"""
     query = db.query(Group)
     if created_by:
         query = query.filter(Group.created_by == created_by)
+
+    order_col = getattr(Group, order_by) if order_by and hasattr(Group, str(order_by)) else Group.id
+    if order_dir and order_dir.lower() == "desc":
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
     groups = query.all()
     return groups
 

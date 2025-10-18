@@ -13,29 +13,42 @@
 - **Auth:** None
 
 ### GET /health
-- **Description:** Health check endpoint
-- **Response:** Status and timestamp
+**Description:** Create a new event. Validates date conflicts server-side.
+**Body:** EventCreate (name, description, start_date, end_date, event_type, owner_id, calendar_id, birthday_user_id, parent_calendar_id, parent_recurring_event_id)
+**Query Params:**
+  - force (bool, default: false) - If true, skip conflict validation and create anyway
+**Responses:**
+  - 201 EventResponse - Created successfully
+  - 409 Conflict - When overlapping events are detected. Response body `detail` contains:
+    - message (str)
+    - conflicts (List[EventResponse-like])
+### PATCH /interactions/{interaction_id}
+**Description:** Partially update an interaction (typically to change status). Accepting invitations validates conflicts server-side.
+**Params:** interaction_id (int)
+**Query Params:**
+  - force (bool, default: false) - If true and accepting, skips conflict validation
+**Body:** EventInteractionUpdate
+**Responses:**
+  - 200 EventInteractionResponse - Updated successfully
+  - 409 Conflict - When accepting an invitation that overlaps existing events. Response body `detail` contains:
+    - message (str)
+    - conflicts (List[EventResponse-like])
+**Notes:**
+  - Cascade behavior: rejecting a base recurring event automatically rejects all pending instance invitations
+**Auth:** None
+### POST /events/event-interactions
+**Description:** Create a new event interaction (alias for /interactions)
+**Body:** EventInteractionCreate
+**Response:** EventInteractionResponse (201)
+**Auth:** None
 - **Auth:** None
-
----
-
-## 2. CONTACTS
-
-### GET /contacts
-- **Description:** List all contacts
-- **Response:** List[ContactResponse]
-- **Auth:** None
-
-### GET /contacts/{contact_id}
-- **Description:** Get a single contact by ID
-- **Params:** contact_id (int)
-- **Response:** ContactResponse
-- **Auth:** None
-
+4. **Missing Endpoints (Future):**
 ### POST /contacts
 - **Description:** Create a new contact
 - **Body:** ContactCreate (name, phone)
 - **Response:** ContactResponse (201)
+5. **Conflict Handling UX Pattern:**
+   - Client creates/accepts → if 409 returned with conflicts, show list to user and re-attempt with `?force=true` if the user confirms.
 - **Auth:** None
 
 ### PUT /contacts/{contact_id}
@@ -56,15 +69,37 @@
 ## 3. USERS
 
 ### GET /users
-- **Description:** List all users
-- **Response:** List[UserResponse]
+- **Description:** List all users, optionally filtered by public status and enriched with contact info
+- **Query Params:**
+  - public (bool, optional) - Filter by public users (users with username). Set to true for public users, false for private users
+  - enriched (bool, default: false) - If true, includes contact information and computed display_name
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: id)
+  - order_dir (str, default: asc) - asc|desc
+- **Response:** List[UserResponse] or List[UserEnrichedResponse] (when enriched=true)
 - **Auth:** None
+- **Examples:**
+  - `/users` - Get all users
+  - `/users?public=true` - Get only public users (with username)
+  - `/users?public=false` - Get only private users (without username)
+  - `/users?enriched=true` - Get all users with contact info and display_name
+- **Enriched Response Fields:** When enriched=true, returns UserEnrichedResponse with:
+  - All UserResponse fields plus:
+  - contact_name (str | null) - Name from Contact table
+  - contact_phone (str | null) - Phone from Contact table
+  - display_name (str) - Computed display name (username or contact name or "Usuario #id")
 
 ### GET /users/{user_id}
-- **Description:** Get a single user by ID
+- **Description:** Get a single user by ID, optionally enriched with contact info
 - **Params:** user_id (int)
-- **Response:** UserResponse
+- **Query Params:**
+  - enriched (bool, default: false) - If true, includes contact information and computed display_name
+- **Response:** UserResponse or UserEnrichedResponse (when enriched=true)
 - **Auth:** None
+- **Examples:**
+  - `/users/1` - Get user #1
+  - `/users/1?enriched=true` - Get user #1 with contact info and display_name
 
 ### POST /users
 - **Description:** Create a new user
@@ -149,10 +184,20 @@
 ## 4. EVENTS
 
 ### GET /events
-- **Description:** List all events, optionally filtered by owner
-- **Query Params:** owner_id (int, optional)
+- **Description:** List all events, optionally filtered by owner or calendar
+- **Query Params:**
+  - owner_id (int, optional) - Filter by event owner
+  - calendar_id (int, optional) - Filter by calendar
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: start_date)
+  - order_dir (str, default: asc) - asc|desc
 - **Response:** List[EventResponse]
 - **Auth:** None
+- **Examples:**
+  - `/events` - Get all events
+  - `/events?owner_id=1` - Get events owned by user 1
+  - `/events?calendar_id=2` - Get events in calendar 2
 
 ### GET /events/{event_id}
 - **Description:** Get a single event by ID
@@ -199,6 +244,33 @@
 - **Response:** List[EventInteractionResponse]
 - **Auth:** None
 
+### GET /events/{event_id}/interactions-enriched
+- **Description:** Get all interactions for a specific event with enriched user information (username, contact name, display name)
+- **Params:** event_id (int)
+- **Response:** List[EventInteractionEnrichedResponse]
+- **Response Fields:**
+  - All fields from EventInteractionResponse
+  - user_name (str) - Display name (username or contact name)
+  - user_username (str, optional) - Username if available
+  - user_contact_name (str, optional) - Contact name if available
+- **Notes:** Uses JOIN to efficiently fetch user and contact data in a single query
+- **Auth:** None
+
+### GET /events/{event_id}/available-invitees
+- **Description:** Get list of users available to be invited to an event (excludes event owner and users already invited/interacted)
+- **Params:** event_id (int)
+- **Response:** List[AvailableInviteeResponse]
+- **Response Fields:**
+  - id (int) - User ID
+  - username (str, optional) - Username if available
+  - contact_name (str, optional) - Contact name if available
+  - display_name (str) - Computed display name
+- **Notes:**
+  - Uses subquery and NOT IN to efficiently filter out invited users
+  - Automatically excludes event owner
+  - Returns empty list if no users available
+- **Auth:** None
+
 ### POST /event-interactions
 - **Description:** Create a new event interaction (alias for /interactions)
 - **Body:** EventInteractionCreate
@@ -210,16 +282,31 @@
 ## 5. EVENT INTERACTIONS
 
 ### GET /interactions
-- **Description:** List all interactions with optional filters
+- **Description:** List all interactions with optional filters, optionally enriched with event information
 - **Query Params:**
-  - event_id (int, optional)
-  - user_id (int, optional)
-  - interaction_type (str, optional) - 'invited', 'subscribed', etc.
-  - status (str, optional) - 'pending', 'accepted', 'rejected'
-- **Response:** List[EventInteractionResponse]
+  - event_id (int, optional) - Filter by event
+  - user_id (int, optional) - Filter by user
+  - interaction_type (str, optional) - Filter by type: 'invited', 'subscribed', 'joined', etc.
+  - status (str, optional) - Filter by status: 'pending', 'accepted', 'rejected'
+  - enriched (bool, optional) - If true, include event information (name, start_date, end_date, event_type)
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: created_at)
+  - order_dir (str, default: desc) - asc|desc
+- **Response:** List[EventInteractionResponse] or List[EventInteractionWithEventResponse] (if enriched=true)
+- **Response Fields (when enriched=true):**
+  - All fields from EventInteractionResponse
+  - event_name (str) - Name of the event
+  - event_start_date (datetime) - Event start date
+  - event_end_date (datetime, optional) - Event end date
+  - event_type (str) - Event type (regular, recurring, birthday)
 - **Notes:**
   - Special hierarchical filtering for pending invitations
   - For recurring events: hides instance invitations if parent is pending
+  - When enriched=true, uses efficient query to fetch events in a single database call
+- **Examples:**
+  - `/interactions?user_id=1&status=pending` - Get pending interactions for user 1
+  - `/interactions?user_id=1&interaction_type=invited&status=pending&enriched=true` - Get pending invitations with event details
 - **Auth:** None
 
 ### GET /interactions/{interaction_id}
@@ -262,7 +349,12 @@
 
 ### GET /calendars
 - **Description:** List all calendars, optionally filtered by user
-- **Query Params:** user_id (int, optional)
+- **Query Params:**
+  - user_id (int, optional)
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: id)
+  - order_dir (str, default: asc) - asc|desc
 - **Response:** List[CalendarResponse]
 - **Auth:** None
 
@@ -308,12 +400,31 @@
 ## 7. CALENDAR MEMBERSHIPS
 
 ### GET /calendar_memberships
-- **Description:** List all calendar memberships with optional filters
+- **Description:** List all calendar memberships with optional filters and enrichment
 - **Query Params:**
-  - calendar_id (int, optional)
-  - user_id (int, optional)
-- **Response:** List[CalendarMembershipResponse]
+  - calendar_id (int, optional) - Filter by calendar
+  - user_id (int, optional) - Filter by user
+  - status (str, optional) - Filter by status ('pending', 'accepted', 'rejected')
+  - enriched (bool, default: false) - If true, includes calendar information (name, color, etc.)
+  - exclude_owned (bool, default: false) - If true and user_id provided, excludes calendars owned by user_id
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: created_at)
+  - order_dir (str, default: desc) - asc|desc
+- **Response:** List[CalendarMembershipResponse] or List[CalendarMembershipEnrichedResponse] (when enriched=true)
 - **Auth:** None
+- **Examples:**
+  - `/calendar_memberships?user_id=1` - Get all memberships for user #1
+  - `/calendar_memberships?user_id=1&enriched=true` - Get memberships with calendar info
+  - `/calendar_memberships?user_id=1&status=pending` - Get pending invitations for user #1
+  - `/calendar_memberships?user_id=1&enriched=true&exclude_owned=true` - Get shared calendars (excluding owned)
+- **Enriched Response Fields:** When enriched=true, returns CalendarMembershipEnrichedResponse with:
+  - All CalendarMembershipResponse fields plus:
+  - calendar_name (str) - Name of the calendar
+  - calendar_color (str) - Color of the calendar
+  - calendar_is_default (bool) - Whether calendar is default
+  - calendar_is_private_birthdays (bool) - Whether calendar is for private birthdays
+  - calendar_user_id (int) - Owner of the calendar
 
 ### GET /calendar_memberships/{membership_id}
 - **Description:** Get a single calendar membership by ID
@@ -346,7 +457,12 @@
 
 ### GET /groups
 - **Description:** List all groups, optionally filtered by creator
-- **Query Params:** created_by (int, optional)
+- **Query Params:**
+  - created_by (int, optional)
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: id)
+  - order_dir (str, default: asc) - asc|desc
 - **Response:** List[GroupResponse]
 - **Auth:** None
 
@@ -384,6 +500,10 @@
 - **Query Params:**
   - group_id (int, optional)
   - user_id (int, optional)
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: id)
+  - order_dir (str, default: asc) - asc|desc
 - **Response:** List[GroupMembershipResponse]
 - **Auth:** None
 
@@ -411,7 +531,12 @@
 
 ### GET /recurring_configs
 - **Description:** List all recurring event configs, optionally filtered by event
-- **Query Params:** event_id (int, optional)
+- **Query Params:**
+  - event_id (int, optional)
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: id)
+  - order_dir (str, default: asc) - asc|desc
 - **Response:** List[RecurringEventConfigResponse]
 - **Auth:** None
 
@@ -449,6 +574,10 @@
 - **Query Params:**
   - event_id (int, optional)
   - user_id (int, optional)
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: id)
+  - order_dir (str, default: asc) - asc|desc
 - **Response:** List[EventBanResponse]
 - **Auth:** None
 
@@ -479,6 +608,10 @@
 - **Query Params:**
   - blocker_user_id (int, optional)
   - blocked_user_id (int, optional)
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: id)
+  - order_dir (str, default: asc) - asc|desc
 - **Response:** List[UserBlockResponse]
 - **Auth:** None
 
@@ -509,6 +642,10 @@
 - **Query Params:**
   - user_id (int, optional)
   - banned_by (int, optional)
+  - limit (int, default: 50, max: 200)
+  - offset (int, default: 0)
+  - order_by (str, default: id)
+  - order_dir (str, default: asc) - asc|desc
 - **Response:** List[AppBanResponse]
 - **Auth:** Admin only
 
@@ -532,14 +669,14 @@
 
 ---
 
-## TOTAL ENDPOINTS: 83
+## TOTAL ENDPOINTS: 86
 
 ### Breakdown by Resource:
 - Root & Health: 2
 - Contacts: 5
-- Users: 8 (added bulk subscription endpoint)
-- Events: 8
-- Event Interactions: 6
+- Users: 8 (added bulk subscription endpoint + public filter)
+- Events: 11 (added calendar_id filter + interactions-enriched + available-invitees)
+- Event Interactions: 6 (added enriched parameter)
 - Calendars: 8
 - Calendar Memberships: 5
 - Groups: 5
@@ -548,6 +685,15 @@
 - Event Bans: 4
 - User Blocks: 4
 - App Bans: 4
+
+### New in v2.1.0 (Performance & Business Logic Optimization):
+- **GET /users?public=true** - Filter users by public status (have username)
+- **GET /events?calendar_id=X** - Filter events by calendar
+- **GET /events/{event_id}/interactions-enriched** - Get interactions with enriched user info (JOINs User + Contact)
+- **GET /events/{event_id}/available-invitees** - Get users available to invite (filtered in backend)
+- **GET /interactions?enriched=true** - Get interactions with event information included
+ - Pagination and ordering added across list endpoints (limit/offset/order_by/order_dir)
+ - Fixed N+1 in calendar_memberships when exclude_owned=true via JOIN-based filtering
 
 ---
 

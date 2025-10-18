@@ -8,8 +8,12 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from models import Event, User, EventInteraction, RecurringEventConfig
-from schemas import EventInteractionCreate, EventInteractionBase, EventInteractionResponse
+from schemas import (
+    EventInteractionCreate, EventInteractionBase, EventInteractionUpdate,
+    EventInteractionResponse, EventInteractionWithEventResponse
+)
 from dependencies import get_db
+from typing import Union
 
 
 router = APIRouter(
@@ -18,12 +22,17 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=List[EventInteractionResponse])
+@router.get("", response_model=List[Union[EventInteractionResponse, EventInteractionWithEventResponse]])
 async def get_interactions(
     event_id: Optional[int] = None,
     user_id: Optional[int] = None,
     interaction_type: Optional[str] = None,
     status: Optional[str] = None,
+    enriched: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: Optional[str] = "created_at",
+    order_dir: str = "desc",
     db: Session = Depends(get_db)
 ):
     """
@@ -45,46 +54,81 @@ async def get_interactions(
     if status:
         query = query.filter(EventInteraction.status == status)
 
+    # Apply ordering and pagination
+    order_col = getattr(EventInteraction, order_by) if order_by and hasattr(EventInteraction, str(order_by)) else EventInteraction.created_at if hasattr(EventInteraction, "created_at") else EventInteraction.id
+    if order_dir and order_dir.lower() == "asc":
+        query = query.order_by(order_col.asc())
+    else:
+        query = query.order_by(order_col.desc())
+
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
+
     interactions = query.all()
 
-    # Apply hierarchical filtering for pending invitations to recurring events
-    if user_id and interaction_type == 'invited' and status == 'pending':
-        # Get all events that have pending invitations for this user
+    # Apply hierarchical filtering for pending invitations to recurring events (optimized batching)
+    if user_id and interaction_type == 'invited' and status == 'pending' and interactions:
         event_ids = [i.event_id for i in interactions]
+        events = db.query(Event).filter(Event.id.in_(event_ids)).all()
+        events_map = {e.id: e for e in events}
+
+        # Collect base recurring event IDs
+        base_recurring_event_ids = [e.id for e in events if e.event_type == 'recurring']
+        pending_parent_config_ids = set()
+        if base_recurring_event_ids:
+            configs = db.query(RecurringEventConfig).filter(
+                RecurringEventConfig.event_id.in_(base_recurring_event_ids)
+            ).all()
+            pending_parent_config_ids = {c.id for c in configs}
+
+        filtered_interactions = []
+        for interaction in interactions:
+            event = events_map.get(interaction.event_id)
+            if not event:
+                continue
+            # If it's an instance, include only if parent recurring base is NOT pending
+            if event.parent_recurring_event_id:
+                if event.parent_recurring_event_id not in pending_parent_config_ids:
+                    filtered_interactions.append(interaction)
+            else:
+                filtered_interactions.append(interaction)
+
+        interactions = filtered_interactions
+
+    # If enriched=True, add event information
+    if enriched:
+        # Get all event IDs
+        event_ids = list(set([i.event_id for i in interactions]))
 
         if event_ids:
-            # Query event details to check for recurring event hierarchy
+            # Fetch events in a single query
             events = db.query(Event).filter(Event.id.in_(event_ids)).all()
             events_map = {e.id: e for e in events}
 
-            # Find recurring event base IDs that have pending invitations
-            pending_parent_ids = set()
-            for interaction in interactions:
-                event = events_map.get(interaction.event_id)
-                if event and event.event_type == 'recurring':
-                    # This is a base recurring event with pending invitation
-                    # Find the recurring config ID
-                    config = db.query(RecurringEventConfig).filter(
-                        RecurringEventConfig.event_id == event.id
-                    ).first()
-                    if config:
-                        pending_parent_ids.add(config.id)
-
-            # Filter out instances whose parent recurring event has a pending invitation
-            filtered_interactions = []
+            # Build enriched responses
+            enriched_interactions = []
             for interaction in interactions:
                 event = events_map.get(interaction.event_id)
                 if event:
-                    # If it's an instance of a recurring event, check if parent is pending
-                    if event.parent_recurring_event_id:
-                        # This is an instance - only include if parent is NOT in pending list
-                        if event.parent_recurring_event_id not in pending_parent_ids:
-                            filtered_interactions.append(interaction)
-                    else:
-                        # Not an instance (it's either a base recurring event or a regular event)
-                        filtered_interactions.append(interaction)
+                    enriched_interactions.append({
+                        "id": interaction.id,
+                        "event_id": interaction.event_id,
+                        "user_id": interaction.user_id,
+                        "interaction_type": interaction.interaction_type,
+                        "status": interaction.status,
+                        "role": interaction.role,
+                        "invited_by_user_id": interaction.invited_by_user_id,
+                        "invited_via_group_id": interaction.invited_via_group_id,
+                        "created_at": interaction.created_at,
+                        "updated_at": interaction.updated_at,
+                        "event_name": event.name,
+                        "event_start_date": event.start_date,
+                        "event_end_date": event.end_date,
+                        "event_type": event.event_type,
+                        "event_start_date_formatted": event.start_date.strftime("%Y-%m-%d %H:%M"),
+                        "event_end_date_formatted": event.end_date.strftime("%Y-%m-%d %H:%M") if event.end_date else None
+                    })
 
-            return filtered_interactions
+            return enriched_interactions
 
     return interactions
 
@@ -153,7 +197,8 @@ async def update_interaction(
 @router.patch("/{interaction_id}", response_model=EventInteractionResponse)
 async def patch_interaction(
     interaction_id: int,
-    interaction: EventInteractionBase,
+    interaction: EventInteractionUpdate,
+    force: bool = False,
     db: Session = Depends(get_db)
 ):
     """
@@ -171,6 +216,89 @@ async def patch_interaction(
 
     # Get the event to check if it's a recurring event
     event = db.query(Event).filter(Event.id == db_interaction.event_id).first()
+
+    # If attempting to accept an invitation, validate conflicts unless forced
+    new_status = interaction.status
+    if (event and
+        db_interaction.interaction_type == 'invited' and
+        new_status == 'accepted' and
+        not force):
+
+        # Build set of other event IDs the user has access to (exclude this event)
+        user_id = db_interaction.user_id
+        other_event_ids = set()
+
+        own = db.query(Event.id).filter(Event.owner_id == user_id).all()
+        other_event_ids.update([e[0] for e in own])
+
+        subs = db.query(EventInteraction.event_id).filter(
+            EventInteraction.user_id == user_id,
+            EventInteraction.interaction_type == 'subscribed'
+        ).all()
+        other_event_ids.update([e[0] for e in subs])
+
+        accepted_inv = db.query(EventInteraction.event_id).filter(
+            EventInteraction.user_id == user_id,
+            EventInteraction.interaction_type == 'invited',
+            EventInteraction.status == 'accepted'
+        ).all()
+        other_event_ids.update([e[0] for e in accepted_inv])
+
+        # Calendar events (owner/admin accepted)
+        from models import CalendarMembership  # local import to avoid circulars
+        calendar_ids = db.query(CalendarMembership.calendar_id).filter(
+            CalendarMembership.user_id == user_id,
+            CalendarMembership.status == 'accepted',
+            CalendarMembership.role.in_(['owner', 'admin'])
+        ).all()
+        if calendar_ids:
+            cal_events = db.query(Event.id).filter(
+                Event.calendar_id.in_([cid for (cid,) in calendar_ids])
+            ).all()
+            other_event_ids.update([e[0] for e in cal_events])
+
+        if event.id in other_event_ids:
+            other_event_ids.remove(event.id)
+
+        conflicts = []
+        if other_event_ids:
+            others = db.query(Event).filter(Event.id.in_(other_event_ids)).all()
+            for ev in others:
+                evt_start = ev.start_date
+                evt_end = ev.end_date
+                start_date = event.start_date
+                end_date = event.end_date
+
+                has_conflict = False
+                if not end_date and not evt_end:
+                    if abs((start_date - evt_start).total_seconds()) < 300:
+                        has_conflict = True
+                elif not end_date:
+                    if evt_end and evt_start <= start_date <= evt_end:
+                        has_conflict = True
+                elif not evt_end:
+                    if start_date <= evt_start <= end_date:
+                        has_conflict = True
+                else:
+                    if max(start_date, evt_start) < min(end_date, evt_end):
+                        has_conflict = True
+
+                if has_conflict:
+                    conflicts.append({
+                        "id": ev.id,
+                        "name": ev.name,
+                        "start_date": ev.start_date,
+                        "end_date": ev.end_date,
+                        "event_type": ev.event_type,
+                        "start_date_formatted": ev.start_date.strftime("%Y-%m-%d %H:%M"),
+                        "end_date_formatted": ev.end_date.strftime("%Y-%m-%d %H:%M") if ev.end_date else None
+                    })
+
+        if conflicts:
+            raise HTTPException(status_code=409, detail={
+                "message": "Invitation acceptance conflicts with existing events",
+                "conflicts": conflicts
+            })
 
     # Only update fields that are explicitly provided (exclude None values)
     for key, value in interaction.dict(exclude_unset=True).items():

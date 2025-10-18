@@ -136,18 +136,16 @@ def insert_sample_data():
         calendars = [
             # Family calendar (owner: Sonia)
             Calendar(user_id=users[sonia_idx].id, name="Family", color="#e74c3c", is_default=False, is_private_birthdays=False),
-            # Private birthday calendars (one per main user)
-            Calendar(user_id=users[sonia_idx].id, name="Cumpleaños", color="#f39c12", is_default=False, is_private_birthdays=True),
-            Calendar(user_id=users[miquel_idx].id, name="Cumpleaños", color="#f39c12", is_default=False, is_private_birthdays=True),
-            Calendar(user_id=users[ada_idx].id, name="Cumpleaños", color="#f39c12", is_default=False, is_private_birthdays=True),
-            Calendar(user_id=users[sara_idx].id, name="Cumpleaños", color="#f39c12", is_default=False, is_private_birthdays=True),
+            # Birthday calendar (owner: Sonia)
+            Calendar(user_id=users[sonia_idx].id, name="Cumpleaños Family", color="#f39c12", is_default=False, is_private_birthdays=False),
         ]
         db.add_all(calendars)
         db.flush()
         logger.info(f"  ✓ Inserted {len(calendars)} calendars")
 
         # Calendar indices
-        family_cal_idx, sonia_bday_cal_idx, miquel_bday_cal_idx, ada_bday_cal_idx, sara_bday_cal_idx = 0, 1, 2, 3, 4
+        family_cal_idx = 0
+        birthday_cal_idx = 1
 
         # 4. Create calendar memberships
         calendar_memberships = [
@@ -157,6 +155,21 @@ def insert_sample_data():
                 user_id=users[sonia_idx].id,
                 role='owner',
                 status='accepted',
+            ),
+            # Sonia is owner of Birthday calendar
+            CalendarMembership(
+                calendar_id=calendars[birthday_cal_idx].id,
+                user_id=users[sonia_idx].id,
+                role='owner',
+                status='accepted',
+            ),
+            # Miquel is admin of Birthday calendar
+            CalendarMembership(
+                calendar_id=calendars[birthday_cal_idx].id,
+                user_id=users[miquel_idx].id,
+                role='admin',
+                status='accepted',
+                invited_by_user_id=users[sonia_idx].id,
             ),
             # Miquel is admin of Family calendar
             CalendarMembership(
@@ -321,7 +334,7 @@ def insert_sample_data():
         db.flush()
         logger.info(f"  ✓ Generated {len(generated_events)} recurring event instances")
 
-        # 8. Create birthday events
+        # 8. Create birthday events in "Cumpleaños Family" calendar
         birthday_events = [
             # Cumpleaños de Miquel - 30 de abril
             Event(
@@ -329,11 +342,10 @@ def insert_sample_data():
                 description="Cumpleaños de Miquel",
                 start_date=datetime(2026, 4, 30, 0, 0),
                 end_date=datetime(2026, 4, 30, 23, 59),
-                event_type="birthday",
-                owner_id=users[miquel_idx].id,
-                calendar_id=calendars[miquel_bday_cal_idx].id,
-                birthday_user_id=users[miquel_idx].id,
-                parent_calendar_id=calendars[miquel_bday_cal_idx].id,
+                event_type="regular",
+                owner_id=users[sonia_idx].id,
+                calendar_id=calendars[birthday_cal_idx].id,
+                parent_calendar_id=calendars[birthday_cal_idx].id,
             ),
             # Cumpleaños de Ada - 6 de septiembre
             Event(
@@ -341,11 +353,10 @@ def insert_sample_data():
                 description="Cumpleaños de Ada",
                 start_date=datetime(2026, 9, 6, 0, 0),
                 end_date=datetime(2026, 9, 6, 23, 59),
-                event_type="birthday",
-                owner_id=users[ada_idx].id,
-                calendar_id=calendars[ada_bday_cal_idx].id,
-                birthday_user_id=users[ada_idx].id,
-                parent_calendar_id=calendars[ada_bday_cal_idx].id,
+                event_type="regular",
+                owner_id=users[sonia_idx].id,
+                calendar_id=calendars[birthday_cal_idx].id,
+                parent_calendar_id=calendars[birthday_cal_idx].id,
             ),
             # Cumpleaños de Sonia - 31 de enero
             Event(
@@ -353,11 +364,10 @@ def insert_sample_data():
                 description="Cumpleaños de Sonia",
                 start_date=datetime(2026, 1, 31, 0, 0),
                 end_date=datetime(2026, 1, 31, 23, 59),
-                event_type="birthday",
+                event_type="regular",
                 owner_id=users[sonia_idx].id,
-                calendar_id=calendars[sonia_bday_cal_idx].id,
-                birthday_user_id=users[sonia_idx].id,
-                parent_calendar_id=calendars[sonia_bday_cal_idx].id,
+                calendar_id=calendars[birthday_cal_idx].id,
+                parent_calendar_id=calendars[birthday_cal_idx].id,
             ),
             # Cumpleaños de Sara - 2 de diciembre
             Event(
@@ -365,11 +375,10 @@ def insert_sample_data():
                 description="Cumpleaños de Sara",
                 start_date=datetime(2026, 12, 2, 0, 0),
                 end_date=datetime(2026, 12, 2, 23, 59),
-                event_type="birthday",
-                owner_id=users[sara_idx].id,
-                calendar_id=calendars[sara_bday_cal_idx].id,
-                birthday_user_id=users[sara_idx].id,
-                parent_calendar_id=calendars[sara_bday_cal_idx].id,
+                event_type="regular",
+                owner_id=users[sonia_idx].id,
+                calendar_id=calendars[birthday_cal_idx].id,
+                parent_calendar_id=calendars[birthday_cal_idx].id,
             ),
         ]
         db.add_all(birthday_events)
@@ -432,7 +441,59 @@ def insert_sample_data():
         db.flush()
         logger.info(f"  ✓ Inserted {len(fcb_matches)} FC Barcelona match events")
 
-        # 11. Create event interactions
+        # 11. Create Sonia's additional events
+        # Event 1: "Cumpleaños clase Sara" - Regular event on Nov 16 where Sonia invites Miquel
+        cumple_sara_event = Event(
+            name="Cumpleaños clase Sara",
+            description="Celebración del cumpleaños de la clase de Sara",
+            start_date=datetime(2025, 11, 16, 17, 0),
+            end_date=datetime(2025, 11, 16, 19, 0),
+            event_type="regular",
+            owner_id=users[sonia_idx].id,
+        )
+        db.add(cumple_sara_event)
+        db.flush()
+
+        # Event 2: "Promociona Madrid" - Recurring event from Nov 16-21, daily at 9am
+        promociona_madrid_base = Event(
+            name="Promociona Madrid",
+            description="Evento promocional diario",
+            start_date=datetime(2025, 11, 16, 9, 0),
+            end_date=datetime(2025, 11, 16, 10, 0),
+            event_type="recurring",
+            owner_id=users[sonia_idx].id,
+        )
+        db.add(promociona_madrid_base)
+        db.flush()
+
+        # Create recurring config for Promociona Madrid (daily from Nov 16-21)
+        promociona_config = RecurringEventConfig(
+            event_id=promociona_madrid_base.id,
+            days_of_week=[0, 1, 2, 3, 4, 5, 6],  # All days
+            time_slots=[{"start": "09:00", "end": "10:00"}],
+            recurrence_end_date=datetime(2025, 11, 21, 23, 59),
+        )
+        db.add(promociona_config)
+        db.flush()
+
+        # Generate instances for Promociona Madrid (Nov 16-21, 6 days)
+        promociona_instances = []
+        for day_offset in range(6):  # 16, 17, 18, 19, 20, 21
+            instance_date = datetime(2025, 11, 16, 9, 0) + timedelta(days=day_offset)
+            promociona_instances.append(Event(
+                name="Promociona Madrid",
+                description=promociona_madrid_base.description,
+                start_date=instance_date,
+                end_date=instance_date + timedelta(hours=1),
+                event_type="regular",
+                owner_id=users[sonia_idx].id,
+                parent_recurring_event_id=promociona_config.id,
+            ))
+        db.add_all(promociona_instances)
+        db.flush()
+        logger.info(f"  ✓ Inserted 2 additional Sonia events (1 regular + 1 recurring with {len(promociona_instances)} instances)")
+
+        # 12. Create event interactions
         interactions = []
 
         # Owner interactions for base recurring events
@@ -456,11 +517,10 @@ def insert_sample_data():
             ))
 
         # Owner interactions for birthday events
-        for i, bday_event in enumerate(birthday_events):
-            owner_idx = [miquel_idx, ada_idx, sonia_idx, sara_idx][i]
+        for bday_event in birthday_events:
             interactions.append(EventInteraction(
                 event_id=bday_event.id,
-                user_id=users[owner_idx].id,
+                user_id=users[sonia_idx].id,
                 interaction_type="joined",
                 status="accepted",
                 role="owner",
@@ -493,6 +553,44 @@ def insert_sample_data():
                 user_id=users[miquel_idx].id,
                 interaction_type="subscribed",
                 status="accepted",
+            ))
+
+        # Owner interactions for Sonia's additional events
+        # Owner of "Cumpleaños clase Sara"
+        interactions.append(EventInteraction(
+            event_id=cumple_sara_event.id,
+            user_id=users[sonia_idx].id,
+            interaction_type="joined",
+            status="accepted",
+            role="owner",
+        ))
+
+        # Miquel invited to "Cumpleaños clase Sara" by Sonia
+        interactions.append(EventInteraction(
+            event_id=cumple_sara_event.id,
+            user_id=users[miquel_idx].id,
+            interaction_type="invited",
+            status="pending",
+            invited_by_user_id=users[sonia_idx].id,
+        ))
+
+        # Owner of "Promociona Madrid" base event
+        interactions.append(EventInteraction(
+            event_id=promociona_madrid_base.id,
+            user_id=users[sonia_idx].id,
+            interaction_type="joined",
+            status="accepted",
+            role="owner",
+        ))
+
+        # Owner interactions for all "Promociona Madrid" instances
+        for promociona_instance in promociona_instances:
+            interactions.append(EventInteraction(
+                event_id=promociona_instance.id,
+                user_id=users[sonia_idx].id,
+                interaction_type="joined",
+                status="accepted",
+                role="owner",
             ))
 
         # Miquel invited to Esquí events by Sonia (base event + all instances)

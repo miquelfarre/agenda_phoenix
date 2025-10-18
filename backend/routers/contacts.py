@@ -19,9 +19,22 @@ router = APIRouter(
 
 
 @router.get("", response_model=List[ContactResponse])
-async def get_contacts(db: Session = Depends(get_db)):
-    """Get all contacts"""
-    contacts = db.query(Contact).all()
+async def get_contacts(
+    limit: int = 50,
+    offset: int = 0,
+    order_by: str = "id",
+    order_dir: str = "asc",
+    db: Session = Depends(get_db)
+):
+    """Get all contacts with pagination and ordering"""
+    query = db.query(Contact)
+    order_col = getattr(Contact, order_by) if order_by and hasattr(Contact, str(order_by)) else Contact.id
+    if order_dir and order_dir.lower() == "desc":
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
+    contacts = query.all()
     return contacts
 
 

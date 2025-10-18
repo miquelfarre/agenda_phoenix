@@ -23,14 +23,26 @@ router = APIRouter(
 async def get_app_bans(
     user_id: Optional[int] = None,
     banned_by: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: str = "id",
+    order_dir: str = "asc",
     db: Session = Depends(get_db)
 ):
-    """Get all app bans, optionally filtered by user_id or banned_by (admin)"""
+    """Get all app bans, optionally filtered by user_id or banned_by (admin), with pagination and ordering"""
     query = db.query(AppBan)
     if user_id:
         query = query.filter(AppBan.user_id == user_id)
     if banned_by:
         query = query.filter(AppBan.banned_by == banned_by)
+
+    order_col = getattr(AppBan, order_by) if order_by and hasattr(AppBan, str(order_by)) else AppBan.id
+    if order_dir and order_dir.lower() == "desc":
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
     bans = query.all()
     return bans
 

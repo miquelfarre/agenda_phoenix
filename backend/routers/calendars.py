@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from models import Calendar, User, CalendarMembership
-from schemas import CalendarCreate, CalendarBase, CalendarResponse, CalendarMembershipCreate, CalendarMembershipResponse
+from schemas import CalendarCreate, CalendarBase, CalendarResponse, CalendarEnrichedResponse, CalendarMembershipCreate, CalendarMembershipResponse
 from dependencies import get_db
+from typing import Union
 
 
 router = APIRouter(
@@ -18,13 +19,48 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=List[CalendarResponse])
-async def get_calendars(user_id: Optional[int] = None, db: Session = Depends(get_db)):
-    """Get all calendars, optionally filtered by user_id"""
+@router.get("", response_model=List[Union[CalendarResponse, CalendarEnrichedResponse]])
+async def get_calendars(
+    user_id: Optional[int] = None,
+    enriched: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: Optional[str] = "id",
+    order_dir: str = "asc",
+    db: Session = Depends(get_db)
+):
+    """Get all calendars, optionally filtered by user_id, optionally enriched with display fields"""
     query = db.query(Calendar)
     if user_id:
         query = query.filter(Calendar.user_id == user_id)
+    # Apply ordering and pagination
+    order_col = getattr(Calendar, order_by) if order_by and hasattr(Calendar, str(order_by)) else Calendar.id
+    if order_dir and order_dir.lower() == "desc":
+        query = query.order_by(order_col.desc())
+    else:
+        query = query.order_by(order_col.asc())
+
+    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
+
     calendars = query.all()
+
+    if enriched:
+        enriched_calendars = []
+        for cal in calendars:
+            calendar_type_display = "Cumpleaños" if cal.is_private_birthdays else "Normal"
+            enriched_calendars.append(CalendarEnrichedResponse(
+                id=cal.id,
+                name=cal.name,
+                color=cal.color,
+                is_default=cal.is_default,
+                is_private_birthdays=cal.is_private_birthdays,
+                user_id=cal.user_id,
+                created_at=cal.created_at,
+                updated_at=cal.updated_at,
+                calendar_type_display=calendar_type_display
+            ))
+        return enriched_calendars
+
     return calendars
 
 

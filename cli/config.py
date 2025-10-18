@@ -4,6 +4,7 @@ API Configuration - Centralized endpoint management
 All API endpoints are defined here as constants and helper functions.
 This ensures consistency and makes it easy to update endpoints.
 """
+
 import os
 
 # API Base URL - can be overridden with AGENDA_API_URL environment variable
@@ -13,6 +14,7 @@ API_BASE_URL = os.getenv("AGENDA_API_URL", "http://localhost:8001")
 # ============================================================================
 # ROOT & HEALTH
 # ============================================================================
+
 
 def url_root():
     """GET / - Root endpoint"""
@@ -28,6 +30,7 @@ def url_health():
 # CONTACTS
 # ============================================================================
 
+
 def url_contacts():
     """GET/POST /contacts - List all contacts / Create contact"""
     return f"{API_BASE_URL}/contacts"
@@ -41,6 +44,7 @@ def url_contact(contact_id):
 # ============================================================================
 # USERS
 # ============================================================================
+
 
 def url_users():
     """GET/POST /users - List all users / Create user"""
@@ -71,6 +75,7 @@ def url_user_subscribe(user_id, target_user_id):
 # EVENTS
 # ============================================================================
 
+
 def url_events():
     """GET/POST /events - List all events / Create event"""
     return f"{API_BASE_URL}/events"
@@ -91,9 +96,20 @@ def url_event_interactions(event_id):
     return f"{API_BASE_URL}/events/{event_id}/interactions"
 
 
+def url_event_interactions_enriched(event_id):
+    """GET /events/{event_id}/interactions-enriched - Get event interactions with user info"""
+    return f"{API_BASE_URL}/events/{event_id}/interactions-enriched"
+
+
+def url_event_available_invitees(event_id):
+    """GET /events/{event_id}/available-invitees - Get users available to invite"""
+    return f"{API_BASE_URL}/events/{event_id}/available-invitees"
+
+
 # ============================================================================
 # INTERACTIONS
 # ============================================================================
+
 
 def url_interactions():
     """GET/POST /interactions - List interactions / Create interaction"""
@@ -108,6 +124,7 @@ def url_interaction(interaction_id):
 # ============================================================================
 # CALENDARS
 # ============================================================================
+
 
 def url_calendars():
     """GET/POST /calendars - List all calendars / Create calendar"""
@@ -133,6 +150,7 @@ def url_calendars_memberships_create():
 # CALENDAR MEMBERSHIPS
 # ============================================================================
 
+
 def url_calendar_memberships():
     """GET/POST /calendar_memberships - List memberships / Create membership"""
     return f"{API_BASE_URL}/calendar_memberships"
@@ -146,6 +164,7 @@ def url_calendar_membership(membership_id):
 # ============================================================================
 # GROUPS
 # ============================================================================
+
 
 def url_groups():
     """GET/POST /groups - List all groups / Create group"""
@@ -161,6 +180,7 @@ def url_group(group_id):
 # GROUP MEMBERSHIPS
 # ============================================================================
 
+
 def url_group_memberships():
     """GET/POST /group_memberships - List memberships / Create membership"""
     return f"{API_BASE_URL}/group_memberships"
@@ -174,6 +194,7 @@ def url_group_membership(membership_id):
 # ============================================================================
 # RECURRING CONFIGS
 # ============================================================================
+
 
 def url_recurring_configs():
     """GET/POST /recurring_configs - List configs / Create config"""
@@ -189,6 +210,7 @@ def url_recurring_config(config_id):
 # EVENT BANS
 # ============================================================================
 
+
 def url_event_bans():
     """GET/POST /event_bans - List bans / Create ban"""
     return f"{API_BASE_URL}/event_bans"
@@ -202,6 +224,7 @@ def url_event_ban(ban_id):
 # ============================================================================
 # USER BLOCKS
 # ============================================================================
+
 
 def url_user_blocks():
     """GET/POST /user_blocks - List blocks / Create block"""
@@ -217,6 +240,7 @@ def url_user_block(block_id):
 # APP BANS
 # ============================================================================
 
+
 def url_app_bans():
     """GET/POST /app_bans - List app bans / Create app ban (admin only)"""
     return f"{API_BASE_URL}/app_bans"
@@ -230,6 +254,7 @@ def url_app_ban(ban_id):
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
 
 def build_query_params(**kwargs):
     """
@@ -247,12 +272,14 @@ def build_query_params(**kwargs):
 # VALIDATION
 # ============================================================================
 
+
 def validate_endpoint_exists():
     """
     Validate that the backend is running and accessible.
     Returns True if backend is up, False otherwise.
     """
     import requests
+
     try:
         response = requests.get(url_health(), timeout=2)
         return response.status_code == 200
