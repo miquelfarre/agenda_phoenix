@@ -27,7 +27,6 @@ from config import (
     url_users,
     url_user,
     url_user_events,
-    url_user_dashboard,
     url_user_subscribe,
     url_events,
     url_event,
@@ -154,7 +153,6 @@ def menu_eventos():
 
         if modo_actual == MODO_USUARIO:
             choices = [
-                "📊 Dashboard / Estadísticas",
                 "📋 Ver MIS eventos",
                 "🔍 Ver detalles de un evento",
                 "➕ Crear nuevo evento",
@@ -177,9 +175,7 @@ def menu_eventos():
             style=custom_style,
         ).ask()
 
-        if choice == "📊 Dashboard / Estadísticas":
-            ver_dashboard()
-        elif choice == "📋 Ver MIS eventos":
+        if choice == "📋 Ver MIS eventos":
             ver_mis_eventos()
         elif choice == "📋 Ver eventos de un usuario":
             listar_eventos_usuario()
@@ -363,78 +359,6 @@ def ver_mis_invitaciones():
         console.print(f"[bold green]✅ Invitación {status_text} exitosamente[/bold green]\n")
     else:
         handle_api_error(response)
-
-    pause()
-
-
-def ver_dashboard():
-    """Muestra un panel de estadísticas y resumen para el usuario actual (Modo Usuario)"""
-    clear_screen()
-    _show_header_wrapper()
-
-    console.print("[bold cyan]📊 Dashboard / Estadísticas[/bold cyan]\n")
-    console.print("[cyan]Recopilando información...[/cyan]\n")
-
-    # Llamar a la API para obtener el dashboard
-    response = api_client.get(url_user_dashboard(usuario_actual))
-    dashboard = handle_api_error(response)
-
-    if not dashboard:
-        pause()
-        return
-
-    # Construir panel de estadísticas usando los datos de la API
-    stats = f"[bold green]📈 Resumen General[/bold green]\n\n"
-    stats += f"  [yellow]Total de eventos:[/yellow] {dashboard['total_events']}\n"
-    stats += f"  [yellow]Eventos propios:[/yellow] {dashboard['owned_events']}\n"
-    stats += f"  [yellow]Eventos suscritos:[/yellow] {dashboard['subscribed_events']}\n"
-    stats += f"  [yellow]Calendarios propios:[/yellow] {dashboard['calendars_count']}\n\n"
-
-    stats += f"[bold magenta]📅 Eventos Próximos[/bold magenta]\n\n"
-    stats += f"  [yellow]Próximos 7 días:[/yellow] {dashboard['upcoming_7_days']} evento(s)\n"
-    stats += f"  [yellow]Este mes ({dashboard['this_month_name']}):[/yellow] {dashboard['this_month_count']} evento(s)\n\n"
-
-    stats += f"[bold cyan]📨 Invitaciones[/bold cyan]\n\n"
-    stats += f"  [yellow]Pendientes:[/yellow] {dashboard['pending_invitations']} invitación(es)\n\n"
-
-    if dashboard["next_event"]:
-        next_event = dashboard["next_event"]
-
-        stats += f"[bold blue]🔔 Próximo Evento[/bold blue]\n\n"
-        stats += f"  [yellow]Nombre:[/yellow] {next_event['name']}\n"
-        stats += f"  [yellow]Fecha:[/yellow] {next_event['start_date_formatted']}\n"
-
-        # Usar el texto formateado que viene del backend
-        time_text = next_event["time_until_text"]
-        if "Hoy" in time_text:
-            stats += f"  [yellow]Tiempo:[/yellow] [bold red]{time_text}[/bold red]\n"
-        else:
-            stats += f"  [yellow]Tiempo:[/yellow] {time_text}\n"
-    else:
-        stats += f"[bold blue]🔔 Próximo Evento[/bold blue]\n\n"
-        stats += f"  [dim]No hay eventos próximos programados[/dim]\n"
-
-    console.print(Panel(stats, title="[bold cyan]📊 Dashboard[/bold cyan]", border_style="cyan", padding=(1, 2)))
-    console.print()
-
-    # Mostrar tabla de próximos eventos si existen
-    if dashboard["upcoming_7_days_events"]:
-        console.print("\n[bold magenta]📆 Eventos en los Próximos 7 Días[/bold magenta]\n")
-
-        table = Table(show_header=True, header_style="bold cyan")
-        table.add_column("Fecha", style="yellow", width=18)
-        table.add_column("Nombre", style="green", width=40)
-        table.add_column("Tipo", style="blue", width=10)
-
-        for event in dashboard["upcoming_7_days_events"]:
-            table.add_row(event["start_date_formatted"], truncate_text(event["name"], 38), event["event_type"])
-
-        console.print(table)
-
-        if dashboard["upcoming_7_days"] > 10:
-            console.print(f"\n[dim]Mostrando 10 de {dashboard['upcoming_7_days']} eventos próximos[/dim]")
-
-        console.print()
 
     pause()
 

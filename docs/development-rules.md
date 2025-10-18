@@ -376,7 +376,7 @@ params = {"from_date": today.isoformat()}
 events = requests.get(f"{API_BASE_URL}/events", params=params).json()
 ```
 
-### Scenario 2: Need to count something
+### Scenario 2: Need to filter or count something
 
 **❌ Wrong approach:**
 ```python
@@ -387,9 +387,10 @@ count = len([e for e in events if e['type'] == 'birthday'])
 
 **✅ Right approach:**
 ```python
-# Backend: Add to dashboard endpoint
-stats = requests.get(f"{API_BASE_URL}/users/{user_id}/dashboard").json()
-birthday_count = stats['birthday_events_count']
+# Backend: Add filtering to endpoint
+params = {"event_type": "birthday"}
+events = requests.get(f"{API_BASE_URL}/users/{user_id}/events", params=params).json()
+birthday_count = len(events)
 ```
 
 ### Scenario 3: Need to create multiple related objects

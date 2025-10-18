@@ -147,21 +147,6 @@
     - Instances inherit the source from their parent recurring event
 - **Auth:** None
 
-### GET /users/{user_id}/dashboard
-- **Description:** Get dashboard statistics for a user
-- **Params:** user_id (int)
-- **Response:** Dashboard object with:
-  - total_events (int)
-  - owned_events (int)
-  - subscribed_events (int)
-  - calendars_count (int)
-  - upcoming_7_days (int)
-  - upcoming_7_days_events (list of events)
-  - this_month_count (int)
-  - pending_invitations (int)
-  - next_event (object or null)
-- **Auth:** None
-
 ### POST /users/{user_id}/subscribe/{target_user_id}
 - **Description:** Subscribe a user to all events of another user (bulk operation)
 - **Params:**

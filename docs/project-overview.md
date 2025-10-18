@@ -187,10 +187,9 @@ docker exec -it agenda_phoenix_db psql -U agenda_user -d agenda_phoenix
 ## Current Status
 
 ### ✅ Completed
-- Backend with 78 endpoints
+- Backend with 77 endpoints
 - Full CRUD operations for all entities
 - Event conflict detection
-- User dashboard with statistics
 - Recurring events support
 - Interactive CLI with dual modes (User/Backoffice)
 

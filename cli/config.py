@@ -61,11 +61,6 @@ def url_user_events(user_id):
     return f"{API_BASE_URL}/users/{user_id}/events"
 
 
-def url_user_dashboard(user_id):
-    """GET /users/{user_id}/dashboard - Get user dashboard"""
-    return f"{API_BASE_URL}/users/{user_id}/dashboard"
-
-
 def url_user_subscribe(user_id, target_user_id):
     """POST /users/{user_id}/subscribe/{target_user_id} - Subscribe to user's events"""
     return f"{API_BASE_URL}/users/{user_id}/subscribe/{target_user_id}"
