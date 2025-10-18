@@ -420,3 +420,35 @@ class UserBlock(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+class AppBan(Base):
+    """
+    AppBan model - Admin bans for entire application access.
+    When a user is banned here, they cannot use the application at all.
+    """
+    __tablename__ = "app_bans"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    banned_by = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    reason = Column(Text, nullable=True)
+    banned_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id], backref="app_ban")
+    banner = relationship("User", foreign_keys=[banned_by])
+
+    def __repr__(self):
+        return f"<AppBan(id={self.id}, user_id={self.user_id}, banned_by={self.banned_by})>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "banned_by": self.banned_by,
+            "reason": self.reason,
+            "banned_at": self.banned_at.isoformat() if self.banned_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }

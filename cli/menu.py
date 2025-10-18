@@ -2,6 +2,9 @@
 """
 Agenda Phoenix - Interfaz interactiva con menús
 Soporta dos modos: Usuario (simulación) y Backoffice (administración)
+
+IMPORTANTE: Este CLI es un cliente de la API, no implementa lógica de negocio.
+Ver DEVELOPMENT_RULES.md para las reglas de desarrollo.
 """
 import questionary
 from questionary import Style
@@ -10,9 +13,20 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import print as rprint
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import parser as date_parser
 from config import API_BASE_URL
+from utils import (
+    format_datetime,
+    truncate_text,
+    create_events_table,
+    create_invitations_table,
+    create_calendars_table,
+    create_conflicts_table,
+    format_count_message,
+    get_user_display_name,
+    show_pagination_info
+)
 
 console = Console()
 
@@ -49,6 +63,17 @@ def show_header():
 
     if modo_actual == MODO_USUARIO and usuario_actual_info:
         header_text += f"\n\n[yellow]👤 Modo Usuario:[/yellow] {usuario_actual_info.get('username', usuario_actual_info.get('contact_name', f'Usuario #{usuario_actual}'))}"
+
+        # Obtener contador de invitaciones pendientes
+        try:
+            response = requests.get(f"{API_BASE_URL}/interactions?user_id={usuario_actual}&interaction_type=invited&status=pending", timeout=1)
+            if response.status_code == 200:
+                pending_invitations = len(response.json())
+                if pending_invitations > 0:
+                    header_text += f"\n[magenta]📨 {pending_invitations} invitación{'es' if pending_invitations != 1 else ''} pendiente{'s' if pending_invitations != 1 else ''}[/magenta]"
+        except:
+            pass  # Si falla, simplemente no mostramos el contador
+
     elif modo_actual == MODO_BACKOFFICE:
         header_text += "\n\n[green]🔧 Modo Backoffice[/green]"
 
@@ -200,6 +225,7 @@ def menu_eventos():
 
         if modo_actual == MODO_USUARIO:
             choices = [
+                "📊 Dashboard / Estadísticas",
                 "📋 Ver MIS eventos",
                 "🔍 Ver detalles de un evento",
                 "➕ Crear nuevo evento",
@@ -222,7 +248,9 @@ def menu_eventos():
             style=custom_style
         ).ask()
 
-        if choice == "📋 Ver MIS eventos":
+        if choice == "📊 Dashboard / Estadísticas":
+            ver_dashboard()
+        elif choice == "📋 Ver MIS eventos":
             ver_mis_eventos()
         elif choice == "📋 Ver eventos de un usuario":
             listar_eventos_usuario()
@@ -241,67 +269,297 @@ def menu_eventos():
 
 
 def ver_mis_eventos():
-    """Muestra los eventos del usuario actual (Modo Usuario)"""
+    """Muestra los eventos del usuario actual (Modo Usuario) con filtros"""
     clear_screen()
     show_header()
 
-    console.print(f"[cyan]Consultando tus eventos...[/cyan]\n")
+    # Ofrecer opciones de filtrado
+    filter_choice = questionary.select(
+        "¿Cómo deseas ver tus eventos?",
+        choices=[
+            "📅 Todos los eventos",
+            "📆 Próximos 7 días",
+            "📊 Este mes",
+            "🔍 Buscar por nombre",
+            "⬅️  Cancelar"
+        ],
+        style=custom_style
+    ).ask()
 
-    response = requests.get(f"{API_BASE_URL}/users/{usuario_actual}/events")
+    if filter_choice == "⬅️  Cancelar":
+        return
+
+    console.print(f"\n[cyan]Consultando tus eventos...[/cyan]\n")
+
+    # Preparar parámetros para la API según el filtro seleccionado
+    now = datetime.now()
+    params = {}
+
+    if filter_choice == "📆 Próximos 7 días":
+        params["from_date"] = now.isoformat()
+        params["to_date"] = (now + timedelta(days=7)).isoformat()
+        title = "📆 Mis Eventos - Próximos 7 Días"
+    elif filter_choice == "📊 Este mes":
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if now.month == 12:
+            end_of_month = start_of_month.replace(year=now.year + 1, month=1, day=1) - timedelta(seconds=1)
+        else:
+            end_of_month = start_of_month.replace(month=now.month + 1, day=1) - timedelta(seconds=1)
+        params["from_date"] = start_of_month.isoformat()
+        params["to_date"] = end_of_month.isoformat()
+        title = f"📊 Mis Eventos - {now.strftime('%B %Y')}"
+    elif filter_choice == "🔍 Buscar por nombre":
+        search_term = questionary.text(
+            "Ingresa el nombre o parte del nombre del evento:",
+            validate=lambda text: len(text) > 0 or "Debe ingresar al menos un carácter"
+        ).ask()
+
+        if not search_term:
+            return
+
+        params["search"] = search_term
+        title = f"🔍 Búsqueda: '{search_term}'"
+    else:
+        title = "📅 Mis Eventos"
+
+    # Llamar a la API con los parámetros
+    response = requests.get(f"{API_BASE_URL}/users/{usuario_actual}/events", params=params)
     events = handle_api_error(response)
 
     if not events:
-        console.print("[yellow]No tienes eventos[/yellow]\n")
+        console.print(f"[yellow]No se encontraron eventos[/yellow]\n")
         pause()
         return
 
-    table = Table(title="📅 Mis Eventos", show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="cyan", justify="right", width=5)
-    table.add_column("Nombre", style="green", width=35)
-    table.add_column("Fecha Inicio", style="yellow", width=18)
-    table.add_column("Tipo", style="blue", width=10)
-    table.add_column("Propietario", style="magenta", width=12)
-
-    for event in events[:30]:
-        start = datetime.fromisoformat(event['start_date'].replace('Z', '+00:00'))
-
-        # Determinar si es propio o ajeno
-        es_propio = event['owner_id'] == usuario_actual
-        propietario = "Yo" if es_propio else f"Usuario #{event['owner_id']}"
-
-        table.add_row(
-            str(event['id']),
-            event['name'][:33] + "..." if len(event['name']) > 33 else event['name'],
-            start.strftime("%Y-%m-%d %H:%M"),
-            event['event_type'],
-            propietario
-        )
-
+    # Usar función de utilidad para crear la tabla
+    table = create_events_table(events, title=title, current_user_id=usuario_actual, max_rows=30)
     console.print(table)
 
-    if len(events) > 30:
-        console.print(f"\n[dim]Mostrando 30 de {len(events)} eventos[/dim]")
+    show_pagination_info(min(30, len(events)), len(events))
 
-    console.print(f"\n[cyan]Total: {len(events)} eventos[/cyan]")
+    console.print(f"\n[cyan]Total: {format_count_message(len(events), 'evento', 'eventos')}[/cyan]")
     console.print("[dim]Incluye tus eventos propios, invitaciones aceptadas y suscripciones[/dim]\n")
     pause()
 
 
 def ver_mis_invitaciones():
-    """Muestra las invitaciones pendientes del usuario actual"""
+    """Muestra las invitaciones pendientes del usuario actual y permite gestionarlas"""
     clear_screen()
     show_header()
 
     console.print(f"[cyan]Consultando tus invitaciones pendientes...[/cyan]\n")
 
-    # Por ahora simulamos que no hay endpoint específico, habría que agregarlo a la API
-    console.print("[yellow]Esta funcionalidad requiere un endpoint específico en la API[/yellow]")
-    console.print("[dim]Endpoint sugerido: GET /users/{user_id}/invitations/pending[/dim]\n")
+    # Obtener invitaciones pendientes del usuario
+    response = requests.get(f"{API_BASE_URL}/interactions?user_id={usuario_actual}&interaction_type=invited&status=pending")
+    invitations = handle_api_error(response)
+
+    if not invitations:
+        console.print("[yellow]No tienes invitaciones pendientes[/yellow]\n")
+        pause()
+        return
+
+    # Obtener detalles de los eventos invitados
+    events_map = {}
+    for inv in invitations:
+        event_response = requests.get(f"{API_BASE_URL}/events/{inv['event_id']}")
+        if event_response.status_code == 200:
+            events_map[inv['event_id']] = event_response.json()
+
+    # Usar función de utilidad para crear la tabla
+    table = create_invitations_table(invitations, events_map, title="📨 Invitaciones Pendientes")
+    console.print(table)
+    console.print(f"\n[cyan]Total: {format_count_message(len(invitations), 'invitación pendiente', 'invitaciones pendientes')}[/cyan]\n")
+
+    # Preguntar si desea gestionar alguna invitación
+    gestionar = questionary.confirm(
+        "¿Deseas aceptar o rechazar alguna invitación?",
+        default=False
+    ).ask()
+
+    if not gestionar:
+        return
+
+    # Seleccionar invitación a gestionar
+    inv_choices = []
+    for inv in invitations:
+        event = events_map.get(inv['event_id'])
+        if event:
+            inv_choices.append(f"ID {inv['id']} - {event['name'][:40]}")
+
+    inv_choices.append("⬅️  Cancelar")
+
+    inv_choice = questionary.select(
+        "Selecciona la invitación a gestionar:",
+        choices=inv_choices,
+        style=custom_style
+    ).ask()
+
+    if inv_choice == "⬅️  Cancelar":
+        return
+
+    inv_id = int(inv_choice.split(" - ")[0].split()[1])
+    selected_inv = next((inv for inv in invitations if inv['id'] == inv_id), None)
+
+    if not selected_inv:
+        console.print("[red]Error: invitación no encontrada[/red]")
+        pause()
+        return
+
+    # Preguntar acción
+    action = questionary.select(
+        "¿Qué deseas hacer con esta invitación?",
+        choices=[
+            "✅ Aceptar invitación",
+            "❌ Rechazar invitación",
+            "⬅️  Cancelar"
+        ],
+        style=custom_style
+    ).ask()
+
+    if action == "⬅️  Cancelar":
+        return
+
+    new_status = "accepted" if action == "✅ Aceptar invitación" else "rejected"
+
+    # Si está aceptando, verificar conflictos
+    if new_status == "accepted":
+        event = events_map.get(selected_inv['event_id'])
+        if event:
+            console.print(f"\n[cyan]Verificando conflictos de horario...[/cyan]\n")
+
+            # Llamar a la API para detectar conflictos
+            params = {
+                "user_id": usuario_actual,
+                "start_date": event['start_date'],
+                "exclude_event_id": event['id']
+            }
+            if event.get('end_date'):
+                params["end_date"] = event['end_date']
+
+            conflicts_response = requests.get(f"{API_BASE_URL}/events/check-conflicts", params=params, timeout=5)
+            conflicts = handle_api_error(conflicts_response) if conflicts_response.status_code == 200 else []
+
+            if conflicts:
+                console.print(f"[bold yellow]⚠️  ADVERTENCIA: Conflicto de horario detectado[/bold yellow]\n")
+                console.print(f"Este evento se solapa con {format_count_message(len(conflicts), 'evento existente', 'eventos existentes')}:\n")
+
+                # Usar función de utilidad para mostrar conflictos
+                conflict_table = create_conflicts_table(conflicts)
+                console.print(conflict_table)
+                console.print()
+
+                # Preguntar si desea continuar
+                continuar = questionary.confirm(
+                    "¿Deseas aceptar la invitación de todos modos?",
+                    default=False
+                ).ask()
+
+                if not continuar:
+                    console.print("[yellow]Operación cancelada[/yellow]\n")
+                    pause()
+                    return
+
+    console.print(f"\n[cyan]Actualizando invitación...[/cyan]\n")
+
+    # Actualizar el estado de la invitación
+    update_data = {
+        "status": new_status
+    }
+
+    response = requests.patch(f"{API_BASE_URL}/interactions/{inv_id}", json=update_data)
+
+    if response.status_code in [200, 204]:
+        status_text = "aceptada" if new_status == "accepted" else "rechazada"
+        console.print(f"[bold green]✅ Invitación {status_text} exitosamente[/bold green]\n")
+    else:
+        handle_api_error(response)
+
+    pause()
+
+
+def ver_dashboard():
+    """Muestra un panel de estadísticas y resumen para el usuario actual (Modo Usuario)"""
+    clear_screen()
+    show_header()
+
+    console.print("[bold cyan]📊 Dashboard / Estadísticas[/bold cyan]\n")
+    console.print("[cyan]Recopilando información...[/cyan]\n")
+
+    # Llamar a la API para obtener el dashboard
+    response = requests.get(f"{API_BASE_URL}/users/{usuario_actual}/dashboard")
+    dashboard = handle_api_error(response)
+
+    if not dashboard:
+        pause()
+        return
+
+    now = datetime.now()
+
+    # Construir panel de estadísticas usando los datos de la API
+    stats = f"[bold green]📈 Resumen General[/bold green]\n\n"
+    stats += f"  [yellow]Total de eventos:[/yellow] {dashboard['total_events']}\n"
+    stats += f"  [yellow]Eventos propios:[/yellow] {dashboard['owned_events']}\n"
+    stats += f"  [yellow]Eventos suscritos:[/yellow] {dashboard['subscribed_events']}\n"
+    stats += f"  [yellow]Calendarios propios:[/yellow] {dashboard['calendars_count']}\n\n"
+
+    stats += f"[bold magenta]📅 Eventos Próximos[/bold magenta]\n\n"
+    stats += f"  [yellow]Próximos 7 días:[/yellow] {dashboard['upcoming_7_days']} evento(s)\n"
+    stats += f"  [yellow]Este mes ({now.strftime('%B %Y')}):[/yellow] {dashboard['this_month_count']} evento(s)\n\n"
+
+    stats += f"[bold cyan]📨 Invitaciones[/bold cyan]\n\n"
+    stats += f"  [yellow]Pendientes:[/yellow] {dashboard['pending_invitations']} invitación(es)\n\n"
+
+    if dashboard['next_event']:
+        next_event = dashboard['next_event']
+        next_start = datetime.fromisoformat(next_event['start_date'].replace('Z', '+00:00'))
+        days_until = next_event['days_until']
+
+        stats += f"[bold blue]🔔 Próximo Evento[/bold blue]\n\n"
+        stats += f"  [yellow]Nombre:[/yellow] {next_event['name']}\n"
+        stats += f"  [yellow]Fecha:[/yellow] {next_start.strftime('%Y-%m-%d %H:%M')}\n"
+
+        if days_until == 0:
+            stats += f"  [yellow]Tiempo:[/yellow] [bold red]¡Hoy![/bold red]\n"
+        elif days_until == 1:
+            stats += f"  [yellow]Tiempo:[/yellow] Mañana\n"
+        else:
+            stats += f"  [yellow]Tiempo:[/yellow] En {days_until} días\n"
+    else:
+        stats += f"[bold blue]🔔 Próximo Evento[/bold blue]\n\n"
+        stats += f"  [dim]No hay eventos próximos programados[/dim]\n"
+
+    console.print(Panel(stats, title="[bold cyan]📊 Dashboard[/bold cyan]", border_style="cyan", padding=(1, 2)))
+    console.print()
+
+    # Mostrar tabla de próximos eventos si existen
+    if dashboard['upcoming_7_days_events']:
+        console.print("\n[bold magenta]📆 Eventos en los Próximos 7 Días[/bold magenta]\n")
+
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("Fecha", style="yellow", width=18)
+        table.add_column("Nombre", style="green", width=40)
+        table.add_column("Tipo", style="blue", width=10)
+
+        for event in dashboard['upcoming_7_days_events']:
+            start = datetime.fromisoformat(event['start_date'].replace('Z', '+00:00'))
+            table.add_row(
+                start.strftime("%Y-%m-%d %H:%M"),
+                event['name'][:38] + "..." if len(event['name']) > 38 else event['name'],
+                event['event_type']
+            )
+
+        console.print(table)
+
+        if dashboard['upcoming_7_days'] > 10:
+            console.print(f"\n[dim]Mostrando 10 de {dashboard['upcoming_7_days']} eventos próximos[/dim]")
+
+        console.print()
+
     pause()
 
 
 def suscribirse_a_usuario_publico():
-    """Permite suscribirse a un usuario público"""
+    """Permite suscribirse a un usuario público usando endpoint bulk"""
     clear_screen()
     show_header()
 
@@ -336,33 +594,20 @@ def suscribirse_a_usuario_publico():
 
     public_user_id = int(user_choice.split(" - ")[0])
 
-    # Obtener eventos del usuario público
-    response = requests.get(f"{API_BASE_URL}/users/{public_user_id}/events")
-    events = handle_api_error(response)
+    console.print(f"\n[cyan]Suscribiéndote a eventos del usuario...[/cyan]\n")
 
-    if not events:
-        console.print("[yellow]Este usuario no tiene eventos públicos[/yellow]\n")
-        pause()
-        return
+    # Llamar al endpoint bulk de suscripción
+    response = requests.post(f"{API_BASE_URL}/users/{usuario_actual}/subscribe/{public_user_id}")
+    result = handle_api_error(response)
 
-    console.print(f"\n[cyan]Suscribiéndote a {len(events)} eventos...[/cyan]\n")
+    if result:
+        console.print(f"[bold green]✅ {result['message']}[/bold green]")
+        if result.get('already_subscribed_count', 0) > 0:
+            console.print(f"[yellow]ℹ️  Ya estabas suscrito a {result['already_subscribed_count']} eventos[/yellow]")
+        if result.get('error_count', 0) > 0:
+            console.print(f"[red]⚠️  {result['error_count']} errores durante la suscripción[/red]")
 
-    # Crear interacciones de tipo 'subscribed'
-    subscribed_count = 0
-    for event in events:
-        data = {
-            "event_id": event['id'],
-            "user_id": usuario_actual,
-            "interaction_type": "subscribed"
-        }
-        try:
-            response = requests.post(f"{API_BASE_URL}/event-interactions", json=data)
-            if response.status_code in [200, 201]:
-                subscribed_count += 1
-        except:
-            pass
-
-    console.print(f"[bold green]✅ Suscrito exitosamente a {subscribed_count} eventos[/bold green]\n")
+    console.print()
     pause()
 
 
@@ -420,30 +665,13 @@ def listar_eventos_usuario():
         pause()
         return
 
-    table = Table(title=f"📅 Eventos del Usuario #{user_id}", show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="cyan", justify="right", width=5)
-    table.add_column("Nombre", style="green", width=30)
-    table.add_column("Fecha Inicio", style="yellow", width=18)
-    table.add_column("Tipo", style="blue", width=10)
-    table.add_column("Owner", style="magenta", justify="right", width=7)
-
-    for event in events[:20]:
-        start = datetime.fromisoformat(event['start_date'].replace('Z', '+00:00'))
-
-        table.add_row(
-            str(event['id']),
-            event['name'][:28] + "..." if len(event['name']) > 28 else event['name'],
-            start.strftime("%Y-%m-%d %H:%M"),
-            event['event_type'],
-            str(event['owner_id'])
-        )
-
+    # Usar función de utilidad para crear la tabla
+    table = create_events_table(events, title=f"📅 Eventos del Usuario #{user_id}", max_rows=20)
     console.print(table)
 
-    if len(events) > 20:
-        console.print(f"\n[dim]Mostrando 20 de {len(events)} eventos[/dim]")
+    show_pagination_info(min(20, len(events)), len(events))
 
-    console.print(f"\n[cyan]Total: {len(events)} eventos[/cyan]\n")
+    console.print(f"\n[cyan]Total: {format_count_message(len(events), 'evento', 'eventos')}[/cyan]\n")
     pause()
 
 
@@ -469,16 +697,13 @@ def ver_evento():
         pause()
         return
 
-    start = datetime.fromisoformat(event['start_date'].replace('Z', '+00:00'))
-
     info = f"[yellow]ID:[/yellow] {event['id']}\n"
     info += f"[yellow]Nombre:[/yellow] {event['name']}\n"
     info += f"[yellow]Descripción:[/yellow] {event.get('description', '-')}\n"
-    info += f"[yellow]Fecha Inicio:[/yellow] {start.strftime('%Y-%m-%d %H:%M')}\n"
+    info += f"[yellow]Fecha Inicio:[/yellow] {format_datetime(event['start_date'])}\n"
 
     if event.get('end_date'):
-        end = datetime.fromisoformat(event['end_date'].replace('Z', '+00:00'))
-        info += f"[yellow]Fecha Fin:[/yellow] {end.strftime('%Y-%m-%d %H:%M')}\n"
+        info += f"[yellow]Fecha Fin:[/yellow] {format_datetime(event['end_date'])}\n"
 
     info += f"[yellow]Tipo:[/yellow] {event['event_type']}\n"
 
@@ -575,6 +800,41 @@ def crear_evento():
     description = questionary.text(
         "Descripción (opcional):"
     ).ask()
+
+    # En modo usuario, verificar conflictos antes de crear
+    if modo_actual == MODO_USUARIO:
+        console.print(f"\n[cyan]Verificando conflictos de horario...[/cyan]\n")
+
+        # Llamar a la API para detectar conflictos
+        params = {
+            "user_id": owner_id,
+            "start_date": parsed_start.isoformat()
+        }
+        if end_date:
+            params["end_date"] = end_date
+
+        conflicts_response = requests.get(f"{API_BASE_URL}/events/check-conflicts", params=params, timeout=5)
+        conflicts = handle_api_error(conflicts_response) if conflicts_response.status_code == 200 else []
+
+        if conflicts:
+            console.print(f"[bold yellow]⚠️  ADVERTENCIA: Conflicto de horario detectado[/bold yellow]\n")
+            console.print(f"Este evento se solapa con {format_count_message(len(conflicts), 'evento existente', 'eventos existentes')}:\n")
+
+            # Usar función de utilidad para mostrar conflictos
+            conflict_table = create_conflicts_table(conflicts)
+            console.print(conflict_table)
+            console.print()
+
+            # Preguntar si desea continuar
+            continuar = questionary.confirm(
+                "¿Deseas crear el evento de todos modos?",
+                default=False
+            ).ask()
+
+            if not continuar:
+                console.print("[yellow]Operación cancelada[/yellow]\n")
+                pause()
+                return
 
     data = {
         "name": name,
@@ -675,15 +935,15 @@ def menu_calendarios():
 
 
 def ver_mis_calendarios():
-    """Muestra los calendarios del usuario actual (Modo Usuario)"""
+    """Muestra los calendarios del usuario actual (Modo Usuario) - propios y compartidos"""
     clear_screen()
     show_header()
 
     console.print(f"[cyan]Consultando tus calendarios...[/cyan]\n")
 
-    # Obtener todos los calendarios y filtrar los del usuario
-    response = requests.get(f"{API_BASE_URL}/calendars")
-    all_calendars = handle_api_error(response)
+    # Obtener todos los calendarios
+    calendars_response = requests.get(f"{API_BASE_URL}/calendars")
+    all_calendars = handle_api_error(calendars_response)
 
     if not all_calendars:
         pause()
@@ -692,31 +952,156 @@ def ver_mis_calendarios():
     # Filtrar calendarios donde el usuario es owner
     my_calendars = [cal for cal in all_calendars if cal.get('user_id') == usuario_actual]
 
-    # TODO: También debería incluir calendarios compartidos con el usuario
-    # Eso requeriría un endpoint específico o consultar memberships
+    # Obtener calendarios compartidos (memberships)
+    memberships_response = requests.get(f"{API_BASE_URL}/calendar_memberships?user_id={usuario_actual}")
+    memberships = handle_api_error(memberships_response)
 
-    if not my_calendars:
-        console.print("[yellow]No tienes calendarios propios[/yellow]\n")
+    shared_calendars = []
+    if memberships:
+        # Obtener detalles de los calendarios compartidos
+        calendars_map = {cal['id']: cal for cal in all_calendars}
+
+        for membership in memberships:
+            cal_id = membership['calendar_id']
+            if cal_id in calendars_map and calendars_map[cal_id]['user_id'] != usuario_actual:
+                # Solo incluir si no somos el owner (para evitar duplicados)
+                cal = calendars_map[cal_id]
+                cal['membership_status'] = membership['status']
+                cal['membership_role'] = membership['role']
+                cal['membership_id'] = membership['id']
+                shared_calendars.append(cal)
+
+    total_calendars = len(my_calendars) + len(shared_calendars)
+
+    if total_calendars == 0:
+        console.print("[yellow]No tienes calendarios[/yellow]\n")
         pause()
         return
 
-    table = Table(title="📆 Mis Calendarios", show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="cyan", justify="right", width=5)
-    table.add_column("Nombre", style="green", width=25)
-    table.add_column("Descripción", style="yellow", width=35)
-    table.add_column("Tipo", style="magenta", width=12)
+    # Tabla de calendarios propios
+    if my_calendars:
+        table_own = Table(title="📆 Mis Calendarios Propios", show_header=True, header_style="bold magenta")
+        table_own.add_column("ID", style="cyan", justify="right", width=5)
+        table_own.add_column("Nombre", style="green", width=25)
+        table_own.add_column("Descripción", style="yellow", width=30)
+        table_own.add_column("Tipo", style="magenta", width=12)
 
-    for cal in my_calendars:
-        tipo = "Cumpleaños" if cal.get('is_private_birthdays') else "Normal"
-        table.add_row(
-            str(cal['id']),
-            cal['name'],
-            cal.get('description', '-')[:33] + "..." if cal.get('description') and len(cal.get('description', '')) > 33 else cal.get('description', '-'),
-            tipo
-        )
+        for cal in my_calendars:
+            tipo = "Cumpleaños" if cal.get('is_private_birthdays') else "Normal"
+            table_own.add_row(
+                str(cal['id']),
+                cal['name'],
+                cal.get('description', '-')[:28] + "..." if cal.get('description') and len(cal.get('description', '')) > 28 else cal.get('description', '-'),
+                tipo
+            )
 
-    console.print(table)
-    console.print(f"\n[cyan]Total: {len(my_calendars)} calendarios propios[/cyan]\n")
+        console.print(table_own)
+        console.print(f"\n[cyan]{len(my_calendars)} calendario(s) propio(s)[/cyan]\n")
+
+    # Tabla de calendarios compartidos
+    if shared_calendars:
+        table_shared = Table(title="🤝 Calendarios Compartidos Conmigo", show_header=True, header_style="bold cyan")
+        table_shared.add_column("ID", style="cyan", justify="right", width=5)
+        table_shared.add_column("Nombre", style="green", width=20)
+        table_shared.add_column("Rol", style="blue", width=10)
+        table_shared.add_column("Estado", style="yellow", width=12)
+        table_shared.add_column("Propietario", style="magenta", justify="right", width=12)
+
+        for cal in shared_calendars:
+            status_color = "green" if cal['membership_status'] == 'accepted' else "yellow"
+            table_shared.add_row(
+                str(cal['id']),
+                cal['name'][:18] + "..." if len(cal['name']) > 18 else cal['name'],
+                cal['membership_role'],
+                f"[{status_color}]{cal['membership_status']}[/{status_color}]",
+                f"Usuario #{cal['user_id']}"
+            )
+
+        console.print(table_shared)
+        console.print(f"\n[cyan]{len(shared_calendars)} calendario(s) compartido(s)[/cyan]\n")
+
+        # Mostrar opciones para gestionar invitaciones pendientes
+        pending_memberships = [cal for cal in shared_calendars if cal['membership_status'] == 'pending']
+
+        if pending_memberships:
+            console.print(f"[magenta]Tienes {len(pending_memberships)} invitación(es) pendiente(s) a calendarios[/magenta]\n")
+
+            gestionar = questionary.confirm(
+                "¿Deseas aceptar o rechazar alguna invitación a calendario?",
+                default=False
+            ).ask()
+
+            if gestionar:
+                gestionar_invitaciones_calendarios(pending_memberships)
+                return  # Volver a mostrar después de gestionar
+
+    pause()
+
+
+def gestionar_invitaciones_calendarios(pending_calendars):
+    """Permite aceptar o rechazar invitaciones a calendarios"""
+    clear_screen()
+    show_header()
+
+    console.print("[bold cyan]📨 Gestionar Invitaciones a Calendarios[/bold cyan]\n")
+
+    # Crear opciones para seleccionar
+    cal_choices = []
+    for cal in pending_calendars:
+        cal_choices.append(f"ID {cal['id']} - {cal['name']}")
+
+    cal_choices.append("⬅️  Cancelar")
+
+    cal_choice = questionary.select(
+        "Selecciona la invitación a gestionar:",
+        choices=cal_choices,
+        style=custom_style
+    ).ask()
+
+    if cal_choice == "⬅️  Cancelar":
+        return
+
+    # Extraer ID del calendario seleccionado
+    cal_id = int(cal_choice.split(" - ")[0].split()[1])
+    selected_cal = next((cal for cal in pending_calendars if cal['id'] == cal_id), None)
+
+    if not selected_cal:
+        console.print("[red]Error: calendario no encontrado[/red]")
+        pause()
+        return
+
+    # Preguntar acción
+    action = questionary.select(
+        f"¿Qué deseas hacer con la invitación a '{selected_cal['name']}'?",
+        choices=[
+            "✅ Aceptar invitación",
+            "❌ Rechazar invitación",
+            "⬅️  Cancelar"
+        ],
+        style=custom_style
+    ).ask()
+
+    if action == "⬅️  Cancelar":
+        return
+
+    new_status = "accepted" if action == "✅ Aceptar invitación" else "rejected"
+
+    console.print(f"\n[cyan]Actualizando invitación...[/cyan]\n")
+
+    # Actualizar el estado de la membresía
+    update_data = {
+        "status": new_status,
+        "role": selected_cal['membership_role']  # Mantener el rol actual
+    }
+
+    response = requests.put(f"{API_BASE_URL}/calendar_memberships/{selected_cal['membership_id']}", json=update_data)
+
+    if response.status_code in [200, 204]:
+        status_text = "aceptada" if new_status == "accepted" else "rechazada"
+        console.print(f"[bold green]✅ Invitación {status_text} exitosamente[/bold green]\n")
+    else:
+        handle_api_error(response)
+
     pause()
 
 

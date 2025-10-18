@@ -178,8 +178,8 @@ def insert_sample_data():
             Event(
                 name="Sincro",
                 description="Evento recurrente Sincro",
-                start_date=datetime(2025, 10, 20, 17, 30),  # First Monday
-                end_date=datetime(2025, 10, 20, 18, 30),
+                start_date=datetime(2025, 11, 3, 17, 30),  # First Monday from Nov 1
+                end_date=datetime(2025, 11, 3, 18, 30),
                 event_type="recurring",
                 owner_id=users[sonia_idx].id,
                 calendar_id=calendars[family_cal_idx].id,
@@ -189,8 +189,8 @@ def insert_sample_data():
             Event(
                 name="DJ",
                 description="Evento recurrente DJ",
-                start_date=datetime(2025, 10, 17, 17, 30),  # First Friday
-                end_date=datetime(2025, 10, 17, 18, 30),
+                start_date=datetime(2025, 11, 3, 17, 30),  # First Monday from Nov 1
+                end_date=datetime(2025, 11, 3, 18, 30),
                 event_type="recurring",
                 owner_id=users[sonia_idx].id,
                 calendar_id=calendars[family_cal_idx].id,
@@ -200,8 +200,19 @@ def insert_sample_data():
             Event(
                 name="Baile KDN",
                 description="Evento recurrente Baile KDN",
-                start_date=datetime(2025, 10, 16, 17, 30),  # First Thursday
-                end_date=datetime(2025, 10, 16, 18, 30),
+                start_date=datetime(2025, 11, 3, 17, 30),  # First Monday from Nov 1
+                end_date=datetime(2025, 11, 3, 18, 30),
+                event_type="recurring",
+                owner_id=users[sonia_idx].id,
+                calendar_id=calendars[family_cal_idx].id,
+                parent_calendar_id=calendars[family_cal_idx].id,
+            ),
+            # Esquí temporada 2025-2026: Saturdays at 08:00
+            Event(
+                name="Esquí temporada 2025-2026",
+                description="Esquí semanal temporada 2025-2026",
+                start_date=datetime(2025, 12, 13, 8, 0),  # First Saturday from Dec 10
+                end_date=datetime(2025, 12, 13, 18, 0),  # 10 hours
                 event_type="recurring",
                 owner_id=users[sonia_idx].id,
                 calendar_id=calendars[family_cal_idx].id,
@@ -214,6 +225,7 @@ def insert_sample_data():
 
         # 6. Create recurring event configs
         end_date_recurring = datetime(2026, 6, 23)
+        end_date_ski = datetime(2026, 3, 30)
         recurring_configs = [
             # Sincro config: Mondays (0) and Wednesdays (2)
             RecurringEventConfig(
@@ -235,6 +247,13 @@ def insert_sample_data():
                 days_of_week=[3],
                 time_slots=[{"start": "17:30", "end": "18:30"}],
                 recurrence_end_date=end_date_recurring,
+            ),
+            # Esquí config: Saturdays (5)
+            RecurringEventConfig(
+                event_id=base_recurring_events[3].id,
+                days_of_week=[5],
+                time_slots=[{"start": "08:00", "end": "18:00"}],
+                recurrence_end_date=end_date_ski,
             ),
         ]
         db.add_all(recurring_configs)
@@ -277,6 +296,26 @@ def insert_sample_data():
 
         # Generate instances for Baile KDN (Thursdays)
         generated_events.extend(generate_instances(base_recurring_events[2], recurring_configs[2], "Baile KDN"))
+
+        # Generate instances for Esquí (Saturdays)
+        ski_instances = []
+        current_date = base_recurring_events[3].start_date
+        while current_date <= recurring_configs[3].recurrence_end_date:
+            if current_date.weekday() in recurring_configs[3].days_of_week:
+                instance = Event(
+                    name="Esquí temporada 2025-2026",
+                    description=base_recurring_events[3].description,
+                    start_date=current_date,
+                    end_date=current_date.replace(hour=18, minute=0),  # 10 hours duration
+                    event_type="regular",
+                    owner_id=base_recurring_events[3].owner_id,
+                    calendar_id=base_recurring_events[3].calendar_id,
+                    parent_calendar_id=base_recurring_events[3].parent_calendar_id,
+                    parent_recurring_event_id=recurring_configs[3].id,
+                )
+                ski_instances.append(instance)
+            current_date += timedelta(days=1)
+        generated_events.extend(ski_instances)
 
         db.add_all(generated_events)
         db.flush()
@@ -454,6 +493,26 @@ def insert_sample_data():
                 user_id=users[miquel_idx].id,
                 interaction_type="subscribed",
                 status="accepted",
+            ))
+
+        # Miquel invited to Esquí events by Sonia (base event + all instances)
+        # Invitation to base recurring event
+        interactions.append(EventInteraction(
+            event_id=base_recurring_events[3].id,  # Esquí base event
+            user_id=users[miquel_idx].id,
+            interaction_type="invited",
+            status="pending",
+            invited_by_user_id=users[sonia_idx].id,
+        ))
+
+        # Invitations to all Esquí instances
+        for ski_event in ski_instances:
+            interactions.append(EventInteraction(
+                event_id=ski_event.id,
+                user_id=users[miquel_idx].id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=users[sonia_idx].id,
             ))
 
         db.add_all(interactions)
