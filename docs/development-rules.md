@@ -382,15 +382,15 @@ events = requests.get(f"{API_BASE_URL}/events", params=params).json()
 ```python
 # CLI
 events = requests.get(f"{API_BASE_URL}/users/{user_id}/events").json()
-count = len([e for e in events if e['type'] == 'birthday'])
+count = len([e for e in events if e['type'] == 'regular'])
 ```
 
 **✅ Right approach:**
 ```python
 # Backend: Add filtering to endpoint
-params = {"event_type": "birthday"}
+params = {"event_type": "regular"}
 events = requests.get(f"{API_BASE_URL}/users/{user_id}/events", params=params).json()
-birthday_count = len(events)
+regular_count = len(events)
 ```
 
 ### Scenario 3: Need to create multiple related objects

@@ -98,7 +98,6 @@ async def get_calendar_memberships(
                 calendar_name=calendar.name,
                 calendar_color=calendar.color,
                 calendar_is_default=calendar.is_default,
-                calendar_is_private_birthdays=calendar.is_private_birthdays,
                 calendar_user_id=calendar.user_id
             ))
 

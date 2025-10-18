@@ -47,17 +47,14 @@ async def get_calendars(
     if enriched:
         enriched_calendars = []
         for cal in calendars:
-            calendar_type_display = "Cumpleaños" if cal.is_private_birthdays else "Normal"
             enriched_calendars.append(CalendarEnrichedResponse(
                 id=cal.id,
                 name=cal.name,
                 color=cal.color,
                 is_default=cal.is_default,
-                is_private_birthdays=cal.is_private_birthdays,
                 user_id=cal.user_id,
                 created_at=cal.created_at,
-                updated_at=cal.updated_at,
-                calendar_type_display=calendar_type_display
+                updated_at=cal.updated_at
             ))
         return enriched_calendars
 

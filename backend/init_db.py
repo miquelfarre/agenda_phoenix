@@ -135,9 +135,9 @@ def insert_sample_data():
         # 3. Create calendars
         calendars = [
             # Family calendar (owner: Sonia)
-            Calendar(user_id=users[sonia_idx].id, name="Family", color="#e74c3c", is_default=False, is_private_birthdays=False),
+            Calendar(user_id=users[sonia_idx].id, name="Family", color="#e74c3c", is_default=False),
             # Birthday calendar (owner: Sonia)
-            Calendar(user_id=users[sonia_idx].id, name="Cumpleaños Family", color="#f39c12", is_default=False, is_private_birthdays=False),
+            Calendar(user_id=users[sonia_idx].id, name="Cumpleaños Family", color="#f39c12", is_default=False),
         ]
         db.add_all(calendars)
         db.flush()

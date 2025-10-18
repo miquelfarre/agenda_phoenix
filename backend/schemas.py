@@ -77,13 +77,12 @@ class EventBase(BaseModel):
     description: Optional[str] = None
     start_date: datetime
     end_date: Optional[datetime] = None
-    event_type: str = 'regular'  # 'regular', 'birthday', 'recurring'
+    event_type: str = 'regular'  # 'regular' or 'recurring'
 
 
 class EventCreate(EventBase):
     owner_id: int
     calendar_id: Optional[int] = None
-    birthday_user_id: Optional[int] = None
     parent_calendar_id: Optional[int] = None
     parent_recurring_event_id: Optional[int] = None
 
@@ -92,7 +91,6 @@ class EventResponse(EventBase):
     id: int
     owner_id: int
     calendar_id: Optional[int]
-    birthday_user_id: Optional[int]
     parent_calendar_id: Optional[int]
     parent_recurring_event_id: Optional[int]
     created_at: datetime
@@ -192,7 +190,6 @@ class CalendarBase(BaseModel):
     name: str
     color: Optional[str] = "#3498db"
     is_default: bool = False
-    is_private_birthdays: bool = False
 
 
 class CalendarCreate(CalendarBase):
@@ -215,7 +212,6 @@ class CalendarEnrichedResponse(CalendarBase):
     user_id: int
     created_at: datetime
     updated_at: datetime
-    calendar_type_display: str  # "Cumpleaños" or "Normal"
 
 
 # ============================================================================
@@ -257,7 +253,6 @@ class CalendarMembershipEnrichedResponse(CalendarMembershipBase):
     calendar_name: str
     calendar_color: str
     calendar_is_default: bool
-    calendar_is_private_birthdays: bool
     calendar_user_id: int  # Calendar owner
 
 

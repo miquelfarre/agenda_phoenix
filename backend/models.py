@@ -88,7 +88,6 @@ class Calendar(Base):
     name = Column(String(255), nullable=False)
     color = Column(String(20), nullable=True, default="#3498db")
     is_default = Column(Boolean, default=False, nullable=False)
-    is_private_birthdays = Column(Boolean, default=False, nullable=False)  # Calendar privado de cumpleaños
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -107,7 +106,6 @@ class Calendar(Base):
             "name": self.name,
             "color": self.color,
             "is_default": self.is_default,
-            "is_private_birthdays": self.is_private_birthdays,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -231,10 +229,9 @@ class Event(Base):
     description = Column(Text, nullable=True)
     start_date = Column(TIMESTAMP(timezone=True), nullable=False)
     end_date = Column(TIMESTAMP(timezone=True), nullable=True)
-    event_type = Column(String(50), nullable=False, default='regular')  # 'regular', 'birthday', 'recurring'
+    event_type = Column(String(50), nullable=False, default='regular')  # 'regular' or 'recurring'
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=True, index=True)
-    birthday_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     parent_calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=True, index=True)  # Calendar que contiene este evento
     parent_recurring_event_id = Column(Integer, ForeignKey("recurring_event_configs.id"), nullable=True, index=True)  # Evento recurrente padre
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
@@ -243,7 +240,6 @@ class Event(Base):
     # Relationships
     owner = relationship("User", foreign_keys=[owner_id], back_populates="events")
     calendar = relationship("Calendar", foreign_keys=[calendar_id], back_populates="events")
-    birthday_user = relationship("User", foreign_keys=[birthday_user_id])
     parent_calendar = relationship("Calendar", foreign_keys=[parent_calendar_id])
     parent_recurring_event = relationship("RecurringEventConfig", foreign_keys=[parent_recurring_event_id])
     interactions = relationship("EventInteraction", back_populates="event", cascade="all, delete-orphan")
@@ -263,7 +259,6 @@ class Event(Base):
             "event_type": self.event_type,
             "owner_id": self.owner_id,
             "calendar_id": self.calendar_id,
-            "birthday_user_id": self.birthday_user_id,
             "parent_calendar_id": self.parent_calendar_id,
             "parent_recurring_event_id": self.parent_recurring_event_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,

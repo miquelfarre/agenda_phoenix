@@ -939,10 +939,9 @@ def listar_todos_calendarios():
     table.add_column("Nombre", style="green", width=20)
     table.add_column("Descripción", style="yellow", width=30)
     table.add_column("User ID", style="blue", justify="right", width=8)
-    table.add_column("Cumpleaños", style="magenta", width=10)
 
     for cal in calendars:
-        table.add_row(str(cal["id"]), cal["name"], cal.get("description", "-")[:28] + "..." if cal.get("description") and len(cal.get("description", "")) > 28 else cal.get("description", "-"), str(cal.get("user_id", "-")), "Sí" if cal.get("is_private_birthdays") else "No")
+        table.add_row(str(cal["id"]), cal["name"], cal.get("description", "-")[:28] + "..." if cal.get("description") and len(cal.get("description", "")) > 28 else cal.get("description", "-"), str(cal.get("user_id", "-")))
 
     console.print(table)
     console.print(f"\n[cyan]Total: {len(calendars)} calendarios[/cyan]\n")
@@ -980,7 +979,6 @@ def ver_calendario():
     else:
         info += f"[yellow]User ID:[/yellow] {calendar.get('user_id', '-')}\n"
 
-    info += f"[yellow]Calendario de Cumpleaños:[/yellow] {'Sí' if calendar.get('is_private_birthdays') else 'No'}\n"
     info += f"[yellow]Color:[/yellow] {calendar.get('color', '-')}\n"
     info += f"[yellow]Por Defecto:[/yellow] {'Sí' if calendar.get('is_default') else 'No'}"
 
@@ -1056,9 +1054,7 @@ def crear_calendario():
 
     description = questionary.text("Descripción (opcional):").ask()
 
-    is_birthdays = questionary.confirm("¿Es un calendario de cumpleaños?", default=False).ask()
-
-    data = {"name": name, "user_id": owner_id, "description": description if description else None, "is_private_birthdays": is_birthdays}
+    data = {"name": name, "user_id": owner_id, "description": description if description else None}
 
     console.print("\n[cyan]Creando calendario...[/cyan]\n")
     response = api_client.post(url_calendars(), json=data)

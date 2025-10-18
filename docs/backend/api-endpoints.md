@@ -14,7 +14,7 @@
 
 ### GET /health
 **Description:** Create a new event. Validates date conflicts server-side.
-**Body:** EventCreate (name, description, start_date, end_date, event_type, owner_id, calendar_id, birthday_user_id, parent_calendar_id, parent_recurring_event_id)
+**Body:** EventCreate (name, description, start_date, end_date, event_type, owner_id, calendar_id, parent_calendar_id, parent_recurring_event_id)
 **Query Params:**
   - force (bool, default: false) - If true, skip conflict validation and create anyway
 **Responses:**
@@ -131,9 +131,9 @@
 - **Response:** List of event objects with additional 'source' field
 - **Response Fields:**
   - id, name, description, start_date, end_date
-  - event_type (regular/recurring/birthday)
+  - event_type (regular/recurring)
   - **source** (NEW): 'owned'/'subscribed'/'invited'/'calendar' - indicates how user has access to this event
-  - owner_id, calendar_id, birthday_user_id
+  - owner_id, calendar_id
   - parent_calendar_id, parent_recurring_event_id
 - **Notes:**
   - Default shows events from today 00:00 for next 30 months
@@ -192,7 +192,7 @@
 
 ### POST /events
 - **Description:** Create a new event
-- **Body:** EventCreate (name, description, start_date, end_date, event_type, owner_id, calendar_id, birthday_user_id, parent_calendar_id, parent_recurring_event_id)
+- **Body:** EventCreate (name, description, start_date, end_date, event_type, owner_id, calendar_id, parent_calendar_id, parent_recurring_event_id)
 - **Response:** EventResponse (201)
 - **Auth:** None
 
@@ -284,7 +284,7 @@
   - event_name (str) - Name of the event
   - event_start_date (datetime) - Event start date
   - event_end_date (datetime, optional) - Event end date
-  - event_type (str) - Event type (regular, recurring, birthday)
+  - event_type (str) - Event type (regular, recurring)
 - **Notes:**
   - Special hierarchical filtering for pending invitations
   - For recurring events: hides instance invitations if parent is pending
@@ -351,7 +351,7 @@
 
 ### POST /calendars
 - **Description:** Create a new calendar
-- **Body:** CalendarCreate (name, color, is_default, is_private_birthdays, user_id)
+- **Body:** CalendarCreate (name, color, is_default, user_id)
 - **Response:** CalendarResponse (201)
 - **Auth:** None
 
@@ -408,7 +408,6 @@
   - calendar_name (str) - Name of the calendar
   - calendar_color (str) - Color of the calendar
   - calendar_is_default (bool) - Whether calendar is default
-  - calendar_is_private_birthdays (bool) - Whether calendar is for private birthdays
   - calendar_user_id (int) - Owner of the calendar
 
 ### GET /calendar_memberships/{membership_id}
