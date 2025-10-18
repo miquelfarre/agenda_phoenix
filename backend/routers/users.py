@@ -266,7 +266,9 @@ async def get_user_events(
             'calendar_id': event.calendar_id,
             'birthday_user_id': event.birthday_user_id,
             'parent_calendar_id': event.parent_calendar_id,
-            'parent_recurring_event_id': event.parent_recurring_event_id
+            'parent_recurring_event_id': event.parent_recurring_event_id,
+            'created_at': event.created_at.isoformat(),
+            'updated_at': event.updated_at.isoformat()
         }
         result.append(event_dict)
 

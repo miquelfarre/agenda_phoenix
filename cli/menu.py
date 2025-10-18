@@ -8,14 +8,24 @@ Ver DEVELOPMENT_RULES.md para las reglas de desarrollo.
 """
 import questionary
 from questionary import Style
-import requests
+import api_client
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import print as rprint
 from datetime import datetime, timedelta
 from dateutil import parser as date_parser
-from config import API_BASE_URL
+from config import (
+    API_BASE_URL,
+    url_root, url_health,
+    url_contacts, url_contact,
+    url_users, url_user, url_user_events, url_user_dashboard, url_user_subscribe,
+    url_events, url_event, url_events_check_conflicts, url_event_interactions,
+    url_interactions, url_interaction,
+    url_calendars, url_calendar, url_calendar_memberships_nested,
+    url_calendar_memberships, url_calendar_membership,
+    build_query_params
+)
 from utils import (
     format_datetime,
     truncate_text,
@@ -66,7 +76,7 @@ def show_header():
 
         # Obtener contador de invitaciones pendientes
         try:
-            response = requests.get(f"{API_BASE_URL}/interactions?user_id={usuario_actual}&interaction_type=invited&status=pending", timeout=1)
+            response = api_client.get(url_interactions() + "?user_id=" + str(usuario_actual) + "&interaction_type=invited&status=pending", timeout=1)
             if response.status_code == 200:
                 pending_invitations = len(response.json())
                 if pending_invitations > 0:
@@ -109,7 +119,7 @@ def seleccionar_modo():
 
     # Verificar conexión con la API
     try:
-        response = requests.get(f"{API_BASE_URL}/", timeout=2)
+        response = api_client.get(url_root(), timeout=2)
         if response.status_code == 200:
             console.print(f"[dim green]✓ Conectado a {API_BASE_URL}[/dim green]\n")
         else:
@@ -157,7 +167,7 @@ def seleccionar_usuario():
     console.print("[cyan]Cargando usuarios disponibles...[/cyan]\n")
 
     # Obtener usuarios
-    users_response = requests.get(f"{API_BASE_URL}/users")
+    users_response = api_client.get(url_users())
     if users_response.status_code != 200:
         console.print("[red]Error al obtener usuarios[/red]")
         pause()
@@ -166,7 +176,7 @@ def seleccionar_usuario():
     users = users_response.json()
 
     # Obtener contactos para mostrar nombres
-    contacts_response = requests.get(f"{API_BASE_URL}/contacts")
+    contacts_response = api_client.get(url_contacts())
     contacts = {}
     if contacts_response.status_code == 200:
         for contact in contacts_response.json():
@@ -323,7 +333,7 @@ def ver_mis_eventos():
         title = "📅 Mis Eventos"
 
     # Llamar a la API con los parámetros
-    response = requests.get(f"{API_BASE_URL}/users/{usuario_actual}/events", params=params)
+    response = api_client.get(url_user_events(usuario_actual), params=params)
     events = handle_api_error(response)
 
     if not events:
@@ -350,7 +360,7 @@ def ver_mis_invitaciones():
     console.print(f"[cyan]Consultando tus invitaciones pendientes...[/cyan]\n")
 
     # Obtener invitaciones pendientes del usuario
-    response = requests.get(f"{API_BASE_URL}/interactions?user_id={usuario_actual}&interaction_type=invited&status=pending")
+    response = api_client.get(url_interactions() + "?user_id=" + str(usuario_actual) + "&interaction_type=invited&status=pending")
     invitations = handle_api_error(response)
 
     if not invitations:
@@ -361,7 +371,7 @@ def ver_mis_invitaciones():
     # Obtener detalles de los eventos invitados
     events_map = {}
     for inv in invitations:
-        event_response = requests.get(f"{API_BASE_URL}/events/{inv['event_id']}")
+        event_response = api_client.get(url_event(inv['event_id']))
         if event_response.status_code == 200:
             events_map[inv['event_id']] = event_response.json()
 
@@ -436,7 +446,7 @@ def ver_mis_invitaciones():
             if event.get('end_date'):
                 params["end_date"] = event['end_date']
 
-            conflicts_response = requests.get(f"{API_BASE_URL}/events/check-conflicts", params=params, timeout=5)
+            conflicts_response = api_client.get(url_events_check_conflicts(), params=params, timeout=5)
             conflicts = handle_api_error(conflicts_response) if conflicts_response.status_code == 200 else []
 
             if conflicts:
@@ -466,7 +476,7 @@ def ver_mis_invitaciones():
         "status": new_status
     }
 
-    response = requests.patch(f"{API_BASE_URL}/interactions/{inv_id}", json=update_data)
+    response = api_client.patch(url_interaction(inv_id), json=update_data)
 
     if response.status_code in [200, 204]:
         status_text = "aceptada" if new_status == "accepted" else "rechazada"
@@ -486,7 +496,7 @@ def ver_dashboard():
     console.print("[cyan]Recopilando información...[/cyan]\n")
 
     # Llamar a la API para obtener el dashboard
-    response = requests.get(f"{API_BASE_URL}/users/{usuario_actual}/dashboard")
+    response = api_client.get(url_user_dashboard(usuario_actual))
     dashboard = handle_api_error(response)
 
     if not dashboard:
@@ -566,7 +576,7 @@ def suscribirse_a_usuario_publico():
     console.print("[bold cyan]🔔 Suscripción a Usuario Público[/bold cyan]\n")
 
     # Obtener usuarios públicos (Instagram, etc)
-    response = requests.get(f"{API_BASE_URL}/users")
+    response = api_client.get(url_users())
     if response.status_code != 200:
         console.print("[red]Error al obtener usuarios[/red]")
         pause()
@@ -597,7 +607,7 @@ def suscribirse_a_usuario_publico():
     console.print(f"\n[cyan]Suscribiéndote a eventos del usuario...[/cyan]\n")
 
     # Llamar al endpoint bulk de suscripción
-    response = requests.post(f"{API_BASE_URL}/users/{usuario_actual}/subscribe/{public_user_id}")
+    response = api_client.post(url_user_subscribe(usuario_actual, public_user_id))
     result = handle_api_error(response)
 
     if result:
@@ -617,14 +627,14 @@ def listar_eventos_usuario():
     show_header()
 
     # Mostrar usuarios para seleccionar
-    users_response = requests.get(f"{API_BASE_URL}/users")
+    users_response = api_client.get(url_users())
     if users_response.status_code != 200:
         console.print("[red]Error al obtener usuarios[/red]")
         pause()
         return
 
     users = users_response.json()
-    contacts_response = requests.get(f"{API_BASE_URL}/contacts")
+    contacts_response = api_client.get(url_contacts())
     contacts = {}
     if contacts_response.status_code == 200:
         for contact in contacts_response.json():
@@ -657,7 +667,7 @@ def listar_eventos_usuario():
 
     console.print(f"\n[cyan]Consultando eventos del usuario #{user_id}...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/users/{user_id}/events")
+    response = api_client.get(url_user_events(user_id))
     events = handle_api_error(response)
 
     if not events:
@@ -690,7 +700,7 @@ def ver_evento():
 
     console.print(f"\n[cyan]Consultando evento #{event_id}...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/events/{event_id}")
+    response = api_client.get(url_event(event_id))
     event = handle_api_error(response)
 
     if not event:
@@ -747,7 +757,7 @@ def crear_evento():
         console.print(f"[dim]El evento será creado como tuyo (Usuario #{owner_id})[/dim]\n")
     else:
         # En modo backoffice, seleccionar owner
-        users_response = requests.get(f"{API_BASE_URL}/users")
+        users_response = api_client.get(url_users())
         if users_response.status_code != 200:
             console.print("[red]Error al obtener usuarios[/red]")
             pause()
@@ -813,7 +823,7 @@ def crear_evento():
         if end_date:
             params["end_date"] = end_date
 
-        conflicts_response = requests.get(f"{API_BASE_URL}/events/check-conflicts", params=params, timeout=5)
+        conflicts_response = api_client.get(url_events_check_conflicts(), params=params, timeout=5)
         conflicts = handle_api_error(conflicts_response) if conflicts_response.status_code == 200 else []
 
         if conflicts:
@@ -846,7 +856,7 @@ def crear_evento():
     }
 
     console.print("\n[cyan]Creando evento...[/cyan]\n")
-    response = requests.post(f"{API_BASE_URL}/events", json=data)
+    response = api_client.post(url_events(), json=data)
     event = handle_api_error(response)
 
     if event:
@@ -880,7 +890,7 @@ def eliminar_evento():
 
     console.print(f"\n[cyan]Eliminando evento #{event_id}...[/cyan]\n")
 
-    response = requests.delete(f"{API_BASE_URL}/events/{event_id}")
+    response = api_client.delete(url_event(event_id))
 
     if response.status_code in [200, 204]:
         console.print(f"[bold green]✅ Evento #{event_id} eliminado exitosamente[/bold green]\n")
@@ -942,7 +952,7 @@ def ver_mis_calendarios():
     console.print(f"[cyan]Consultando tus calendarios...[/cyan]\n")
 
     # Obtener todos los calendarios
-    calendars_response = requests.get(f"{API_BASE_URL}/calendars")
+    calendars_response = api_client.get(url_calendars())
     all_calendars = handle_api_error(calendars_response)
 
     if not all_calendars:
@@ -953,7 +963,7 @@ def ver_mis_calendarios():
     my_calendars = [cal for cal in all_calendars if cal.get('user_id') == usuario_actual]
 
     # Obtener calendarios compartidos (memberships)
-    memberships_response = requests.get(f"{API_BASE_URL}/calendar_memberships?user_id={usuario_actual}")
+    memberships_response = api_client.get(url_calendar_memberships() + "?user_id=" + str(usuario_actual))
     memberships = handle_api_error(memberships_response)
 
     shared_calendars = []
@@ -1094,7 +1104,7 @@ def gestionar_invitaciones_calendarios(pending_calendars):
         "role": selected_cal['membership_role']  # Mantener el rol actual
     }
 
-    response = requests.put(f"{API_BASE_URL}/calendar_memberships/{selected_cal['membership_id']}", json=update_data)
+    response = api_client.put(url_calendar_membership(selected_cal['membership_id']), json=update_data)
 
     if response.status_code in [200, 204]:
         status_text = "aceptada" if new_status == "accepted" else "rechazada"
@@ -1112,7 +1122,7 @@ def listar_todos_calendarios():
 
     console.print("[cyan]Consultando calendarios...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/calendars")
+    response = api_client.get(url_calendars())
     calendars = handle_api_error(response)
 
     if not calendars:
@@ -1155,7 +1165,7 @@ def ver_calendario():
 
     console.print(f"\n[cyan]Consultando calendario #{calendar_id}...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/calendars/{calendar_id}")
+    response = api_client.get(url_calendar(calendar_id))
     calendar = handle_api_error(response)
 
     if not calendar:
@@ -1198,7 +1208,7 @@ def ver_miembros_calendario():
 
     console.print(f"\n[cyan]Consultando miembros del calendario #{calendar_id}...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/calendars/{calendar_id}/memberships")
+    response = api_client.get(url_calendar_memberships_nested(calendar_id))
     memberships = handle_api_error(response)
 
     if not memberships:
@@ -1246,7 +1256,7 @@ def crear_calendario():
         console.print(f"[dim]El calendario será creado como tuyo (Usuario #{owner_id})[/dim]\n")
     else:
         # En modo backoffice, seleccionar owner
-        users_response = requests.get(f"{API_BASE_URL}/users")
+        users_response = api_client.get(url_users())
         if users_response.status_code != 200:
             console.print("[red]Error al obtener usuarios[/red]")
             pause()
@@ -1279,7 +1289,7 @@ def crear_calendario():
     }
 
     console.print("\n[cyan]Creando calendario...[/cyan]\n")
-    response = requests.post(f"{API_BASE_URL}/calendars", json=data)
+    response = api_client.post(url_calendars(), json=data)
     calendar = handle_api_error(response)
 
     if calendar:
@@ -1324,7 +1334,7 @@ def listar_usuarios_backoffice():
 
     console.print("[cyan]Consultando usuarios...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/users")
+    response = api_client.get(url_users())
     users = handle_api_error(response)
 
     if not users:
@@ -1332,7 +1342,7 @@ def listar_usuarios_backoffice():
         return
 
     # Obtener contactos
-    contacts_response = requests.get(f"{API_BASE_URL}/contacts")
+    contacts_response = api_client.get(url_contacts())
     contacts = {}
     if contacts_response.status_code == 200:
         for contact in contacts_response.json():
@@ -1380,7 +1390,7 @@ def ver_usuario_backoffice():
 
     console.print(f"\n[cyan]Consultando usuario #{user_id}...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/users/{user_id}")
+    response = api_client.get(url_user(user_id))
     user = handle_api_error(response)
 
     if not user:
@@ -1393,7 +1403,7 @@ def ver_usuario_backoffice():
     info += f"[yellow]Auth ID:[/yellow] {user.get('auth_id', '-')}\n"
 
     if user.get('contact_id'):
-        contact_response = requests.get(f"{API_BASE_URL}/contacts/{user['contact_id']}")
+        contact_response = api_client.get(url_contact(user['contact_id']))
         if contact_response.status_code == 200:
             contact = contact_response.json()
             info += f"[yellow]Nombre (Contacto):[/yellow] {contact.get('name', '-')}\n"
@@ -1453,7 +1463,7 @@ def listar_contactos_backoffice():
 
     console.print("[cyan]Consultando contactos...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/contacts")
+    response = api_client.get(url_contacts())
     contacts = handle_api_error(response)
 
     if not contacts:
@@ -1492,7 +1502,7 @@ def ver_contacto_backoffice():
 
     console.print(f"\n[cyan]Consultando contacto #{contact_id}...[/cyan]\n")
 
-    response = requests.get(f"{API_BASE_URL}/contacts/{contact_id}")
+    response = api_client.get(url_contact(contact_id))
     contact = handle_api_error(response)
 
     if not contact:
@@ -1538,7 +1548,7 @@ def crear_contacto_backoffice():
     }
 
     console.print("\n[cyan]Creando contacto...[/cyan]\n")
-    response = requests.post(f"{API_BASE_URL}/contacts", json=data)
+    response = api_client.post(url_contacts(), json=data)
     contact = handle_api_error(response)
 
     if contact:

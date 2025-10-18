@@ -85,6 +85,7 @@ class EventResponse(EventBase):
     parent_recurring_event_id: Optional[int]
     created_at: datetime
     updated_at: datetime
+    source: Optional[str] = None  # For /users/{user_id}/events endpoint
 
     class Config:
         from_attributes = True
