@@ -128,10 +128,16 @@ def insert_sample_data():
         # 3. Create calendars
         cal_family = Calendar(owner_id=sonia.id, name="Family")
         cal_birthdays = Calendar(owner_id=sonia.id, name="Cumpleaños Family")
+        cal_esqui_temporal = Calendar(
+            owner_id=sonia.id,
+            name="Temporada Esquí 2025-2026",
+            start_date=datetime(2025, 12, 1),
+            end_date=datetime(2026, 3, 31)
+        )
 
-        db.add_all([cal_family, cal_birthdays])
+        db.add_all([cal_family, cal_birthdays, cal_esqui_temporal])
         db.flush()
-        logger.info(f"  ✓ Inserted 2 calendars")
+        logger.info(f"  ✓ Inserted 3 calendars (2 permanent, 1 temporal)")
 
         # 4. Create calendar memberships
         membership_sonia_family = CalendarMembership(
@@ -197,7 +203,7 @@ def insert_sample_data():
             start_date=datetime(2025, 12, 13, 8, 0),
             event_type="recurring",
             owner_id=sonia.id,
-            calendar_id=cal_family.id,
+            calendar_id=cal_esqui_temporal.id,  # Usar calendario temporal
         )
 
         db.add_all([recurring_sincro, recurring_dj, recurring_baile, recurring_esqui])
@@ -207,6 +213,7 @@ def insert_sample_data():
         # 6. Create recurring event configs
         config_sincro = RecurringEventConfig(
             event_id=recurring_sincro.id,
+            recurrence_type='weekly',
             schedule=[
                 {"day": 0, "day_name": "Lunes", "time": "17:30"},
                 {"day": 2, "day_name": "Miércoles", "time": "17:30"},
@@ -215,6 +222,7 @@ def insert_sample_data():
         )
         config_dj = RecurringEventConfig(
             event_id=recurring_dj.id,
+            recurrence_type='weekly',
             schedule=[
                 {"day": 4, "day_name": "Viernes", "time": "17:30"},
             ],
@@ -222,6 +230,7 @@ def insert_sample_data():
         )
         config_baile = RecurringEventConfig(
             event_id=recurring_baile.id,
+            recurrence_type='weekly',
             schedule=[
                 {"day": 3, "day_name": "Jueves", "time": "17:30"},
             ],
@@ -229,6 +238,7 @@ def insert_sample_data():
         )
         config_esqui = RecurringEventConfig(
             event_id=recurring_esqui.id,
+            recurrence_type='weekly',
             schedule=[
                 {"day": 5, "day_name": "Sábado", "time": "08:00"},
             ],
@@ -289,42 +299,154 @@ def insert_sample_data():
         logger.info(f"  ✓ Generated {len(all_instances)} recurring event instances")
 
         # 8. Create birthday events in "Cumpleaños Family" calendar
+        # Estos son eventos recurrentes anuales perpetuos (sin fecha fin)
         bday_miquel = Event(
             name="Cumpleaños de Miquel",
-            description="Cumpleaños de Miquel",
+            description="Cumpleaños de Miquel (30 de abril)",
             start_date=datetime(2026, 4, 30, 0, 0),
-            event_type="regular",
+            event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_birthdays.id,
         )
         bday_ada = Event(
             name="Cumpleaños de Ada",
-            description="Cumpleaños de Ada",
+            description="Cumpleaños de Ada (6 de septiembre)",
             start_date=datetime(2026, 9, 6, 0, 0),
-            event_type="regular",
+            event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_birthdays.id,
         )
         bday_sonia = Event(
             name="Cumpleaños de Sonia",
-            description="Cumpleaños de Sonia",
+            description="Cumpleaños de Sonia (31 de enero)",
             start_date=datetime(2026, 1, 31, 0, 0),
-            event_type="regular",
+            event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_birthdays.id,
         )
         bday_sara = Event(
             name="Cumpleaños de Sara",
-            description="Cumpleaños de Sara",
+            description="Cumpleaños de Sara (2 de diciembre)",
             start_date=datetime(2026, 12, 2, 0, 0),
-            event_type="regular",
+            event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_birthdays.id,
         )
 
         db.add_all([bday_miquel, bday_ada, bday_sonia, bday_sara])
         db.flush()
-        logger.info(f"  ✓ Inserted 4 birthday events")
+        logger.info(f"  ✓ Inserted 4 birthday recurring events (yearly, perpetual)")
+
+        # Create recurring configs for birthdays (yearly, perpetual = no end date)
+        config_bday_miquel = RecurringEventConfig(
+            event_id=bday_miquel.id,
+            recurrence_type='yearly',
+            schedule=[{"month": 4, "day_of_month": 30}],
+            recurrence_end_date=None,  # Perpetuo
+        )
+        config_bday_ada = RecurringEventConfig(
+            event_id=bday_ada.id,
+            recurrence_type='yearly',
+            schedule=[{"month": 9, "day_of_month": 6}],
+            recurrence_end_date=None,  # Perpetuo
+        )
+        config_bday_sonia = RecurringEventConfig(
+            event_id=bday_sonia.id,
+            recurrence_type='yearly',
+            schedule=[{"month": 1, "day_of_month": 31}],
+            recurrence_end_date=None,  # Perpetuo
+        )
+        config_bday_sara = RecurringEventConfig(
+            event_id=bday_sara.id,
+            recurrence_type='yearly',
+            schedule=[{"month": 12, "day_of_month": 2}],
+            recurrence_end_date=None,  # Perpetuo
+        )
+
+        db.add_all([config_bday_miquel, config_bday_ada, config_bday_sonia, config_bday_sara])
+        db.flush()
+        logger.info(f"  ✓ Inserted 4 birthday recurring configs (yearly, perpetual)")
+
+        # 8.5. Crear más eventos recurrentes para demostrar TODOS los tipos
+        # DAILY: Medicación diaria
+        recurring_medicacion = Event(
+            name="Tomar medicación",
+            description="Recordatorio diario de medicación",
+            start_date=datetime(2025, 11, 1, 9, 0),
+            event_type="recurring",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+
+        # MONTHLY: Pago de alquiler (día 1 de cada mes)
+        recurring_alquiler = Event(
+            name="Pago de alquiler",
+            description="Pago mensual del alquiler",
+            start_date=datetime(2025, 11, 1, 10, 0),
+            event_type="recurring",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+
+        # MONTHLY: Reunión de equipo (días 5 y 20 de cada mes)
+        recurring_reunion = Event(
+            name="Reunión de equipo",
+            description="Reuniones quincenales del equipo",
+            start_date=datetime(2025, 11, 5, 15, 0),
+            event_type="recurring",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+
+        # YEARLY: Navidad (perpetuo)
+        recurring_navidad = Event(
+            name="Navidad",
+            description="Celebración de Navidad",
+            start_date=datetime(2025, 12, 25, 0, 0),
+            event_type="recurring",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+
+        db.add_all([recurring_medicacion, recurring_alquiler, recurring_reunion, recurring_navidad])
+        db.flush()
+        logger.info(f"  ✓ Inserted 4 additional recurring events (daily, monthly, yearly)")
+
+        # Configs para los nuevos eventos recurrentes
+        config_medicacion = RecurringEventConfig(
+            event_id=recurring_medicacion.id,
+            recurrence_type='daily',
+            schedule=[{"interval_days": 1}],  # Cada día
+            recurrence_end_date=datetime(2026, 12, 31),  # Termina fin de 2026
+        )
+
+        config_alquiler = RecurringEventConfig(
+            event_id=recurring_alquiler.id,
+            recurrence_type='monthly',
+            schedule=[{"day_of_month": 1}],  # Día 1 de cada mes
+            recurrence_end_date=None,  # Perpetuo
+        )
+
+        config_reunion = RecurringEventConfig(
+            event_id=recurring_reunion.id,
+            recurrence_type='monthly',
+            schedule=[
+                {"day_of_month": 5},   # Día 5 de cada mes
+                {"day_of_month": 20}   # Día 20 de cada mes
+            ],
+            recurrence_end_date=datetime(2026, 12, 31),
+        )
+
+        config_navidad = RecurringEventConfig(
+            event_id=recurring_navidad.id,
+            recurrence_type='yearly',
+            schedule=[{"month": 12, "day_of_month": 25}],  # 25 de diciembre cada año
+            recurrence_end_date=None,  # Perpetuo
+        )
+
+        db.add_all([config_medicacion, config_alquiler, config_reunion, config_navidad])
+        db.flush()
+        logger.info(f"  ✓ Inserted 4 additional recurring configs (daily, monthly, yearly)")
 
         # 9. Create regular events
         event_katy_perry = Event(
@@ -398,6 +520,7 @@ def insert_sample_data():
         # Create recurring config for Promociona Madrid
         config_promociona = RecurringEventConfig(
             event_id=recurring_promociona_madrid.id,
+            recurrence_type='weekly',
             schedule=[
                 {"day": 0, "day_name": "Lunes", "time": "09:00"},
                 {"day": 1, "day_name": "Martes", "time": "09:00"},
@@ -435,8 +558,15 @@ def insert_sample_data():
                 interaction_type="joined", status="accepted", role="owner",
             ))
 
-        # Sonia owns all birthday events
+        # Sonia owns all birthday events (recurring yearly perpetual)
         for event in [bday_miquel, bday_ada, bday_sonia, bday_sara]:
+            interactions.append(EventInteraction(
+                event_id=event.id, user_id=sonia.id,
+                interaction_type="joined", status="accepted", role="owner",
+            ))
+
+        # Sonia owns all additional recurring events (daily, monthly, yearly)
+        for event in [recurring_medicacion, recurring_alquiler, recurring_reunion, recurring_navidad]:
             interactions.append(EventInteraction(
                 event_id=event.id, user_id=sonia.id,
                 interaction_type="joined", status="accepted", role="owner",

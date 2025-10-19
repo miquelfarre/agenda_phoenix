@@ -186,6 +186,8 @@ class EventInteractionWithEventResponse(EventInteractionBase):
 
 class CalendarBase(BaseModel):
     name: str
+    start_date: Optional[datetime] = None  # Optional: for temporal calendars
+    end_date: Optional[datetime] = None    # Optional: for temporal calendars
 
 
 class CalendarCreate(CalendarBase):
@@ -302,8 +304,9 @@ class GroupMembershipResponse(GroupMembershipBase):
 # ============================================================================
 
 class RecurringEventConfigBase(BaseModel):
-    schedule: Optional[List[Dict[str, str]]] = None  # [{"day": 1, "day_name": "Martes", "time": "18:00"}]
-    recurrence_end_date: Optional[datetime] = None
+    recurrence_type: str = 'weekly'  # 'daily', 'weekly', 'monthly', 'yearly'
+    schedule: Optional[List[Dict[str, str]]] = None  # Type-specific configuration
+    recurrence_end_date: Optional[datetime] = None  # NULL = perpetual/infinite
 
 
 class RecurringEventConfigCreate(RecurringEventConfigBase):

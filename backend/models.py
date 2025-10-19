@@ -80,12 +80,18 @@ class User(Base):
 class Calendar(Base):
     """
     Calendar model - Users can have multiple calendars to organize events.
+
+    Calendars can be:
+    - Permanent (no start_date/end_date): e.g., "Personal", "Work"
+    - Temporal (with start_date/end_date): e.g., "Summer Course 2025", "Project Q1 2025"
     """
     __tablename__ = "calendars"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)  # Owner principal del calendar
     name = Column(String(255), nullable=False)
+    start_date = Column(TIMESTAMP(timezone=True), nullable=True)  # Optional: for temporal calendars
+    end_date = Column(TIMESTAMP(timezone=True), nullable=True)    # Optional: for temporal calendars
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -102,6 +108,8 @@ class Calendar(Base):
             "id": self.id,
             "owner_id": self.owner_id,
             "name": self.name,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
+            "end_date": self.end_date.isoformat() if self.end_date else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -308,13 +316,24 @@ class EventInteraction(Base):
 class RecurringEventConfig(Base):
     """
     RecurringEventConfig model - Configuration for recurring events.
+
+    Supports multiple recurrence types:
+    - 'daily': Repeats every day or every X days
+    - 'weekly': Repeats on specific days of the week (e.g., Mon, Wed, Fri)
+    - 'monthly': Repeats on specific days of the month (e.g., 1st, 15th, last day)
+    - 'yearly': Repeats on a specific date each year (e.g., birthdays, holidays)
+
+    Perpetual events:
+    - If recurrence_end_date is NULL, the event repeats indefinitely
+    - Common for birthdays, annual holidays, etc.
     """
     __tablename__ = "recurring_event_configs"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False, unique=True, index=True)
-    schedule = Column(JSON, nullable=True)  # [{"day": 1, "day_name": "Martes", "time": "18:00"}, ...]
-    recurrence_end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # End date for the recurrence (replaces parent event end_date)
+    recurrence_type = Column(String(20), nullable=False, default='weekly')  # 'daily', 'weekly', 'monthly', 'yearly'
+    schedule = Column(JSON, nullable=True)  # Type-specific configuration (format varies by recurrence_type)
+    recurrence_end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # NULL = perpetual/infinite recurrence
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -322,12 +341,13 @@ class RecurringEventConfig(Base):
     event = relationship("Event", foreign_keys=[event_id], back_populates="recurring_config")
 
     def __repr__(self):
-        return f"<RecurringEventConfig(id={self.id}, event_id={self.event_id})>"
+        return f"<RecurringEventConfig(id={self.id}, event_id={self.event_id}, type={self.recurrence_type})>"
 
     def to_dict(self):
         return {
             "id": self.id,
             "event_id": self.event_id,
+            "recurrence_type": self.recurrence_type,
             "schedule": self.schedule,
             "recurrence_end_date": self.recurrence_end_date.isoformat() if self.recurrence_end_date else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
