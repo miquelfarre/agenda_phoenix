@@ -65,430 +65,332 @@ def insert_sample_data():
         now = datetime.now()
 
         # 1. Create contacts
-        contacts = [
-            Contact(name="Sonia", phone="+34606014680"),
-            Contact(name="Miquel", phone="+34626034421"),
-            Contact(name="Ada", phone="+34623949193"),
-            Contact(name="Sara", phone="+34611223344"),
-            Contact(name="TDB", phone="+34600000001"),
-            Contact(name="PolR", phone="+34600000002"),
-        ]
-        db.add_all(contacts)
+        contact_sonia = Contact(name="Sonia", phone="+34606014680")
+        contact_miquel = Contact(name="Miquel", phone="+34626034421")
+        contact_ada = Contact(name="Ada", phone="+34623949193")
+        contact_sara = Contact(name="Sara", phone="+34611223344")
+        contact_tdb = Contact(name="TDB", phone="+34600000001")
+        contact_polr = Contact(name="PolR", phone="+34600000002")
+
+        db.add_all([contact_sonia, contact_miquel, contact_ada, contact_sara, contact_tdb, contact_polr])
         db.flush()
-        logger.info(f"  ✓ Inserted {len(contacts)} contacts")
+        logger.info(f"  ✓ Inserted 6 contacts")
 
         # 2. Create users
-        users = [
-            # Private users (phone auth)
-            User(
-                contact_id=contacts[0].id,  # Sonia
-                auth_provider="phone",
-                auth_id=contacts[0].phone,
-                last_login=now,
-            ),
-            User(
-                contact_id=contacts[1].id,  # Miquel
-                auth_provider="phone",
-                auth_id=contacts[1].phone,
-                last_login=now,
-            ),
-            User(
-                contact_id=contacts[2].id,  # Ada
-                auth_provider="phone",
-                auth_id=contacts[2].phone,
-                last_login=now,
-            ),
-            User(
-                contact_id=contacts[3].id,  # Sara
-                auth_provider="phone",
-                auth_id=contacts[3].phone,
-                last_login=now,
-            ),
-            User(
-                contact_id=contacts[4].id,  # TDB (baneado)
-                auth_provider="phone",
-                auth_id=contacts[4].phone,
-                last_login=now,
-            ),
-            User(
-                contact_id=contacts[5].id,  # PolR (bloqueado por todos)
-                auth_provider="phone",
-                auth_id=contacts[5].phone,
-                last_login=now,
-            ),
-            # Public user (instagram auth)
-            User(
-                username="fcbarcelona",
-                auth_provider="instagram",
-                auth_id="ig_fcbarcelona",
-                profile_picture_url="https://example.com/fcb-logo.png",
-                last_login=now,
-            ),
-        ]
-        db.add_all(users)
-        db.flush()
-        logger.info(f"  ✓ Inserted {len(users)} users")
+        sonia = User(
+            contact_id=contact_sonia.id,
+            auth_provider="phone",
+            auth_id=contact_sonia.phone,
+            last_login=now,
+        )
+        miquel = User(
+            contact_id=contact_miquel.id,
+            auth_provider="phone",
+            auth_id=contact_miquel.phone,
+            last_login=now,
+        )
+        ada = User(
+            contact_id=contact_ada.id,
+            auth_provider="phone",
+            auth_id=contact_ada.phone,
+            last_login=now,
+        )
+        sara = User(
+            contact_id=contact_sara.id,
+            auth_provider="phone",
+            auth_id=contact_sara.phone,
+            last_login=now,
+        )
+        tdb = User(
+            contact_id=contact_tdb.id,
+            auth_provider="phone",
+            auth_id=contact_tdb.phone,
+            last_login=now,
+        )
+        polr = User(
+            contact_id=contact_polr.id,
+            auth_provider="phone",
+            auth_id=contact_polr.phone,
+            last_login=now,
+        )
+        fcbarcelona = User(
+            username="fcbarcelona",
+            auth_provider="instagram",
+            auth_id="ig_fcbarcelona",
+            profile_picture_url="https://example.com/fcb-logo.png",
+            last_login=now,
+        )
 
-        # Indices for easy reference
-        sonia_idx, miquel_idx, ada_idx, sara_idx, tdb_idx, polr_idx, fcb_idx = 0, 1, 2, 3, 4, 5, 6
+        db.add_all([sonia, miquel, ada, sara, tdb, polr, fcbarcelona])
+        db.flush()
+        logger.info(f"  ✓ Inserted 7 users")
 
         # 3. Create calendars
-        calendars = [
-            # Family calendar (owner: Sonia)
-            Calendar(user_id=users[sonia_idx].id, name="Family", color="#e74c3c", is_default=False),
-            # Birthday calendar (owner: Sonia)
-            Calendar(user_id=users[sonia_idx].id, name="Cumpleaños Family", color="#f39c12", is_default=False),
-        ]
-        db.add_all(calendars)
-        db.flush()
-        logger.info(f"  ✓ Inserted {len(calendars)} calendars")
+        cal_family = Calendar(owner_id=sonia.id, name="Family")
+        cal_birthdays = Calendar(owner_id=sonia.id, name="Cumpleaños Family")
 
-        # Calendar indices
-        family_cal_idx = 0
-        birthday_cal_idx = 1
+        db.add_all([cal_family, cal_birthdays])
+        db.flush()
+        logger.info(f"  ✓ Inserted 2 calendars")
 
         # 4. Create calendar memberships
-        calendar_memberships = [
-            # Sonia is owner of Family calendar
-            CalendarMembership(
-                calendar_id=calendars[family_cal_idx].id,
-                user_id=users[sonia_idx].id,
-                role='owner',
-                status='accepted',
-            ),
-            # Sonia is owner of Birthday calendar
-            CalendarMembership(
-                calendar_id=calendars[birthday_cal_idx].id,
-                user_id=users[sonia_idx].id,
-                role='owner',
-                status='accepted',
-            ),
-            # Miquel is admin of Birthday calendar
-            CalendarMembership(
-                calendar_id=calendars[birthday_cal_idx].id,
-                user_id=users[miquel_idx].id,
-                role='admin',
-                status='accepted',
-                invited_by_user_id=users[sonia_idx].id,
-            ),
-            # Miquel is admin of Family calendar
-            CalendarMembership(
-                calendar_id=calendars[family_cal_idx].id,
-                user_id=users[miquel_idx].id,
-                role='admin',
-                status='accepted',
-                invited_by_user_id=users[sonia_idx].id,
-            ),
-        ]
-        db.add_all(calendar_memberships)
+        membership_sonia_family = CalendarMembership(
+            calendar_id=cal_family.id,
+            user_id=sonia.id,
+            role='owner',
+            status='accepted',
+        )
+        membership_sonia_birthdays = CalendarMembership(
+            calendar_id=cal_birthdays.id,
+            user_id=sonia.id,
+            role='owner',
+            status='accepted',
+        )
+        membership_miquel_birthdays = CalendarMembership(
+            calendar_id=cal_birthdays.id,
+            user_id=miquel.id,
+            role='admin',
+            status='accepted',
+            invited_by_user_id=sonia.id,
+        )
+        membership_miquel_family = CalendarMembership(
+            calendar_id=cal_family.id,
+            user_id=miquel.id,
+            role='admin',
+            status='accepted',
+            invited_by_user_id=sonia.id,
+        )
+
+        db.add_all([membership_sonia_family, membership_sonia_birthdays, membership_miquel_birthdays, membership_miquel_family])
         db.flush()
-        logger.info(f"  ✓ Inserted {len(calendar_memberships)} calendar memberships")
+        logger.info(f"  ✓ Inserted 4 calendar memberships")
 
         # 5. Create recurring event configs (base events)
         # These are the "template" events for recurring series
-        base_recurring_events = [
-            # Sincro: Mondays and Wednesdays at 17:30
-            Event(
-                name="Sincro",
-                description="Evento recurrente Sincro",
-                start_date=datetime(2025, 11, 3, 17, 30),  # First Monday from Nov 1
-                end_date=datetime(2025, 11, 3, 18, 30),
-                event_type="recurring",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[family_cal_idx].id,
-                parent_calendar_id=calendars[family_cal_idx].id,
-            ),
-            # DJ: Fridays at 17:30
-            Event(
-                name="DJ",
-                description="Evento recurrente DJ",
-                start_date=datetime(2025, 11, 3, 17, 30),  # First Monday from Nov 1
-                end_date=datetime(2025, 11, 3, 18, 30),
-                event_type="recurring",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[family_cal_idx].id,
-                parent_calendar_id=calendars[family_cal_idx].id,
-            ),
-            # Baile KDN: Thursdays at 17:30
-            Event(
-                name="Baile KDN",
-                description="Evento recurrente Baile KDN",
-                start_date=datetime(2025, 11, 3, 17, 30),  # First Monday from Nov 1
-                end_date=datetime(2025, 11, 3, 18, 30),
-                event_type="recurring",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[family_cal_idx].id,
-                parent_calendar_id=calendars[family_cal_idx].id,
-            ),
-            # Esquí temporada 2025-2026: Saturdays at 08:00
-            Event(
-                name="Esquí temporada 2025-2026",
-                description="Esquí semanal temporada 2025-2026",
-                start_date=datetime(2025, 12, 13, 8, 0),  # First Saturday from Dec 10
-                end_date=datetime(2025, 12, 13, 18, 0),  # 10 hours
-                event_type="recurring",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[family_cal_idx].id,
-                parent_calendar_id=calendars[family_cal_idx].id,
-            ),
-        ]
-        db.add_all(base_recurring_events)
+        recurring_sincro = Event(
+            name="Sincro",
+            description="Evento recurrente Sincro",
+            start_date=datetime(2025, 11, 3, 17, 30),
+            end_date=datetime(2025, 11, 3, 18, 30),
+            event_type="recurring",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+        recurring_dj = Event(
+            name="DJ",
+            description="Evento recurrente DJ",
+            start_date=datetime(2025, 11, 3, 17, 30),
+            end_date=datetime(2025, 11, 3, 18, 30),
+            event_type="recurring",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+        recurring_baile = Event(
+            name="Baile KDN",
+            description="Evento recurrente Baile KDN",
+            start_date=datetime(2025, 11, 3, 17, 30),
+            end_date=datetime(2025, 11, 3, 18, 30),
+            event_type="recurring",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+        recurring_esqui = Event(
+            name="Esquí temporada 2025-2026",
+            description="Esquí semanal temporada 2025-2026",
+            start_date=datetime(2025, 12, 13, 8, 0),
+            end_date=datetime(2025, 12, 13, 18, 0),
+            event_type="recurring",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+
+        db.add_all([recurring_sincro, recurring_dj, recurring_baile, recurring_esqui])
         db.flush()
-        logger.info(f"  ✓ Inserted {len(base_recurring_events)} base recurring events")
+        logger.info(f"  ✓ Inserted 4 base recurring events")
 
         # 6. Create recurring event configs
-        end_date_recurring = datetime(2026, 6, 23)
-        end_date_ski = datetime(2026, 3, 30)
-        recurring_configs = [
-            # Sincro config: Mondays (0) and Wednesdays (2)
-            RecurringEventConfig(
-                event_id=base_recurring_events[0].id,
-                days_of_week=[0, 2],
-                time_slots=[{"start": "17:30", "end": "18:30"}],
-                recurrence_end_date=end_date_recurring,
-            ),
-            # DJ config: Fridays (4)
-            RecurringEventConfig(
-                event_id=base_recurring_events[1].id,
-                days_of_week=[4],
-                time_slots=[{"start": "17:30", "end": "18:30"}],
-                recurrence_end_date=end_date_recurring,
-            ),
-            # Baile KDN config: Thursdays (3)
-            RecurringEventConfig(
-                event_id=base_recurring_events[2].id,
-                days_of_week=[3],
-                time_slots=[{"start": "17:30", "end": "18:30"}],
-                recurrence_end_date=end_date_recurring,
-            ),
-            # Esquí config: Saturdays (5)
-            RecurringEventConfig(
-                event_id=base_recurring_events[3].id,
-                days_of_week=[5],
-                time_slots=[{"start": "08:00", "end": "18:00"}],
-                recurrence_end_date=end_date_ski,
-            ),
-        ]
-        db.add_all(recurring_configs)
+        config_sincro = RecurringEventConfig(
+            event_id=recurring_sincro.id,
+            days_of_week=[0, 2],  # Mondays and Wednesdays
+            time_slots=[{"start": "17:30", "end": "18:30"}],
+            recurrence_end_date=datetime(2026, 6, 23),
+        )
+        config_dj = RecurringEventConfig(
+            event_id=recurring_dj.id,
+            days_of_week=[4],  # Fridays
+            time_slots=[{"start": "17:30", "end": "18:30"}],
+            recurrence_end_date=datetime(2026, 6, 23),
+        )
+        config_baile = RecurringEventConfig(
+            event_id=recurring_baile.id,
+            days_of_week=[3],  # Thursdays
+            time_slots=[{"start": "17:30", "end": "18:30"}],
+            recurrence_end_date=datetime(2026, 6, 23),
+        )
+        config_esqui = RecurringEventConfig(
+            event_id=recurring_esqui.id,
+            days_of_week=[5],  # Saturdays
+            time_slots=[{"start": "08:00", "end": "18:00"}],
+            recurrence_end_date=datetime(2026, 3, 30),
+        )
+
+        db.add_all([config_sincro, config_dj, config_baile, config_esqui])
         db.flush()
-        logger.info(f"  ✓ Inserted {len(recurring_configs)} recurring configs")
+        logger.info(f"  ✓ Inserted 4 recurring configs")
 
         # 7. Pre-generate recurring event instances
-        generated_events = []
-
-        # Helper function to generate instances for a recurring event
-        def generate_instances(base_event, config, event_name):
+        def generate_instances(base_event, config):
+            """Helper function to generate instances for a recurring event"""
             instances = []
             current_date = base_event.start_date
 
             while current_date <= config.recurrence_end_date:
-                # Check if current day is in the days_of_week
                 if current_date.weekday() in config.days_of_week:
                     instance = Event(
-                        name=event_name,
+                        name=base_event.name,
                         description=base_event.description,
                         start_date=current_date,
-                        end_date=current_date + timedelta(hours=1),
                         event_type="regular",
                         owner_id=base_event.owner_id,
                         calendar_id=base_event.calendar_id,
-                        parent_calendar_id=base_event.parent_calendar_id,
                         parent_recurring_event_id=config.id,
                     )
                     instances.append(instance)
-
                 current_date += timedelta(days=1)
 
             return instances
 
-        # Generate instances for Sincro (Mondays and Wednesdays)
-        generated_events.extend(generate_instances(base_recurring_events[0], recurring_configs[0], "Sincro"))
+        # Generate all recurring event instances
+        sincro_instances = generate_instances(recurring_sincro, config_sincro)
+        dj_instances = generate_instances(recurring_dj, config_dj)
+        baile_instances = generate_instances(recurring_baile, config_baile)
+        esqui_instances = generate_instances(recurring_esqui, config_esqui)
 
-        # Generate instances for DJ (Fridays)
-        generated_events.extend(generate_instances(base_recurring_events[1], recurring_configs[1], "DJ"))
-
-        # Generate instances for Baile KDN (Thursdays)
-        generated_events.extend(generate_instances(base_recurring_events[2], recurring_configs[2], "Baile KDN"))
-
-        # Generate instances for Esquí (Saturdays)
-        ski_instances = []
-        current_date = base_recurring_events[3].start_date
-        while current_date <= recurring_configs[3].recurrence_end_date:
-            if current_date.weekday() in recurring_configs[3].days_of_week:
-                instance = Event(
-                    name="Esquí temporada 2025-2026",
-                    description=base_recurring_events[3].description,
-                    start_date=current_date,
-                    end_date=current_date.replace(hour=18, minute=0),  # 10 hours duration
-                    event_type="regular",
-                    owner_id=base_recurring_events[3].owner_id,
-                    calendar_id=base_recurring_events[3].calendar_id,
-                    parent_calendar_id=base_recurring_events[3].parent_calendar_id,
-                    parent_recurring_event_id=recurring_configs[3].id,
-                )
-                ski_instances.append(instance)
-            current_date += timedelta(days=1)
-        generated_events.extend(ski_instances)
-
-        db.add_all(generated_events)
+        all_instances = sincro_instances + dj_instances + baile_instances + esqui_instances
+        db.add_all(all_instances)
         db.flush()
-        logger.info(f"  ✓ Generated {len(generated_events)} recurring event instances")
+        logger.info(f"  ✓ Generated {len(all_instances)} recurring event instances")
 
         # 8. Create birthday events in "Cumpleaños Family" calendar
-        birthday_events = [
-            # Cumpleaños de Miquel - 30 de abril
-            Event(
-                name="Cumpleaños de Miquel",
-                description="Cumpleaños de Miquel",
-                start_date=datetime(2026, 4, 30, 0, 0),
-                end_date=datetime(2026, 4, 30, 23, 59),
-                event_type="regular",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[birthday_cal_idx].id,
-                parent_calendar_id=calendars[birthday_cal_idx].id,
-            ),
-            # Cumpleaños de Ada - 6 de septiembre
-            Event(
-                name="Cumpleaños de Ada",
-                description="Cumpleaños de Ada",
-                start_date=datetime(2026, 9, 6, 0, 0),
-                end_date=datetime(2026, 9, 6, 23, 59),
-                event_type="regular",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[birthday_cal_idx].id,
-                parent_calendar_id=calendars[birthday_cal_idx].id,
-            ),
-            # Cumpleaños de Sonia - 31 de enero
-            Event(
-                name="Cumpleaños de Sonia",
-                description="Cumpleaños de Sonia",
-                start_date=datetime(2026, 1, 31, 0, 0),
-                end_date=datetime(2026, 1, 31, 23, 59),
-                event_type="regular",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[birthday_cal_idx].id,
-                parent_calendar_id=calendars[birthday_cal_idx].id,
-            ),
-            # Cumpleaños de Sara - 2 de diciembre
-            Event(
-                name="Cumpleaños de Sara",
-                description="Cumpleaños de Sara",
-                start_date=datetime(2026, 12, 2, 0, 0),
-                end_date=datetime(2026, 12, 2, 23, 59),
-                event_type="regular",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[birthday_cal_idx].id,
-                parent_calendar_id=calendars[birthday_cal_idx].id,
-            ),
-        ]
-        db.add_all(birthday_events)
+        bday_miquel = Event(
+            name="Cumpleaños de Miquel",
+            description="Cumpleaños de Miquel",
+            start_date=datetime(2026, 4, 30, 0, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+            calendar_id=cal_birthdays.id,
+        )
+        bday_ada = Event(
+            name="Cumpleaños de Ada",
+            description="Cumpleaños de Ada",
+            start_date=datetime(2026, 9, 6, 0, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+            calendar_id=cal_birthdays.id,
+        )
+        bday_sonia = Event(
+            name="Cumpleaños de Sonia",
+            description="Cumpleaños de Sonia",
+            start_date=datetime(2026, 1, 31, 0, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+            calendar_id=cal_birthdays.id,
+        )
+        bday_sara = Event(
+            name="Cumpleaños de Sara",
+            description="Cumpleaños de Sara",
+            start_date=datetime(2026, 12, 2, 0, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+            calendar_id=cal_birthdays.id,
+        )
+
+        db.add_all([bday_miquel, bday_ada, bday_sonia, bday_sara])
         db.flush()
-        logger.info(f"  ✓ Inserted {len(birthday_events)} birthday events")
+        logger.info(f"  ✓ Inserted 4 birthday events")
 
         # 9. Create regular events
-        regular_events = [
-            # Concierto de Katy Perry
-            Event(
-                name="Concierto de Katy Perry",
-                description="Lugar: Palau Sant Jordi, Barcelona",
-                start_date=datetime(2025, 11, 9, 20, 0),
-                end_date=datetime(2025, 11, 9, 23, 0),
-                event_type="regular",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[family_cal_idx].id,
-                parent_calendar_id=calendars[family_cal_idx].id,
-            ),
-            # Festa del Codony
-            Event(
-                name="Festa del Codony",
-                description="Lugar: Tremp",
-                start_date=datetime(2025, 11, 1, 9, 0),
-                end_date=datetime(2025, 11, 1, 14, 0),
-                event_type="regular",
-                owner_id=users[sonia_idx].id,
-                calendar_id=calendars[family_cal_idx].id,
-                parent_calendar_id=calendars[family_cal_idx].id,
-            ),
-        ]
-        db.add_all(regular_events)
+        event_katy_perry = Event(
+            name="Concierto de Katy Perry",
+            description="Lugar: Palau Sant Jordi, Barcelona",
+            start_date=datetime(2025, 11, 9, 20, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+        event_festa_codony = Event(
+            name="Festa del Codony",
+            description="Lugar: Tremp",
+            start_date=datetime(2025, 11, 1, 9, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+            calendar_id=cal_family.id,
+        )
+
+        db.add_all([event_katy_perry, event_festa_codony])
         db.flush()
-        logger.info(f"  ✓ Inserted {len(regular_events)} regular events")
+        logger.info(f"  ✓ Inserted 2 regular events")
 
         # 10. Create FC Barcelona match events
         fcb_matches = [
-            Event(name="FC Barcelona vs Girona", start_date=datetime(2025, 10, 18, 16, 15), end_date=datetime(2025, 10, 18, 18, 15), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Olympiakos", start_date=datetime(2025, 10, 21, 18, 45), end_date=datetime(2025, 10, 21, 20, 45), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Real Madrid vs FC Barcelona", start_date=datetime(2025, 10, 26, 16, 15), end_date=datetime(2025, 10, 26, 18, 15), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Elche", start_date=datetime(2025, 11, 2, 18, 30), end_date=datetime(2025, 11, 2, 20, 30), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Club Brugge vs FC Barcelona", start_date=datetime(2025, 11, 5, 21, 0), end_date=datetime(2025, 11, 5, 23, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Celta de Vigo vs FC Barcelona", start_date=datetime(2025, 11, 9, 21, 0), end_date=datetime(2025, 11, 9, 23, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Athletic Club", start_date=datetime(2025, 11, 23, 18, 0), end_date=datetime(2025, 11, 23, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Chelsea vs FC Barcelona", start_date=datetime(2025, 11, 25, 21, 0), end_date=datetime(2025, 11, 25, 23, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Alavés", start_date=datetime(2025, 11, 30, 18, 0), end_date=datetime(2025, 11, 30, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Real Betis vs FC Barcelona", start_date=datetime(2025, 12, 7, 18, 0), end_date=datetime(2025, 12, 7, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Eintracht Frankfurt", start_date=datetime(2025, 12, 9, 21, 0), end_date=datetime(2025, 12, 9, 23, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Osasuna", start_date=datetime(2025, 12, 14, 18, 0), end_date=datetime(2025, 12, 14, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Villarreal vs FC Barcelona", start_date=datetime(2025, 12, 21, 18, 0), end_date=datetime(2025, 12, 21, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Espanyol vs FC Barcelona", start_date=datetime(2026, 1, 4, 18, 0), end_date=datetime(2026, 1, 4, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Athletic Club", start_date=datetime(2026, 1, 7, 20, 0), end_date=datetime(2026, 1, 7, 22, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Atlético Madrid", start_date=datetime(2026, 1, 11, 18, 0), end_date=datetime(2026, 1, 11, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Real Sociedad vs FC Barcelona", start_date=datetime(2026, 1, 18, 18, 0), end_date=datetime(2026, 1, 18, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs Real Oviedo", start_date=datetime(2026, 1, 25, 18, 0), end_date=datetime(2026, 1, 25, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="Slavia Prague vs FC Barcelona", start_date=datetime(2026, 1, 21, 18, 0), end_date=datetime(2026, 1, 21, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
-            Event(name="FC Barcelona vs FC København", start_date=datetime(2026, 1, 28, 18, 0), end_date=datetime(2026, 1, 28, 20, 0), event_type="regular", owner_id=users[fcb_idx].id),
+            Event(name="FC Barcelona vs Girona", start_date=datetime(2025, 10, 18, 16, 15), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Olympiakos", start_date=datetime(2025, 10, 21, 18, 45), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Real Madrid vs FC Barcelona", start_date=datetime(2025, 10, 26, 16, 15), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Elche", start_date=datetime(2025, 11, 2, 18, 30), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Club Brugge vs FC Barcelona", start_date=datetime(2025, 11, 5, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Celta de Vigo vs FC Barcelona", start_date=datetime(2025, 11, 9, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Athletic Club", start_date=datetime(2025, 11, 23, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Chelsea vs FC Barcelona", start_date=datetime(2025, 11, 25, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Alavés", start_date=datetime(2025, 11, 30, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Real Betis vs FC Barcelona", start_date=datetime(2025, 12, 7, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Eintracht Frankfurt", start_date=datetime(2025, 12, 9, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Osasuna", start_date=datetime(2025, 12, 14, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Villarreal vs FC Barcelona", start_date=datetime(2025, 12, 21, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Espanyol vs FC Barcelona", start_date=datetime(2026, 1, 4, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Athletic Club", start_date=datetime(2026, 1, 7, 20, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Atlético Madrid", start_date=datetime(2026, 1, 11, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Real Sociedad vs FC Barcelona", start_date=datetime(2026, 1, 18, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Real Oviedo", start_date=datetime(2026, 1, 25, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Slavia Prague vs FC Barcelona", start_date=datetime(2026, 1, 21, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs FC København", start_date=datetime(2026, 1, 28, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
         ]
         db.add_all(fcb_matches)
         db.flush()
-        logger.info(f"  ✓ Inserted {len(fcb_matches)} FC Barcelona match events")
+        logger.info(f"  ✓ Inserted 20 FC Barcelona match events")
 
         # 11. Create Sonia's additional events
-        # Event 1: "Cumpleaños clase Sara" - Regular event on Nov 16 where Sonia invites Miquel
-        cumple_sara_event = Event(
+        event_cumple_sara_clase = Event(
             name="Cumpleaños clase Sara",
             description="Celebración del cumpleaños de la clase de Sara",
             start_date=datetime(2025, 11, 16, 17, 0),
-            end_date=datetime(2025, 11, 16, 19, 0),
             event_type="regular",
-            owner_id=users[sonia_idx].id,
+            owner_id=sonia.id,
         )
-        db.add(cumple_sara_event)
-        db.flush()
 
-        # Event 2: "Promociona Madrid" - Recurring event from Nov 16-21, daily at 9am
-        promociona_madrid_base = Event(
+        recurring_promociona_madrid = Event(
             name="Promociona Madrid",
             description="Evento promocional diario",
             start_date=datetime(2025, 11, 16, 9, 0),
             end_date=datetime(2025, 11, 16, 10, 0),
             event_type="recurring",
-            owner_id=users[sonia_idx].id,
+            owner_id=sonia.id,
         )
-        db.add(promociona_madrid_base)
+
+        db.add_all([event_cumple_sara_clase, recurring_promociona_madrid])
         db.flush()
 
-        # Create recurring config for Promociona Madrid (daily from Nov 16-21)
-        promociona_config = RecurringEventConfig(
-            event_id=promociona_madrid_base.id,
+        # Create recurring config for Promociona Madrid
+        config_promociona = RecurringEventConfig(
+            event_id=recurring_promociona_madrid.id,
             days_of_week=[0, 1, 2, 3, 4, 5, 6],  # All days
             time_slots=[{"start": "09:00", "end": "10:00"}],
             recurrence_end_date=datetime(2025, 11, 21, 23, 59),
         )
-        db.add(promociona_config)
+        db.add(config_promociona)
         db.flush()
 
         # Generate instances for Promociona Madrid (Nov 16-21, 6 days)
-        promociona_instances = []
-        for day_offset in range(6):  # 16, 17, 18, 19, 20, 21
-            instance_date = datetime(2025, 11, 16, 9, 0) + timedelta(days=day_offset)
-            promociona_instances.append(Event(
-                name="Promociona Madrid",
-                description=promociona_madrid_base.description,
-                start_date=instance_date,
-                end_date=instance_date + timedelta(hours=1),
-                event_type="regular",
-                owner_id=users[sonia_idx].id,
-                parent_recurring_event_id=promociona_config.id,
-            ))
+        promociona_instances = generate_instances(recurring_promociona_madrid, config_promociona)
         db.add_all(promociona_instances)
         db.flush()
         logger.info(f"  ✓ Inserted 2 additional Sonia events (1 regular + 1 recurring with {len(promociona_instances)} instances)")
@@ -496,150 +398,110 @@ def insert_sample_data():
         # 12. Create event interactions
         interactions = []
 
-        # Owner interactions for base recurring events
-        for base_event in base_recurring_events:
+        # Sonia owns all her recurring base events
+        for event in [recurring_sincro, recurring_dj, recurring_baile, recurring_esqui]:
             interactions.append(EventInteraction(
-                event_id=base_event.id,
-                user_id=users[sonia_idx].id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
+                event_id=event.id, user_id=sonia.id,
+                interaction_type="joined", status="accepted", role="owner",
             ))
 
-        # Owner interactions for generated recurring instances
-        for gen_event in generated_events:
+        # Sonia owns all recurring instances
+        for event in all_instances:
             interactions.append(EventInteraction(
-                event_id=gen_event.id,
-                user_id=users[sonia_idx].id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
+                event_id=event.id, user_id=sonia.id,
+                interaction_type="joined", status="accepted", role="owner",
             ))
 
-        # Owner interactions for birthday events
-        for bday_event in birthday_events:
+        # Sonia owns all birthday events
+        for event in [bday_miquel, bday_ada, bday_sonia, bday_sara]:
             interactions.append(EventInteraction(
-                event_id=bday_event.id,
-                user_id=users[sonia_idx].id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
+                event_id=event.id, user_id=sonia.id,
+                interaction_type="joined", status="accepted", role="owner",
             ))
 
-        # Owner interactions for regular events
-        for reg_event in regular_events:
+        # Sonia owns regular events
+        for event in [event_katy_perry, event_festa_codony]:
             interactions.append(EventInteraction(
-                event_id=reg_event.id,
-                user_id=users[sonia_idx].id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
+                event_id=event.id, user_id=sonia.id,
+                interaction_type="joined", status="accepted", role="owner",
             ))
 
-        # Owner interactions for FC Barcelona matches
-        for fcb_event in fcb_matches:
+        # FC Barcelona owns all their matches
+        for event in fcb_matches:
             interactions.append(EventInteraction(
-                event_id=fcb_event.id,
-                user_id=users[fcb_idx].id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
+                event_id=event.id, user_id=fcbarcelona.id,
+                interaction_type="joined", status="accepted", role="owner",
             ))
 
-        # Miquel subscribed to fcbarcelona (subscribed to all their events)
-        for fcb_event in fcb_matches:
+        # Miquel subscribed to all FC Barcelona matches
+        for event in fcb_matches:
             interactions.append(EventInteraction(
-                event_id=fcb_event.id,
-                user_id=users[miquel_idx].id,
-                interaction_type="subscribed",
-                status="accepted",
+                event_id=event.id, user_id=miquel.id,
+                interaction_type="subscribed", status="accepted",
             ))
 
-        # Owner interactions for Sonia's additional events
-        # Owner of "Cumpleaños clase Sara"
+        # Sonia owns "Cumpleaños clase Sara"
         interactions.append(EventInteraction(
-            event_id=cumple_sara_event.id,
-            user_id=users[sonia_idx].id,
-            interaction_type="joined",
-            status="accepted",
-            role="owner",
+            event_id=event_cumple_sara_clase.id, user_id=sonia.id,
+            interaction_type="joined", status="accepted", role="owner",
         ))
 
-        # Miquel invited to "Cumpleaños clase Sara" by Sonia
+        # Miquel invited to "Cumpleaños clase Sara"
         interactions.append(EventInteraction(
-            event_id=cumple_sara_event.id,
-            user_id=users[miquel_idx].id,
-            interaction_type="invited",
-            status="pending",
-            invited_by_user_id=users[sonia_idx].id,
+            event_id=event_cumple_sara_clase.id, user_id=miquel.id,
+            interaction_type="invited", status="pending",
+            invited_by_user_id=sonia.id,
         ))
 
-        # Owner of "Promociona Madrid" base event
+        # Sonia owns "Promociona Madrid" base event
         interactions.append(EventInteraction(
-            event_id=promociona_madrid_base.id,
-            user_id=users[sonia_idx].id,
-            interaction_type="joined",
-            status="accepted",
-            role="owner",
+            event_id=recurring_promociona_madrid.id, user_id=sonia.id,
+            interaction_type="joined", status="accepted", role="owner",
         ))
 
-        # Owner interactions for all "Promociona Madrid" instances
-        for promociona_instance in promociona_instances:
+        # Sonia owns all "Promociona Madrid" instances
+        for event in promociona_instances:
             interactions.append(EventInteraction(
-                event_id=promociona_instance.id,
-                user_id=users[sonia_idx].id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
+                event_id=event.id, user_id=sonia.id,
+                interaction_type="joined", status="accepted", role="owner",
             ))
 
-        # Miquel invited to Esquí events by Sonia (base event + all instances)
-        # Invitation to base recurring event
+        # Miquel invited to Esquí events (base + all instances)
         interactions.append(EventInteraction(
-            event_id=base_recurring_events[3].id,  # Esquí base event
-            user_id=users[miquel_idx].id,
-            interaction_type="invited",
-            status="pending",
-            invited_by_user_id=users[sonia_idx].id,
+            event_id=recurring_esqui.id, user_id=miquel.id,
+            interaction_type="invited", status="pending",
+            invited_by_user_id=sonia.id,
         ))
-
-        # Invitations to all Esquí instances
-        for ski_event in ski_instances:
+        for event in esqui_instances:
             interactions.append(EventInteraction(
-                event_id=ski_event.id,
-                user_id=users[miquel_idx].id,
-                interaction_type="invited",
-                status="pending",
-                invited_by_user_id=users[sonia_idx].id,
+                event_id=event.id, user_id=miquel.id,
+                interaction_type="invited", status="pending",
+                invited_by_user_id=sonia.id,
             ))
 
         db.add_all(interactions)
         db.flush()
         logger.info(f"  ✓ Inserted {len(interactions)} event interactions")
 
-        # 12. Create event ban for TDB user
-        # Ban TDB from the first regular event (Concierto de Katy Perry)
-        event_bans = [
-            EventBan(
-                event_id=regular_events[0].id,
-                user_id=users[tdb_idx].id,
-                banned_by=users[sonia_idx].id,
-            ),
-        ]
-        db.add_all(event_bans)
+        # 13. Create event ban for TDB user
+        ban_tdb = EventBan(
+            event_id=event_katy_perry.id,
+            user_id=tdb.id,
+            banned_by=sonia.id,
+        )
+        db.add(ban_tdb)
         db.flush()
-        logger.info(f"  ✓ Inserted {len(event_bans)} event bans")
+        logger.info(f"  ✓ Inserted 1 event ban")
 
-        # 13. Create user blocks for PolR (blocked by all main users)
-        user_blocks = [
-            UserBlock(blocker_user_id=users[sonia_idx].id, blocked_user_id=users[polr_idx].id),
-            UserBlock(blocker_user_id=users[miquel_idx].id, blocked_user_id=users[polr_idx].id),
-            UserBlock(blocker_user_id=users[ada_idx].id, blocked_user_id=users[polr_idx].id),
-            UserBlock(blocker_user_id=users[sara_idx].id, blocked_user_id=users[polr_idx].id),
-        ]
-        db.add_all(user_blocks)
+        # 14. Create user blocks for PolR (blocked by all main users)
+        block_sonia_polr = UserBlock(blocker_user_id=sonia.id, blocked_user_id=polr.id)
+        block_miquel_polr = UserBlock(blocker_user_id=miquel.id, blocked_user_id=polr.id)
+        block_ada_polr = UserBlock(blocker_user_id=ada.id, blocked_user_id=polr.id)
+        block_sara_polr = UserBlock(blocker_user_id=sara.id, blocked_user_id=polr.id)
+
+        db.add_all([block_sonia_polr, block_miquel_polr, block_ada_polr, block_sara_polr])
         db.flush()
-        logger.info(f"  ✓ Inserted {len(user_blocks)} user blocks")
+        logger.info(f"  ✓ Inserted 4 user blocks")
 
         db.commit()
         logger.info("✅ Sample data inserted successfully")

@@ -8,6 +8,7 @@ Ver DEVELOPMENT_RULES.md para las reglas de desarrollo.
 """
 import questionary
 import api_client
+from datetime import datetime, timedelta
 from rich.table import Table
 from rich.panel import Panel
 from ui.console import console, custom_style, clear_screen
@@ -39,6 +40,8 @@ from config import (
     url_calendar_memberships_nested,
     url_calendar_memberships,
     url_calendar_membership,
+    url_recurring_configs,
+    url_recurring_config,
 )
 from ui.header import show_header
 
@@ -641,7 +644,32 @@ def crear_evento():
 
         owner_id = int(owner_choice.split(" - ")[0])
 
-    start_date = questionary.text("Fecha y hora de inicio (YYYY-MM-DD HH:MM):", validate=lambda text: len(text) > 0 or "No puede estar vacío").ask()
+    # Preguntar tipo de evento
+    event_type_choice = questionary.select(
+        "¿Qué tipo de evento deseas crear?",
+        choices=[
+            "📅 Evento Regular (fecha específica)",
+            "🔄 Evento Recurrente (se repite)",
+            "⬅️  Cancelar"
+        ],
+        style=custom_style
+    ).ask()
+
+    if event_type_choice == "⬅️  Cancelar":
+        return
+
+    if event_type_choice == "🔄 Evento Recurrente (se repite)":
+        crear_evento_recurrente(owner_id, name)
+        return
+
+    # Flujo para evento regular
+    now = datetime.now()
+    default_datetime = now.strftime("%Y-%m-%d %H:%M")
+    start_date = questionary.text(
+        "Fecha y hora de inicio (YYYY-MM-DD HH:MM):",
+        default=default_datetime,
+        validate=lambda text: len(text) > 0 or "No puede estar vacío"
+    ).ask()
 
     if not start_date:
         return
@@ -653,23 +681,18 @@ def crear_evento():
         pause()
         return
 
-    tiene_fin = questionary.confirm("¿Tiene fecha de fin?", default=True).ask()
-
-    end_date = None
-    if tiene_fin:
-        end_date = questionary.text("Fecha y hora de fin (YYYY-MM-DD HH:MM):").ask()
-
-        if end_date:
-            try:
-                parsed_end = date_parser.parse(end_date)
-                end_date = parsed_end.isoformat()
-            except:
-                console.print("[red]Formato de fecha inválido, se omitirá fecha de fin[/red]")
-                end_date = None
-
     description = questionary.text("Descripción (opcional):").ask()
 
-    data = {"name": name, "owner_id": owner_id, "start_date": parsed_start.isoformat(), "end_date": end_date, "description": description if description else None, "event_type": "regular"}
+    # Los eventos regulares NO tienen end_date (se omite del payload)
+    data = {
+        "name": name,
+        "owner_id": owner_id,
+        "start_date": parsed_start.isoformat(),
+        "event_type": "regular"
+    }
+
+    if description:
+        data["description"] = description
 
     console.print("\n[cyan]Creando evento...[/cyan]\n")
     response = api_client.post(url_events(), json=data)
@@ -702,6 +725,165 @@ def crear_evento():
 
     if event:
         console.print(f"[bold green]✅ Evento '{name}' creado exitosamente con ID: {event['id']}[/bold green]\n")
+
+    pause()
+
+
+def crear_evento_recurrente(owner_id, name):
+    """Crea un evento recurrente con su configuración"""
+    clear_screen()
+    _show_header_wrapper()
+
+    console.print(f"[bold cyan]🔄 Crear Evento Recurrente: {name}[/bold cyan]\n")
+    console.print("[dim]Los eventos recurrentes se repiten en días específicos de la semana[/dim]\n")
+
+    # 1. Pedir fecha y hora del primer evento (plantilla)
+    now = datetime.now()
+    default_start = now.strftime("%Y-%m-%d %H:%M")
+    start_date_str = questionary.text(
+        "Fecha y hora de INICIO del primer evento (YYYY-MM-DD HH:MM):",
+        default=default_start,
+        validate=lambda text: len(text) > 0 or "No puede estar vacío"
+    ).ask()
+
+    if not start_date_str:
+        return
+
+    try:
+        parsed_start = date_parser.parse(start_date_str)
+    except:
+        console.print("[red]Formato de fecha inválido[/red]")
+        pause()
+        return
+
+    # 2. Pedir fecha y hora de fin del primer evento (para calcular duración)
+    # Intentar parsear la fecha de inicio para sugerir +1 hora
+    try:
+        parsed_start_temp = date_parser.parse(start_date_str)
+        default_end = (parsed_start_temp + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M")
+    except:
+        default_end = (now + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M")
+
+    end_date_str = questionary.text(
+        "Fecha y hora de FIN del primer evento (YYYY-MM-DD HH:MM):",
+        default=default_end,
+        validate=lambda text: len(text) > 0 or "No puede estar vacío"
+    ).ask()
+
+    if not end_date_str:
+        return
+
+    try:
+        parsed_end = date_parser.parse(end_date_str)
+    except:
+        console.print("[red]Formato de fecha inválido[/red]")
+        pause()
+        return
+
+    # Validar que end_date sea después de start_date
+    if parsed_end <= parsed_start:
+        console.print("[red]La fecha de fin debe ser posterior a la fecha de inicio[/red]")
+        pause()
+        return
+
+    # 3. Pedir días de la semana
+    console.print("\n[cyan]Selecciona los días en que se repetirá el evento:[/cyan]")
+    days_choices = questionary.checkbox(
+        "Días de la semana:",
+        choices=[
+            "0 - Lunes",
+            "1 - Martes",
+            "2 - Miércoles",
+            "3 - Jueves",
+            "4 - Viernes",
+            "5 - Sábado",
+            "6 - Domingo"
+        ]
+    ).ask()
+
+    if not days_choices:
+        console.print("[yellow]Debes seleccionar al menos un día[/yellow]")
+        pause()
+        return
+
+    # Extraer números de días
+    days_of_week = [int(day.split(" - ")[0]) for day in days_choices]
+
+    # 4. Pedir fecha de fin de la recurrencia
+    console.print("\n[cyan]¿Hasta cuándo se repetirá el evento?[/cyan]")
+    # Sugerir 3 meses después de la fecha de inicio
+    default_recurrence_end = (parsed_start + timedelta(days=90)).strftime("%Y-%m-%d")
+    recurrence_end_str = questionary.text(
+        "Fecha de fin de la recurrencia (YYYY-MM-DD):",
+        default=default_recurrence_end,
+        validate=lambda text: len(text) > 0 or "No puede estar vacío"
+    ).ask()
+
+    if not recurrence_end_str:
+        return
+
+    try:
+        recurrence_end = date_parser.parse(recurrence_end_str)
+    except:
+        console.print("[red]Formato de fecha inválido[/red]")
+        pause()
+        return
+
+    # 5. Descripción opcional
+    description = questionary.text("Descripción (opcional):").ask()
+
+    # 6. Calcular time_slots
+    start_time = parsed_start.strftime("%H:%M")
+    end_time = parsed_end.strftime("%H:%M")
+    time_slots = [{"start": start_time, "end": end_time}]
+
+    # 7. Crear el evento base (recurring)
+    console.print("\n[cyan]Creando evento recurrente...[/cyan]\n")
+
+    event_data = {
+        "name": name,
+        "owner_id": owner_id,
+        "start_date": parsed_start.isoformat(),
+        "end_date": parsed_end.isoformat(),  # Recurring events SÍ tienen end_date
+        "event_type": "recurring"
+    }
+
+    if description:
+        event_data["description"] = description
+
+    response = api_client.post(url_events(), json=event_data)
+    event = handle_api_error(response)
+
+    if not event:
+        console.print("[red]No se pudo crear el evento base[/red]")
+        pause()
+        return
+
+    console.print(f"[green]✓ Evento base creado con ID: {event['id']}[/green]\n")
+
+    # 8. Crear la configuración recurrente
+    console.print("[cyan]Creando configuración de recurrencia...[/cyan]\n")
+
+    config_data = {
+        "event_id": event['id'],
+        "days_of_week": days_of_week,
+        "time_slots": time_slots,
+        "recurrence_end_date": recurrence_end.isoformat()
+    }
+
+    config_response = api_client.post(url_recurring_configs(), json=config_data)
+    config = handle_api_error(config_response)
+
+    if not config:
+        console.print("[red]No se pudo crear la configuración de recurrencia[/red]")
+        console.print("[yellow]El evento base fue creado pero sin recurrencia[/yellow]")
+        pause()
+        return
+
+    console.print(f"[bold green]✅ Evento recurrente '{name}' creado exitosamente![/bold green]")
+    console.print(f"[dim]Se repetirá los días: {', '.join([['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][d] for d in days_of_week])}[/dim]")
+    console.print(f"[dim]Desde {parsed_start.strftime('%Y-%m-%d')} hasta {recurrence_end.strftime('%Y-%m-%d')}[/dim]")
+    console.print(f"[dim]Horario: {start_time} - {end_time}[/dim]\n")
 
     pause()
 
@@ -817,10 +999,9 @@ def ver_mis_calendarios():
         table_own.add_column("ID", style="cyan", justify="right", width=5)
         table_own.add_column("Nombre", style="green", width=25)
         table_own.add_column("Descripción", style="yellow", width=30)
-        table_own.add_column("Tipo", style="magenta", width=12)
 
         for cal in my_calendars:
-            table_own.add_row(str(cal["id"]), cal["name"], truncate_text(cal.get("description", "-"), 28), cal["calendar_type_display"])
+            table_own.add_row(str(cal["id"]), cal["name"], truncate_text(cal.get("description", "-"), 28))
 
         console.print(table_own)
         console.print(f"\n[cyan]{len(my_calendars)} calendario(s) propio(s)[/cyan]\n")

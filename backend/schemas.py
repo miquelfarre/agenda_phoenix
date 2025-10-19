@@ -83,7 +83,6 @@ class EventBase(BaseModel):
 class EventCreate(EventBase):
     owner_id: int
     calendar_id: Optional[int] = None
-    parent_calendar_id: Optional[int] = None
     parent_recurring_event_id: Optional[int] = None
 
 
@@ -91,7 +90,6 @@ class EventResponse(EventBase):
     id: int
     owner_id: int
     calendar_id: Optional[int]
-    parent_calendar_id: Optional[int]
     parent_recurring_event_id: Optional[int]
     created_at: datetime
     updated_at: datetime
@@ -188,17 +186,15 @@ class EventInteractionWithEventResponse(EventInteractionBase):
 
 class CalendarBase(BaseModel):
     name: str
-    color: Optional[str] = "#3498db"
-    is_default: bool = False
 
 
 class CalendarCreate(CalendarBase):
-    user_id: int
+    owner_id: int
 
 
 class CalendarResponse(CalendarBase):
     id: int
-    user_id: int
+    owner_id: int
     created_at: datetime
     updated_at: datetime
 
@@ -209,7 +205,7 @@ class CalendarResponse(CalendarBase):
 class CalendarEnrichedResponse(CalendarBase):
     """Calendar response with enriched display fields"""
     id: int
-    user_id: int
+    owner_id: int
     created_at: datetime
     updated_at: datetime
 
@@ -251,9 +247,7 @@ class CalendarMembershipEnrichedResponse(CalendarMembershipBase):
     updated_at: datetime
     # Calendar information
     calendar_name: str
-    calendar_color: str
-    calendar_is_default: bool
-    calendar_user_id: int  # Calendar owner
+    calendar_owner_id: int  # Calendar owner
 
 
 # ============================================================================

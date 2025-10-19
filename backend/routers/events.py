@@ -6,7 +6,7 @@ Handles all event-related endpoints including conflict checking.
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models import Event, User, EventInteraction, CalendarMembership, Contact
 from schemas import (
@@ -64,7 +64,6 @@ async def get_events(
             "event_type": event.event_type,
             "owner_id": event.owner_id,
             "calendar_id": event.calendar_id,
-            "parent_calendar_id": event.parent_calendar_id,
             "parent_recurring_event_id": event.parent_recurring_event_id,
             "created_at": event.created_at,
             "updated_at": event.updated_at,
@@ -170,7 +169,6 @@ async def check_event_conflicts(
                 "event_type": event.event_type,
                 "owner_id": event.owner_id,
                 "calendar_id": event.calendar_id,
-                "parent_calendar_id": event.parent_calendar_id,
                 "parent_recurring_event_id": event.parent_recurring_event_id,
                 "created_at": event.created_at,
                 "updated_at": event.updated_at,
@@ -201,7 +199,6 @@ async def get_event(
         "event_type": event.event_type,
         "owner_id": event.owner_id,
         "calendar_id": event.calendar_id,
-        "parent_calendar_id": event.parent_calendar_id,
         "parent_recurring_event_id": event.parent_recurring_event_id,
         "created_at": event.created_at,
         "updated_at": event.updated_at,
@@ -389,12 +386,20 @@ async def create_event(
         conflicts = []
         if event_ids:
             all_events = db.query(Event).filter(Event.id.in_(event_ids)).all()
+
+            # Ensure incoming dates are timezone-aware (convert naive to UTC if needed)
+            start_date = event.start_date
+            if start_date.tzinfo is None:
+                start_date = start_date.replace(tzinfo=timezone.utc)
+
+            end_date = event.end_date
+            if end_date and end_date.tzinfo is None:
+                end_date = end_date.replace(tzinfo=timezone.utc)
+
             for ev in all_events:
                 # Overlap check with same semantics as /events/check-conflicts
                 evt_start = ev.start_date
                 evt_end = ev.end_date
-                start_date = event.start_date
-                end_date = event.end_date
 
                 has_conflict = False
                 if not end_date and not evt_end:
@@ -427,7 +432,18 @@ async def create_event(
                 "conflicts": conflicts
             })
 
-    db_event = Event(**event.dict())
+    # Ensure dates are timezone-aware before saving to database
+    event_data = event.dict()
+    if event_data['start_date'].tzinfo is None:
+        event_data['start_date'] = event_data['start_date'].replace(tzinfo=timezone.utc)
+    if event_data.get('end_date') and event_data['end_date'].tzinfo is None:
+        event_data['end_date'] = event_data['end_date'].replace(tzinfo=timezone.utc)
+
+    # VALIDATION: Only recurring events can have end_date
+    if event_data.get('event_type') == 'regular':
+        event_data['end_date'] = None
+
+    db_event = Event(**event_data)
     db.add(db_event)
     db.commit()
     db.refresh(db_event)
@@ -446,7 +462,18 @@ async def update_event(event_id: int, event: EventCreate, db: Session = Depends(
         if not owner:
             raise HTTPException(status_code=404, detail="Owner user not found")
 
-    for key, value in event.dict().items():
+    # Ensure dates are timezone-aware before updating
+    event_data = event.dict()
+    if event_data['start_date'].tzinfo is None:
+        event_data['start_date'] = event_data['start_date'].replace(tzinfo=timezone.utc)
+    if event_data.get('end_date') and event_data['end_date'].tzinfo is None:
+        event_data['end_date'] = event_data['end_date'].replace(tzinfo=timezone.utc)
+
+    # VALIDATION: Only recurring events can have end_date
+    if event_data.get('event_type') == 'regular':
+        event_data['end_date'] = None
+
+    for key, value in event_data.items():
         setattr(db_event, key, value)
 
     db.commit()

@@ -50,7 +50,6 @@ async def get_calendars(
             enriched_calendars.append(CalendarEnrichedResponse(
                 id=cal.id,
                 name=cal.name,
-                color=cal.color,
                 is_default=cal.is_default,
                 user_id=cal.user_id,
                 created_at=cal.created_at,

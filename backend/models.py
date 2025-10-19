@@ -84,10 +84,8 @@ class Calendar(Base):
     __tablename__ = "calendars"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)  # Owner principal del calendar
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)  # Owner principal del calendar
     name = Column(String(255), nullable=False)
-    color = Column(String(20), nullable=True, default="#3498db")
-    is_default = Column(Boolean, default=False, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -97,15 +95,13 @@ class Calendar(Base):
     memberships = relationship("CalendarMembership", back_populates="calendar", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Calendar(id={self.id}, name='{self.name}', user_id={self.user_id})>"
+        return f"<Calendar(id={self.id}, name='{self.name}', owner_id={self.owner_id})>"
 
     def to_dict(self):
         return {
             "id": self.id,
-            "user_id": self.user_id,
+            "owner_id": self.owner_id,
             "name": self.name,
-            "color": self.color,
-            "is_default": self.is_default,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -232,7 +228,6 @@ class Event(Base):
     event_type = Column(String(50), nullable=False, default='regular')  # 'regular' or 'recurring'
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=True, index=True)
-    parent_calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=True, index=True)  # Calendar que contiene este evento
     parent_recurring_event_id = Column(Integer, ForeignKey("recurring_event_configs.id"), nullable=True, index=True)  # Evento recurrente padre
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -240,7 +235,6 @@ class Event(Base):
     # Relationships
     owner = relationship("User", foreign_keys=[owner_id], back_populates="events")
     calendar = relationship("Calendar", foreign_keys=[calendar_id], back_populates="events")
-    parent_calendar = relationship("Calendar", foreign_keys=[parent_calendar_id])
     parent_recurring_event = relationship("RecurringEventConfig", foreign_keys=[parent_recurring_event_id])
     interactions = relationship("EventInteraction", back_populates="event", cascade="all, delete-orphan")
     recurring_config = relationship("RecurringEventConfig", foreign_keys="RecurringEventConfig.event_id", back_populates="event", uselist=False, cascade="all, delete-orphan")
@@ -259,7 +253,6 @@ class Event(Base):
             "event_type": self.event_type,
             "owner_id": self.owner_id,
             "calendar_id": self.calendar_id,
-            "parent_calendar_id": self.parent_calendar_id,
             "parent_recurring_event_id": self.parent_recurring_event_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

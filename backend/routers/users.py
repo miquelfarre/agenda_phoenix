@@ -432,7 +432,6 @@ async def get_user_events(
             'source': event_sources.get(event.id, 'owned'),
             'owner_id': event.owner_id,
             'calendar_id': event.calendar_id,
-            'parent_calendar_id': event.parent_calendar_id,
             'parent_recurring_event_id': event.parent_recurring_event_id,
             'created_at': event.created_at.isoformat(),
             'updated_at': event.updated_at.isoformat(),
