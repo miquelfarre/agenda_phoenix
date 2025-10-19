@@ -735,13 +735,13 @@ def crear_evento_recurrente(owner_id, name):
     _show_header_wrapper()
 
     console.print(f"[bold cyan]🔄 Crear Evento Recurrente: {name}[/bold cyan]\n")
-    console.print("[dim]Los eventos recurrentes se repiten en días específicos de la semana[/dim]\n")
+    console.print("[dim]Los eventos recurrentes se repiten en días y horas específicas[/dim]\n")
 
-    # 1. Pedir fecha y hora del primer evento (plantilla)
+    # 1. Pedir fecha de inicio del rango de recurrencia
     now = datetime.now()
-    default_start = now.strftime("%Y-%m-%d %H:%M")
+    default_start = now.strftime("%Y-%m-%d")
     start_date_str = questionary.text(
-        "Fecha y hora de INICIO del primer evento (YYYY-MM-DD HH:MM):",
+        "Fecha de INICIO de la recurrencia (YYYY-MM-DD):",
         default=default_start,
         validate=lambda text: len(text) > 0 or "No puede estar vacío"
     ).ask()
@@ -750,43 +750,13 @@ def crear_evento_recurrente(owner_id, name):
         return
 
     try:
-        parsed_start = date_parser.parse(start_date_str)
+        parsed_start_date = date_parser.parse(start_date_str)
     except:
         console.print("[red]Formato de fecha inválido[/red]")
         pause()
         return
 
-    # 2. Pedir fecha y hora de fin del primer evento (para calcular duración)
-    # Intentar parsear la fecha de inicio para sugerir +1 hora
-    try:
-        parsed_start_temp = date_parser.parse(start_date_str)
-        default_end = (parsed_start_temp + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M")
-    except:
-        default_end = (now + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M")
-
-    end_date_str = questionary.text(
-        "Fecha y hora de FIN del primer evento (YYYY-MM-DD HH:MM):",
-        default=default_end,
-        validate=lambda text: len(text) > 0 or "No puede estar vacío"
-    ).ask()
-
-    if not end_date_str:
-        return
-
-    try:
-        parsed_end = date_parser.parse(end_date_str)
-    except:
-        console.print("[red]Formato de fecha inválido[/red]")
-        pause()
-        return
-
-    # Validar que end_date sea después de start_date
-    if parsed_end <= parsed_start:
-        console.print("[red]La fecha de fin debe ser posterior a la fecha de inicio[/red]")
-        pause()
-        return
-
-    # 3. Pedir días de la semana
+    # 2. Pedir días de la semana y sus horas
     console.print("\n[cyan]Selecciona los días en que se repetirá el evento:[/cyan]")
     days_choices = questionary.checkbox(
         "Días de la semana:",
@@ -806,13 +776,35 @@ def crear_evento_recurrente(owner_id, name):
         pause()
         return
 
-    # Extraer números de días
-    days_of_week = [int(day.split(" - ")[0]) for day in days_choices]
+    # 3. Para cada día seleccionado, pedir la hora
+    day_names = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    schedule = []
+
+    console.print("\n[cyan]Ahora indica la hora para cada día:[/cyan]")
+    for day_choice in days_choices:
+        day_num = int(day_choice.split(" - ")[0])
+        day_name = day_names[day_num]
+
+        default_time = "09:00"
+        time_str = questionary.text(
+            f"Hora para {day_name} (HH:MM):",
+            default=default_time,
+            validate=lambda text: len(text) > 0 or "No puede estar vacío"
+        ).ask()
+
+        if not time_str:
+            return
+
+        schedule.append({
+            "day": day_num,
+            "day_name": day_name,
+            "time": time_str
+        })
 
     # 4. Pedir fecha de fin de la recurrencia
     console.print("\n[cyan]¿Hasta cuándo se repetirá el evento?[/cyan]")
     # Sugerir 3 meses después de la fecha de inicio
-    default_recurrence_end = (parsed_start + timedelta(days=90)).strftime("%Y-%m-%d")
+    default_recurrence_end = (parsed_start_date + timedelta(days=90)).strftime("%Y-%m-%d")
     recurrence_end_str = questionary.text(
         "Fecha de fin de la recurrencia (YYYY-MM-DD):",
         default=default_recurrence_end,
@@ -832,19 +824,16 @@ def crear_evento_recurrente(owner_id, name):
     # 5. Descripción opcional
     description = questionary.text("Descripción (opcional):").ask()
 
-    # 6. Calcular time_slots
-    start_time = parsed_start.strftime("%H:%M")
-    end_time = parsed_end.strftime("%H:%M")
-    time_slots = [{"start": start_time, "end": end_time}]
-
-    # 7. Crear el evento base (recurring)
+    # 6. Crear el evento base (recurring) - solo con start_date, sin end_date
     console.print("\n[cyan]Creando evento recurrente...[/cyan]\n")
+
+    # El start_date del evento base es solo la fecha de inicio del rango
+    event_start = datetime.combine(parsed_start_date.date(), datetime.min.time())
 
     event_data = {
         "name": name,
         "owner_id": owner_id,
-        "start_date": parsed_start.isoformat(),
-        "end_date": parsed_end.isoformat(),  # Recurring events SÍ tienen end_date
+        "start_date": event_start.isoformat(),
         "event_type": "recurring"
     }
 
@@ -861,13 +850,12 @@ def crear_evento_recurrente(owner_id, name):
 
     console.print(f"[green]✓ Evento base creado con ID: {event['id']}[/green]\n")
 
-    # 8. Crear la configuración recurrente
+    # 7. Crear la configuración recurrente con el nuevo formato schedule
     console.print("[cyan]Creando configuración de recurrencia...[/cyan]\n")
 
     config_data = {
         "event_id": event['id'],
-        "days_of_week": days_of_week,
-        "time_slots": time_slots,
+        "schedule": schedule,
         "recurrence_end_date": recurrence_end.isoformat()
     }
 
@@ -881,9 +869,10 @@ def crear_evento_recurrente(owner_id, name):
         return
 
     console.print(f"[bold green]✅ Evento recurrente '{name}' creado exitosamente![/bold green]")
-    console.print(f"[dim]Se repetirá los días: {', '.join([['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'][d] for d in days_of_week])}[/dim]")
-    console.print(f"[dim]Desde {parsed_start.strftime('%Y-%m-%d')} hasta {recurrence_end.strftime('%Y-%m-%d')}[/dim]")
-    console.print(f"[dim]Horario: {start_time} - {end_time}[/dim]\n")
+    console.print(f"[dim]Horarios:[/dim]")
+    for item in schedule:
+        console.print(f"[dim]  • {item['day_name']}: {item['time']}[/dim]")
+    console.print(f"[dim]Desde {parsed_start_date.strftime('%Y-%m-%d')} hasta {recurrence_end.strftime('%Y-%m-%d')}[/dim]\n")
 
     pause()
 
