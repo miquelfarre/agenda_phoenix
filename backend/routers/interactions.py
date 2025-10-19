@@ -4,8 +4,9 @@ Event Interactions Router
 Handles all event interaction endpoints including invitations and subscriptions.
 """
 from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from models import Event, User, EventInteraction, RecurringEventConfig
 from schemas import (
@@ -13,7 +14,6 @@ from schemas import (
     EventInteractionResponse, EventInteractionWithEventResponse
 )
 from dependencies import get_db
-from typing import Union
 
 
 router = APIRouter(
@@ -44,7 +44,18 @@ async def get_interactions(
     - Regular events (not instances of recurring events)
     - Instances of recurring events ONLY if the parent recurring event invitation is NOT pending
     """
-    query = db.query(EventInteraction)
+    # OPTIMIZATION: Use JOIN from the start if enriched=True or if we need hierarchical filtering
+    needs_event_data = enriched or (user_id and interaction_type == 'invited' and status == 'pending')
+
+    if needs_event_data:
+        # Single optimized query with JOIN
+        query = db.query(EventInteraction, Event).join(
+            Event, EventInteraction.event_id == Event.id
+        )
+    else:
+        query = db.query(EventInteraction)
+
+    # Apply filters
     if event_id:
         query = query.filter(EventInteraction.event_id == event_id)
     if user_id:
@@ -54,83 +65,66 @@ async def get_interactions(
     if status:
         query = query.filter(EventInteraction.status == status)
 
-    # Apply ordering and pagination
-    order_col = getattr(EventInteraction, order_by) if order_by and hasattr(EventInteraction, str(order_by)) else EventInteraction.created_at if hasattr(EventInteraction, "created_at") else EventInteraction.id
+    # OPTIMIZATION: Apply hierarchical filtering in SQL instead of Python
+    if user_id and interaction_type == 'invited' and status == 'pending':
+        # Subquery to get config IDs of base recurring events with pending invitations
+        pending_recurring_config_subquery = select(RecurringEventConfig.id).join(
+            Event, RecurringEventConfig.event_id == Event.id
+        ).where(
+            Event.event_type == 'recurring'
+        )
+
+        # Filter: Include all non-instances OR instances where parent config is NOT in pending list
+        query = query.filter(
+            or_(
+                Event.parent_recurring_event_id.is_(None),  # Not an instance
+                ~Event.parent_recurring_event_id.in_(pending_recurring_config_subquery)  # Instance but parent not pending
+            )
+        )
+
+    # Apply ordering
+    order_col = getattr(EventInteraction, order_by) if order_by and hasattr(EventInteraction, str(order_by)) else EventInteraction.created_at
     if order_dir and order_dir.lower() == "asc":
         query = query.order_by(order_col.asc())
     else:
         query = query.order_by(order_col.desc())
 
+    # Apply pagination
     query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
 
-    interactions = query.all()
+    # Execute query
+    if needs_event_data:
+        results = query.all()  # List of (EventInteraction, Event) tuples
 
-    # Apply hierarchical filtering for pending invitations to recurring events (optimized batching)
-    if user_id and interaction_type == 'invited' and status == 'pending' and interactions:
-        event_ids = [i.event_id for i in interactions]
-        events = db.query(Event).filter(Event.id.in_(event_ids)).all()
-        events_map = {e.id: e for e in events}
-
-        # Collect base recurring event IDs
-        base_recurring_event_ids = [e.id for e in events if e.event_type == 'recurring']
-        pending_parent_config_ids = set()
-        if base_recurring_event_ids:
-            configs = db.query(RecurringEventConfig).filter(
-                RecurringEventConfig.event_id.in_(base_recurring_event_ids)
-            ).all()
-            pending_parent_config_ids = {c.id for c in configs}
-
-        filtered_interactions = []
-        for interaction in interactions:
-            event = events_map.get(interaction.event_id)
-            if not event:
-                continue
-            # If it's an instance, include only if parent recurring base is NOT pending
-            if event.parent_recurring_event_id:
-                if event.parent_recurring_event_id not in pending_parent_config_ids:
-                    filtered_interactions.append(interaction)
-            else:
-                filtered_interactions.append(interaction)
-
-        interactions = filtered_interactions
-
-    # If enriched=True, add event information
-    if enriched:
-        # Get all event IDs
-        event_ids = list(set([i.event_id for i in interactions]))
-
-        if event_ids:
-            # Fetch events in a single query
-            events = db.query(Event).filter(Event.id.in_(event_ids)).all()
-            events_map = {e.id: e for e in events}
-
-            # Build enriched responses
+        if enriched:
+            # Build enriched responses directly from joined data
             enriched_interactions = []
-            for interaction in interactions:
-                event = events_map.get(interaction.event_id)
-                if event:
-                    enriched_interactions.append({
-                        "id": interaction.id,
-                        "event_id": interaction.event_id,
-                        "user_id": interaction.user_id,
-                        "interaction_type": interaction.interaction_type,
-                        "status": interaction.status,
-                        "role": interaction.role,
-                        "invited_by_user_id": interaction.invited_by_user_id,
-                        "invited_via_group_id": interaction.invited_via_group_id,
-                        "created_at": interaction.created_at,
-                        "updated_at": interaction.updated_at,
-                        "event_name": event.name,
-                        "event_start_date": event.start_date,
-                        "event_end_date": event.end_date,
-                        "event_type": event.event_type,
-                        "event_start_date_formatted": event.start_date.strftime("%Y-%m-%d %H:%M"),
-                        "event_end_date_formatted": event.end_date.strftime("%Y-%m-%d %H:%M") if event.end_date else None
-                    })
-
+            for interaction, event in results:
+                enriched_interactions.append({
+                    "id": interaction.id,
+                    "event_id": interaction.event_id,
+                    "user_id": interaction.user_id,
+                    "interaction_type": interaction.interaction_type,
+                    "status": interaction.status,
+                    "role": interaction.role,
+                    "invited_by_user_id": interaction.invited_by_user_id,
+                    "invited_via_group_id": interaction.invited_via_group_id,
+                    "created_at": interaction.created_at,
+                    "updated_at": interaction.updated_at,
+                    "event_name": event.name,
+                    "event_start_date": event.start_date,
+                    "event_end_date": event.end_date,
+                    "event_type": event.event_type,
+                    "event_start_date_formatted": event.start_date.strftime("%Y-%m-%d %H:%M"),
+                    "event_end_date_formatted": event.end_date.strftime("%Y-%m-%d %H:%M") if event.end_date else None
+                })
             return enriched_interactions
-
-    return interactions
+        else:
+            # Return only interactions (extract from tuples)
+            return [interaction for interaction, _ in results]
+    else:
+        interactions = query.all()
+        return interactions
 
 
 @router.get("/{interaction_id}", response_model=EventInteractionResponse)
