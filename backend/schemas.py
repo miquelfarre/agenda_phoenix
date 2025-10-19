@@ -302,8 +302,7 @@ class GroupMembershipResponse(GroupMembershipBase):
 # ============================================================================
 
 class RecurringEventConfigBase(BaseModel):
-    days_of_week: Optional[List[int]] = None
-    time_slots: Optional[List[Dict[str, str]]] = None
+    schedule: Optional[List[Dict[str, str]]] = None  # [{"day": 1, "day_name": "Martes", "time": "18:00"}]
     recurrence_end_date: Optional[datetime] = None
 
 

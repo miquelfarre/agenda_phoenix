@@ -313,9 +313,8 @@ class RecurringEventConfig(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False, unique=True, index=True)
-    days_of_week = Column(JSON, nullable=True)  # [0,1,2,3,4,5,6] for Mon-Sun
-    time_slots = Column(JSON, nullable=True)  # [{"start": "09:00", "end": "10:00"}]
-    recurrence_end_date = Column(TIMESTAMP(timezone=True), nullable=True)
+    schedule = Column(JSON, nullable=True)  # [{"day": 1, "day_name": "Martes", "time": "18:00"}, ...]
+    recurrence_end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # End date for the recurrence (replaces parent event end_date)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -329,8 +328,7 @@ class RecurringEventConfig(Base):
         return {
             "id": self.id,
             "event_id": self.event_id,
-            "days_of_week": self.days_of_week,
-            "time_slots": self.time_slots,
+            "schedule": self.schedule,
             "recurrence_end_date": self.recurrence_end_date.isoformat() if self.recurrence_end_date else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

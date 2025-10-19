@@ -22,7 +22,7 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=List[Union[EventInteractionResponse, EventInteractionWithEventResponse]])
+@router.get("", response_model=List[Union[EventInteractionWithEventResponse, EventInteractionResponse]])
 async def get_interactions(
     event_id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -67,11 +67,16 @@ async def get_interactions(
 
     # OPTIMIZATION: Apply hierarchical filtering in SQL instead of Python
     if user_id and interaction_type == 'invited' and status == 'pending':
-        # Subquery to get config IDs of base recurring events with pending invitations
+        # Subquery to get config IDs of base recurring events where THIS USER has a pending invitation
         pending_recurring_config_subquery = select(RecurringEventConfig.id).join(
             Event, RecurringEventConfig.event_id == Event.id
+        ).join(
+            EventInteraction, EventInteraction.event_id == Event.id
         ).where(
-            Event.event_type == 'recurring'
+            Event.event_type == 'recurring',
+            EventInteraction.user_id == user_id,
+            EventInteraction.interaction_type == 'invited',
+            EventInteraction.status == 'pending'
         )
 
         # Filter: Include all non-instances OR instances where parent config is NOT in pending list

@@ -171,7 +171,6 @@ def insert_sample_data():
             name="Sincro",
             description="Evento recurrente Sincro",
             start_date=datetime(2025, 11, 3, 17, 30),
-            end_date=datetime(2025, 11, 3, 18, 30),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -180,7 +179,6 @@ def insert_sample_data():
             name="DJ",
             description="Evento recurrente DJ",
             start_date=datetime(2025, 11, 3, 17, 30),
-            end_date=datetime(2025, 11, 3, 18, 30),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -189,7 +187,6 @@ def insert_sample_data():
             name="Baile KDN",
             description="Evento recurrente Baile KDN",
             start_date=datetime(2025, 11, 3, 17, 30),
-            end_date=datetime(2025, 11, 3, 18, 30),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -198,7 +195,6 @@ def insert_sample_data():
             name="Esquí temporada 2025-2026",
             description="Esquí semanal temporada 2025-2026",
             start_date=datetime(2025, 12, 13, 8, 0),
-            end_date=datetime(2025, 12, 13, 18, 0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -211,26 +207,31 @@ def insert_sample_data():
         # 6. Create recurring event configs
         config_sincro = RecurringEventConfig(
             event_id=recurring_sincro.id,
-            days_of_week=[0, 2],  # Mondays and Wednesdays
-            time_slots=[{"start": "17:30", "end": "18:30"}],
+            schedule=[
+                {"day": 0, "day_name": "Lunes", "time": "17:30"},
+                {"day": 2, "day_name": "Miércoles", "time": "17:30"},
+            ],
             recurrence_end_date=datetime(2026, 6, 23),
         )
         config_dj = RecurringEventConfig(
             event_id=recurring_dj.id,
-            days_of_week=[4],  # Fridays
-            time_slots=[{"start": "17:30", "end": "18:30"}],
+            schedule=[
+                {"day": 4, "day_name": "Viernes", "time": "17:30"},
+            ],
             recurrence_end_date=datetime(2026, 6, 23),
         )
         config_baile = RecurringEventConfig(
             event_id=recurring_baile.id,
-            days_of_week=[3],  # Thursdays
-            time_slots=[{"start": "17:30", "end": "18:30"}],
+            schedule=[
+                {"day": 3, "day_name": "Jueves", "time": "17:30"},
+            ],
             recurrence_end_date=datetime(2026, 6, 23),
         )
         config_esqui = RecurringEventConfig(
             event_id=recurring_esqui.id,
-            days_of_week=[5],  # Saturdays
-            time_slots=[{"start": "08:00", "end": "18:00"}],
+            schedule=[
+                {"day": 5, "day_name": "Sábado", "time": "08:00"},
+            ],
             recurrence_end_date=datetime(2026, 3, 30),
         )
 
@@ -242,14 +243,30 @@ def insert_sample_data():
         def generate_instances(base_event, config):
             """Helper function to generate instances for a recurring event"""
             instances = []
-            current_date = base_event.start_date
 
-            while current_date <= config.recurrence_end_date:
-                if current_date.weekday() in config.days_of_week:
+            # Create a map of day -> time from schedule
+            day_time_map = {}
+            for schedule_item in config.schedule:
+                day = schedule_item["day"]
+                time = schedule_item["time"]
+                day_time_map[day] = time
+
+            current_date = base_event.start_date.date()  # Just the date part
+
+            while current_date <= config.recurrence_end_date.date():
+                weekday = current_date.weekday()
+                if weekday in day_time_map:
+                    # Parse the time for this weekday
+                    time_str = day_time_map[weekday]
+                    hour, minute = map(int, time_str.split(":"))
+
+                    instance_datetime = datetime.combine(current_date, datetime.min.time())
+                    instance_datetime = instance_datetime.replace(hour=hour, minute=minute)
+
                     instance = Event(
                         name=base_event.name,
                         description=base_event.description,
-                        start_date=current_date,
+                        start_date=instance_datetime,
                         event_type="regular",
                         owner_id=base_event.owner_id,
                         calendar_id=base_event.calendar_id,
@@ -371,7 +388,6 @@ def insert_sample_data():
             name="Promociona Madrid",
             description="Evento promocional diario",
             start_date=datetime(2025, 11, 16, 9, 0),
-            end_date=datetime(2025, 11, 16, 10, 0),
             event_type="recurring",
             owner_id=sonia.id,
         )
@@ -382,8 +398,15 @@ def insert_sample_data():
         # Create recurring config for Promociona Madrid
         config_promociona = RecurringEventConfig(
             event_id=recurring_promociona_madrid.id,
-            days_of_week=[0, 1, 2, 3, 4, 5, 6],  # All days
-            time_slots=[{"start": "09:00", "end": "10:00"}],
+            schedule=[
+                {"day": 0, "day_name": "Lunes", "time": "09:00"},
+                {"day": 1, "day_name": "Martes", "time": "09:00"},
+                {"day": 2, "day_name": "Miércoles", "time": "09:00"},
+                {"day": 3, "day_name": "Jueves", "time": "09:00"},
+                {"day": 4, "day_name": "Viernes", "time": "09:00"},
+                {"day": 5, "day_name": "Sábado", "time": "09:00"},
+                {"day": 6, "day_name": "Domingo", "time": "09:00"},
+            ],
             recurrence_end_date=datetime(2025, 11, 21, 23, 59),
         )
         db.add(config_promociona)
