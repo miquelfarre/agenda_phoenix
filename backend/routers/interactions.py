@@ -155,12 +155,17 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
         raise HTTPException(status_code=404, detail="User not found")
 
     # Check if user is banned
-    from dependencies import check_user_not_banned
+    from dependencies import check_user_not_banned, check_users_not_blocked
     check_user_not_banned(interaction.user_id, db)
 
     # Check if the user inviting is banned (if applicable)
     if interaction.invited_by_user_id:
         check_user_not_banned(interaction.invited_by_user_id, db)
+        # Check if there's a block between inviter and invitee
+        check_users_not_blocked(interaction.invited_by_user_id, interaction.user_id, db)
+
+    # Check if there's a block between event owner and invitee
+    check_users_not_blocked(event.owner_id, interaction.user_id, db)
 
     # Check if interaction already exists (unique constraint)
     existing = db.query(EventInteraction).filter(

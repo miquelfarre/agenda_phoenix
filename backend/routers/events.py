@@ -355,7 +355,7 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
 
 @router.get("/{event_id}/available-invitees", response_model=List[AvailableInviteeResponse])
 async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
-    """Get list of users available to be invited to an event (excludes owner and already invited users)"""
+    """Get list of users available to be invited to an event (excludes owner, already invited users, and blocked users)"""
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -365,7 +365,17 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
         EventInteraction.event_id == event_id
     ).subquery()
 
-    # Get all users NOT in the invited list and NOT the owner, with Contact info in one query
+    # Get user IDs that have mutual blocks with the event owner
+    from models import UserBlock
+    blocked_user_ids_subquery = db.query(UserBlock.blocked_user_id).filter(
+        UserBlock.blocker_user_id == event.owner_id
+    ).union(
+        db.query(UserBlock.blocker_user_id).filter(
+            UserBlock.blocked_user_id == event.owner_id
+        )
+    ).subquery()
+
+    # Get all users NOT in the invited list, NOT the owner, NOT blocked, with Contact info in one query
     results = db.query(
         User,
         Contact
@@ -373,7 +383,8 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
         Contact, User.contact_id == Contact.id
     ).filter(
         User.id != event.owner_id,
-        ~User.id.in_(invited_user_ids_subquery)
+        ~User.id.in_(invited_user_ids_subquery),
+        ~User.id.in_(blocked_user_ids_subquery)
     ).all()
 
     # Build available invitees list

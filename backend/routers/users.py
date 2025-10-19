@@ -337,6 +337,32 @@ async def get_user_events(
     # No additional in-memory search needed; handled by DB ilike
 
     # ============================================================
+    # 3.5. FILTER OUT BLOCKED USERS
+    # ============================================================
+    # Get IDs of users that have mutual blocks with the current user
+    from models import UserBlock
+    blocked_user_ids = set()
+
+    # Users blocked by the current user
+    blocks_by_me = db.query(UserBlock.blocked_user_id).filter(
+        UserBlock.blocker_user_id == user_id
+    ).all()
+    blocked_user_ids.update([b[0] for b in blocks_by_me])
+
+    # Users who blocked the current user
+    blocks_on_me = db.query(UserBlock.blocker_user_id).filter(
+        UserBlock.blocked_user_id == user_id
+    ).all()
+    blocked_user_ids.update([b[0] for b in blocks_on_me])
+
+    # Filter out events owned by blocked users
+    if blocked_user_ids:
+        events = [e for e in events if e.owner_id not in blocked_user_ids]
+
+    if not events:
+        return []
+
+    # ============================================================
     # 4. FETCH OWNER INFORMATION (batch query)
     # ============================================================
     # Get all unique owner IDs
