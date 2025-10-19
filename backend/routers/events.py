@@ -52,6 +52,19 @@ async def get_events(
 
     events = query.all()
 
+    # Fetch owner information for all events (batch query)
+    owner_ids = list(set(e.owner_id for e in events))
+    owners_info = {}  # owner_id -> display_name
+    if owner_ids:
+        owners = db.query(User, Contact).outerjoin(
+            Contact, User.contact_id == Contact.id
+        ).filter(User.id.in_(owner_ids)).all()
+
+        for user, contact in owners:
+            # Display name priority: username > contact_name > "Usuario #{id}"
+            display_name = user.username or (contact.name if contact else None) or f"Usuario #{user.id}"
+            owners_info[user.id] = display_name
+
     # Build enriched responses
     enriched_events = []
     for event in events:
@@ -75,7 +88,7 @@ async def get_events(
         if current_user_id is not None:
             is_owner = event.owner_id == current_user_id
             event_dict["is_owner"] = is_owner
-            event_dict["owner_display"] = "Yo" if is_owner else f"Usuario #{event.owner_id}"
+            event_dict["owner_display"] = "Yo" if is_owner else owners_info.get(event.owner_id, f"Usuario #{event.owner_id}")
 
         enriched_events.append(event_dict)
 
@@ -190,6 +203,16 @@ async def get_event(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
+    # Fetch owner information
+    owner_display_name = f"Usuario #{event.owner_id}"
+    owner_user = db.query(User, Contact).outerjoin(
+        Contact, User.contact_id == Contact.id
+    ).filter(User.id == event.owner_id).first()
+
+    if owner_user:
+        user, contact = owner_user
+        owner_display_name = user.username or (contact.name if contact else None) or f"Usuario #{user.id}"
+
     event_dict = {
         "id": event.id,
         "name": event.name,
@@ -210,7 +233,7 @@ async def get_event(
     if current_user_id is not None:
         is_owner = event.owner_id == current_user_id
         event_dict["is_owner"] = is_owner
-        event_dict["owner_display"] = "Yo" if is_owner else f"Usuario #{event.owner_id}"
+        event_dict["owner_display"] = "Yo" if is_owner else owner_display_name
 
     return event_dict
 

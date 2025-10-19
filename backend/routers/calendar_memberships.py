@@ -70,7 +70,7 @@ async def get_calendar_memberships(
             results = results.filter(CalendarMembership.user_id == user_id)
             # If exclude_owned, filter out calendars where user_id is the owner
             if exclude_owned:
-                results = results.filter(Calendar.user_id != user_id)
+                results = results.filter(Calendar.owner_id != user_id)
         if status:
             results = results.filter(CalendarMembership.status == status)
 
@@ -96,8 +96,7 @@ async def get_calendar_memberships(
                 created_at=membership.created_at,
                 updated_at=membership.updated_at,
                 calendar_name=calendar.name,
-                calendar_is_default=calendar.is_default,
-                calendar_user_id=calendar.user_id
+                calendar_owner_id=calendar.owner_id
             ))
 
         return enriched_memberships
@@ -111,7 +110,7 @@ async def get_calendar_memberships(
         q = q.filter(CalendarMembership.user_id == user_id)
         if status:
             q = q.filter(CalendarMembership.status == status)
-        q = q.filter(Calendar.user_id != user_id)
+        q = q.filter(Calendar.owner_id != user_id)
 
         # Apply ordering and pagination
         order_col = getattr(CalendarMembership, order_by) if order_by and hasattr(CalendarMembership, str(order_by)) else CalendarMembership.created_at if hasattr(CalendarMembership, "created_at") else CalendarMembership.id

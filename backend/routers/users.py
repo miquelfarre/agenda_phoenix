@@ -326,7 +326,25 @@ async def get_user_events(
     # No additional in-memory search needed; handled by DB ilike
 
     # ============================================================
-    # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
+    # 4. FETCH OWNER INFORMATION (batch query)
+    # ============================================================
+    # Get all unique owner IDs
+    owner_ids = list(set(e.owner_id for e in events))
+
+    # Fetch all owners with their contact info in one query
+    owners_info = {}  # owner_id -> display_name
+    if owner_ids:
+        owners = db.query(User, Contact).outerjoin(
+            Contact, User.contact_id == Contact.id
+        ).filter(User.id.in_(owner_ids)).all()
+
+        for user, contact in owners:
+            # Display name priority: username > contact_name > "Usuario #{id}"
+            display_name = user.username or (contact.name if contact else None) or f"Usuario #{user.id}"
+            owners_info[user.id] = display_name
+
+    # ============================================================
+    # 5. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
     # ============================================================
     # Get all recurring event IDs in one go
     recurring_event_ids = [e.id for e in events if e.event_type == 'recurring']
@@ -420,7 +438,7 @@ async def get_user_events(
         rounded_end = round_to_5min(event.end_date) if event.end_date else None
 
         is_owner = event.owner_id == user_id
-        owner_display = "Yo" if is_owner else f"Usuario #{event.owner_id}"
+        owner_display = "Yo" if is_owner else owners_info.get(event.owner_id, f"Usuario #{event.owner_id}")
 
         event_dict = {
             'id': event.id,

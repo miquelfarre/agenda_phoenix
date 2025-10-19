@@ -32,7 +32,7 @@ async def get_calendars(
     """Get all calendars, optionally filtered by user_id, optionally enriched with display fields"""
     query = db.query(Calendar)
     if user_id:
-        query = query.filter(Calendar.user_id == user_id)
+        query = query.filter(Calendar.owner_id == user_id)
     # Apply ordering and pagination
     order_col = getattr(Calendar, order_by) if order_by and hasattr(Calendar, str(order_by)) else Calendar.id
     if order_dir and order_dir.lower() == "desc":
@@ -50,8 +50,7 @@ async def get_calendars(
             enriched_calendars.append(CalendarEnrichedResponse(
                 id=cal.id,
                 name=cal.name,
-                is_default=cal.is_default,
-                user_id=cal.user_id,
+                owner_id=cal.owner_id,
                 created_at=cal.created_at,
                 updated_at=cal.updated_at
             ))
@@ -73,7 +72,7 @@ async def get_calendar(calendar_id: int, db: Session = Depends(get_db)):
 async def create_calendar(calendar: CalendarCreate, db: Session = Depends(get_db)):
     """Create a new calendar"""
     # Verify user exists
-    user = db.query(User).filter(User.id == calendar.user_id).first()
+    user = db.query(User).filter(User.id == calendar.owner_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
