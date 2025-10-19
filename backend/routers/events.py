@@ -198,10 +198,54 @@ async def get_event(
     current_user_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
-    """Get a single event by ID"""
+    """
+    Get a single event by ID.
+
+    Access control: Only users with one of these relationships can view the event:
+    - Event owner
+    - Has EventInteraction (invited or subscribed)
+    - Member of calendar containing the event (owner/admin with accepted status)
+    """
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
+
+    # Validate access if current_user_id provided
+    if current_user_id is not None:
+        # Check if user is banned
+        from dependencies import check_user_not_banned
+        check_user_not_banned(current_user_id, db)
+        has_access = False
+
+        # Check 1: Is owner
+        if event.owner_id == current_user_id:
+            has_access = True
+
+        # Check 2: Has EventInteraction (invited or subscribed)
+        if not has_access:
+            interaction = db.query(EventInteraction).filter(
+                EventInteraction.event_id == event_id,
+                EventInteraction.user_id == current_user_id
+            ).first()
+            if interaction:
+                has_access = True
+
+        # Check 3: Member of calendar containing the event
+        if not has_access and event.calendar_id:
+            calendar_membership = db.query(CalendarMembership).filter(
+                CalendarMembership.calendar_id == event.calendar_id,
+                CalendarMembership.user_id == current_user_id,
+                CalendarMembership.status == 'accepted',
+                CalendarMembership.role.in_(['owner', 'admin'])
+            ).first()
+            if calendar_membership:
+                has_access = True
+
+        if not has_access:
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to view this event"
+            )
 
     # Fetch owner information
     owner_display_name = f"Usuario #{event.owner_id}"
@@ -372,6 +416,10 @@ async def create_event(
     owner = db.query(User).filter(User.id == event.owner_id).first()
     if not owner:
         raise HTTPException(status_code=404, detail="Owner user not found")
+
+    # Check if owner is banned
+    from dependencies import check_user_not_banned
+    check_user_not_banned(event.owner_id, db)
 
     # Conflict detection (server-side business logic formerly in CLI)
     if not force:

@@ -154,6 +154,14 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Check if user is banned
+    from dependencies import check_user_not_banned
+    check_user_not_banned(interaction.user_id, db)
+
+    # Check if the user inviting is banned (if applicable)
+    if interaction.invited_by_user_id:
+        check_user_not_banned(interaction.invited_by_user_id, db)
+
     # Check if interaction already exists (unique constraint)
     existing = db.query(EventInteraction).filter(
         EventInteraction.event_id == interaction.event_id,
@@ -212,6 +220,10 @@ async def patch_interaction(
     ).first()
     if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
+
+    # Check if user is banned
+    from dependencies import check_user_not_banned
+    check_user_not_banned(db_interaction.user_id, db)
 
     # Get the event to check if it's a recurring event
     event = db.query(Event).filter(Event.id == db_interaction.event_id).first()

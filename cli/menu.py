@@ -156,10 +156,11 @@ def menu_eventos():
 
         if modo_actual == MODO_USUARIO:
             choices = [
+                "📨 Ver MIS invitaciones pendientes",
                 "📋 Ver MIS eventos",
                 "🔍 Ver detalles de un evento",
                 "➕ Crear nuevo evento",
-                "📨 Ver MIS invitaciones pendientes",
+                "📤 Invitar usuario a un evento",
                 "🔔 Suscribirme a usuario público",
                 "⬅️  Volver al menú principal",
             ]
@@ -178,7 +179,9 @@ def menu_eventos():
             style=custom_style,
         ).ask()
 
-        if choice == "📋 Ver MIS eventos":
+        if choice == "📨 Ver MIS invitaciones pendientes":
+            ver_mis_invitaciones()
+        elif choice == "📋 Ver MIS eventos":
             ver_mis_eventos()
         elif choice == "📋 Ver eventos de un usuario":
             listar_eventos_usuario()
@@ -186,8 +189,8 @@ def menu_eventos():
             ver_evento()
         elif choice == "➕ Crear nuevo evento":
             crear_evento()
-        elif choice == "📨 Ver MIS invitaciones pendientes":
-            ver_mis_invitaciones()
+        elif choice == "📤 Invitar usuario a un evento":
+            invitar_usuario_a_evento_menu()
         elif choice == "🔔 Suscribirme a usuario público":
             suscribirse_a_usuario_publico()
         elif choice == "🗑️  Eliminar un evento":
@@ -202,17 +205,30 @@ def ver_mis_eventos():
     _show_header_wrapper()
 
     # Ofrecer opciones de filtrado
-    filter_choice = questionary.select("¿Cómo deseas ver tus eventos?", choices=["📅 Todos los eventos", "📆 Próximos 7 días", "📊 Este mes", "🔍 Buscar por nombre", "⬅️  Cancelar"], style=custom_style).ask()
+    filter_choice = questionary.select(
+        "¿Cómo deseas ver tus eventos?",
+        choices=[
+            "📅 Todos los eventos",
+            "📆 Hoy",
+            "📆 Esta semana (próximos 7 días)",
+            "📊 Este mes",
+            "🔍 Buscar por nombre",
+            "⬅️  Cancelar"
+        ],
+        style=custom_style
+    ).ask()
 
     if filter_choice == "⬅️  Cancelar":
         return
 
-    console.print(f"\n[cyan]Consultando tus eventos...[/cyan]\n")
-
     # Usar filtros predefinidos del backend
     params = {}
+    enable_pagination = False
 
-    if filter_choice == "📆 Próximos 7 días":
+    if filter_choice == "📆 Hoy":
+        params["filter"] = "today"
+        title = "📆 Mis Eventos - Hoy"
+    elif filter_choice == "📆 Esta semana (próximos 7 días)":
         params["filter"] = "next_7_days"
         title = "📆 Mis Eventos - Próximos 7 Días"
     elif filter_choice == "📊 Este mes":
@@ -227,26 +243,77 @@ def ver_mis_eventos():
         params["search"] = search_term
         title = f"🔍 Búsqueda: '{search_term}'"
     else:
+        # "Todos los eventos" - habilitar paginación
         title = "📅 Mis Eventos"
+        enable_pagination = True
 
-    # Llamar a la API con los parámetros
-    response = api_client.get(url_user_events(usuario_actual), params=params)
-    events = handle_api_error(response)
+    # Variables para paginación
+    offset = 0
+    limit = 30
+    all_events = []
 
-    if not events:
-        console.print(f"[yellow]No se encontraron eventos[/yellow]\n")
-        pause()
-        return
+    while True:
+        clear_screen()
+        _show_header_wrapper()
+        console.print(f"\n[cyan]Consultando tus eventos...[/cyan]\n")
 
-    # Usar función de utilidad para crear la tabla
-    table = create_events_table(events, title=title, current_user_id=usuario_actual, max_rows=30)
-    console.print(table)
+        # Añadir parámetros de paginación si está habilitada
+        if enable_pagination:
+            params["limit"] = limit
+            params["offset"] = offset
 
-    show_pagination_info(min(30, len(events)), len(events))
+        # Llamar a la API con los parámetros
+        response = api_client.get(url_user_events(usuario_actual), params=params)
+        events = handle_api_error(response)
 
-    console.print(f"\n[cyan]Total: {format_count_message(len(events), 'evento', 'eventos')}[/cyan]")
-    console.print("[dim]Incluye tus eventos propios, invitaciones aceptadas y suscripciones[/dim]\n")
-    pause()
+        if not events:
+            if offset == 0:
+                console.print(f"[yellow]No se encontraron eventos[/yellow]\n")
+                pause()
+                return
+            else:
+                console.print(f"[yellow]No hay más eventos para mostrar[/yellow]\n")
+                pause()
+                break
+
+        # Si no hay paginación, mostrar todo y terminar
+        if not enable_pagination:
+            table = create_events_table(events, title=title, current_user_id=usuario_actual, max_rows=50)
+            console.print(table)
+            show_pagination_info(min(50, len(events)), len(events))
+            console.print(f"\n[cyan]Total: {format_count_message(len(events), 'evento', 'eventos')}[/cyan]")
+            console.print("[dim]Incluye tus eventos propios, invitaciones aceptadas y suscripciones[/dim]\n")
+            pause()
+            break
+
+        # Con paginación: acumular eventos y mostrar
+        all_events.extend(events)
+
+        page_title = f"{title} (mostrando {len(all_events)} eventos)"
+        table = create_events_table(all_events, title=page_title, current_user_id=usuario_actual, max_rows=len(all_events))
+        console.print(table)
+
+        # Mostrar info de paginación
+        console.print(f"\n[cyan]Mostrando {len(all_events)} eventos[/cyan]")
+        console.print("[dim]Incluye tus eventos propios, invitaciones aceptadas y suscripciones[/dim]\n")
+
+        # Si obtuvimos menos eventos que el límite, no hay más páginas
+        if len(events) < limit:
+            console.print("[dim]No hay más eventos para mostrar[/dim]\n")
+            pause()
+            break
+
+        # Preguntar si quiere ver más
+        ver_mas = questionary.confirm(
+            f"Hay más eventos disponibles. ¿Deseas cargar los siguientes {limit}?",
+            default=True
+        ).ask()
+
+        if not ver_mas:
+            break
+
+        # Avanzar a la siguiente página
+        offset += limit
 
 
 def ver_mis_invitaciones():
@@ -611,6 +678,56 @@ def invitar_a_evento(event_id):
         console.print("[red]No se pudo crear la invitación[/red]\n")
 
     pause()
+
+
+def invitar_usuario_a_evento_menu():
+    """Menú para seleccionar un evento propio e invitar a un usuario"""
+    clear_screen()
+    _show_header_wrapper()
+
+    console.print("[bold cyan]📤 Invitar Usuario a un Evento[/bold cyan]\n")
+    console.print("[cyan]Cargando tus eventos...[/cyan]\n")
+
+    # Obtener eventos del usuario actual
+    response = api_client.get(url_user_events(usuario_actual))
+    events = handle_api_error(response)
+
+    if not events:
+        console.print("[yellow]No tienes eventos creados[/yellow]\n")
+        pause()
+        return
+
+    # Filtrar solo eventos propios
+    my_events = [e for e in events if e.get('is_owner', False) or e.get('source') == 'owned']
+
+    if not my_events:
+        console.print("[yellow]No tienes eventos propios a los que puedas invitar usuarios[/yellow]\n")
+        pause()
+        return
+
+    # Crear opciones de eventos
+    event_choices = []
+    for event in my_events:
+        event_name = truncate_text(event['name'], 40)
+        event_date = event.get('start_date_formatted', event.get('start_date', ''))
+        event_choices.append(f"{event['id']} - {event_name} ({event_date})")
+
+    event_choices.append("⬅️  Cancelar")
+
+    event_choice = questionary.select(
+        "Selecciona el evento al que deseas invitar usuarios:",
+        choices=event_choices,
+        style=custom_style
+    ).ask()
+
+    if event_choice == "⬅️  Cancelar":
+        return
+
+    # Parsear ID del evento
+    event_id = int(event_choice.split(" - ")[0])
+
+    # Llamar a la función existente para invitar
+    invitar_a_evento(event_id)
 
 
 def crear_evento():
@@ -1006,7 +1123,7 @@ def ver_mis_calendarios():
 
         for cal in shared_calendars:
             status_color = "green" if cal["status"] == "accepted" else "yellow"
-            table_shared.add_row(str(cal["calendar_id"]), truncate_text(cal["calendar_name"], 18), cal["role"], f"[{status_color}]{cal['status']}[/{status_color}]", f"Usuario #{cal['calendar_user_id']}")
+            table_shared.add_row(str(cal["calendar_id"]), truncate_text(cal["calendar_name"], 18), cal["role"], f"[{status_color}]{cal['status']}[/{status_color}]", f"Usuario #{cal['calendar_owner_id']}")
 
         console.print(table_shared)
         console.print(f"\n[cyan]{len(shared_calendars)} calendario(s) compartido(s)[/cyan]\n")

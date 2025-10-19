@@ -209,6 +209,8 @@ async def get_user_events(
     to_date: Optional[datetime] = None,
     search: Optional[str] = None,
     filter: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
     db: Session = Depends(get_db)
 ):
     """
@@ -226,7 +228,9 @@ async def get_user_events(
     - include_past: if False, filters out past events
     - from_date, to_date: date range (default: today to +30 months)
     - search: case-insensitive name filter
-    - filter: predefined filters ('next_7_days', 'this_month') - overrides from_date/to_date
+    - filter: predefined filters ('today', 'next_7_days', 'this_month') - overrides from_date/to_date
+    - limit: maximum number of events to return (default: all)
+    - offset: number of events to skip for pagination (default: 0)
     """
     # ============================================================
     # 1. VALIDATION AND DATE SETUP
@@ -235,10 +239,17 @@ async def get_user_events(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Check if user is banned
+    from dependencies import check_user_not_banned
+    check_user_not_banned(user_id, db)
+
     # Apply predefined filters
     now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-    if filter == "next_7_days":
+    if filter == "today":
+        from_date = now
+        to_date = now + timedelta(days=1)  # Until end of today
+    elif filter == "next_7_days":
         from_date = now
         to_date = now + timedelta(days=7)
     elif filter == "this_month":
@@ -459,6 +470,12 @@ async def get_user_events(
             'owner_display': owner_display
         }
         result.append(event_dict)
+
+    # Apply pagination
+    if limit is not None:
+        start_idx = max(0, offset)
+        end_idx = start_idx + limit
+        result = result[start_idx:end_idx]
 
     return result
 
