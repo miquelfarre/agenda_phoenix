@@ -216,6 +216,7 @@ async def get_user_events(
     """
     Get all events for a user from multiple sources:
     - Own events (where user is owner)
+    - Joined events (via EventInteraction type='joined' with status='accepted' - admin/member roles)
     - Subscribed events (via EventInteraction type='subscribed')
     - Invited events (via EventInteraction type='invited')
     - Calendar events (via CalendarMembership with role owner/admin)
@@ -270,7 +271,7 @@ async def get_user_events(
             from_date = now_midnight
 
     # ============================================================
-    # 2. COLLECT EVENT IDs WITH SOURCES (priority: owned > subscribed > invited > calendar)
+    # 2. COLLECT EVENT IDs WITH SOURCES (priority: owned > joined > subscribed > invited > calendar)
     # ============================================================
     event_sources = {}  # event_id -> source_type
 
@@ -278,6 +279,16 @@ async def get_user_events(
     own_event_ids = db.query(Event.id).filter(Event.owner_id == user_id).all()
     for (event_id,) in own_event_ids:
         event_sources[event_id] = 'owned'
+
+    # Joined events (events where user is admin/member with accepted status)
+    joined_event_ids = db.query(EventInteraction.event_id).filter(
+        EventInteraction.user_id == user_id,
+        EventInteraction.interaction_type == 'joined',
+        EventInteraction.status == 'accepted'
+    ).all()
+    for (event_id,) in joined_event_ids:
+        if event_id not in event_sources:
+            event_sources[event_id] = 'joined'
 
     # Subscribed events
     subscribed_event_ids = db.query(EventInteraction.event_id).filter(
@@ -460,6 +471,24 @@ async def get_user_events(
     visible_events = [e for e in events if e.id not in events_to_hide]
 
     # ============================================================
+    # 5.5. GET USER INTERACTIONS FOR VISIBLE EVENTS
+    # ============================================================
+    visible_event_ids = [e.id for e in visible_events]
+    user_interactions = {}
+    if visible_event_ids:
+        interactions = db.query(EventInteraction).filter(
+            EventInteraction.event_id.in_(visible_event_ids),
+            EventInteraction.user_id == user_id
+        ).all()
+        for interaction in interactions:
+            user_interactions[interaction.event_id] = {
+                'interaction_type': interaction.interaction_type,
+                'status': interaction.status,
+                'role': interaction.role,
+                'invited_by_user_id': interaction.invited_by_user_id
+            }
+
+    # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)
     # ============================================================
     def round_to_5min(dt):
@@ -493,7 +522,8 @@ async def get_user_events(
             'start_date_formatted': rounded_start.strftime("%Y-%m-%d %H:%M"),
             'end_date_formatted': rounded_end.strftime("%Y-%m-%d %H:%M") if rounded_end else None,
             'is_owner': is_owner,
-            'owner_display': owner_display
+            'owner_display': owner_display,
+            'interaction': user_interactions.get(event.id)
         }
         result.append(event_dict)
 

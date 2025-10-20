@@ -103,8 +103,14 @@ start_backend() {
     fi
 
     # Build images
-    info "Building Docker images..."
-    docker compose build backend >/dev/null 2>&1
+    info "Building Docker images (this may take a few minutes on first run)..."
+    if ! docker compose build backend; then
+        err "Failed to build Docker images. This may be due to Docker Hub connectivity issues."
+        err "Please retry in a few minutes or check your internet connection."
+        exit 1
+    fi
+
+    success "Docker images built successfully"
 
     # Start all services in detached mode
     info "Starting all services (Supabase + Backend)..."

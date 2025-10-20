@@ -514,7 +514,15 @@ def insert_sample_data():
             owner_id=sonia.id,
         )
 
-        db.add_all([event_cumple_sara_clase, recurring_promociona_madrid])
+        event_compra_semanal = Event(
+            name="Compra semanal sábado",
+            description="Compra semanal en el supermercado",
+            start_date=datetime(2025, 10, 25, 10, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+        )
+
+        db.add_all([event_cumple_sara_clase, recurring_promociona_madrid, event_compra_semanal])
         db.flush()
 
         # Create recurring config for Promociona Madrid
@@ -603,6 +611,19 @@ def insert_sample_data():
         interactions.append(EventInteraction(
             event_id=event_cumple_sara_clase.id, user_id=miquel.id,
             interaction_type="invited", status="pending",
+            invited_by_user_id=sonia.id,
+        ))
+
+        # Sonia owns "Compra semanal sábado"
+        interactions.append(EventInteraction(
+            event_id=event_compra_semanal.id, user_id=sonia.id,
+            interaction_type="joined", status="accepted", role="owner",
+        ))
+
+        # Miquel is admin of "Compra semanal sábado"
+        interactions.append(EventInteraction(
+            event_id=event_compra_semanal.id, user_id=miquel.id,
+            interaction_type="joined", status="accepted", role="admin",
             invited_by_user_id=sonia.id,
         ))
 

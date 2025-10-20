@@ -680,11 +680,20 @@ def invitar_usuario_a_evento_menu(_show_header_wrapper, handle_api_error, pause,
         pause()
         return
 
-    # Filtrar solo eventos propios
-    my_events = [e for e in events if e.get('is_owner', False) or e.get('source') == 'owned']
+    # Filtrar eventos donde puedas invitar (owner o admin)
+    my_events = []
+    for e in events:
+        # Si eres owner
+        if e.get('is_owner', False) or e.get('source') == 'owned':
+            my_events.append(e)
+        # Si eres admin (joined con role admin)
+        elif e.get('source') == 'joined':
+            interaction = e.get('interaction', {})
+            if interaction and interaction.get('role') == 'admin':
+                my_events.append(e)
 
     if not my_events:
-        console.print("[yellow]No tienes eventos propios a los que puedas invitar usuarios[/yellow]\n")
+        console.print("[yellow]No tienes eventos propios o como admin a los que puedas invitar usuarios[/yellow]\n")
         pause()
         return
 
@@ -838,6 +847,66 @@ def editar_evento(_show_header_wrapper, handle_api_error, pause, modo_actual, us
     _show_header_wrapper()
 
     console.print("[bold cyan]Editar Evento[/bold cyan]\n")
+
+    # En modo usuario, primero mostrar los eventos que puede editar
+    if modo_actual == MODO_USUARIO:
+        console.print("[cyan]Cargando eventos que puedes editar...[/cyan]\n")
+
+        # Obtener eventos donde el usuario es owner o admin
+        response = api_client.get(url_user_events(usuario_actual), params={"enriched": "true"})
+        user_events = handle_api_error(response)
+
+        if not user_events:
+            console.print("[yellow]No tienes eventos que puedas editar[/yellow]\n")
+            pause()
+            return
+
+        # Filtrar solo eventos regulares (no recurrentes) donde sea owner o admin
+        editable_events = []
+        for event in user_events:
+            if event.get('event_type') == 'regular':
+                # Verificar si es owner
+                if event.get('owner_id') == usuario_actual:
+                    editable_events.append(event)
+                else:
+                    # Verificar si es admin
+                    interaction = event.get('_interaction')
+                    if interaction and interaction.get('role') == 'admin' and interaction.get('status') == 'accepted':
+                        editable_events.append(event)
+
+        if not editable_events:
+            console.print("[yellow]No tienes eventos regulares que puedas editar[/yellow]\n")
+            console.print("[dim]Solo se pueden editar eventos regulares (no recurrentes)[/dim]\n")
+            pause()
+            return
+
+        # Mostrar tabla de eventos editables
+        table = Table(title="Eventos que puedes editar", show_header=True, header_style="bold cyan")
+        table.add_column("ID", style="cyan", justify="right", width=8)
+        table.add_column("Nombre", style="yellow", width=30)
+        table.add_column("Fecha", style="green", width=20)
+        table.add_column("Rol", style="magenta", width=10)
+
+        for event in editable_events:
+            start_date = event.get('start_date', '')
+            if start_date:
+                try:
+                    dt = date_parser.parse(start_date)
+                    start_date = dt.strftime("%Y-%m-%d %H:%M")
+                except:
+                    pass
+
+            rol = "Owner" if event.get('owner_id') == usuario_actual else "Admin"
+
+            table.add_row(
+                str(event['id']),
+                truncate_text(event['name'], 28),
+                start_date,
+                rol
+            )
+
+        console.print(table)
+        console.print()
 
     event_id = questionary.text("ID del evento a editar:", validate=lambda text: text.isdigit() or "Debe ser un numero").ask()
 

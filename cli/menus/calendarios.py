@@ -435,6 +435,70 @@ def editar_calendario(_show_header_wrapper, handle_api_error, pause, modo_actual
 
     console.print("[bold cyan]Editar Calendario[/bold cyan]\n")
 
+    # En modo usuario, primero mostrar los calendarios que puede editar
+    if modo_actual == MODO_USUARIO:
+        console.print("[cyan]Cargando calendarios que puedes editar...[/cyan]\n")
+
+        # Obtener memberships del usuario
+        memberships_response = api_client.get(url_calendar_memberships(), params={"user_id": usuario_actual, "status": "accepted"})
+        memberships = handle_api_error(memberships_response)
+
+        if not memberships:
+            console.print("[yellow]No tienes calendarios que puedas editar[/yellow]\n")
+            pause()
+            return
+
+        # Filtrar solo calendarios donde sea owner o admin
+        editable_calendars = []
+        calendar_ids_to_fetch = set()
+
+        for membership in memberships:
+            if membership.get('role') in ['owner', 'admin']:
+                calendar_ids_to_fetch.add(membership['calendar_id'])
+
+        if not calendar_ids_to_fetch:
+            console.print("[yellow]No tienes calendarios donde seas propietario o administrador[/yellow]\n")
+            pause()
+            return
+
+        # Obtener detalles de calendarios
+        for cal_id in calendar_ids_to_fetch:
+            cal_response = api_client.get(url_calendar(cal_id))
+            calendar = handle_api_error(cal_response)
+            if calendar:
+                # Agregar rol del usuario
+                for membership in memberships:
+                    if membership['calendar_id'] == cal_id:
+                        calendar['_user_role'] = membership.get('role')
+                        break
+                editable_calendars.append(calendar)
+
+        if not editable_calendars:
+            console.print("[yellow]No se pudieron cargar los calendarios[/yellow]\n")
+            pause()
+            return
+
+        # Mostrar tabla de calendarios editables
+        table = Table(title="Calendarios que puedes editar", show_header=True, header_style="bold cyan")
+        table.add_column("ID", style="cyan", justify="right", width=8)
+        table.add_column("Nombre", style="yellow", width=30)
+        table.add_column("Tipo", style="green", width=15)
+        table.add_column("Rol", style="magenta", width=10)
+
+        for calendar in editable_calendars:
+            tipo = "Temporal" if calendar.get('start_date') or calendar.get('end_date') else "Permanente"
+            rol = calendar.get('_user_role', 'N/A').capitalize()
+
+            table.add_row(
+                str(calendar['id']),
+                truncate_text(calendar['name'], 28),
+                tipo,
+                rol
+            )
+
+        console.print(table)
+        console.print()
+
     calendar_id = questionary.text("ID del calendario a editar:", validate=lambda text: text.isdigit() or "Debe ser un numero").ask()
 
     if not calendar_id:
