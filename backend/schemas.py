@@ -98,6 +98,7 @@ class EventResponse(EventBase):
     end_date_formatted: Optional[str] = None  # Pre-formatted date for UI
     is_owner: Optional[bool] = None  # Whether current user is owner
     owner_display: Optional[str] = None  # "Yo" or "Usuario #X"
+    interaction: Optional[dict] = None  # User's interaction with this event (type, status, role)
 
     class Config:
         from_attributes = True
