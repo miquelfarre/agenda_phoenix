@@ -153,10 +153,11 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Event not found")
 
     # Get user IDs that already have interactions with this event (in a single subquery)
-    invited_user_ids_subquery = db.query(EventInteraction.user_id).filter(EventInteraction.event_id == event_id).subquery()
+    # Use scalar_subquery() for SQLAlchemy 2.0+ compatibility
+    invited_user_ids_subquery = db.query(EventInteraction.user_id).filter(EventInteraction.event_id == event_id).scalar_subquery()
 
     # Get user IDs that have mutual blocks with the event owner
-    blocked_user_ids_subquery = db.query(UserBlock.blocked_user_id).filter(UserBlock.blocker_user_id == event.owner_id).union(db.query(UserBlock.blocker_user_id).filter(UserBlock.blocked_user_id == event.owner_id)).subquery()
+    blocked_user_ids_subquery = db.query(UserBlock.blocked_user_id).filter(UserBlock.blocker_user_id == event.owner_id).union(db.query(UserBlock.blocker_user_id).filter(UserBlock.blocked_user_id == event.owner_id)).scalar_subquery()
 
     # Get all users NOT in the invited list, NOT the owner, NOT blocked, NOT public, with Contact info in one query
     results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id).filter(User.id != event.owner_id, User.is_public == False, ~User.id.in_(invited_user_ids_subquery), ~User.id.in_(blocked_user_ids_subquery)).all()
