@@ -1,0 +1,32 @@
+{
+  "name": "Update calendar successfully",
+  "description": "Actualizar un calendario existente con éxito",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Roberto Díaz",
+        "phone": "+34600888999"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario Original"
+      }
+    ]
+  },
+  "request": {
+    "method": "PUT",
+    "endpoint": "/calendars/1",
+    "body": {
+      "name": "Calendario Actualizado",
+      "start_date": "2025-01-01T00:00:00",
+      "end_date": "2025-12-31T23:59:59"
+    }
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

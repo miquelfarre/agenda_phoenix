@@ -1,0 +1,16 @@
+{
+  "status_code": 201,
+  "body": {
+    "_status_code": 201,
+    "body": {
+      "name": "Calendario de trabajo",
+      "start_date": null,
+      "end_date": null,
+      "id": "{{ID}}",
+      "owner_id": 1,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

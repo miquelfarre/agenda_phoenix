@@ -1,0 +1,35 @@
+{
+  "name": "Yearly recurrence - December 25th",
+  "description": "Evento que se repite cada año el 25 de diciembre (Navidad)",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Navidad",
+        "description": "Cena de Navidad familiar",
+        "start_date": "2025-12-25T20:00:00",
+        "end_date": "2025-12-25T23:59:00",
+        "event_type": "recurring",
+        "owner_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/recurring_configs",
+    "body": {
+      "event_id": 100,
+      "recurrence_type": "yearly",
+      "schedule": [
+        {"month": "12", "day": "25"}
+      ],
+      "recurrence_end_date": "2030-12-31T23:59:59"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

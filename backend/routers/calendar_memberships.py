@@ -3,37 +3,22 @@ Calendar Memberships Router
 
 Handles all calendar membership endpoints.
 """
-from fastapi import APIRouter, HTTPException, Depends
+
+from typing import List, Optional, Union
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Optional
 
-from models import Calendar, User, CalendarMembership
-from schemas import (
-    CalendarMembershipCreate, CalendarMembershipBase,
-    CalendarMembershipResponse, CalendarMembershipEnrichedResponse
-)
 from dependencies import get_db
-from typing import Union
+from models import Calendar, CalendarMembership, User
+from schemas import CalendarMembershipBase, CalendarMembershipCreate, CalendarMembershipEnrichedResponse, CalendarMembershipResponse
 
-
-router = APIRouter(
-    prefix="/calendar_memberships",
-    tags=["calendar_memberships"]
-)
+router = APIRouter(prefix="/calendar_memberships", tags=["calendar_memberships"])
 
 
 @router.get("", response_model=List[Union[CalendarMembershipResponse, CalendarMembershipEnrichedResponse]])
 async def get_calendar_memberships(
-    calendar_id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    status: Optional[str] = None,
-    enriched: bool = False,
-    exclude_owned: bool = False,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: Optional[str] = "created_at",
-    order_dir: str = "desc",
-    db: Session = Depends(get_db)
+    calendar_id: Optional[int] = None, user_id: Optional[int] = None, status: Optional[str] = None, enriched: bool = False, exclude_owned: bool = False, limit: int = 50, offset: int = 0, order_by: Optional[str] = "created_at", order_dir: str = "desc", db: Session = Depends(get_db)
 ):
     """Get all calendar memberships, optionally filtered, optionally enriched with calendar info
 
@@ -60,9 +45,7 @@ async def get_calendar_memberships(
     # If enriched, add calendar information
     if enriched:
         # Use JOIN to get calendar data efficiently
-        results = db.query(CalendarMembership, Calendar).join(
-            Calendar, CalendarMembership.calendar_id == Calendar.id
-        )
+        results = db.query(CalendarMembership, Calendar).join(Calendar, CalendarMembership.calendar_id == Calendar.id)
 
         if calendar_id:
             results = results.filter(CalendarMembership.calendar_id == calendar_id)
@@ -86,18 +69,20 @@ async def get_calendar_memberships(
         enriched_memberships = []
         for membership, calendar in results:
             # Create CalendarMembershipEnrichedResponse instance directly
-            enriched_memberships.append(CalendarMembershipEnrichedResponse(
-                id=membership.id,
-                calendar_id=membership.calendar_id,
-                user_id=membership.user_id,
-                role=membership.role,
-                status=membership.status,
-                invited_by_user_id=membership.invited_by_user_id,
-                created_at=membership.created_at,
-                updated_at=membership.updated_at,
-                calendar_name=calendar.name,
-                calendar_owner_id=calendar.owner_id
-            ))
+            enriched_memberships.append(
+                CalendarMembershipEnrichedResponse(
+                    id=membership.id,
+                    calendar_id=membership.calendar_id,
+                    user_id=membership.user_id,
+                    role=membership.role,
+                    status=membership.status,
+                    invited_by_user_id=membership.invited_by_user_id,
+                    created_at=membership.created_at,
+                    updated_at=membership.updated_at,
+                    calendar_name=calendar.name,
+                    calendar_owner_id=calendar.owner_id,
+                )
+            )
 
         return enriched_memberships
 
@@ -148,14 +133,11 @@ async def create_calendar_membership(membership: CalendarMembershipCreate, db: S
         raise HTTPException(status_code=404, detail="User not found")
 
     # Check if membership already exists
-    existing = db.query(CalendarMembership).filter(
-        CalendarMembership.calendar_id == membership.calendar_id,
-        CalendarMembership.user_id == membership.user_id
-    ).first()
+    existing = db.query(CalendarMembership).filter(CalendarMembership.calendar_id == membership.calendar_id, CalendarMembership.user_id == membership.user_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="User already has a membership in this calendar")
 
-    db_membership = CalendarMembership(**membership.dict())
+    db_membership = CalendarMembership(**membership.model_dump())
     db.add(db_membership)
     db.commit()
     db.refresh(db_membership)
@@ -163,17 +145,13 @@ async def create_calendar_membership(membership: CalendarMembershipCreate, db: S
 
 
 @router.put("/{membership_id}", response_model=CalendarMembershipResponse)
-async def update_calendar_membership(
-    membership_id: int,
-    membership: CalendarMembershipBase,
-    db: Session = Depends(get_db)
-):
+async def update_calendar_membership(membership_id: int, membership: CalendarMembershipBase, db: Session = Depends(get_db)):
     """Update a calendar membership (e.g., change status from pending to accepted, or change role)"""
     db_membership = db.query(CalendarMembership).filter(CalendarMembership.id == membership_id).first()
     if not db_membership:
         raise HTTPException(status_code=404, detail="Calendar membership not found")
 
-    for key, value in membership.dict().items():
+    for key, value in membership.model_dump().items():
         setattr(db_membership, key, value)
 
     db.commit()

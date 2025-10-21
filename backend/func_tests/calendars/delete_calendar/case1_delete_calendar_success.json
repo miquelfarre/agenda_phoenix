@@ -1,0 +1,27 @@
+{
+  "name": "Delete calendar successfully",
+  "description": "Eliminar un calendario existente con éxito",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Sofía Torres",
+        "phone": "+34600123321"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario a Eliminar"
+      }
+    ]
+  },
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/calendars/1"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

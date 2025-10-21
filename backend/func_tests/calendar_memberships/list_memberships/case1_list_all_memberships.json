@@ -1,0 +1,62 @@
+{
+  "name": "List all calendar memberships",
+  "description": "Listar todas las membresías de calendarios del sistema",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Owner 1",
+        "phone": "+34600111100"
+      },
+      {
+        "id": 2,
+        "name": "Member 1",
+        "phone": "+34600222200"
+      },
+      {
+        "id": 3,
+        "name": "Member 2",
+        "phone": "+34600333300"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario A"
+      },
+      {
+        "id": 2,
+        "owner_id": 1,
+        "name": "Calendario B"
+      }
+    ],
+    "calendar_memberships": [
+      {
+        "calendar_id": 1,
+        "user_id": 2,
+        "role": "member",
+        "status": "accepted"
+      },
+      {
+        "calendar_id": 1,
+        "user_id": 3,
+        "role": "admin",
+        "status": "pending"
+      },
+      {
+        "calendar_id": 2,
+        "user_id": 2,
+        "role": "member",
+        "status": "accepted"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/calendar_memberships"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "status_code": 201,
+  "body": {
+    "_status_code": 201,
+    "body": {
+      "interaction_type": "joined",
+      "status": "accepted",
+      "role": null,
+      "id": "{{ID}}",
+      "event_id": "{{ID}}",
+      "user_id": "{{ID}}",
+      "invited_by_user_id": null,
+      "invited_via_group_id": null,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

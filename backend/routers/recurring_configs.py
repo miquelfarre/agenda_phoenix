@@ -3,30 +3,21 @@ Recurring Event Configs Router
 
 Handles all recurring event configuration endpoints.
 """
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 
-from models import Event, RecurringEventConfig
-from schemas import RecurringEventConfigCreate, RecurringEventConfigBase, RecurringEventConfigResponse
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from dependencies import get_db
+from models import Event, RecurringEventConfig
+from schemas import RecurringEventConfigBase, RecurringEventConfigCreate, RecurringEventConfigResponse
 
-
-router = APIRouter(
-    prefix="/recurring_configs",
-    tags=["recurring_configs"]
-)
+router = APIRouter(prefix="/recurring_configs", tags=["recurring_configs"])
 
 
 @router.get("", response_model=List[RecurringEventConfigResponse])
-async def get_recurring_configs(
-    event_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_recurring_configs(event_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all recurring event configs, optionally filtered by event_id, with pagination and ordering"""
     query = db.query(RecurringEventConfig)
     if event_id:
@@ -61,13 +52,11 @@ async def create_recurring_config(config: RecurringEventConfigCreate, db: Sessio
         raise HTTPException(status_code=404, detail="Event not found")
 
     # Check if config already exists for this event
-    existing = db.query(RecurringEventConfig).filter(
-        RecurringEventConfig.event_id == config.event_id
-    ).first()
+    existing = db.query(RecurringEventConfig).filter(RecurringEventConfig.event_id == config.event_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="Event already has a recurring config")
 
-    db_config = RecurringEventConfig(**config.dict())
+    db_config = RecurringEventConfig(**config.model_dump())
     db.add(db_config)
     db.commit()
     db.refresh(db_config)
@@ -81,7 +70,7 @@ async def update_recurring_config(config_id: int, config: RecurringEventConfigBa
     if not db_config:
         raise HTTPException(status_code=404, detail="Recurring config not found")
 
-    for key, value in config.dict().items():
+    for key, value in config.model_dump().items():
         setattr(db_config, key, value)
 
     db.commit()

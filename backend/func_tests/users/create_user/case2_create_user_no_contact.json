@@ -1,0 +1,20 @@
+{
+  "name": "Create user without contact (Instagram user)",
+  "description": "Crear un usuario de Instagram sin contacto asociado",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/users",
+    "body": {
+      "username": "instagram_user",
+      "auth_provider": "instagram",
+      "auth_id": "ig_12345678",
+      "profile_picture_url": "https://example.com/profile.jpg"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

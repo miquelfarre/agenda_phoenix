@@ -1,0 +1,14 @@
+{
+  "name": "Get events of non-existent user (should fail)",
+  "description": "Intentar obtener eventos de un usuario que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/9999/events"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

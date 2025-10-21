@@ -1,0 +1,14 @@
+{
+  "name": "Get members of nonexistent calendar (should fail)",
+  "description": "Intentar obtener miembros de un calendario que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/calendars/9999/memberships"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

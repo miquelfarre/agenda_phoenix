@@ -9,13 +9,12 @@ Pure SQLAlchemy - NO RAW SQL!
 """
 
 import logging
-from database import engine, Base, SessionLocal
-from models import (
-    Contact, User, Calendar, CalendarMembership,
-    Event, EventInteraction, RecurringEventConfig,
-    EventBan, UserBlock
-)
 from datetime import datetime, timedelta
+
+from sqlalchemy import inspect, text
+
+from database import Base, SessionLocal, engine
+from models import Calendar, CalendarMembership, Contact, Event, EventBan, EventInteraction, RecurringEventConfig, User, UserBlock
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +27,6 @@ def drop_all_tables():
     try:
         # Use inspector to get all tables and drop them with CASCADE
         # This handles circular foreign key dependencies
-        from sqlalchemy import inspect, text
         inspector = inspect(engine)
         tables = inspector.get_table_names()
 
@@ -128,12 +126,7 @@ def insert_sample_data():
         # 3. Create calendars
         cal_family = Calendar(owner_id=sonia.id, name="Family")
         cal_birthdays = Calendar(owner_id=sonia.id, name="Cumpleaños Family")
-        cal_esqui_temporal = Calendar(
-            owner_id=sonia.id,
-            name="Temporada Esquí 2025-2026",
-            start_date=datetime(2025, 12, 1),
-            end_date=datetime(2026, 3, 31)
-        )
+        cal_esqui_temporal = Calendar(owner_id=sonia.id, name="Temporada Esquí 2025-2026", start_date=datetime(2025, 12, 1), end_date=datetime(2026, 3, 31))
 
         db.add_all([cal_family, cal_birthdays, cal_esqui_temporal])
         db.flush()
@@ -143,27 +136,27 @@ def insert_sample_data():
         membership_sonia_family = CalendarMembership(
             calendar_id=cal_family.id,
             user_id=sonia.id,
-            role='owner',
-            status='accepted',
+            role="owner",
+            status="accepted",
         )
         membership_sonia_birthdays = CalendarMembership(
             calendar_id=cal_birthdays.id,
             user_id=sonia.id,
-            role='owner',
-            status='accepted',
+            role="owner",
+            status="accepted",
         )
         membership_miquel_birthdays = CalendarMembership(
             calendar_id=cal_birthdays.id,
             user_id=miquel.id,
-            role='admin',
-            status='accepted',
+            role="admin",
+            status="accepted",
             invited_by_user_id=sonia.id,
         )
         membership_miquel_family = CalendarMembership(
             calendar_id=cal_family.id,
             user_id=miquel.id,
-            role='admin',
-            status='accepted',
+            role="admin",
+            status="accepted",
             invited_by_user_id=sonia.id,
         )
 
@@ -213,7 +206,7 @@ def insert_sample_data():
         # 6. Create recurring event configs
         config_sincro = RecurringEventConfig(
             event_id=recurring_sincro.id,
-            recurrence_type='weekly',
+            recurrence_type="weekly",
             schedule=[
                 {"day": 0, "day_name": "Lunes", "time": "17:30"},
                 {"day": 2, "day_name": "Miércoles", "time": "17:30"},
@@ -222,7 +215,7 @@ def insert_sample_data():
         )
         config_dj = RecurringEventConfig(
             event_id=recurring_dj.id,
-            recurrence_type='weekly',
+            recurrence_type="weekly",
             schedule=[
                 {"day": 4, "day_name": "Viernes", "time": "17:30"},
             ],
@@ -230,7 +223,7 @@ def insert_sample_data():
         )
         config_baile = RecurringEventConfig(
             event_id=recurring_baile.id,
-            recurrence_type='weekly',
+            recurrence_type="weekly",
             schedule=[
                 {"day": 3, "day_name": "Jueves", "time": "17:30"},
             ],
@@ -238,7 +231,7 @@ def insert_sample_data():
         )
         config_esqui = RecurringEventConfig(
             event_id=recurring_esqui.id,
-            recurrence_type='weekly',
+            recurrence_type="weekly",
             schedule=[
                 {"day": 5, "day_name": "Sábado", "time": "08:00"},
             ],
@@ -340,25 +333,25 @@ def insert_sample_data():
         # Create recurring configs for birthdays (yearly, perpetual = no end date)
         config_bday_miquel = RecurringEventConfig(
             event_id=bday_miquel.id,
-            recurrence_type='yearly',
+            recurrence_type="yearly",
             schedule=[{"month": 4, "day_of_month": 30}],
             recurrence_end_date=None,  # Perpetuo
         )
         config_bday_ada = RecurringEventConfig(
             event_id=bday_ada.id,
-            recurrence_type='yearly',
+            recurrence_type="yearly",
             schedule=[{"month": 9, "day_of_month": 6}],
             recurrence_end_date=None,  # Perpetuo
         )
         config_bday_sonia = RecurringEventConfig(
             event_id=bday_sonia.id,
-            recurrence_type='yearly',
+            recurrence_type="yearly",
             schedule=[{"month": 1, "day_of_month": 31}],
             recurrence_end_date=None,  # Perpetuo
         )
         config_bday_sara = RecurringEventConfig(
             event_id=bday_sara.id,
-            recurrence_type='yearly',
+            recurrence_type="yearly",
             schedule=[{"month": 12, "day_of_month": 2}],
             recurrence_end_date=None,  # Perpetuo
         )
@@ -415,31 +408,28 @@ def insert_sample_data():
         # Configs para los nuevos eventos recurrentes
         config_medicacion = RecurringEventConfig(
             event_id=recurring_medicacion.id,
-            recurrence_type='daily',
+            recurrence_type="daily",
             schedule=[{"interval_days": 1}],  # Cada día
             recurrence_end_date=datetime(2026, 12, 31),  # Termina fin de 2026
         )
 
         config_alquiler = RecurringEventConfig(
             event_id=recurring_alquiler.id,
-            recurrence_type='monthly',
+            recurrence_type="monthly",
             schedule=[{"day_of_month": 1}],  # Día 1 de cada mes
             recurrence_end_date=None,  # Perpetuo
         )
 
         config_reunion = RecurringEventConfig(
             event_id=recurring_reunion.id,
-            recurrence_type='monthly',
-            schedule=[
-                {"day_of_month": 5},   # Día 5 de cada mes
-                {"day_of_month": 20}   # Día 20 de cada mes
-            ],
+            recurrence_type="monthly",
+            schedule=[{"day_of_month": 5}, {"day_of_month": 20}],  # Día 5 de cada mes  # Día 20 de cada mes
             recurrence_end_date=datetime(2026, 12, 31),
         )
 
         config_navidad = RecurringEventConfig(
             event_id=recurring_navidad.id,
-            recurrence_type='yearly',
+            recurrence_type="yearly",
             schedule=[{"month": 12, "day_of_month": 25}],  # 25 de diciembre cada año
             recurrence_end_date=None,  # Perpetuo
         )
@@ -528,7 +518,7 @@ def insert_sample_data():
         # Create recurring config for Promociona Madrid
         config_promociona = RecurringEventConfig(
             event_id=recurring_promociona_madrid.id,
-            recurrence_type='weekly',
+            recurrence_type="weekly",
             schedule=[
                 {"day": 0, "day_name": "Lunes", "time": "09:00"},
                 {"day": 1, "day_name": "Martes", "time": "09:00"},
@@ -554,104 +544,175 @@ def insert_sample_data():
 
         # Sonia owns all her recurring base events
         for event in [recurring_sincro, recurring_dj, recurring_baile, recurring_esqui]:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=sonia.id,
-                interaction_type="joined", status="accepted", role="owner",
-            ))
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
 
         # Sonia owns all recurring instances
         for event in all_instances:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=sonia.id,
-                interaction_type="joined", status="accepted", role="owner",
-            ))
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
 
         # Sonia owns all birthday events (recurring yearly perpetual)
         for event in [bday_miquel, bday_ada, bday_sonia, bday_sara]:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=sonia.id,
-                interaction_type="joined", status="accepted", role="owner",
-            ))
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
 
         # Sonia owns all additional recurring events (daily, monthly, yearly)
         for event in [recurring_medicacion, recurring_alquiler, recurring_reunion, recurring_navidad]:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=sonia.id,
-                interaction_type="joined", status="accepted", role="owner",
-            ))
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
 
         # Sonia owns regular events
         for event in [event_katy_perry, event_festa_codony]:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=sonia.id,
-                interaction_type="joined", status="accepted", role="owner",
-            ))
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
 
         # FC Barcelona owns all their matches
         for event in fcb_matches:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=fcbarcelona.id,
-                interaction_type="joined", status="accepted", role="owner",
-            ))
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=fcbarcelona.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
 
         # Miquel subscribed to all FC Barcelona matches
         for event in fcb_matches:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=miquel.id,
-                interaction_type="subscribed", status="accepted",
-            ))
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=miquel.id,
+                    interaction_type="subscribed",
+                    status="accepted",
+                )
+            )
 
         # Sonia owns "Cumpleaños clase Sara"
-        interactions.append(EventInteraction(
-            event_id=event_cumple_sara_clase.id, user_id=sonia.id,
-            interaction_type="joined", status="accepted", role="owner",
-        ))
+        interactions.append(
+            EventInteraction(
+                event_id=event_cumple_sara_clase.id,
+                user_id=sonia.id,
+                interaction_type="joined",
+                status="accepted",
+                role="owner",
+            )
+        )
 
         # Miquel invited to "Cumpleaños clase Sara"
-        interactions.append(EventInteraction(
-            event_id=event_cumple_sara_clase.id, user_id=miquel.id,
-            interaction_type="invited", status="pending",
-            invited_by_user_id=sonia.id,
-        ))
+        interactions.append(
+            EventInteraction(
+                event_id=event_cumple_sara_clase.id,
+                user_id=miquel.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=sonia.id,
+            )
+        )
 
         # Sonia owns "Compra semanal sábado"
-        interactions.append(EventInteraction(
-            event_id=event_compra_semanal.id, user_id=sonia.id,
-            interaction_type="joined", status="accepted", role="owner",
-        ))
+        interactions.append(
+            EventInteraction(
+                event_id=event_compra_semanal.id,
+                user_id=sonia.id,
+                interaction_type="joined",
+                status="accepted",
+                role="owner",
+            )
+        )
 
         # Miquel is admin of "Compra semanal sábado"
-        interactions.append(EventInteraction(
-            event_id=event_compra_semanal.id, user_id=miquel.id,
-            interaction_type="joined", status="accepted", role="admin",
-            invited_by_user_id=sonia.id,
-        ))
+        interactions.append(
+            EventInteraction(
+                event_id=event_compra_semanal.id,
+                user_id=miquel.id,
+                interaction_type="joined",
+                status="accepted",
+                role="admin",
+                invited_by_user_id=sonia.id,
+            )
+        )
 
         # Sonia owns "Promociona Madrid" base event
-        interactions.append(EventInteraction(
-            event_id=recurring_promociona_madrid.id, user_id=sonia.id,
-            interaction_type="joined", status="accepted", role="owner",
-        ))
+        interactions.append(
+            EventInteraction(
+                event_id=recurring_promociona_madrid.id,
+                user_id=sonia.id,
+                interaction_type="joined",
+                status="accepted",
+                role="owner",
+            )
+        )
 
         # Sonia owns all "Promociona Madrid" instances
         for event in promociona_instances:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=sonia.id,
-                interaction_type="joined", status="accepted", role="owner",
-            ))
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
 
         # Miquel invited to Esquí events (base + all instances)
-        interactions.append(EventInteraction(
-            event_id=recurring_esqui.id, user_id=miquel.id,
-            interaction_type="invited", status="pending",
-            invited_by_user_id=sonia.id,
-        ))
-        for event in esqui_instances:
-            interactions.append(EventInteraction(
-                event_id=event.id, user_id=miquel.id,
-                interaction_type="invited", status="pending",
+        interactions.append(
+            EventInteraction(
+                event_id=recurring_esqui.id,
+                user_id=miquel.id,
+                interaction_type="invited",
+                status="pending",
                 invited_by_user_id=sonia.id,
-            ))
+            )
+        )
+        for event in esqui_instances:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=miquel.id,
+                    interaction_type="invited",
+                    status="pending",
+                    invited_by_user_id=sonia.id,
+                )
+            )
 
         db.add_all(interactions)
         db.flush()

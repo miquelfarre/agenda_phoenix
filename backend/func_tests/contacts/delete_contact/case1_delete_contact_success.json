@@ -1,0 +1,16 @@
+{
+  "name": "Delete contact successfully",
+  "description": "Eliminar un contacto existente",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Contacto a eliminar", "phone": "+34606014680"}
+    ]
+  },
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/contacts/1"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

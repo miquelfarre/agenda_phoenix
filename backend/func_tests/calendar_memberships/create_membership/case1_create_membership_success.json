@@ -1,0 +1,39 @@
+{
+  "name": "Create calendar membership successfully",
+  "description": "Añadir un usuario a un calendario con éxito (invitación pendiente)",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Owner Usuario",
+        "phone": "+34600111000"
+      },
+      {
+        "id": 2,
+        "name": "Invited Usuario",
+        "phone": "+34600222000"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario Compartido"
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/calendar_memberships",
+    "body": {
+      "calendar_id": 1,
+      "user_id": 2,
+      "role": "member",
+      "status": "pending",
+      "invited_by_user_id": 1
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Update nonexistent calendar (should fail)",
+  "description": "Intentar actualizar un calendario que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "PUT",
+    "endpoint": "/calendars/9999",
+    "body": {
+      "name": "Calendario Inexistente"
+    }
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

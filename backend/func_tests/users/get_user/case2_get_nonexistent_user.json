@@ -1,0 +1,14 @@
+{
+  "name": "Get non-existent user (should fail)",
+  "description": "Intentar obtener un usuario que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/9999"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

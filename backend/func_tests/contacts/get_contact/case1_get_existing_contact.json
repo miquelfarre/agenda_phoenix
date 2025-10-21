@@ -1,0 +1,16 @@
+{
+  "name": "Get existing contact by ID",
+  "description": "Obtener un contacto existente por su ID",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/contacts/1"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

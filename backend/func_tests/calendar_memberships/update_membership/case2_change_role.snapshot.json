@@ -1,0 +1,17 @@
+{
+  "status_code": 200,
+  "body": {
+    "_status_code": 200,
+    "body": {
+      "role": "admin",
+      "status": "accepted",
+      "id": "{{ID}}",
+      "calendar_id": "{{ID}}",
+      "user_id": "{{ID}}",
+      "invited_by_user_id": null,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

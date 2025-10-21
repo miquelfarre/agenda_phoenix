@@ -1,0 +1,35 @@
+{
+  "name": "Weekly recurrence - every Monday",
+  "description": "Evento que se repite todos los lunes",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Sincro semanal",
+        "description": "Reunión de equipo",
+        "start_date": "2025-11-03T10:00:00",
+        "end_date": "2025-11-03T11:00:00",
+        "event_type": "recurring",
+        "owner_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/recurring_configs",
+    "body": {
+      "event_id": 100,
+      "recurrence_type": "weekly",
+      "schedule": [
+        {"day": "monday"}
+      ],
+      "recurrence_end_date": "2025-12-31T23:59:59"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

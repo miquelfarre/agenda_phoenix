@@ -1,0 +1,40 @@
+{
+  "name": "Create duplicate interaction (should fail)",
+  "description": "Intentar crear una interacción duplicada",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"},
+      {"id": 2, "name": "Miquel", "phone": "+34606014681"}
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Cena con amigos",
+        "start_date": "2025-11-15T20:00:00",
+        "event_type": "regular",
+        "owner_id": 1
+      }
+    ],
+    "event_interactions": [
+      {
+        "event_id": 100,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "pending"
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/events/event-interactions",
+    "body": {
+      "event_id": 100,
+      "user_id": 2,
+      "interaction_type": "invited",
+      "status": "accepted"
+    }
+  },
+  "expected_response": {
+    "status_code": 400
+  }
+}

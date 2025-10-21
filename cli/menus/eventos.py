@@ -21,6 +21,7 @@ from ui.tables import (
     create_events_table,
     create_conflicts_table,
     show_pagination_info,
+    format_datetime,
 )
 from config import (
     API_BASE_URL,
@@ -268,7 +269,7 @@ def ver_mis_invitaciones(_show_header_wrapper, handle_api_error, pause, usuario_
     table.add_column("Tipo", style="blue", width=10)
 
     for inv in invitations:
-        table.add_row(str(inv["id"]), truncate_text(inv["event_name"], 28), inv.get("event_start_date_formatted", inv.get("event_start_date", "-")), inv["event_type"])
+        table.add_row(str(inv["id"]), truncate_text(inv["event_name"], 28), format_datetime(inv.get("event_start_date")), inv["event_type"])
 
     console.print(table)
     console.print(f"\n[cyan]Total: {format_count_message(len(invitations), 'invitacion pendiente', 'invitaciones pendientes')}[/cyan]\n")
@@ -475,19 +476,15 @@ def ver_evento(_show_header_wrapper, handle_api_error, pause, modo_actual, usuar
     info = f"[yellow]ID:[/yellow] {event['id']}\n"
     info += f"[yellow]Nombre:[/yellow] {event['name']}\n"
     info += f"[yellow]Descripcion:[/yellow] {event.get('description', '-')}\n"
-    info += f"[yellow]Fecha Inicio:[/yellow] {event.get('start_date_formatted', event.get('start_date', '-'))}\n"
+    info += f"[yellow]Fecha Inicio:[/yellow] {format_datetime(event.get('start_date'))}\n"
 
     if event.get("end_date"):
-        info += f"[yellow]Fecha Fin:[/yellow] {event.get('end_date_formatted', event.get('end_date', '-'))}\n"
+        info += f"[yellow]Fecha Fin:[/yellow] {format_datetime(event.get('end_date'))}\n"
 
     info += f"[yellow]Tipo:[/yellow] {event['event_type']}\n"
 
-    # Backend provides owner_display field
-    if modo_actual == MODO_USUARIO:
-        owner_display = event.get("owner_display", f"Usuario #{event['owner_id']}")
-        info += f"[yellow]Propietario:[/yellow] {owner_display}\n"
-    else:
-        info += f"[yellow]Owner ID:[/yellow] {event['owner_id']}\n"
+    # Show owner_id (client calculates ownership)
+    info += f"[yellow]Propietario:[/yellow] Usuario #{event['owner_id']}\n"
 
     if event.get("calendar_id"):
         info += f"[yellow]Calendario ID:[/yellow] {event['calendar_id']}\n"
@@ -530,7 +527,8 @@ def ver_evento(_show_header_wrapper, handle_api_error, pause, modo_actual, usuar
         console.print("[dim]No hay invitaciones para este evento[/dim]\n")
 
     # Si es modo usuario y es propio, ofrecer opciones
-    if modo_actual == MODO_USUARIO and event.get("is_owner", False):
+    is_owner = (modo_actual == MODO_USUARIO and event.get('owner_id') == usuario_actual)
+    if is_owner:
         gestionar = questionary.confirm("Deseas invitar a un usuario a este evento?", default=False).ask()
 
         if gestionar:
@@ -683,14 +681,12 @@ def invitar_usuario_a_evento_menu(_show_header_wrapper, handle_api_error, pause,
     # Filtrar eventos donde puedas invitar (owner o admin)
     my_events = []
     for e in events:
-        # Si eres owner
-        if e.get('is_owner', False) or e.get('source') == 'owned':
+        # Si eres owner (no tiene interaction o si tiene es porque fuiste invitado)
+        if e.get('owner_id') == usuario_actual:
             my_events.append(e)
-        # Si eres admin (joined con role admin)
-        elif e.get('source') == 'joined':
-            interaction = e.get('interaction', {})
-            if interaction and interaction.get('role') == 'admin':
-                my_events.append(e)
+        # Si eres admin (has interaction with admin role)
+        elif e.get('interaction') and e['interaction'].get('role') == 'admin':
+            my_events.append(e)
 
     if not my_events:
         console.print("[yellow]No tienes eventos propios o como admin a los que puedas invitar usuarios[/yellow]\n")
@@ -701,7 +697,7 @@ def invitar_usuario_a_evento_menu(_show_header_wrapper, handle_api_error, pause,
     event_choices = []
     for event in my_events:
         event_name = truncate_text(event['name'], 40)
-        event_date = event.get('start_date_formatted', event.get('start_date', ''))
+        event_date = format_datetime(event.get('start_date'))
         event_choices.append(f"{event['id']} - {event_name} ({event_date})")
 
     event_choices.append("Cancelar")

@@ -1,0 +1,39 @@
+{
+  "name": "Create admin membership",
+  "description": "Añadir un usuario como admin directamente a un calendario",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Owner Usuario",
+        "phone": "+34600111004"
+      },
+      {
+        "id": 2,
+        "name": "Admin Usuario",
+        "phone": "+34600222004"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario Empresarial"
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/calendar_memberships",
+    "body": {
+      "calendar_id": 1,
+      "user_id": 2,
+      "role": "admin",
+      "status": "accepted",
+      "invited_by_user_id": 1
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

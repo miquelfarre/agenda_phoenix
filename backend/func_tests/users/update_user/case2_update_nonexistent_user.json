@@ -1,0 +1,19 @@
+{
+  "name": "Update non-existent user (should fail)",
+  "description": "Intentar actualizar un usuario que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "PUT",
+    "endpoint": "/users/9999",
+    "body": {
+      "username": "fantasma",
+      "auth_provider": "phone",
+      "auth_id": "+34600000000"
+    }
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

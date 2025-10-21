@@ -1,0 +1,39 @@
+{
+  "status_code": 200,
+  "body": {
+    "_status_code": 200,
+    "body": [
+      {
+        "role": "member",
+        "status": "accepted",
+        "id": "{{ID}}",
+        "calendar_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "role": "admin",
+        "status": "pending",
+        "id": "{{ID}}",
+        "calendar_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "role": "member",
+        "status": "accepted",
+        "id": "{{ID}}",
+        "calendar_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

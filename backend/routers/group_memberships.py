@@ -3,31 +3,21 @@ Group Memberships Router
 
 Handles all group membership endpoints.
 """
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 
-from models import Group, User, GroupMembership
-from schemas import GroupMembershipCreate, GroupMembershipResponse
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from dependencies import get_db
+from models import Group, GroupMembership, User
+from schemas import GroupMembershipCreate, GroupMembershipResponse
 
-
-router = APIRouter(
-    prefix="/group_memberships",
-    tags=["group_memberships"]
-)
+router = APIRouter(prefix="/group_memberships", tags=["group_memberships"])
 
 
 @router.get("", response_model=List[GroupMembershipResponse])
-async def get_group_memberships(
-    group_id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_group_memberships(group_id: Optional[int] = None, user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all group memberships, optionally filtered by group_id and/or user_id, with pagination and ordering"""
     query = db.query(GroupMembership)
     if group_id:
@@ -69,14 +59,11 @@ async def create_group_membership(membership: GroupMembershipCreate, db: Session
         raise HTTPException(status_code=404, detail="User not found")
 
     # Check if membership already exists
-    existing = db.query(GroupMembership).filter(
-        GroupMembership.group_id == membership.group_id,
-        GroupMembership.user_id == membership.user_id
-    ).first()
+    existing = db.query(GroupMembership).filter(GroupMembership.group_id == membership.group_id, GroupMembership.user_id == membership.user_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="User is already a member of this group")
 
-    db_membership = GroupMembership(**membership.dict())
+    db_membership = GroupMembership(**membership.model_dump())
     db.add(db_membership)
     db.commit()
     db.refresh(db_membership)

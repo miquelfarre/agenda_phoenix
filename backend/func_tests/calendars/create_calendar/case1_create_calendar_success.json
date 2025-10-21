@@ -1,0 +1,26 @@
+{
+  "name": "Create calendar successfully",
+  "description": "Crear un calendario básico con éxito",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Ana García",
+        "phone": "+34600111222"
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/calendars",
+    "body": {
+      "name": "Calendario de trabajo",
+      "owner_id": 1,
+      "start_date": null,
+      "end_date": null
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

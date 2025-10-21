@@ -1,0 +1,33 @@
+{
+  "name": "List events filtered by owner_id",
+  "description": "Obtener eventos de un owner específico",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"},
+      {"id": 2, "name": "Miquel", "phone": "+34606014681"}
+    ],
+    "events": [
+      {
+        "id": 1,
+        "name": "Evento de Sonia",
+        "start_date": "2025-11-15T20:00:00",
+        "event_type": "regular",
+        "owner_id": 1
+      },
+      {
+        "id": 2,
+        "name": "Evento de Miquel",
+        "start_date": "2025-11-16T10:00:00",
+        "event_type": "regular",
+        "owner_id": 2
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/events?owner_id=1"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

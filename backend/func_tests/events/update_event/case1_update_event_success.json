@@ -1,0 +1,33 @@
+{
+  "name": "Update event successfully",
+  "description": "Actualizar un evento existente con nuevos datos",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Cena original",
+        "description": "Descripción original",
+        "start_date": "2025-11-15T20:00:00",
+        "event_type": "regular",
+        "owner_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "PUT",
+    "endpoint": "/events/100",
+    "body": {
+      "name": "Cena actualizada",
+      "description": "Nueva descripción",
+      "start_date": "2025-11-15T21:00:00",
+      "event_type": "regular",
+      "owner_id": 1
+    }
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

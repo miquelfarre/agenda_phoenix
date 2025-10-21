@@ -3,31 +3,21 @@ User Blocks Router
 
 Handles all user block endpoints.
 """
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from dependencies import get_db
 from models import User, UserBlock
 from schemas import UserBlockCreate, UserBlockResponse
-from dependencies import get_db
 
-
-router = APIRouter(
-    prefix="/user_blocks",
-    tags=["user_blocks"]
-)
+router = APIRouter(prefix="/user_blocks", tags=["user_blocks"])
 
 
 @router.get("", response_model=List[UserBlockResponse])
-async def get_user_blocks(
-    blocker_user_id: Optional[int] = None,
-    blocked_user_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_user_blocks(blocker_user_id: Optional[int] = None, blocked_user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all user blocks, optionally filtered by blocker or blocked user, with pagination and ordering"""
     query = db.query(UserBlock)
     if blocker_user_id:
@@ -69,14 +59,11 @@ async def create_user_block(block: UserBlockCreate, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="Blocked user not found")
 
     # Check if block already exists
-    existing = db.query(UserBlock).filter(
-        UserBlock.blocker_user_id == block.blocker_user_id,
-        UserBlock.blocked_user_id == block.blocked_user_id
-    ).first()
+    existing = db.query(UserBlock).filter(UserBlock.blocker_user_id == block.blocker_user_id, UserBlock.blocked_user_id == block.blocked_user_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="User is already blocked")
 
-    db_block = UserBlock(**block.dict())
+    db_block = UserBlock(**block.model_dump())
     db.add(db_block)
     db.commit()
     db.refresh(db_block)

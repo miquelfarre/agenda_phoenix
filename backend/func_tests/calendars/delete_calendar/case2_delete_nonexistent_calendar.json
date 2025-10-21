@@ -1,0 +1,14 @@
+{
+  "name": "Delete nonexistent calendar (should fail)",
+  "description": "Intentar eliminar un calendario que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/calendars/9999"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Delete non-existent event (should fail)",
+  "description": "Intentar eliminar un evento que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/events/9999"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

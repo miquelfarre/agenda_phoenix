@@ -1,0 +1,20 @@
+{
+  "name": "Update contact successfully",
+  "description": "Actualizar un contacto existente",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia Original", "phone": "+34606014680"}
+    ]
+  },
+  "request": {
+    "method": "PUT",
+    "endpoint": "/contacts/1",
+    "body": {
+      "name": "Sonia Actualizada",
+      "phone": "+34606014680"
+    }
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

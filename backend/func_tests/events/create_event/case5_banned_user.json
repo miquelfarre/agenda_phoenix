@@ -1,0 +1,31 @@
+{
+  "name": "Banned user tries to create event (should fail)",
+  "description": "Un usuario baneado intenta crear un evento, debe fallar con 403",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Admin", "phone": "+34600000000"},
+      {"id": 2, "name": "Usuario Baneado", "phone": "+34600000001"}
+    ],
+    "app_bans": [
+      {
+        "user_id": 2,
+        "banned_by": 1,
+        "reason": "Comportamiento inapropiado"
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/events",
+    "body": {
+      "name": "Evento de usuario baneado",
+      "description": "Este evento no debería crearse",
+      "start_date": "2025-11-15T20:00:00",
+      "event_type": "regular",
+      "owner_id": 2
+    }
+  },
+  "expected_response": {
+    "status_code": 403
+  }
+}

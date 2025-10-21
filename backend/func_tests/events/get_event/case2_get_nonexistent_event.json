@@ -1,0 +1,14 @@
+{
+  "name": "Get non-existent event (should fail)",
+  "description": "Intentar obtener un evento que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/events/9999"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

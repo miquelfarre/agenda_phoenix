@@ -1,0 +1,22 @@
+{
+  "name": "Update user successfully",
+  "description": "Actualizar un usuario existente",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ]
+  },
+  "request": {
+    "method": "PUT",
+    "endpoint": "/users/1",
+    "body": {
+      "contact_id": 1,
+      "username": "sonia_updated",
+      "auth_provider": "phone",
+      "auth_id": "+34606014680"
+    }
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

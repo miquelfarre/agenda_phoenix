@@ -3,29 +3,21 @@ Contacts Router
 
 Handles all contact-related endpoints.
 """
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+
 from typing import List
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from dependencies import get_db
 from models import Contact
 from schemas import ContactCreate, ContactResponse
-from dependencies import get_db
 
-
-router = APIRouter(
-    prefix="/contacts",
-    tags=["contacts"]
-)
+router = APIRouter(prefix="/contacts", tags=["contacts"])
 
 
 @router.get("", response_model=List[ContactResponse])
-async def get_contacts(
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_contacts(limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all contacts with pagination and ordering"""
     query = db.query(Contact)
     order_col = getattr(Contact, order_by) if order_by and hasattr(Contact, str(order_by)) else Contact.id
@@ -55,7 +47,7 @@ async def create_contact(contact: ContactCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Phone number already exists")
 
-    db_contact = Contact(**contact.dict())
+    db_contact = Contact(**contact.model_dump())
     db.add(db_contact)
     db.commit()
     db.refresh(db_contact)
@@ -70,14 +62,11 @@ async def update_contact(contact_id: int, contact: ContactCreate, db: Session = 
         raise HTTPException(status_code=404, detail="Contact not found")
 
     # Check if phone already exists for another contact
-    existing = db.query(Contact).filter(
-        Contact.phone == contact.phone,
-        Contact.id != contact_id
-    ).first()
+    existing = db.query(Contact).filter(Contact.phone == contact.phone, Contact.id != contact_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="Phone number already exists")
 
-    for key, value in contact.dict().items():
+    for key, value in contact.model_dump().items():
         setattr(db_contact, key, value)
 
     db.commit()

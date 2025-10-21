@@ -1,0 +1,26 @@
+{
+  "name": "Create membership for nonexistent calendar (should fail)",
+  "description": "Intentar crear una membresía para un calendario que no existe",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Usuario Test",
+        "phone": "+34600111002"
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/calendar_memberships",
+    "body": {
+      "calendar_id": 9999,
+      "user_id": 1,
+      "role": "member",
+      "status": "pending"
+    }
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

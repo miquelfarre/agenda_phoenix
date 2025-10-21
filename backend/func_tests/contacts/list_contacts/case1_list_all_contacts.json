@@ -1,0 +1,17 @@
+{
+  "name": "List all contacts",
+  "description": "Obtener lista de todos los contactos",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"},
+      {"id": 2, "name": "Miquel", "phone": "+34606014681"}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/contacts"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Get non-existent contact (should fail)",
+  "description": "Intentar obtener un contacto que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/contacts/9999"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

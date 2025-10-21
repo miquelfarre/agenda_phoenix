@@ -1,0 +1,14 @@
+{
+  "name": "Delete non-existent user (should fail)",
+  "description": "Intentar eliminar un usuario que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/users/9999"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

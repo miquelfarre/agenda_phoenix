@@ -3,56 +3,47 @@ Agenda Phoenix API
 
 Modular FastAPI application using routers for organized endpoint management.
 """
+
+import logging
+from contextlib import asynccontextmanager
+from datetime import datetime
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
-import logging
 
 from init_db import init_database
 
 # Import all routers
-from routers import (
-    contacts,
-    users,
-    events,
-    interactions,
-    calendars,
-    calendar_memberships,
-    groups,
-    group_memberships,
-    recurring_configs,
-    event_bans,
-    user_blocks,
-    app_bans
-)
-
+from routers import app_bans, calendar_memberships, calendars, contacts, event_bans, events, group_memberships, groups, interactions, recurring_configs, user_blocks, users
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Initialize FastAPI app
-app = FastAPI(
-    title="Agenda Phoenix API",
-    version="2.0.0",
-    description="Calendar and Event Management API with modular router structure"
-)
-
-
-# Startup event
-@app.on_event("startup")
-async def startup_event():
+# Lifespan event handler
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
-    Execute on application startup.
+    Execute on application startup and shutdown.
     Initialize database: drop all tables, recreate them, and insert sample data.
     """
+    # Startup
     logger.info("🚀 FastAPI application starting up...")
     try:
         init_database()
         logger.info("✅ Database initialization completed")
     except Exception as e:
         logger.error(f"❌ Failed to initialize database: {e}")
+
+    yield  # Application is running
+
+    # Shutdown
+    logger.info("👋 FastAPI application shutting down...")
+
+
+# Initialize FastAPI app with lifespan
+app = FastAPI(title="Agenda Phoenix API", version="2.0.0", description="Calendar and Event Management API with modular router structure", lifespan=lifespan)
 
 
 # CORS Configuration
@@ -102,10 +93,10 @@ async def root():
             "recurring_configs": "/recurring_configs",
             "event_bans": "/event_bans",
             "user_blocks": "/user_blocks",
-            "app_bans": "/app_bans"
+            "app_bans": "/app_bans",
         },
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
     }
 
 
@@ -118,4 +109,5 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8001)

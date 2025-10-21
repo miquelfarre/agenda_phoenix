@@ -1,0 +1,42 @@
+{
+  "name": "List all calendars",
+  "description": "Listar todos los calendarios del sistema",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "María Sánchez",
+        "phone": "+34600555666"
+      },
+      {
+        "id": 2,
+        "name": "Pedro Martín",
+        "phone": "+34600777888"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario Personal"
+      },
+      {
+        "id": 2,
+        "owner_id": 2,
+        "name": "Calendario de Trabajo"
+      },
+      {
+        "id": 3,
+        "owner_id": 1,
+        "name": "Calendario Familiar"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/calendars"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

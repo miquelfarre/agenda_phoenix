@@ -1,0 +1,27 @@
+{
+  "name": "Get existing calendar",
+  "description": "Obtener un calendario existente por ID",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Isabel Ruiz",
+        "phone": "+34600222444"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Mi Calendario Principal"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/calendars/1"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

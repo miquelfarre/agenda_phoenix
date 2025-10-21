@@ -1,0 +1,26 @@
+{
+  "name": "Get existing event by ID",
+  "description": "Obtener un evento existente por su ID",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Cena con amigos",
+        "description": "Cena en casa de Sonia",
+        "start_date": "2025-11-15T20:00:00",
+        "event_type": "regular",
+        "owner_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/events/100"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

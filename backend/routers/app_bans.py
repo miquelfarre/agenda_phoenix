@@ -4,31 +4,21 @@ App Bans Router
 Handles application-level bans (admin only).
 When a user is banned here, they cannot access the application at all.
 """
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 
-from models import User, AppBan
-from schemas import AppBanCreate, AppBanResponse
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from dependencies import get_db
+from models import AppBan, User
+from schemas import AppBanCreate, AppBanResponse
 
-
-router = APIRouter(
-    prefix="/app_bans",
-    tags=["app_bans"]
-)
+router = APIRouter(prefix="/app_bans", tags=["app_bans"])
 
 
 @router.get("", response_model=List[AppBanResponse])
-async def get_app_bans(
-    user_id: Optional[int] = None,
-    banned_by: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_app_bans(user_id: Optional[int] = None, banned_by: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all app bans, optionally filtered by user_id or banned_by (admin), with pagination and ordering"""
     query = db.query(AppBan)
     if user_id:
@@ -74,7 +64,7 @@ async def create_app_ban(ban: AppBanCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="User is already banned from the application")
 
-    db_ban = AppBan(**ban.dict())
+    db_ban = AppBan(**ban.model_dump())
     db.add(db_ban)
     db.commit()
     db.refresh(db_ban)

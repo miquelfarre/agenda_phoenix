@@ -1,0 +1,41 @@
+{
+  "name": "Get existing membership",
+  "description": "Obtener una membresía existente por ID",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Owner",
+        "phone": "+34600111103"
+      },
+      {
+        "id": 2,
+        "name": "Member",
+        "phone": "+34600222203"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario"
+      }
+    ],
+    "calendar_memberships": [
+      {
+        "calendar_id": 1,
+        "user_id": 2,
+        "role": "admin",
+        "status": "accepted",
+        "invited_by_user_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/calendar_memberships/1"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

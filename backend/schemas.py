@@ -3,14 +3,16 @@ Pydantic Schemas for Agenda Phoenix API
 
 All request/response models defined here.
 """
-from pydantic import BaseModel
-from typing import List, Optional, Dict
-from datetime import datetime
 
+from datetime import datetime
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict
 
 # ============================================================================
 # CONTACT SCHEMAS
 # ============================================================================
+
 
 class ContactBase(BaseModel):
     name: str
@@ -26,13 +28,13 @@ class ContactResponse(ContactBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
 # USER SCHEMAS
 # ============================================================================
+
 
 class UserBase(BaseModel):
     username: Optional[str] = None
@@ -52,12 +54,12 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserEnrichedResponse(UserBase):
     """User response with enriched contact information"""
+
     id: int
     contact_id: Optional[int]
     contact_name: Optional[str]  # From Contact table
@@ -72,12 +74,13 @@ class UserEnrichedResponse(UserBase):
 # EVENT SCHEMAS
 # ============================================================================
 
+
 class EventBase(BaseModel):
     name: str
     description: Optional[str] = None
     start_date: datetime
     end_date: Optional[datetime] = None
-    event_type: str = 'regular'  # 'regular' or 'recurring'
+    event_type: str = "regular"  # 'regular' or 'recurring'
 
 
 class EventCreate(EventBase):
@@ -93,20 +96,15 @@ class EventResponse(EventBase):
     parent_recurring_event_id: Optional[int]
     created_at: datetime
     updated_at: datetime
-    source: Optional[str] = None  # For /users/{user_id}/events endpoint
-    start_date_formatted: Optional[str] = None  # Pre-formatted date for UI
-    end_date_formatted: Optional[str] = None  # Pre-formatted date for UI
-    is_owner: Optional[bool] = None  # Whether current user is owner
-    owner_display: Optional[str] = None  # "Yo" or "Usuario #X"
-    interaction: Optional[dict] = None  # User's interaction with this event (type, status, role)
+    interaction: Optional[dict] = None  # User's interaction with this event (type, status, role) - only for /users/{id}/events
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
 # EVENT INTERACTION SCHEMAS
 # ============================================================================
+
 
 class EventInteractionBase(BaseModel):
     interaction_type: str
@@ -123,6 +121,7 @@ class EventInteractionCreate(EventInteractionBase):
 
 class EventInteractionUpdate(BaseModel):
     """Schema for updating an event interaction (all fields optional)"""
+
     interaction_type: Optional[str] = None
     status: Optional[str] = None
     role: Optional[str] = None
@@ -137,12 +136,12 @@ class EventInteractionResponse(EventInteractionBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EventInteractionEnrichedResponse(EventInteractionBase):
     """Enriched interaction response with user information"""
+
     id: int
     event_id: int
     user_id: int
@@ -157,6 +156,7 @@ class EventInteractionEnrichedResponse(EventInteractionBase):
 
 class AvailableInviteeResponse(BaseModel):
     """User available to be invited to an event"""
+
     id: int
     username: Optional[str]
     contact_name: Optional[str]
@@ -165,6 +165,7 @@ class AvailableInviteeResponse(BaseModel):
 
 class EventInteractionWithEventResponse(EventInteractionBase):
     """Interaction response with event information included"""
+
     id: int
     event_id: int
     user_id: int
@@ -185,10 +186,11 @@ class EventInteractionWithEventResponse(EventInteractionBase):
 # CALENDAR SCHEMAS
 # ============================================================================
 
+
 class CalendarBase(BaseModel):
     name: str
     start_date: Optional[datetime] = None  # Optional: for temporal calendars
-    end_date: Optional[datetime] = None    # Optional: for temporal calendars
+    end_date: Optional[datetime] = None  # Optional: for temporal calendars
 
 
 class CalendarCreate(CalendarBase):
@@ -201,12 +203,12 @@ class CalendarResponse(CalendarBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CalendarEnrichedResponse(CalendarBase):
     """Calendar response with enriched display fields"""
+
     id: int
     owner_id: int
     created_at: datetime
@@ -217,9 +219,10 @@ class CalendarEnrichedResponse(CalendarBase):
 # CALENDAR MEMBERSHIP SCHEMAS
 # ============================================================================
 
+
 class CalendarMembershipBase(BaseModel):
-    role: str = 'member'  # 'owner', 'admin', 'member'
-    status: str = 'pending'  # 'pending', 'accepted', 'rejected'
+    role: str = "member"  # 'owner', 'admin', 'member'
+    status: str = "pending"  # 'pending', 'accepted', 'rejected'
 
 
 class CalendarMembershipCreate(CalendarMembershipBase):
@@ -236,12 +239,12 @@ class CalendarMembershipResponse(CalendarMembershipBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CalendarMembershipEnrichedResponse(CalendarMembershipBase):
     """Calendar membership with enriched calendar information"""
+
     id: int
     calendar_id: int
     user_id: int
@@ -256,6 +259,7 @@ class CalendarMembershipEnrichedResponse(CalendarMembershipBase):
 # ============================================================================
 # GROUP SCHEMAS
 # ============================================================================
+
 
 class GroupBase(BaseModel):
     name: str
@@ -272,13 +276,13 @@ class GroupResponse(GroupBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
 # GROUP MEMBERSHIP SCHEMAS
 # ============================================================================
+
 
 class GroupMembershipBase(BaseModel):
     pass
@@ -296,16 +300,16 @@ class GroupMembershipResponse(GroupMembershipBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
 # RECURRING EVENT CONFIG SCHEMAS
 # ============================================================================
 
+
 class RecurringEventConfigBase(BaseModel):
-    recurrence_type: str = 'weekly'  # 'daily', 'weekly', 'monthly', 'yearly'
+    recurrence_type: str = "weekly"  # 'daily', 'weekly', 'monthly', 'yearly'
     schedule: Optional[List[Dict[str, str]]] = None  # Type-specific configuration
     recurrence_end_date: Optional[datetime] = None  # NULL = perpetual/infinite
 
@@ -320,13 +324,13 @@ class RecurringEventConfigResponse(RecurringEventConfigBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
 # EVENT BAN SCHEMAS
 # ============================================================================
+
 
 class EventBanBase(BaseModel):
     reason: Optional[str] = None
@@ -346,13 +350,13 @@ class EventBanResponse(EventBanBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
 # USER BLOCK SCHEMAS
 # ============================================================================
+
 
 class UserBlockBase(BaseModel):
     pass
@@ -370,13 +374,13 @@ class UserBlockResponse(UserBlockBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
 # APP BAN SCHEMAS
 # ============================================================================
+
 
 class AppBanBase(BaseModel):
     reason: Optional[str] = None
@@ -394,5 +398,4 @@ class AppBanResponse(AppBanBase):
     banned_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

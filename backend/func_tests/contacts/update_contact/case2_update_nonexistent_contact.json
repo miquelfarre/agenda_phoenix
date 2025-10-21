@@ -1,0 +1,18 @@
+{
+  "name": "Update non-existent contact (should fail)",
+  "description": "Intentar actualizar un contacto que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "PUT",
+    "endpoint": "/contacts/9999",
+    "body": {
+      "name": "Contacto Fantasma",
+      "phone": "+34600000000"
+    }
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

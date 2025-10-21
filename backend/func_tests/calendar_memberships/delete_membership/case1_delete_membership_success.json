@@ -1,0 +1,40 @@
+{
+  "name": "Delete membership successfully",
+  "description": "Eliminar una membresía existente con éxito (usuario sale del calendario)",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Owner",
+        "phone": "+34600111106"
+      },
+      {
+        "id": 2,
+        "name": "Member to Remove",
+        "phone": "+34600222206"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario"
+      }
+    ],
+    "calendar_memberships": [
+      {
+        "calendar_id": 1,
+        "user_id": 2,
+        "role": "member",
+        "status": "accepted"
+      }
+    ]
+  },
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/calendar_memberships/1"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

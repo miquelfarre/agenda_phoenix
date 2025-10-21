@@ -1,0 +1,42 @@
+{
+  "name": "List calendars filtered by owner",
+  "description": "Listar solo los calendarios de un usuario específico",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Laura Gómez",
+        "phone": "+34600999000"
+      },
+      {
+        "id": 2,
+        "name": "José Fernández",
+        "phone": "+34600111333"
+      }
+    ],
+    "calendars": [
+      {
+        "id": 1,
+        "owner_id": 1,
+        "name": "Calendario Personal Laura"
+      },
+      {
+        "id": 2,
+        "owner_id": 2,
+        "name": "Calendario José"
+      },
+      {
+        "id": 3,
+        "owner_id": 1,
+        "name": "Calendario Deportes"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/calendars?user_id=1"
+  },
+  "expected_response": {
+    "status_code": 200
+  }
+}

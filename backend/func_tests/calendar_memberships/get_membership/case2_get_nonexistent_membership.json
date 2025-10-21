@@ -1,0 +1,14 @@
+{
+  "name": "Get nonexistent membership (should fail)",
+  "description": "Intentar obtener una membresía que no existe",
+  "setup": {
+    "users": []
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/calendar_memberships/9999"
+  },
+  "expected_response": {
+    "status_code": 404
+  }
+}

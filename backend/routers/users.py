@@ -3,36 +3,26 @@ Users Router
 
 Handles all user-related endpoints including user events.
 """
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from datetime import datetime, timedelta
-import logging
 
-from models import User, Event, EventInteraction, CalendarMembership, RecurringEventConfig, Calendar, Contact
-from schemas import UserCreate, UserResponse, UserEnrichedResponse, EventResponse
-from dependencies import get_db
-from typing import Union
+import logging
+from datetime import datetime, timedelta
+from typing import List, Optional, Union
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from dependencies import check_user_not_banned, get_db
+from models import Calendar, CalendarMembership, Contact, Event, EventInteraction, RecurringEventConfig, User, UserBlock
+from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserResponse
 
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(
-    prefix="/users",
-    tags=["users"]
-)
+router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("", response_model=List[Union[UserResponse, UserEnrichedResponse]])
-async def get_users(
-    public: Optional[bool] = None,
-    enriched: bool = False,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: Optional[str] = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_users(public: Optional[bool] = None, enriched: bool = False, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all users, optionally filtered by public status, optionally enriched with contact info"""
     query = db.query(User)
     if public is not None:
@@ -57,9 +47,7 @@ async def get_users(
     # If enriched, add contact information
     if enriched:
         # Use JOIN to get contact data efficiently
-        results = db.query(User, Contact).outerjoin(
-            Contact, User.contact_id == Contact.id
-        )
+        results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id)
 
         if public is not None:
             if public:
@@ -93,20 +81,22 @@ async def get_users(
                 display_name = f"Usuario #{user.id}"
 
             # Create UserEnrichedResponse instance directly
-            enriched_users.append(UserEnrichedResponse(
-                id=user.id,
-                username=user.username,
-                auth_provider=user.auth_provider,
-                auth_id=user.auth_id,
-                profile_picture_url=user.profile_picture_url,
-                contact_id=user.contact_id,
-                contact_name=contact_name,
-                contact_phone=contact_phone,
-                display_name=display_name,
-                last_login=user.last_login,
-                created_at=user.created_at,
-                updated_at=user.updated_at
-            ))
+            enriched_users.append(
+                UserEnrichedResponse(
+                    id=user.id,
+                    username=user.username,
+                    auth_provider=user.auth_provider,
+                    auth_id=user.auth_id,
+                    profile_picture_url=user.profile_picture_url,
+                    contact_id=user.contact_id,
+                    contact_name=contact_name,
+                    contact_phone=contact_phone,
+                    display_name=display_name,
+                    last_login=user.last_login,
+                    created_at=user.created_at,
+                    updated_at=user.updated_at,
+                )
+            )
 
         return enriched_users
 
@@ -150,7 +140,7 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
             display_name=display_name,
             last_login=user.last_login,
             created_at=user.created_at,
-            updated_at=user.updated_at
+            updated_at=user.updated_at,
         )
 
     return user
@@ -160,14 +150,11 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """Create a new user"""
     # Check if auth_id already exists for this provider
-    existing = db.query(User).filter(
-        User.auth_provider == user.auth_provider,
-        User.auth_id == user.auth_id
-    ).first()
+    existing = db.query(User).filter(User.auth_provider == user.auth_provider, User.auth_id == user.auth_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="User already exists for this auth provider")
 
-    db_user = User(**user.dict())
+    db_user = User(**user.model_dump())
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -181,7 +168,7 @@ async def update_user(user_id: int, user: UserCreate, db: Session = Depends(get_
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    for key, value in user.dict().items():
+    for key, value in user.model_dump().items():
         setattr(db_user, key, value)
 
     db.commit()
@@ -202,17 +189,7 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{user_id}/events", response_model=List[EventResponse])
-async def get_user_events(
-    user_id: int,
-    include_past: bool = False,
-    from_date: Optional[datetime] = None,
-    to_date: Optional[datetime] = None,
-    search: Optional[str] = None,
-    filter: Optional[str] = None,
-    limit: Optional[int] = None,
-    offset: int = 0,
-    db: Session = Depends(get_db)
-):
+async def get_user_events(user_id: int, include_past: bool = False, from_date: Optional[datetime] = None, to_date: Optional[datetime] = None, search: Optional[str] = None, filter: Optional[str] = None, limit: Optional[int] = None, offset: int = 0, db: Session = Depends(get_db)):
     """
     Get all events for a user from multiple sources:
     - Own events (where user is owner)
@@ -241,7 +218,6 @@ async def get_user_events(
         raise HTTPException(status_code=404, detail="User not found")
 
     # Check if user is banned
-    from dependencies import check_user_not_banned
     check_user_not_banned(user_id, db)
 
     # Apply predefined filters
@@ -263,7 +239,7 @@ async def get_user_events(
         if from_date is None:
             from_date = now
         if to_date is None:
-            to_date = from_date + timedelta(days=30*30)  # 30 months
+            to_date = from_date + timedelta(days=30 * 30)  # 30 months
 
     if not include_past:
         now_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -278,50 +254,34 @@ async def get_user_events(
     # Own events (highest priority)
     own_event_ids = db.query(Event.id).filter(Event.owner_id == user_id).all()
     for (event_id,) in own_event_ids:
-        event_sources[event_id] = 'owned'
+        event_sources[event_id] = "owned"
 
     # Joined events (events where user is admin/member with accepted status)
-    joined_event_ids = db.query(EventInteraction.event_id).filter(
-        EventInteraction.user_id == user_id,
-        EventInteraction.interaction_type == 'joined',
-        EventInteraction.status == 'accepted'
-    ).all()
+    joined_event_ids = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == user_id, EventInteraction.interaction_type == "joined", EventInteraction.status == "accepted").all()
     for (event_id,) in joined_event_ids:
         if event_id not in event_sources:
-            event_sources[event_id] = 'joined'
+            event_sources[event_id] = "joined"
 
     # Subscribed events
-    subscribed_event_ids = db.query(EventInteraction.event_id).filter(
-        EventInteraction.user_id == user_id,
-        EventInteraction.interaction_type == 'subscribed'
-    ).all()
+    subscribed_event_ids = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == user_id, EventInteraction.interaction_type == "subscribed").all()
     for (event_id,) in subscribed_event_ids:
         if event_id not in event_sources:
-            event_sources[event_id] = 'subscribed'
+            event_sources[event_id] = "subscribed"
 
     # Invited events
-    invited_event_ids = db.query(EventInteraction.event_id).filter(
-        EventInteraction.user_id == user_id,
-        EventInteraction.interaction_type == 'invited'
-    ).all()
+    invited_event_ids = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == user_id, EventInteraction.interaction_type == "invited").all()
     for (event_id,) in invited_event_ids:
         if event_id not in event_sources:
-            event_sources[event_id] = 'invited'
+            event_sources[event_id] = "invited"
 
     # Calendar events (lowest priority)
-    calendar_ids = db.query(CalendarMembership.calendar_id).filter(
-        CalendarMembership.user_id == user_id,
-        CalendarMembership.status == 'accepted',
-        CalendarMembership.role.in_(['owner', 'admin'])
-    ).all()
+    calendar_ids = db.query(CalendarMembership.calendar_id).filter(CalendarMembership.user_id == user_id, CalendarMembership.status == "accepted", CalendarMembership.role.in_(["owner", "admin"])).all()
 
     if calendar_ids:
-        calendar_event_ids = db.query(Event.id).filter(
-            Event.calendar_id.in_([cid for (cid,) in calendar_ids])
-        ).all()
+        calendar_event_ids = db.query(Event.id).filter(Event.calendar_id.in_([cid for (cid,) in calendar_ids])).all()
         for (event_id,) in calendar_event_ids:
             if event_id not in event_sources:
-                event_sources[event_id] = 'calendar'
+                event_sources[event_id] = "calendar"
 
     if not event_sources:
         return []
@@ -329,11 +289,7 @@ async def get_user_events(
     # ============================================================
     # 3. FETCH EVENTS (single query)
     # ============================================================
-    base_query = db.query(Event).filter(
-        Event.id.in_(event_sources.keys()),
-        Event.start_date >= from_date,
-        Event.start_date <= to_date
-    )
+    base_query = db.query(Event).filter(Event.id.in_(event_sources.keys()), Event.start_date >= from_date, Event.start_date <= to_date)
 
     # Apply search in DB when provided
     if search:
@@ -351,19 +307,14 @@ async def get_user_events(
     # 3.5. FILTER OUT BLOCKED USERS
     # ============================================================
     # Get IDs of users that have mutual blocks with the current user
-    from models import UserBlock
     blocked_user_ids = set()
 
     # Users blocked by the current user
-    blocks_by_me = db.query(UserBlock.blocked_user_id).filter(
-        UserBlock.blocker_user_id == user_id
-    ).all()
+    blocks_by_me = db.query(UserBlock.blocked_user_id).filter(UserBlock.blocker_user_id == user_id).all()
     blocked_user_ids.update([b[0] for b in blocks_by_me])
 
     # Users who blocked the current user
-    blocks_on_me = db.query(UserBlock.blocker_user_id).filter(
-        UserBlock.blocked_user_id == user_id
-    ).all()
+    blocks_on_me = db.query(UserBlock.blocker_user_id).filter(UserBlock.blocked_user_id == user_id).all()
     blocked_user_ids.update([b[0] for b in blocks_on_me])
 
     # Filter out events owned by blocked users
@@ -374,51 +325,21 @@ async def get_user_events(
         return []
 
     # ============================================================
-    # 4. FETCH OWNER INFORMATION (batch query)
-    # ============================================================
-    # Get all unique owner IDs
-    owner_ids = list(set(e.owner_id for e in events))
-
-    # Fetch all owners with their contact info in one query
-    owners_info = {}  # owner_id -> display_name
-    if owner_ids:
-        owners = db.query(User, Contact).outerjoin(
-            Contact, User.contact_id == Contact.id
-        ).filter(User.id.in_(owner_ids)).all()
-
-        for user, contact in owners:
-            # Display name priority: username > contact_name > "Usuario #{id}"
-            display_name = user.username or (contact.name if contact else None) or f"Usuario #{user.id}"
-            owners_info[user.id] = display_name
-
-    # ============================================================
-    # 5. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
+    # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
     # ============================================================
     # Get all recurring event IDs in one go
-    recurring_event_ids = [e.id for e in events if e.event_type == 'recurring']
+    recurring_event_ids = [e.id for e in events if e.event_type == "recurring"]
 
     # Fetch all recurring configs at once
     recurring_configs = {}  # event_id -> config_id
     if recurring_event_ids:
-        configs = db.query(
-            RecurringEventConfig.event_id,
-            RecurringEventConfig.id
-        ).filter(
-            RecurringEventConfig.event_id.in_(recurring_event_ids)
-        ).all()
+        configs = db.query(RecurringEventConfig.event_id, RecurringEventConfig.id).filter(RecurringEventConfig.event_id.in_(recurring_event_ids)).all()
         recurring_configs = {event_id: config_id for event_id, config_id in configs}
 
     # Fetch all invitations for this user at once
     invitations = {}  # event_id -> status
     if recurring_event_ids:
-        user_invitations = db.query(
-            EventInteraction.event_id,
-            EventInteraction.status
-        ).filter(
-            EventInteraction.event_id.in_(recurring_event_ids),
-            EventInteraction.user_id == user_id,
-            EventInteraction.interaction_type == 'invited'
-        ).all()
+        user_invitations = db.query(EventInteraction.event_id, EventInteraction.status).filter(EventInteraction.event_id.in_(recurring_event_ids), EventInteraction.user_id == user_id, EventInteraction.interaction_type == "invited").all()
         invitations = {event_id: status for event_id, status in user_invitations}
 
     # ============================================================
@@ -437,7 +358,7 @@ async def get_user_events(
 
     # Determine what to hide based on user permissions
     for event in events:
-        if event.event_type != 'recurring':
+        if event.event_type != "recurring":
             continue
 
         base_id = event.id
@@ -445,14 +366,14 @@ async def get_user_events(
         if not config_id:
             continue
 
-        source = event_sources.get(base_id, 'owned')
+        source = event_sources.get(base_id, "owned")
         invitation_status = invitations.get(base_id)
 
         # Determine user's access level
-        is_owner = (source == 'owned')
-        has_calendar_access = (source == 'calendar')
-        has_accepted_invite = (invitation_status == 'accepted')
-        has_pending_invite = (invitation_status == 'pending')
+        is_owner = source == "owned"
+        has_calendar_access = source == "calendar"
+        has_accepted_invite = invitation_status == "accepted"
+        has_pending_invite = invitation_status == "pending"
 
         instance_ids = instance_map.get(config_id, [])
 
@@ -476,17 +397,9 @@ async def get_user_events(
     visible_event_ids = [e.id for e in visible_events]
     user_interactions = {}
     if visible_event_ids:
-        interactions = db.query(EventInteraction).filter(
-            EventInteraction.event_id.in_(visible_event_ids),
-            EventInteraction.user_id == user_id
-        ).all()
+        interactions = db.query(EventInteraction).filter(EventInteraction.event_id.in_(visible_event_ids), EventInteraction.user_id == user_id).all()
         for interaction in interactions:
-            user_interactions[interaction.event_id] = {
-                'interaction_type': interaction.interaction_type,
-                'status': interaction.status,
-                'role': interaction.role,
-                'invited_by_user_id': interaction.invited_by_user_id
-            }
+            user_interactions[interaction.event_id] = {"interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id}
 
     # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)
@@ -503,27 +416,19 @@ async def get_user_events(
         rounded_start = round_to_5min(event.start_date)
         rounded_end = round_to_5min(event.end_date) if event.end_date else None
 
-        is_owner = event.owner_id == user_id
-        owner_display = "Yo" if is_owner else owners_info.get(event.owner_id, f"Usuario #{event.owner_id}")
-
         event_dict = {
-            'id': event.id,
-            'name': event.name,
-            'description': event.description,
-            'start_date': rounded_start.isoformat(),
-            'end_date': rounded_end.isoformat() if rounded_end else None,
-            'event_type': event.event_type,
-            'source': event_sources.get(event.id, 'owned'),
-            'owner_id': event.owner_id,
-            'calendar_id': event.calendar_id,
-            'parent_recurring_event_id': event.parent_recurring_event_id,
-            'created_at': event.created_at.isoformat(),
-            'updated_at': event.updated_at.isoformat(),
-            'start_date_formatted': rounded_start.strftime("%Y-%m-%d %H:%M"),
-            'end_date_formatted': rounded_end.strftime("%Y-%m-%d %H:%M") if rounded_end else None,
-            'is_owner': is_owner,
-            'owner_display': owner_display,
-            'interaction': user_interactions.get(event.id)
+            "id": event.id,
+            "name": event.name,
+            "description": event.description,
+            "start_date": rounded_start.isoformat(),
+            "end_date": rounded_end.isoformat() if rounded_end else None,
+            "event_type": event.event_type,
+            "owner_id": event.owner_id,
+            "calendar_id": event.calendar_id,
+            "parent_recurring_event_id": event.parent_recurring_event_id,
+            "created_at": event.created_at.isoformat(),
+            "updated_at": event.updated_at.isoformat(),
+            "interaction": user_interactions.get(event.id),
         }
         result.append(event_dict)
 
@@ -557,12 +462,7 @@ async def subscribe_to_user(user_id: int, target_user_id: int, db: Session = Dep
     events = db.query(Event).filter(Event.owner_id == target_user_id).all()
 
     if not events:
-        return {
-            "message": "Target user has no events",
-            "subscribed_count": 0,
-            "already_subscribed_count": 0,
-            "error_count": 0
-        }
+        return {"message": "Target user has no events", "subscribed_count": 0, "already_subscribed_count": 0, "error_count": 0}
 
     subscribed_count = 0
     already_subscribed_count = 0
@@ -570,11 +470,7 @@ async def subscribe_to_user(user_id: int, target_user_id: int, db: Session = Dep
 
     for event in events:
         # Check if subscription already exists
-        existing = db.query(EventInteraction).filter(
-            EventInteraction.event_id == event.id,
-            EventInteraction.user_id == user_id,
-            EventInteraction.interaction_type == 'subscribed'
-        ).first()
+        existing = db.query(EventInteraction).filter(EventInteraction.event_id == event.id, EventInteraction.user_id == user_id, EventInteraction.interaction_type == "subscribed").first()
 
         if existing:
             already_subscribed_count += 1
@@ -582,11 +478,7 @@ async def subscribe_to_user(user_id: int, target_user_id: int, db: Session = Dep
 
         try:
             # Create subscription
-            interaction = EventInteraction(
-                event_id=event.id,
-                user_id=user_id,
-                interaction_type='subscribed'
-            )
+            interaction = EventInteraction(event_id=event.id, user_id=user_id, interaction_type="subscribed")
             db.add(interaction)
             subscribed_count += 1
         except Exception as e:
@@ -595,10 +487,4 @@ async def subscribe_to_user(user_id: int, target_user_id: int, db: Session = Dep
 
     db.commit()
 
-    return {
-        "message": f"Subscribed to {subscribed_count} events",
-        "subscribed_count": subscribed_count,
-        "already_subscribed_count": already_subscribed_count,
-        "error_count": error_count,
-        "total_events": len(events)
-    }
+    return {"message": f"Subscribed to {subscribed_count} events", "subscribed_count": subscribed_count, "already_subscribed_count": already_subscribed_count, "error_count": error_count, "total_events": len(events)}

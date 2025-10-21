@@ -1,0 +1,37 @@
+{
+  "name": "Weekly recurrence - Mon, Wed, Fri",
+  "description": "Evento que se repite lunes, miércoles y viernes",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Clases de yoga",
+        "description": "Yoga 3 veces por semana",
+        "start_date": "2025-11-03T19:00:00",
+        "end_date": "2025-11-03T20:00:00",
+        "event_type": "recurring",
+        "owner_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/recurring_configs",
+    "body": {
+      "event_id": 100,
+      "recurrence_type": "weekly",
+      "schedule": [
+        {"day": "monday"},
+        {"day": "wednesday"},
+        {"day": "friday"}
+      ],
+      "recurrence_end_date": "2026-06-30T23:59:59"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

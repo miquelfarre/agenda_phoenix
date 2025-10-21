@@ -1,0 +1,20 @@
+{
+  "name": "Create contact with duplicate phone (should fail)",
+  "description": "Intentar crear un contacto con un teléfono que ya existe",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/contacts",
+    "body": {
+      "name": "Otro Usuario",
+      "phone": "+34606014680"
+    }
+  },
+  "expected_response": {
+    "status_code": 400
+  }
+}

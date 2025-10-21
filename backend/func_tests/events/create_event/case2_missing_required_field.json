@@ -1,0 +1,25 @@
+{
+  "name": "Create event without name (should fail)",
+  "description": "Intentar crear un evento sin el campo 'name' obligatorio",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/events",
+    "body": {
+      "description": "Evento sin nombre",
+      "start_date": "2025-11-15T20:00:00",
+      "event_type": "regular",
+      "owner_id": 1
+    }
+  },
+  "expected_response": {
+    "status_code": 422,
+    "body": {
+      "detail": "{{contains: 'name'}}"
+    }
+  }
+}

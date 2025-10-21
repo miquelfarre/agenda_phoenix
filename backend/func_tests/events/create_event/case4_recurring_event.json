@@ -1,0 +1,24 @@
+{
+  "name": "Create recurring event (basic)",
+  "description": "Crear un evento de tipo recurrente (sin configuración de recurrencia)",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/events",
+    "body": {
+      "name": "Sincro semanal",
+      "description": "Reunión de sincronización todos los lunes",
+      "start_date": "2025-11-17T10:00:00",
+      "end_date": "2025-11-17T11:00:00",
+      "event_type": "recurring",
+      "owner_id": 1
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

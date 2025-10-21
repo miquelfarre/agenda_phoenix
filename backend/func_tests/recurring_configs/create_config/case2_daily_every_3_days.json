@@ -1,0 +1,35 @@
+{
+  "name": "Daily recurrence - every 3 days",
+  "description": "Evento que se repite cada 3 días",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Entrenamiento intercalado",
+        "description": "Gym cada 3 días",
+        "start_date": "2025-11-01T18:00:00",
+        "end_date": "2025-11-01T19:30:00",
+        "event_type": "recurring",
+        "owner_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/recurring_configs",
+    "body": {
+      "event_id": 100,
+      "recurrence_type": "daily",
+      "schedule": [
+        {"interval": "3"}
+      ],
+      "recurrence_end_date": "2026-01-31T23:59:59"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

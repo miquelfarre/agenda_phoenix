@@ -1,0 +1,26 @@
+{
+  "name": "Create temporal calendar with start and end dates",
+  "description": "Crear un calendario temporal con fechas de inicio y fin",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Carlos López",
+        "phone": "+34600333444"
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/calendars",
+    "body": {
+      "name": "Vacaciones Verano 2025",
+      "owner_id": 1,
+      "start_date": "2025-07-01T00:00:00",
+      "end_date": "2025-08-31T23:59:59"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  }
+}

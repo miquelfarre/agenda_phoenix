@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, UniqueConstraint, Boolean, Text, JSON
+from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import relationship
-from sqlalchemy import func
+
 from database import Base
 
 
@@ -8,6 +8,7 @@ class Contact(Base):
     """
     Contact model - Phone contacts from user's device.
     """
+
     __tablename__ = "contacts"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -37,6 +38,7 @@ class User(Base):
     User model - Users who have logged in.
     Two types: private (phone auth) and public (instagram auth).
     """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -85,13 +87,14 @@ class Calendar(Base):
     - Permanent (no start_date/end_date): e.g., "Personal", "Work"
     - Temporal (with start_date/end_date): e.g., "Summer Course 2025", "Project Q1 2025"
     """
+
     __tablename__ = "calendars"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)  # Owner principal del calendar
     name = Column(String(255), nullable=False)
     start_date = Column(TIMESTAMP(timezone=True), nullable=True)  # Optional: for temporal calendars
-    end_date = Column(TIMESTAMP(timezone=True), nullable=True)    # Optional: for temporal calendars
+    end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # Optional: for temporal calendars
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -120,21 +123,20 @@ class CalendarMembership(Base):
     CalendarMembership model - Membresías de usuarios en calendarios.
     Permite tener owners, admins y members de un calendar.
     """
+
     __tablename__ = "calendar_memberships"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    role = Column(String(50), nullable=False, default='member')  # 'owner', 'admin', 'member'
-    status = Column(String(50), nullable=False, default='pending')  # 'pending', 'accepted', 'rejected'
+    role = Column(String(50), nullable=False, default="member")  # 'owner', 'admin', 'member'
+    status = Column(String(50), nullable=False, default="pending")  # 'pending', 'accepted', 'rejected'
     invited_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Unique constraint: un usuario solo puede tener una membresía por calendar
-    __table_args__ = (
-        UniqueConstraint('calendar_id', 'user_id', name='uq_calendar_user_membership'),
-    )
+    __table_args__ = (UniqueConstraint("calendar_id", "user_id", name="uq_calendar_user_membership"),)
 
     # Relationships
     calendar = relationship("Calendar", back_populates="memberships")
@@ -161,6 +163,7 @@ class Group(Base):
     """
     Group model - Users can be organized into groups for mass invitations.
     """
+
     __tablename__ = "groups"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -192,6 +195,7 @@ class GroupMembership(Base):
     """
     GroupMembership model - Junction table for users and groups.
     """
+
     __tablename__ = "group_memberships"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -201,9 +205,7 @@ class GroupMembership(Base):
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Unique constraint: one user per group
-    __table_args__ = (
-        UniqueConstraint('group_id', 'user_id', name='uq_group_user'),
-    )
+    __table_args__ = (UniqueConstraint("group_id", "user_id", name="uq_group_user"),)
 
     # Relationships
     group = relationship("Group", back_populates="memberships")
@@ -226,6 +228,7 @@ class Event(Base):
     """
     Event model for storing calendar events.
     """
+
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -233,10 +236,10 @@ class Event(Base):
     description = Column(Text, nullable=True)
     start_date = Column(TIMESTAMP(timezone=True), nullable=False)
     end_date = Column(TIMESTAMP(timezone=True), nullable=True)
-    event_type = Column(String(50), nullable=False, default='regular')  # 'regular' or 'recurring'
+    event_type = Column(String(50), nullable=False, default="regular")  # 'regular' or 'recurring'
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=True, index=True)
-    parent_recurring_event_id = Column(Integer, ForeignKey("recurring_event_configs.id"), nullable=True, index=True)  # Evento recurrente padre
+    parent_recurring_event_id = Column(Integer, ForeignKey("recurring_event_configs.id", use_alter=True, name="fk_event_parent_recurring"), nullable=True, index=True)  # Evento recurrente padre
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -271,6 +274,7 @@ class EventInteraction(Base):
     """
     EventInteraction model - Tracks user interactions with events.
     """
+
     __tablename__ = "event_interactions"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -285,9 +289,7 @@ class EventInteraction(Base):
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Unique constraint: one active interaction per user per event
-    __table_args__ = (
-        UniqueConstraint('event_id', 'user_id', name='uq_event_user_interaction'),
-    )
+    __table_args__ = (UniqueConstraint("event_id", "user_id", name="uq_event_user_interaction"),)
 
     # Relationships
     event = relationship("Event", back_populates="interactions")
@@ -327,11 +329,12 @@ class RecurringEventConfig(Base):
     - If recurrence_end_date is NULL, the event repeats indefinitely
     - Common for birthdays, annual holidays, etc.
     """
+
     __tablename__ = "recurring_event_configs"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False, unique=True, index=True)
-    recurrence_type = Column(String(20), nullable=False, default='weekly')  # 'daily', 'weekly', 'monthly', 'yearly'
+    recurrence_type = Column(String(20), nullable=False, default="weekly")  # 'daily', 'weekly', 'monthly', 'yearly'
     schedule = Column(JSON, nullable=True)  # Type-specific configuration (format varies by recurrence_type)
     recurrence_end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # NULL = perpetual/infinite recurrence
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
@@ -359,6 +362,7 @@ class EventBan(Base):
     """
     EventBan model - Track users banned from specific events.
     """
+
     __tablename__ = "event_bans"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -370,9 +374,7 @@ class EventBan(Base):
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Unique constraint: one ban per user per event
-    __table_args__ = (
-        UniqueConstraint('event_id', 'user_id', name='uq_event_user_ban'),
-    )
+    __table_args__ = (UniqueConstraint("event_id", "user_id", name="uq_event_user_ban"),)
 
     # Relationships
     event = relationship("Event", back_populates="bans")
@@ -398,6 +400,7 @@ class UserBlock(Base):
     """
     UserBlock model - Track users blocking other users.
     """
+
     __tablename__ = "user_blocks"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -407,9 +410,7 @@ class UserBlock(Base):
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Unique constraint: one block per user pair
-    __table_args__ = (
-        UniqueConstraint('blocker_user_id', 'blocked_user_id', name='uq_blocker_blocked'),
-    )
+    __table_args__ = (UniqueConstraint("blocker_user_id", "blocked_user_id", name="uq_blocker_blocked"),)
 
     # Relationships
     blocker = relationship("User", foreign_keys=[blocker_user_id], back_populates="blocked_users")
@@ -433,6 +434,7 @@ class AppBan(Base):
     AppBan model - Admin bans for entire application access.
     When a user is banned here, they cannot use the application at all.
     """
+
     __tablename__ = "app_bans"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)

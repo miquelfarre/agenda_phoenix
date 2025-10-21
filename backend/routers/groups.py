@@ -3,30 +3,21 @@ Groups Router
 
 Handles all group-related endpoints.
 """
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 
-from models import Group, User
-from schemas import GroupCreate, GroupBase, GroupResponse
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from dependencies import get_db
+from models import Group, User
+from schemas import GroupBase, GroupCreate, GroupResponse
 
-
-router = APIRouter(
-    prefix="/groups",
-    tags=["groups"]
-)
+router = APIRouter(prefix="/groups", tags=["groups"])
 
 
 @router.get("", response_model=List[GroupResponse])
-async def get_groups(
-    created_by: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_groups(created_by: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all groups, optionally filtered by creator, with pagination and ordering"""
     query = db.query(Group)
     if created_by:
@@ -60,7 +51,7 @@ async def create_group(group: GroupCreate, db: Session = Depends(get_db)):
     if not creator:
         raise HTTPException(status_code=404, detail="Creator user not found")
 
-    db_group = Group(**group.dict())
+    db_group = Group(**group.model_dump())
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
@@ -74,7 +65,7 @@ async def update_group(group_id: int, group: GroupBase, db: Session = Depends(ge
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
 
-    for key, value in group.dict().items():
+    for key, value in group.model_dump().items():
         setattr(db_group, key, value)
 
     db.commit()

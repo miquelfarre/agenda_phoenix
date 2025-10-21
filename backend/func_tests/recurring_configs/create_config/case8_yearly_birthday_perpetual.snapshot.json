@@ -1,0 +1,21 @@
+{
+  "status_code": 201,
+  "body": {
+    "_status_code": 201,
+    "body": {
+      "recurrence_type": "yearly",
+      "schedule": [
+        {
+          "month": "6",
+          "day": "14"
+        }
+      ],
+      "recurrence_end_date": null,
+      "id": "{{ID}}",
+      "event_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

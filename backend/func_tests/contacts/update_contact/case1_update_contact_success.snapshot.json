@@ -1,0 +1,14 @@
+{
+  "status_code": 200,
+  "body": {
+    "_status_code": 200,
+    "body": {
+      "name": "Sonia Actualizada",
+      "phone": "+34606014680",
+      "id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

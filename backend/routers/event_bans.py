@@ -3,31 +3,21 @@ Event Bans Router
 
 Handles all event ban endpoints.
 """
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
 
-from models import Event, User, EventBan
-from schemas import EventBanCreate, EventBanResponse
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from dependencies import get_db
+from models import Event, EventBan, User
+from schemas import EventBanCreate, EventBanResponse
 
-
-router = APIRouter(
-    prefix="/event_bans",
-    tags=["event_bans"]
-)
+router = APIRouter(prefix="/event_bans", tags=["event_bans"])
 
 
 @router.get("", response_model=List[EventBanResponse])
-async def get_event_bans(
-    event_id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_event_bans(event_id: Optional[int] = None, user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all event bans, optionally filtered by event_id and/or user_id, with pagination and ordering"""
     query = db.query(EventBan)
     if event_id:
@@ -74,14 +64,11 @@ async def create_event_ban(ban: EventBanCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Banner user not found")
 
     # Check if ban already exists
-    existing = db.query(EventBan).filter(
-        EventBan.event_id == ban.event_id,
-        EventBan.user_id == ban.user_id
-    ).first()
+    existing = db.query(EventBan).filter(EventBan.event_id == ban.event_id, EventBan.user_id == ban.user_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="User is already banned from this event")
 
-    db_ban = EventBan(**ban.dict())
+    db_ban = EventBan(**ban.model_dump())
     db.add(db_ban)
     db.commit()
     db.refresh(db_ban)
