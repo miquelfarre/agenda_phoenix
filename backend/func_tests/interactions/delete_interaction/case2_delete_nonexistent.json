@@ -1,0 +1,12 @@
+{
+  "description": "Delete nonexistent interaction returns 404",
+  "setup": {},
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/interactions/999"
+  },
+  "expected": {
+    "status_code": 404,
+    "body_contains": ["Interaction not found"]
+  }
+}

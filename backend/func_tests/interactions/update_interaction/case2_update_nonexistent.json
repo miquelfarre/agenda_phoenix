@@ -1,0 +1,16 @@
+{
+  "description": "Update nonexistent interaction returns 404",
+  "setup": {},
+  "request": {
+    "method": "PUT",
+    "endpoint": "/interactions/999",
+    "body": {
+      "interaction_type": "invited",
+      "status": "accepted"
+    }
+  },
+  "expected": {
+    "status_code": 404,
+    "body_contains": ["Interaction not found"]
+  }
+}

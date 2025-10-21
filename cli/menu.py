@@ -16,7 +16,6 @@ from ui.tables import (
     truncate_text,
     format_count_message,
     create_events_table,
-    create_conflicts_table,
     show_pagination_info,
 )
 from dateutil import parser as date_parser

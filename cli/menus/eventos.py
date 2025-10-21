@@ -19,7 +19,6 @@ from ui.tables import (
     truncate_text,
     format_count_message,
     create_events_table,
-    create_conflicts_table,
     show_pagination_info,
     format_datetime,
 )
@@ -303,15 +302,6 @@ def ver_mis_invitaciones(_show_header_wrapper, handle_api_error, pause, usuario_
         pause()
         return
 
-    # Obtener datos del evento para verificar conflictos
-    event_response = api_client.get(url_event(selected_inv["event_id"]))
-    event_data = handle_api_error(event_response)
-
-    if not event_data:
-        console.print("[red]Error: no se pudo obtener informacion del evento[/red]")
-        pause()
-        return
-
     # Preguntar accion
     action = questionary.select("Que deseas hacer con esta invitacion?", choices=["Aceptar invitacion", "Rechazar invitacion", "Cancelar"], style=custom_style).ask()
 
@@ -326,31 +316,6 @@ def ver_mis_invitaciones(_show_header_wrapper, handle_api_error, pause, usuario_
     update_data = {"status": new_status}
 
     response = api_client.patch(url_interaction(inv_id), json=update_data)
-
-    # Manejo de conflictos desde el backend (409)
-    if response.status_code == 409:
-        try:
-            detail = response.json().get("detail")
-        except Exception:
-            detail = None
-        conflicts = []
-        if isinstance(detail, dict):
-            conflicts = detail.get("conflicts") or []
-
-        if conflicts:
-            console.print(f"[bold yellow]Conflictos detectados por el backend[/bold yellow]\n")
-            conflict_table = create_conflicts_table(conflicts)
-            console.print(conflict_table)
-            console.print()
-
-        continuar = questionary.confirm("Se han detectado conflictos. Aceptar de todos modos?", default=False).ask()
-
-        if not continuar:
-            pause()
-            return
-
-        # Reintentar con force=true
-        response = api_client.patch(url_interaction(inv_id) + "?force=true", json=update_data)
 
     if response.status_code in [200, 204]:
         status_text = "aceptada" if new_status == "accepted" else "rechazada"
@@ -804,31 +769,6 @@ def crear_evento(_show_header_wrapper, handle_api_error, pause, modo_actual, usu
 
     console.print("\n[cyan]Creando evento...[/cyan]\n")
     response = api_client.post(url_events(), json=data)
-
-    # Manejo de conflictos desde el backend (409) con reintento
-    if response.status_code == 409:
-        try:
-            detail = response.json().get("detail")
-        except Exception:
-            detail = None
-        conflicts = []
-        if isinstance(detail, dict):
-            conflicts = detail.get("conflicts") or []
-
-        if conflicts:
-            console.print(f"[bold yellow]Conflictos detectados por el backend[/bold yellow]\n")
-            conflict_table = create_conflicts_table(conflicts)
-            console.print(conflict_table)
-            console.print()
-
-        continuar = questionary.confirm("Se han detectado conflictos. Crear de todos modos?", default=False).ask()
-
-        if not continuar:
-            pause()
-            return
-
-        # Reintentar con force=true
-        response = api_client.post(url_events() + "?force=true", json=data)
     event = handle_api_error(response)
 
     if event:

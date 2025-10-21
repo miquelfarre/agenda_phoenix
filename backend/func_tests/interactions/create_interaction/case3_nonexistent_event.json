@@ -1,0 +1,21 @@
+{
+  "description": "Create interaction with nonexistent event returns 404",
+  "setup": {
+    "users": [
+      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/interactions",
+    "body": {
+      "event_id": 999,
+      "user_id": 2,
+      "interaction_type": "subscribed"
+    }
+  },
+  "expected": {
+    "status_code": 404,
+    "body_contains": ["Event not found"]
+  }
+}

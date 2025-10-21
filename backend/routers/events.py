@@ -1,7 +1,7 @@
 """
 Events Router
 
-Handles all event-related endpoints including conflict checking.
+Handles all event-related endpoints.
 """
 
 from datetime import datetime, timezone
@@ -38,84 +38,6 @@ async def get_events(owner_id: Optional[int] = None, calendar_id: Optional[int] 
 
     events = query.all()
     return events
-
-
-@router.get("/check-conflicts")
-async def check_event_conflicts(user_id: int, start_date: datetime, end_date: Optional[datetime] = None, exclude_event_id: Optional[int] = None, db: Session = Depends(get_db)):
-    """Check for event conflicts for a user within a given time range"""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    event_ids = set()
-
-    # Own events
-    own_events = db.query(Event.id).filter(Event.owner_id == user_id).all()
-    event_ids.update([e[0] for e in own_events])
-
-    # Subscribed events
-    subscribed_events = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == user_id, EventInteraction.interaction_type == "subscribed").all()
-    event_ids.update([e[0] for e in subscribed_events])
-
-    # Invited events (accepted)
-    invited_events = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == user_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "accepted").all()
-    event_ids.update([e[0] for e in invited_events])
-
-    # Calendar events
-    calendar_memberships = db.query(CalendarMembership.calendar_id).filter(CalendarMembership.user_id == user_id, CalendarMembership.status == "accepted", CalendarMembership.role.in_(["owner", "admin"])).all()
-
-    if calendar_memberships:
-        calendar_ids = [m[0] for m in calendar_memberships]
-        calendar_events = db.query(Event.id).filter(Event.calendar_id.in_(calendar_ids)).all()
-        event_ids.update([e[0] for e in calendar_events])
-
-    if event_ids:
-        all_events = db.query(Event).filter(Event.id.in_(event_ids)).all()
-    else:
-        return []
-
-    # Detect conflicts
-    conflicts = []
-    for event in all_events:
-        if exclude_event_id and event.id == exclude_event_id:
-            continue
-
-        evt_start = event.start_date
-        evt_end = event.end_date
-
-        # Check overlap
-        has_conflict = False
-        if not end_date and not evt_end:
-            if abs((start_date - evt_start).total_seconds()) < 300:
-                has_conflict = True
-        elif not end_date:
-            if evt_end and evt_start <= start_date <= evt_end:
-                has_conflict = True
-        elif not evt_end:
-            if start_date <= evt_start <= end_date:
-                has_conflict = True
-        else:
-            if max(start_date, evt_start) < min(end_date, evt_end):
-                has_conflict = True
-
-        if has_conflict:
-            conflicts.append(
-                {
-                    "id": event.id,
-                    "name": event.name,
-                    "description": event.description,
-                    "start_date": event.start_date,
-                    "end_date": event.end_date,
-                    "event_type": event.event_type,
-                    "owner_id": event.owner_id,
-                    "calendar_id": event.calendar_id,
-                    "parent_recurring_event_id": event.parent_recurring_event_id,
-                    "created_at": event.created_at,
-                    "updated_at": event.updated_at,
-                }
-            )
-
-    return conflicts
 
 
 @router.get("/{event_id}", response_model=EventResponse)
@@ -261,76 +183,14 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=EventResponse, status_code=201)
-async def create_event(event: EventCreate, force: bool = False, db: Session = Depends(get_db)):
-    """Create a new event with optional conflict validation.
-
-    If force is False, validates that the event time does not conflict for the owner
-    with any of their other accessible events. Returns 409 with conflict list if found.
-    """
+async def create_event(event: EventCreate, db: Session = Depends(get_db)):
+    """Create a new event."""
     owner = db.query(User).filter(User.id == event.owner_id).first()
     if not owner:
         raise HTTPException(status_code=404, detail="Owner user not found")
 
     # Check if owner is banned
     check_user_not_banned(event.owner_id, db)
-
-    # Conflict detection (server-side business logic formerly in CLI)
-    if not force:
-        # Collect all event IDs the owner has access to (same logic as /events/check-conflicts)
-        event_ids = set()
-
-        own_events = db.query(Event.id).filter(Event.owner_id == event.owner_id).all()
-        event_ids.update([e[0] for e in own_events])
-
-        subscribed_events = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == event.owner_id, EventInteraction.interaction_type == "subscribed").all()
-        event_ids.update([e[0] for e in subscribed_events])
-
-        invited_events = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == event.owner_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "accepted").all()
-        event_ids.update([e[0] for e in invited_events])
-
-        calendar_memberships = db.query(CalendarMembership.calendar_id).filter(CalendarMembership.user_id == event.owner_id, CalendarMembership.status == "accepted", CalendarMembership.role.in_(["owner", "admin"])).all()
-        if calendar_memberships:
-            calendar_ids = [m[0] for m in calendar_memberships]
-            calendar_events = db.query(Event.id).filter(Event.calendar_id.in_(calendar_ids)).all()
-            event_ids.update([e[0] for e in calendar_events])
-
-        conflicts = []
-        if event_ids:
-            all_events = db.query(Event).filter(Event.id.in_(event_ids)).all()
-
-            # Ensure incoming dates are timezone-aware (convert naive to UTC if needed)
-            start_date = event.start_date
-            if start_date.tzinfo is None:
-                start_date = start_date.replace(tzinfo=timezone.utc)
-
-            end_date = event.end_date
-            if end_date and end_date.tzinfo is None:
-                end_date = end_date.replace(tzinfo=timezone.utc)
-
-            for ev in all_events:
-                # Overlap check with same semantics as /events/check-conflicts
-                evt_start = ev.start_date
-                evt_end = ev.end_date
-
-                has_conflict = False
-                if not end_date and not evt_end:
-                    if abs((start_date - evt_start).total_seconds()) < 300:
-                        has_conflict = True
-                elif not end_date:
-                    if evt_end and evt_start <= start_date <= evt_end:
-                        has_conflict = True
-                elif not evt_end:
-                    if start_date <= evt_start <= end_date:
-                        has_conflict = True
-                else:
-                    if max(start_date, evt_start) < min(end_date, evt_end):
-                        has_conflict = True
-
-                if has_conflict:
-                    conflicts.append({"id": ev.id, "name": ev.name, "start_date": ev.start_date, "end_date": ev.end_date, "event_type": ev.event_type})
-
-        if conflicts:
-            raise HTTPException(status_code=409, detail={"message": "Event time conflicts detected", "conflicts": conflicts})
 
     # Ensure dates are timezone-aware before saving to database
     event_data = event.model_dump()

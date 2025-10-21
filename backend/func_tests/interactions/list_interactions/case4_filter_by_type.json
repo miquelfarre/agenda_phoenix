@@ -1,0 +1,23 @@
+{
+  "description": "List interactions filtered by interaction_type",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"},
+      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+    ],
+    "events": [
+      {"id": 1, "name": "Party", "start_date": "2025-12-01T18:00:00", "owner_id": 1}
+    ],
+    "event_interactions": [
+      {"event_id": 1, "user_id": 1, "interaction_type": "joined", "status": "accepted", "role": "owner"},
+      {"event_id": 1, "user_id": 2, "interaction_type": "invited", "status": "pending"}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/interactions?interaction_type=invited"
+  },
+  "expected": {
+    "status_code": 200
+  }
+}

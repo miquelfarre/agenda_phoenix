@@ -1,0 +1,15 @@
+{
+  "description": "Patch nonexistent interaction returns 404",
+  "setup": {},
+  "request": {
+    "method": "PATCH",
+    "endpoint": "/interactions/999",
+    "body": {
+      "status": "accepted"
+    }
+  },
+  "expected": {
+    "status_code": 404,
+    "body_contains": ["Interaction not found"]
+  }
+}

@@ -81,11 +81,6 @@ def url_event(event_id):
     return f"{API_BASE_URL}/events/{event_id}"
 
 
-def url_events_check_conflicts():
-    """GET /events/check-conflicts - Check event conflicts"""
-    return f"{API_BASE_URL}/events/check-conflicts"
-
-
 def url_event_interactions(event_id):
     """GET /events/{event_id}/interactions - Get event interactions"""
     return f"{API_BASE_URL}/events/{event_id}/interactions"

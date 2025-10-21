@@ -63,16 +63,4 @@ def create_events_table(events, title="Events", current_user_id=None, max_rows=3
     return table
 
 
-def create_conflicts_table(conflicts):
-    table = Table(show_header=True, header_style="bold yellow")
-    table.add_column("Evento", style="yellow", width=30)
-    table.add_column("Fecha", style="cyan", width=18)
-    for conf in conflicts[:5]:
-        table.add_row(
-            truncate_text(conf["name"], 28),
-            format_datetime(conf.get("start_date")),
-        )
-    return table
-
-
 # Note: Invitations and calendars tables previously lived here; removed as unused.

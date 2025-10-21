@@ -181,7 +181,7 @@ async def update_interaction(interaction_id: int, interaction: EventInteractionB
 
 
 @router.patch("/{interaction_id}", response_model=EventInteractionResponse)
-async def patch_interaction(interaction_id: int, interaction: EventInteractionUpdate, force: bool = False, db: Session = Depends(get_db)):
+async def patch_interaction(interaction_id: int, interaction: EventInteractionUpdate, db: Session = Depends(get_db)):
     """
     Partially update an existing interaction (typically to change status) - PATCH alias for PUT
 
@@ -198,65 +198,6 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
 
     # Get the event to check if it's a recurring event
     event = db.query(Event).filter(Event.id == db_interaction.event_id).first()
-
-    # If attempting to accept an invitation, validate conflicts unless forced
-    new_status = interaction.status
-    if event and db_interaction.interaction_type == "invited" and new_status == "accepted" and not force:
-
-        # Build set of other event IDs the user has access to (exclude this event)
-        user_id = db_interaction.user_id
-        other_event_ids = set()
-
-        own = db.query(Event.id).filter(Event.owner_id == user_id).all()
-        other_event_ids.update([e[0] for e in own])
-
-        subs = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == user_id, EventInteraction.interaction_type == "subscribed").all()
-        other_event_ids.update([e[0] for e in subs])
-
-        accepted_inv = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == user_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "accepted").all()
-        other_event_ids.update([e[0] for e in accepted_inv])
-
-        # Calendar events (owner/admin accepted)
-        from models import CalendarMembership  # local import to avoid circulars
-
-        calendar_ids = db.query(CalendarMembership.calendar_id).filter(CalendarMembership.user_id == user_id, CalendarMembership.status == "accepted", CalendarMembership.role.in_(["owner", "admin"])).all()
-        if calendar_ids:
-            cal_events = db.query(Event.id).filter(Event.calendar_id.in_([cid for (cid,) in calendar_ids])).all()
-            other_event_ids.update([e[0] for e in cal_events])
-
-        if event.id in other_event_ids:
-            other_event_ids.remove(event.id)
-
-        conflicts = []
-        if other_event_ids:
-            others = db.query(Event).filter(Event.id.in_(other_event_ids)).all()
-            for ev in others:
-                evt_start = ev.start_date
-                evt_end = ev.end_date
-                start_date = event.start_date
-                end_date = event.end_date
-
-                has_conflict = False
-                if not end_date and not evt_end:
-                    if abs((start_date - evt_start).total_seconds()) < 300:
-                        has_conflict = True
-                elif not end_date:
-                    if evt_end and evt_start <= start_date <= evt_end:
-                        has_conflict = True
-                elif not evt_end:
-                    if start_date <= evt_start <= end_date:
-                        has_conflict = True
-                else:
-                    if max(start_date, evt_start) < min(end_date, evt_end):
-                        has_conflict = True
-
-                if has_conflict:
-                    conflicts.append(
-                        {"id": ev.id, "name": ev.name, "start_date": ev.start_date, "end_date": ev.end_date, "event_type": ev.event_type, "start_date_formatted": ev.start_date.strftime("%Y-%m-%d %H:%M"), "end_date_formatted": ev.end_date.strftime("%Y-%m-%d %H:%M") if ev.end_date else None}
-                    )
-
-        if conflicts:
-            raise HTTPException(status_code=409, detail={"message": "Invitation acceptance conflicts with existing events", "conflicts": conflicts})
 
     # Only update fields that are explicitly provided (exclude None values)
     for key, value in interaction.dict(exclude_unset=True).items():
