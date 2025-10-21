@@ -2,12 +2,31 @@
   "description": "Exclude past events when include_past=false",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      }
     ],
     "events": [
-      {"id": 1, "name": "Past Event", "start_date": "2024-01-01T10:00:00", "owner_id": 1},
-      {"id": 2, "name": "Recent Past", "start_date": "2025-10-01T10:00:00", "owner_id": 1},
-      {"id": 3, "name": "Future Event", "start_date": "2026-01-01T10:00:00", "owner_id": 1}
+      {
+        "id": 1,
+        "name": "Past Event",
+        "start_date": "2024-01-01T10:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 2,
+        "name": "Recent Past",
+        "start_date": "2025-10-01T10:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 3,
+        "name": "Future Event",
+        "start_date": "2026-01-01T10:00:00",
+        "owner_id": 1
+      }
     ]
   },
   "request": {
@@ -16,6 +35,22 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY future events (id=3), NOT past events (id=1,2)"
+    "note": "Should return ONLY future events (id=3), NOT past events (id=1,2)",
+    "body": [
+      {
+        "name": "Future Event",
+        "description": null,
+        "start_date": "2026-01-01T10:00:00",
+        "end_date": null,
+        "event_type": "regular",
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "calendar_id": null,
+        "parent_recurring_event_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "interaction": null
+      }
+    ]
   }
 }

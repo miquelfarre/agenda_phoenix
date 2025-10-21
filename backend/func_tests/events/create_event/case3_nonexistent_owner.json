@@ -20,5 +20,11 @@
     "body": {
       "detail": "Owner user not found"
     }
+  },
+  "expected": {
+    "status_code": 404,
+    "body": {
+      "detail": "Owner user not found"
+    }
   }
 }

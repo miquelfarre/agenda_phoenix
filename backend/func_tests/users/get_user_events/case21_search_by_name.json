@@ -2,13 +2,37 @@
   "description": "Search events by name (case-insensitive)",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      }
     ],
     "events": [
-      {"id": 1, "name": "Team Meeting", "start_date": "2025-12-01T10:00:00", "owner_id": 1},
-      {"id": 2, "name": "Team Lunch", "start_date": "2025-12-02T12:00:00", "owner_id": 1},
-      {"id": 3, "name": "Client Presentation", "start_date": "2025-12-03T14:00:00", "owner_id": 1},
-      {"id": 4, "name": "TEAM Workshop", "start_date": "2025-12-04T09:00:00", "owner_id": 1}
+      {
+        "id": 1,
+        "name": "Team Meeting",
+        "start_date": "2025-12-01T10:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 2,
+        "name": "Team Lunch",
+        "start_date": "2025-12-02T12:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 3,
+        "name": "Client Presentation",
+        "start_date": "2025-12-03T14:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 4,
+        "name": "TEAM Workshop",
+        "start_date": "2025-12-04T09:00:00",
+        "owner_id": 1
+      }
     ]
   },
   "request": {
@@ -17,6 +41,50 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return events with 'team' in name (id=1,2,4), case-insensitive, NOT id=3"
+    "note": "Should return events with 'team' in name (id=1,2,4), case-insensitive, NOT id=3",
+    "body": [
+      {
+        "name": "Team Meeting",
+        "description": null,
+        "start_date": "2025-12-01T10:00:00",
+        "end_date": null,
+        "event_type": "regular",
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "calendar_id": null,
+        "parent_recurring_event_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "interaction": null
+      },
+      {
+        "name": "Team Lunch",
+        "description": null,
+        "start_date": "2025-12-02T12:00:00",
+        "end_date": null,
+        "event_type": "regular",
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "calendar_id": null,
+        "parent_recurring_event_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "interaction": null
+      },
+      {
+        "name": "TEAM Workshop",
+        "description": null,
+        "start_date": "2025-12-04T09:00:00",
+        "end_date": null,
+        "event_type": "regular",
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "calendar_id": null,
+        "parent_recurring_event_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "interaction": null
+      }
+    ]
   }
 }

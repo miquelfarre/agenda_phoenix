@@ -7,6 +7,11 @@
   },
   "expected": {
     "status_code": 404,
-    "body_contains": ["Event ban not found"]
+    "body_contains": [
+      "Event ban not found"
+    ],
+    "body": {
+      "detail": "Event ban not found"
+    }
   }
 }

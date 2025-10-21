@@ -2,21 +2,75 @@
   "description": "Hierarchical filtering for pending invitations to recurring events - shows base, hides instances",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ],
     "events": [
-      {"id": 1, "name": "Weekly Meeting", "start_date": "2025-12-01T10:00:00", "event_type": "recurring", "owner_id": 1},
-      {"id": 2, "name": "Weekly Meeting", "start_date": "2025-12-08T10:00:00", "event_type": "regular", "owner_id": 1, "parent_recurring_event_id": 1},
-      {"id": 3, "name": "Weekly Meeting", "start_date": "2025-12-15T10:00:00", "event_type": "regular", "owner_id": 1, "parent_recurring_event_id": 1}
+      {
+        "id": 1,
+        "name": "Weekly Meeting",
+        "start_date": "2025-12-01T10:00:00",
+        "event_type": "recurring",
+        "owner_id": 1
+      },
+      {
+        "id": 2,
+        "name": "Weekly Meeting",
+        "start_date": "2025-12-08T10:00:00",
+        "event_type": "regular",
+        "owner_id": 1,
+        "parent_recurring_event_id": 1
+      },
+      {
+        "id": 3,
+        "name": "Weekly Meeting",
+        "start_date": "2025-12-15T10:00:00",
+        "event_type": "regular",
+        "owner_id": 1,
+        "parent_recurring_event_id": 1
+      }
     ],
     "recurring_configs": [
-      {"event_id": 1, "recurrence_type": "weekly", "schedule": [{"day": 0, "day_name": "Monday", "time": "10:00"}], "recurrence_end_date": "2025-12-31T23:59:59"}
+      {
+        "event_id": 1,
+        "recurrence_type": "weekly",
+        "schedule": [
+          {
+            "day": 0,
+            "day_name": "Monday",
+            "time": "10:00"
+          }
+        ],
+        "recurrence_end_date": "2025-12-31T23:59:59"
+      }
     ],
     "event_interactions": [
-      {"event_id": 1, "user_id": 2, "interaction_type": "invited", "status": "pending"},
-      {"event_id": 2, "user_id": 2, "interaction_type": "invited", "status": "pending"},
-      {"event_id": 3, "user_id": 2, "interaction_type": "invited", "status": "pending"}
+      {
+        "event_id": 1,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "pending"
+      },
+      {
+        "event_id": 2,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "pending"
+      },
+      {
+        "event_id": 3,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "pending"
+      }
     ]
   },
   "request": {
@@ -25,6 +79,50 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should only return base recurring event (id=1), not instances (id=2,3)"
+    "note": "Should only return base recurring event (id=1), not instances (id=2,3)",
+    "body": [
+      {
+        "interaction_type": "invited",
+        "status": "pending",
+        "role": null,
+        "note": null,
+        "rejection_message": null,
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "invited_via_group_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "interaction_type": "invited",
+        "status": "pending",
+        "role": null,
+        "note": null,
+        "rejection_message": null,
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "invited_via_group_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "interaction_type": "invited",
+        "status": "pending",
+        "role": null,
+        "note": null,
+        "rejection_message": null,
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "invited_via_group_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
   }
 }

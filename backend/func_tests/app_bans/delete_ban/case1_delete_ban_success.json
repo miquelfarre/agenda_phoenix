@@ -2,11 +2,22 @@
   "description": "Delete an existing app ban successfully",
   "setup": {
     "users": [
-      {"id": 1, "name": "Admin", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Admin",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ],
     "app_bans": [
-      {"user_id": 2, "banned_by": 1}
+      {
+        "user_id": 2,
+        "banned_by": 1
+      }
     ]
   },
   "request": {
@@ -15,6 +26,12 @@
   },
   "expected": {
     "status_code": 200,
-    "body_contains": ["App ban deleted successfully"]
+    "body_contains": [
+      "App ban deleted successfully"
+    ],
+    "body": {
+      "message": "App ban deleted successfully",
+      "id": "{{ID}}"
+    }
   }
 }

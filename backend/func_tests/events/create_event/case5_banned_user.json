@@ -3,8 +3,16 @@
   "description": "Un usuario baneado intenta crear un evento, debe fallar con 403",
   "setup": {
     "users": [
-      {"id": 1, "name": "Admin", "phone": "+34600000000"},
-      {"id": 2, "name": "Usuario Baneado", "phone": "+34600000001"}
+      {
+        "id": 1,
+        "name": "Admin",
+        "phone": "+34600000000"
+      },
+      {
+        "id": 2,
+        "name": "Usuario Baneado",
+        "phone": "+34600000001"
+      }
     ],
     "app_bans": [
       {
@@ -27,5 +35,15 @@
   },
   "expected_response": {
     "status_code": 403
+  },
+  "expected": {
+    "status_code": 403,
+    "body": {
+      "detail": {
+        "message": "User is banned from the application",
+        "reason": "Comportamiento inapropiado",
+        "banned_at": "{{TIMESTAMP}}"
+      }
+    }
   }
 }

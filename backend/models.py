@@ -46,6 +46,7 @@ class User(Base):
     username = Column(String(100), nullable=True, index=True)  # For Instagram users
     auth_provider = Column(String(20), nullable=False)  # 'phone' or 'instagram'
     auth_id = Column(String(255), nullable=False, unique=True, index=True)  # Phone number or Instagram user ID
+    is_public = Column(Boolean, nullable=False, default=False, index=True)  # True for instagram users, False for phone users
     profile_picture_url = Column(String(500), nullable=True)
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
@@ -72,6 +73,7 @@ class User(Base):
             "username": self.username,
             "auth_provider": self.auth_provider,
             "auth_id": self.auth_id,
+            "is_public": self.is_public,
             "profile_picture_url": self.profile_picture_url,
             "last_login": self.last_login.isoformat() if self.last_login else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -285,6 +287,8 @@ class EventInteraction(Base):
     role = Column(String(50), nullable=True)  # 'owner', 'admin', null (member)
     invited_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     invited_via_group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
+    note = Column(Text, nullable=True)  # Personal note for this event
+    rejection_message = Column(Text, nullable=True)  # Message when rejecting invitation
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -310,6 +314,8 @@ class EventInteraction(Base):
             "role": self.role,
             "invited_by_user_id": self.invited_by_user_id,
             "invited_via_group_id": self.invited_via_group_id,
+            "note": self.note,
+            "rejection_message": self.rejection_message,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -459,4 +465,68 @@ class AppBan(Base):
             "reason": self.reason,
             "banned_at": self.banned_at.isoformat() if self.banned_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class EventCancellation(Base):
+    """
+    EventCancellation model - Tracks cancelled events with optional message.
+    When an event is deleted/cancelled, a cancellation record is created.
+    """
+
+    __tablename__ = "event_cancellations"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    event_id = Column(Integer, nullable=False, index=True)  # Not FK because event might be deleted
+    event_name = Column(String(255), nullable=False)  # Store name for reference
+    cancelled_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    message = Column(Text, nullable=True)  # Optional cancellation message
+    cancelled_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+
+    # Relationships
+    cancelled_by = relationship("User", foreign_keys=[cancelled_by_user_id])
+
+    def __repr__(self):
+        return f"<EventCancellation(id={self.id}, event_id={self.event_id}, cancelled_by={self.cancelled_by_user_id})>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "event_id": self.event_id,
+            "event_name": self.event_name,
+            "cancelled_by_user_id": self.cancelled_by_user_id,
+            "message": self.message,
+            "cancelled_at": self.cancelled_at.isoformat() if self.cancelled_at else None,
+        }
+
+
+class EventCancellationView(Base):
+    """
+    EventCancellationView model - Tracks which users have viewed a cancellation.
+    After viewing, the cancellation message disappears for that user.
+    """
+
+    __tablename__ = "event_cancellation_views"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    cancellation_id = Column(Integer, ForeignKey("event_cancellations.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    viewed_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+
+    # Unique constraint: one view per user per cancellation
+    __table_args__ = (UniqueConstraint("cancellation_id", "user_id", name="uq_cancellation_user_view"),)
+
+    # Relationships
+    cancellation = relationship("EventCancellation")
+    user = relationship("User")
+
+    def __repr__(self):
+        return f"<EventCancellationView(id={self.id}, cancellation_id={self.cancellation_id}, user_id={self.user_id})>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "cancellation_id": self.cancellation_id,
+            "user_id": self.user_id,
+            "viewed_at": self.viewed_at.isoformat() if self.viewed_at else None,
         }

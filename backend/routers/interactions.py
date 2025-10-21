@@ -131,6 +131,13 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Public users cannot be invited to events (they can only manage their own events)
+    if interaction.interaction_type == "invited" and user.is_public:
+        raise HTTPException(
+            status_code=403,
+            detail="Public users cannot be invited to events. Only private users can receive invitations."
+        )
+
     # Check if user is banned
     check_user_not_banned(interaction.user_id, db)
 
@@ -142,6 +149,47 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
 
     # Check if there's a block between event owner and invitee
     check_users_not_blocked(event.owner_id, interaction.user_id, db)
+
+    # VALIDATION: For invitations, verify the inviter has permission to invite
+    if interaction.interaction_type == "invited" and interaction.invited_by_user_id:
+        inviter_id = interaction.invited_by_user_id
+
+        # Get inviter user to check if they're public
+        inviter_user = db.query(User).filter(User.id == inviter_id).first()
+        if not inviter_user:
+            raise HTTPException(status_code=404, detail="Inviter user not found")
+
+        # Public users (e.g., FC Barcelona) cannot invite others
+        if inviter_user.is_public:
+            raise HTTPException(
+                status_code=403,
+                detail="Public users cannot invite others to events. Only private users can invite."
+            )
+
+        # Check if inviter is the event owner
+        is_owner = (event.owner_id == inviter_id)
+
+        if not is_owner:
+            # Check if inviter is an admin or accepted participant of this event
+            inviter_interaction = db.query(EventInteraction).filter(
+                EventInteraction.event_id == interaction.event_id,
+                EventInteraction.user_id == inviter_id
+            ).first()
+
+            has_permission = False
+            if inviter_interaction:
+                # Inviter is admin with accepted status
+                if inviter_interaction.role == "admin" and inviter_interaction.status == "accepted":
+                    has_permission = True
+                # Inviter is a subscribed or joined participant with accepted status
+                elif inviter_interaction.interaction_type in ["subscribed", "joined"] and inviter_interaction.status == "accepted":
+                    has_permission = True
+
+            if not has_permission:
+                raise HTTPException(
+                    status_code=403,
+                    detail="User does not have permission to invite others to this event. Must be event owner, admin, or accepted participant."
+                )
 
     # Check if interaction already exists (unique constraint)
     existing = db.query(EventInteraction).filter(EventInteraction.event_id == interaction.event_id, EventInteraction.user_id == interaction.user_id).first()

@@ -27,7 +27,7 @@ def setup_test_data(db, setup_config: Dict):
     """
     from datetime import datetime, timezone
 
-    from models import AppBan, Calendar, CalendarMembership, Contact, Event, EventBan, EventInteraction, Group, GroupMembership, RecurringEventConfig, User, UserBlock
+    from models import AppBan, Calendar, CalendarMembership, Contact, Event, EventBan, EventCancellation, EventCancellationView, EventInteraction, Group, GroupMembership, RecurringEventConfig, User, UserBlock
 
     created_objects = {}
 
@@ -38,7 +38,21 @@ def setup_test_data(db, setup_config: Dict):
             db.add(contact)
             db.flush()
 
-            user = User(id=user_config.get("id"), contact_id=contact.id, auth_provider="phone", auth_id=contact.phone)
+            # Determinar is_public basado en auth_provider o campo explícito
+            is_public = user_config.get("is_public", False)
+            auth_provider = user_config.get("auth_provider", "phone")
+
+            # Si auth_provider es instagram, marcar como público
+            if auth_provider == "instagram":
+                is_public = True
+
+            user = User(
+                id=user_config.get("id"),
+                contact_id=contact.id,
+                auth_provider=auth_provider,
+                auth_id=contact.phone,
+                is_public=is_public
+            )
             db.add(user)
             db.flush()
 
@@ -143,6 +157,30 @@ def setup_test_data(db, setup_config: Dict):
             db.add(ban)
             db.flush()
 
+    # Crear event cancellations
+    if "event_cancellations" in setup_config:
+        for cancellation_config in setup_config["event_cancellations"]:
+            cancellation = EventCancellation(
+                id=cancellation_config.get("id"),
+                event_id=cancellation_config["event_id"],
+                event_name=cancellation_config["event_name"],
+                cancelled_by_user_id=cancellation_config["cancelled_by_user_id"],
+                message=cancellation_config.get("message")
+            )
+            db.add(cancellation)
+            db.flush()
+
+    # Crear event cancellation views
+    if "event_cancellation_views" in setup_config:
+        for view_config in setup_config["event_cancellation_views"]:
+            view = EventCancellationView(
+                id=view_config.get("id"),
+                cancellation_id=view_config["cancellation_id"],
+                user_id=view_config["user_id"]
+            )
+            db.add(view)
+            db.flush()
+
     db.commit()
     return created_objects
 
@@ -186,16 +224,16 @@ def normalize_response(data):
 
     normalized = {}
     for key, value in data.items():
-        # IDs: reemplazar con placeholder
-        if key in ["id", "user_id", "event_id", "calendar_id", "interaction_id"]:
+        # IDs: reemplazar con placeholder solo si no es null (todos los campos que terminen en _id o sean "id")
+        if (key == "id" or key.endswith("_id")) and value is not None:
             normalized[key] = "{{ID}}"
-        # Timestamps: reemplazar con placeholder
-        elif key in ["created_at", "updated_at", "last_login", "banned_at"]:
+        # Timestamps: reemplazar con placeholder (todos los campos que terminen en _at)
+        elif key.endswith("_at"):
             normalized[key] = "{{TIMESTAMP}}"
         # Recursivo para objetos y arrays
         elif isinstance(value, (dict, list)):
             normalized[key] = normalize_response(value)
-        # Otros valores: mantener como están
+        # Otros valores: mantener como están (incluyendo IDs null)
         else:
             normalized[key] = value
 
@@ -219,6 +257,76 @@ def load_snapshot(snapshot_path: Path) -> Dict:
 
     with open(snapshot_path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def compare_with_expected(actual_response, expected: dict, test_path: Path = None, update_expected: bool = False) -> tuple[bool, str]:
+    """
+    Compara la respuesta actual con el expected body explícito del test
+
+    Args:
+        actual_response: La respuesta HTTP actual
+        expected: El diccionario expected del test con status_code y body
+        test_path: Path al archivo JSON del test (necesario para update_expected)
+        update_expected: Si True, actualiza el expected.body en el archivo JSON
+
+    Returns:
+        (success: bool, diff_message: str)
+    """
+    # Preparar datos actuales
+    try:
+        actual_body = actual_response.json()
+    except:
+        actual_body = {"_raw_text": actual_response.text}
+
+    # Normalizar respuesta actual (IDs → {{ID}}, timestamps → {{TIMESTAMP}})
+    normalized_actual_body = normalize_response(actual_body)
+
+    # Verificar status code
+    expected_status = expected.get("status_code")
+    if expected_status and actual_response.status_code != expected_status:
+        return False, f"❌ Status code mismatch: expected {expected_status}, got {actual_response.status_code}"
+
+    # Comparar body
+    expected_body = expected.get("body")
+    if expected_body is None:
+        return True, "✅ No body to compare (only status code checked)"
+
+    # Comparar JSONs como strings para detectar diferencias
+    expected_str = json.dumps(expected_body, sort_keys=True, indent=2)
+    actual_str = json.dumps(normalized_actual_body, sort_keys=True, indent=2)
+
+    # Si son iguales, success
+    if expected_str == actual_str:
+        return True, "✅ Matches expected body"
+
+    # Si update_expected está activo, actualizar el archivo
+    if update_expected and test_path:
+        with open(test_path, 'r', encoding='utf-8') as f:
+            test_data = json.load(f)
+
+        test_data["expected"]["body"] = normalized_actual_body
+
+        with open(test_path, 'w', encoding='utf-8') as f:
+            json.dump(test_data, f, indent=2, ensure_ascii=False)
+            f.write('\n')
+
+        return True, "✅ Updated expected.body in test file"
+
+    # Si hay diferencias, generar diff
+    diff_lines = difflib.unified_diff(
+        expected_str.splitlines(keepends=True),
+        actual_str.splitlines(keepends=True),
+        fromfile="expected (in test file)",
+        tofile="actual response (normalized)",
+        lineterm=""
+    )
+
+    diff_message = f"❌ Response differs from expected:\n\n"
+    diff_message += "".join(diff_lines)
+    diff_message += f"\n\nTip: Use {{{{ID}}}} for dynamic IDs and {{{{TIMESTAMP}}}} for dates in expected body"
+    diff_message += f"\n    Or run: pytest func_tests/test_snapshots.py --update-expected"
+
+    return False, diff_message
 
 
 def compare_with_snapshot(actual_response, snapshot_path: Path, update_snapshots: bool = False) -> tuple[bool, str]:
@@ -286,7 +394,7 @@ TEST_CASES = discover_test_cases()
 @pytest.mark.parametrize("test_id,test_path,test_data", TEST_CASES, ids=[tc[0] for tc in TEST_CASES])
 def test_snapshot_match(test_id, test_path, test_data, client, test_db, request):
     """
-    Ejecuta el test y compara con snapshot
+    Ejecuta el test y compara con expected body (o snapshot si no hay expected)
     """
     # Setup
     if "setup" in test_data:
@@ -311,13 +419,19 @@ def test_snapshot_match(test_id, test_path, test_data, client, test_db, request)
     else:
         pytest.fail(f"Unsupported method: {method}")
 
-    # Compare with snapshot
-    snapshot_path = get_snapshot_path(test_path)
-    update_snapshots = request.config.getoption("--update-snapshots")
-
-    success, message = compare_with_snapshot(response, snapshot_path, update_snapshots)
-
-    print(f"\n{message}")
-
-    if not success:
-        pytest.fail(message)
+    # Check if test has explicit expected body
+    if "expected" in test_data and "body" in test_data["expected"]:
+        # New approach: compare with explicit expected body
+        update_expected = request.config.getoption("--update-expected")
+        success, message = compare_with_expected(response, test_data["expected"], test_path, update_expected)
+        print(f"\n{message}")
+        if not success:
+            pytest.fail(message)
+    else:
+        # Legacy approach: compare with snapshot file
+        snapshot_path = get_snapshot_path(test_path)
+        update_snapshots = request.config.getoption("--update-snapshots")
+        success, message = compare_with_snapshot(response, snapshot_path, update_snapshots)
+        print(f"\n{message}")
+        if not success:
+            pytest.fail(message)

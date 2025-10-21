@@ -10,6 +10,7 @@ import pytest
 def pytest_addoption(parser):
     """Añade opciones personalizadas a pytest"""
     parser.addoption("--update-snapshots", action="store_true", default=False, help="Update snapshots instead of comparing")
+    parser.addoption("--update-expected", action="store_true", default=False, help="Update expected.body in test files with actual normalized responses")
 
 
 from fastapi.testclient import TestClient

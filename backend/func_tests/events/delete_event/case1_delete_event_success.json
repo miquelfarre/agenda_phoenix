@@ -3,7 +3,11 @@
   "description": "Eliminar un evento existente",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      }
     ],
     "events": [
       {
@@ -21,5 +25,13 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "message": "Event deleted successfully (single event)",
+      "id": "{{ID}}",
+      "deleted_count": 1
+    }
   }
 }

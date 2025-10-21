@@ -3,7 +3,11 @@
   "description": "Eliminar un contacto existente",
   "setup": {
     "users": [
-      {"id": 1, "name": "Contacto a eliminar", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Contacto a eliminar",
+        "phone": "+34606014680"
+      }
     ]
   },
   "request": {
@@ -12,5 +16,12 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "message": "Contact deleted successfully",
+      "id": "{{ID}}"
+    }
   }
 }

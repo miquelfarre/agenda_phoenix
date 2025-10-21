@@ -3,7 +3,11 @@
   "description": "Actualizar un usuario existente",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      }
     ]
   },
   "request": {
@@ -18,5 +22,20 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "username": "sonia_updated",
+      "auth_provider": "phone",
+      "auth_id": "{{ID}}",
+      "is_public": false,
+      "profile_picture_url": null,
+      "id": "{{ID}}",
+      "contact_id": "{{ID}}",
+      "last_login": null,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

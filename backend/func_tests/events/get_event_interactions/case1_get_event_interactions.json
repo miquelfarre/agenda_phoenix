@@ -3,9 +3,21 @@
   "description": "Obtener todas las interacciones de un evento",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"},
-      {"id": 2, "name": "Miquel", "phone": "+34606014681"},
-      {"id": 3, "name": "Ana", "phone": "+34606014682"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      },
+      {
+        "id": 2,
+        "name": "Miquel",
+        "phone": "+34606014681"
+      },
+      {
+        "id": 3,
+        "name": "Ana",
+        "phone": "+34606014682"
+      }
     ],
     "events": [
       {
@@ -37,5 +49,38 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": [
+      {
+        "interaction_type": "invited",
+        "status": "accepted",
+        "role": null,
+        "note": null,
+        "rejection_message": null,
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "invited_via_group_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "interaction_type": "invited",
+        "status": "pending",
+        "role": null,
+        "note": null,
+        "rejection_message": null,
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "invited_via_group_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
   }
 }

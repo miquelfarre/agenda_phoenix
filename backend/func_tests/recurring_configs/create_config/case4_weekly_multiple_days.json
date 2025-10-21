@@ -3,7 +3,11 @@
   "description": "Evento que se repite lunes, miércoles y viernes",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      }
     ],
     "events": [
       {
@@ -24,14 +28,42 @@
       "event_id": 100,
       "recurrence_type": "weekly",
       "schedule": [
-        {"day": "monday"},
-        {"day": "wednesday"},
-        {"day": "friday"}
+        {
+          "day": "monday"
+        },
+        {
+          "day": "wednesday"
+        },
+        {
+          "day": "friday"
+        }
       ],
       "recurrence_end_date": "2026-06-30T23:59:59"
     }
   },
   "expected_response": {
     "status_code": 201
+  },
+  "expected": {
+    "status_code": 201,
+    "body": {
+      "recurrence_type": "weekly",
+      "schedule": [
+        {
+          "day": "monday"
+        },
+        {
+          "day": "wednesday"
+        },
+        {
+          "day": "friday"
+        }
+      ],
+      "recurrence_end_date": "2026-06-30T23:59:59",
+      "id": "{{ID}}",
+      "event_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

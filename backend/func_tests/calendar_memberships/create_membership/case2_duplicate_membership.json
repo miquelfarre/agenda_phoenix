@@ -42,5 +42,11 @@
   },
   "expected_response": {
     "status_code": 400
+  },
+  "expected": {
+    "status_code": 400,
+    "body": {
+      "detail": "User already has a membership in this calendar"
+    }
   }
 }

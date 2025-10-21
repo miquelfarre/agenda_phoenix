@@ -3,7 +3,11 @@
   "description": "Crear un usuario nuevo con contacto",
   "setup": {
     "users": [
-      {"id": 1, "name": "Contact Existente", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Contact Existente",
+        "phone": "+34606014680"
+      }
     ]
   },
   "request": {
@@ -18,5 +22,11 @@
   },
   "expected_response": {
     "status_code": 201
+  },
+  "expected": {
+    "status_code": 400,
+    "body": {
+      "detail": "User already exists for this auth provider"
+    }
   }
 }

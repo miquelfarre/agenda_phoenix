@@ -3,7 +3,11 @@
   "description": "Actualizar un contacto existente",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia Original", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia Original",
+        "phone": "+34606014680"
+      }
     ]
   },
   "request": {
@@ -16,5 +20,15 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "name": "Sonia Actualizada",
+      "phone": "+34606014680",
+      "id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

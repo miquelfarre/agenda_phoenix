@@ -3,7 +3,11 @@
   "description": "Intentar crear una segunda configuración de recurrencia para un evento",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      }
     ],
     "events": [
       {
@@ -19,7 +23,11 @@
       {
         "event_id": 100,
         "recurrence_type": "weekly",
-        "schedule": [{"day": "monday"}],
+        "schedule": [
+          {
+            "day": "monday"
+          }
+        ],
         "recurrence_end_date": "2025-12-31T23:59:59"
       }
     ]
@@ -30,11 +38,21 @@
     "body": {
       "event_id": 100,
       "recurrence_type": "daily",
-      "schedule": [{"interval": "1"}],
+      "schedule": [
+        {
+          "interval": "1"
+        }
+      ],
       "recurrence_end_date": "2026-12-31T23:59:59"
     }
   },
   "expected_response": {
     "status_code": 400
+  },
+  "expected": {
+    "status_code": 400,
+    "body": {
+      "detail": "Event already has a recurring config"
+    }
   }
 }

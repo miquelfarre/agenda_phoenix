@@ -3,7 +3,11 @@
   "description": "Obtener un evento existente por su ID",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      }
     ],
     "events": [
       {
@@ -22,5 +26,22 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "name": "Cena con amigos",
+      "description": "Cena en casa de Sonia",
+      "start_date": "2025-11-15T20:00:00",
+      "end_date": null,
+      "event_type": "regular",
+      "id": "{{ID}}",
+      "owner_id": "{{ID}}",
+      "calendar_id": null,
+      "parent_recurring_event_id": null,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}",
+      "interaction": null
+    }
   }
 }

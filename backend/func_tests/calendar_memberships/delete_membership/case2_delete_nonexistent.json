@@ -10,5 +10,11 @@
   },
   "expected_response": {
     "status_code": 404
+  },
+  "expected": {
+    "status_code": 404,
+    "body": {
+      "detail": "Calendar membership not found"
+    }
   }
 }

@@ -23,5 +23,12 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "message": "Calendar deleted successfully",
+      "id": "{{ID}}"
+    }
   }
 }

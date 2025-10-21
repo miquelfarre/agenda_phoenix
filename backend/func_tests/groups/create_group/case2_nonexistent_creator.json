@@ -12,6 +12,11 @@
   },
   "expected": {
     "status_code": 404,
-    "body_contains": ["Creator user not found"]
+    "body_contains": [
+      "Creator user not found"
+    ],
+    "body": {
+      "detail": "Creator user not found"
+    }
   }
 }

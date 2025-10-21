@@ -2,7 +2,11 @@
   "description": "Create user block with nonexistent blocked user returns 404",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      }
     ]
   },
   "request": {
@@ -15,6 +19,11 @@
   },
   "expected": {
     "status_code": 404,
-    "body_contains": ["Blocked user not found"]
+    "body_contains": [
+      "Blocked user not found"
+    ],
+    "body": {
+      "detail": "Blocked user not found"
+    }
   }
 }

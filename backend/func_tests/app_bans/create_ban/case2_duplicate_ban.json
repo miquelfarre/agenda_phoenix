@@ -2,11 +2,22 @@
   "description": "Create duplicate app ban returns 400",
   "setup": {
     "users": [
-      {"id": 1, "name": "Admin", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Admin",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ],
     "app_bans": [
-      {"user_id": 2, "banned_by": 1}
+      {
+        "user_id": 2,
+        "banned_by": 1
+      }
     ]
   },
   "request": {
@@ -20,6 +31,11 @@
   },
   "expected": {
     "status_code": 400,
-    "body_contains": ["User is already banned from the application"]
+    "body_contains": [
+      "User is already banned from the application"
+    ],
+    "body": {
+      "detail": "User is already banned from the application"
+    }
   }
 }

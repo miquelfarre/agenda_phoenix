@@ -2,11 +2,23 @@
   "description": "Delete an existing user block successfully",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ],
     "user_blocks": [
-      {"id": 1, "blocker_user_id": 1, "blocked_user_id": 2}
+      {
+        "id": 1,
+        "blocker_user_id": 1,
+        "blocked_user_id": 2
+      }
     ]
   },
   "request": {
@@ -15,6 +27,12 @@
   },
   "expected": {
     "status_code": 200,
-    "body_contains": ["User block deleted successfully"]
+    "body_contains": [
+      "User block deleted successfully"
+    ],
+    "body": {
+      "message": "User block deleted successfully",
+      "id": "{{ID}}"
+    }
   }
 }

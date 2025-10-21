@@ -2,13 +2,33 @@
   "description": "List user blocks filtered by blocked_user_id",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"},
-      {"id": 3, "name": "Charlie", "phone": "+1234567892"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      },
+      {
+        "id": 3,
+        "name": "Charlie",
+        "phone": "+1234567892"
+      }
     ],
     "user_blocks": [
-      {"id": 1, "blocker_user_id": 1, "blocked_user_id": 2},
-      {"id": 2, "blocker_user_id": 3, "blocked_user_id": 2}
+      {
+        "id": 1,
+        "blocker_user_id": 1,
+        "blocked_user_id": 2
+      },
+      {
+        "id": 2,
+        "blocker_user_id": 3,
+        "blocked_user_id": 2
+      }
     ]
   },
   "request": {
@@ -16,6 +36,22 @@
     "endpoint": "/user_blocks?blocked_user_id=2"
   },
   "expected": {
-    "status_code": 200
+    "status_code": 200,
+    "body": [
+      {
+        "id": "{{ID}}",
+        "blocker_user_id": "{{ID}}",
+        "blocked_user_id": "{{ID}}",
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "id": "{{ID}}",
+        "blocker_user_id": "{{ID}}",
+        "blocked_user_id": "{{ID}}",
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
   }
 }

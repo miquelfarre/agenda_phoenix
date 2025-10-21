@@ -2,11 +2,23 @@
   "description": "Get an existing app ban successfully",
   "setup": {
     "users": [
-      {"id": 1, "name": "Admin", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Admin",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ],
     "app_bans": [
-      {"user_id": 2, "banned_by": 1, "reason": "Spam"}
+      {
+        "user_id": 2,
+        "banned_by": 1,
+        "reason": "Spam"
+      }
     ]
   },
   "request": {
@@ -14,6 +26,14 @@
     "endpoint": "/app_bans/1"
   },
   "expected": {
-    "status_code": 200
+    "status_code": 200,
+    "body": {
+      "reason": "Spam",
+      "id": "{{ID}}",
+      "user_id": "{{ID}}",
+      "banned_by": 1,
+      "banned_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

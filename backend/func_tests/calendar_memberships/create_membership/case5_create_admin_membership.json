@@ -35,5 +35,18 @@
   },
   "expected_response": {
     "status_code": 201
+  },
+  "expected": {
+    "status_code": 201,
+    "body": {
+      "role": "admin",
+      "status": "accepted",
+      "id": "{{ID}}",
+      "calendar_id": "{{ID}}",
+      "user_id": "{{ID}}",
+      "invited_by_user_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

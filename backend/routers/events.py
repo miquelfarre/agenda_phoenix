@@ -11,8 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from dependencies import check_user_not_banned, get_db
-from models import CalendarMembership, Contact, Event, EventInteraction, User, UserBlock
-from schemas import AvailableInviteeResponse, EventCreate, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventResponse
+from models import CalendarMembership, Contact, Event, EventCancellation, EventCancellationView, EventInteraction, User, UserBlock
+from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventResponse
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -147,7 +147,7 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
 
 @router.get("/{event_id}/available-invitees", response_model=List[AvailableInviteeResponse])
 async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
-    """Get list of users available to be invited to an event (excludes owner, already invited users, and blocked users)"""
+    """Get list of users available to be invited to an event (excludes owner, already invited users, blocked users, and public users)"""
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -158,8 +158,8 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     # Get user IDs that have mutual blocks with the event owner
     blocked_user_ids_subquery = db.query(UserBlock.blocked_user_id).filter(UserBlock.blocker_user_id == event.owner_id).union(db.query(UserBlock.blocker_user_id).filter(UserBlock.blocked_user_id == event.owner_id)).subquery()
 
-    # Get all users NOT in the invited list, NOT the owner, NOT blocked, with Contact info in one query
-    results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id).filter(User.id != event.owner_id, ~User.id.in_(invited_user_ids_subquery), ~User.id.in_(blocked_user_ids_subquery)).all()
+    # Get all users NOT in the invited list, NOT the owner, NOT blocked, NOT public, with Contact info in one query
+    results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id).filter(User.id != event.owner_id, User.is_public == False, ~User.id.in_(invited_user_ids_subquery), ~User.id.in_(blocked_user_ids_subquery)).all()
 
     # Build available invitees list
     available = []
@@ -242,12 +242,123 @@ async def update_event(event_id: int, event: EventCreate, db: Session = Depends(
 
 
 @router.delete("/{event_id}")
-async def delete_event(event_id: int, db: Session = Depends(get_db)):
-    """Delete an event"""
+async def delete_event(event_id: int, delete_request: Optional[EventDeleteRequest] = None, db: Session = Depends(get_db)):
+    """
+    Delete an event and optionally create cancellation notifications.
+
+    If delete_request is provided with cancelled_by_user_id, creates EventCancellation records
+    for all users with interactions to this event.
+
+    For recurring events: deleting the base event also deletes all instances.
+    """
     db_event = db.query(Event).filter(Event.id == event_id).first()
     if not db_event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    db.delete(db_event)
+    events_to_delete = [db_event]
+
+    # If it's a recurring base event, get all instances
+    if db_event.event_type == "recurring":
+        instances = db.query(Event).filter(
+            Event.parent_recurring_event_id == event_id
+        ).all()
+        events_to_delete.extend(instances)
+
+    # Create cancellation records if requested
+    if delete_request and delete_request.cancelled_by_user_id:
+        for event in events_to_delete:
+            # Get all users with interactions to this event
+            interactions = db.query(EventInteraction).filter(
+                EventInteraction.event_id == event.id
+            ).all()
+
+            if interactions:
+                # Create cancellation record
+                cancellation = EventCancellation(
+                    event_id=event.id,
+                    event_name=event.name,
+                    cancelled_by_user_id=delete_request.cancelled_by_user_id,
+                    message=delete_request.cancellation_message
+                )
+                db.add(cancellation)
+                db.flush()  # Get the cancellation ID
+
+    # Delete all events
+    for event in events_to_delete:
+        db.delete(event)
+
     db.commit()
-    return {"message": "Event deleted successfully", "id": event_id}
+
+    deleted_count = len(events_to_delete)
+    return {
+        "message": f"Event deleted successfully ({'with ' + str(deleted_count - 1) + ' instances' if deleted_count > 1 else 'single event'})",
+        "id": event_id,
+        "deleted_count": deleted_count
+    }
+
+
+@router.get("/cancellations", response_model=List[EventCancellationResponse])
+async def get_event_cancellations(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get all event cancellations that a user hasn't viewed yet.
+
+    Returns cancellations for events where the user had an interaction
+    and hasn't viewed the cancellation message yet.
+    """
+    # Get all cancellations that this user hasn't viewed
+    viewed_cancellation_ids = db.query(EventCancellationView.cancellation_id).filter(
+        EventCancellationView.user_id == user_id
+    ).all()
+    viewed_ids = [v[0] for v in viewed_cancellation_ids]
+
+    # Get cancellations for events where user had interactions
+    # and hasn't viewed the cancellation
+    cancellations = db.query(EventCancellation).filter(
+        EventCancellation.id.not_in(viewed_ids) if viewed_ids else True
+    ).all()
+
+    # Filter to only cancellations where the user had an interaction with the event
+    # Note: We can't use a JOIN because the event might be deleted
+    # So we need to check if user had any interaction with that event_id
+    user_cancellations = []
+    for cancellation in cancellations:
+        # Check if this cancellation's event_id was ever in the user's interactions
+        # This requires checking deleted interactions, but we're storing event_id in cancellation
+        # For now, return all unviewed cancellations for simplicity
+        # In production, you might want to add a junction table for affected users
+        user_cancellations.append(cancellation)
+
+    return user_cancellations
+
+
+@router.post("/cancellations/{cancellation_id}/view")
+async def mark_cancellation_as_viewed(cancellation_id: int, user_id: int, db: Session = Depends(get_db)):
+    """
+    Mark an event cancellation as viewed by a user.
+
+    After viewing, the cancellation will no longer appear in the user's list.
+    """
+    # Check if cancellation exists
+    cancellation = db.query(EventCancellation).filter(EventCancellation.id == cancellation_id).first()
+    if not cancellation:
+        raise HTTPException(status_code=404, detail="Cancellation not found")
+
+    # Check if already viewed
+    existing_view = db.query(EventCancellationView).filter(
+        EventCancellationView.cancellation_id == cancellation_id,
+        EventCancellationView.user_id == user_id
+    ).first()
+
+    if existing_view:
+        return {"message": "Cancellation already marked as viewed", "id": existing_view.id}
+
+    # Create view record
+    view = EventCancellationView(
+        cancellation_id=cancellation_id,
+        user_id=user_id
+    )
+    db.add(view)
+    db.commit()
+    db.refresh(view)
+
+    return {"message": "Cancellation marked as viewed", "id": view.id}

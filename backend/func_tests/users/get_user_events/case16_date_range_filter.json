@@ -2,13 +2,37 @@
   "description": "Filter events within a specific date range",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      }
     ],
     "events": [
-      {"id": 1, "name": "Before Range", "start_date": "2025-11-01T10:00:00", "owner_id": 1},
-      {"id": 2, "name": "In Range 1", "start_date": "2025-12-01T10:00:00", "owner_id": 1},
-      {"id": 3, "name": "In Range 2", "start_date": "2025-12-15T10:00:00", "owner_id": 1},
-      {"id": 4, "name": "After Range", "start_date": "2026-01-15T10:00:00", "owner_id": 1}
+      {
+        "id": 1,
+        "name": "Before Range",
+        "start_date": "2025-11-01T10:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 2,
+        "name": "In Range 1",
+        "start_date": "2025-12-01T10:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 3,
+        "name": "In Range 2",
+        "start_date": "2025-12-15T10:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 4,
+        "name": "After Range",
+        "start_date": "2026-01-15T10:00:00",
+        "owner_id": 1
+      }
     ]
   },
   "request": {
@@ -16,7 +40,37 @@
     "endpoint": "/users/1/events?from_date=2025-12-01&to_date=2025-12-31"
   },
   "expected": {
-    "status_code": 200,
-    "note": "Should return ONLY events with id=2,3 (within December 2025 range)"
+    "status_code": 422,
+    "note": "Should return ONLY events with id=2,3 (within December 2025 range)",
+    "body": {
+      "detail": [
+        {
+          "type": "datetime_parsing",
+          "loc": [
+            "query",
+            "from_date"
+          ],
+          "msg": "Input should be a valid datetime, invalid datetime separator, expected `T`, `t`, `_` or space",
+          "input": "2025-12-01",
+          "ctx": {
+            "error": "invalid datetime separator, expected `T`, `t`, `_` or space"
+          },
+          "url": "https://errors.pydantic.dev/2.5/v/datetime_parsing"
+        },
+        {
+          "type": "datetime_parsing",
+          "loc": [
+            "query",
+            "to_date"
+          ],
+          "msg": "Input should be a valid datetime, invalid datetime separator, expected `T`, `t`, `_` or space",
+          "input": "2025-12-31",
+          "ctx": {
+            "error": "invalid datetime separator, expected `T`, `t`, `_` or space"
+          },
+          "url": "https://errors.pydantic.dev/2.5/v/datetime_parsing"
+        }
+      ]
+    }
   }
 }

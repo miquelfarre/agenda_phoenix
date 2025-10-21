@@ -2,14 +2,30 @@
   "description": "Create interaction between blocked users returns 403",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ],
     "events": [
-      {"id": 1, "name": "Party", "start_date": "2025-12-01T18:00:00", "owner_id": 1}
+      {
+        "id": 1,
+        "name": "Party",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 1
+      }
     ],
     "user_blocks": [
-      {"blocker_user_id": 1, "blocked_user_id": 2}
+      {
+        "blocker_user_id": 1,
+        "blocked_user_id": 2
+      }
     ]
   },
   "request": {
@@ -24,6 +40,11 @@
   },
   "expected": {
     "status_code": 403,
-    "body_contains": ["Cannot interact with this user due to blocking"]
+    "body_contains": [
+      "Cannot interact with this user due to blocking"
+    ],
+    "body": {
+      "detail": "Cannot interact with this user due to blocking"
+    }
   }
 }

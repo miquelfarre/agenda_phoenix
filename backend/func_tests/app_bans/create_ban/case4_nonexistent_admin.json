@@ -2,7 +2,11 @@
   "description": "Create app ban with nonexistent admin/banner returns 404",
   "setup": {
     "users": [
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ]
   },
   "request": {
@@ -15,6 +19,11 @@
   },
   "expected": {
     "status_code": 404,
-    "body_contains": ["Banner user (admin) not found"]
+    "body_contains": [
+      "Banner user (admin) not found"
+    ],
+    "body": {
+      "detail": "Banner user (admin) not found"
+    }
   }
 }

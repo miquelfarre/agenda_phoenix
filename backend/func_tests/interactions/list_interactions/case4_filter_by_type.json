@@ -2,15 +2,39 @@
   "description": "List interactions filtered by interaction_type",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ],
     "events": [
-      {"id": 1, "name": "Party", "start_date": "2025-12-01T18:00:00", "owner_id": 1}
+      {
+        "id": 1,
+        "name": "Party",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 1
+      }
     ],
     "event_interactions": [
-      {"event_id": 1, "user_id": 1, "interaction_type": "joined", "status": "accepted", "role": "owner"},
-      {"event_id": 1, "user_id": 2, "interaction_type": "invited", "status": "pending"}
+      {
+        "event_id": 1,
+        "user_id": 1,
+        "interaction_type": "joined",
+        "status": "accepted",
+        "role": "owner"
+      },
+      {
+        "event_id": 1,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "pending"
+      }
     ]
   },
   "request": {
@@ -18,6 +42,22 @@
     "endpoint": "/interactions?interaction_type=invited"
   },
   "expected": {
-    "status_code": 200
+    "status_code": 200,
+    "body": [
+      {
+        "interaction_type": "invited",
+        "status": "pending",
+        "role": null,
+        "note": null,
+        "rejection_message": null,
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "invited_via_group_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
   }
 }

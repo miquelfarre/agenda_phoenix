@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import inspect, text
 
 from database import Base, SessionLocal, engine
-from models import Calendar, CalendarMembership, Contact, Event, EventBan, EventInteraction, RecurringEventConfig, User, UserBlock
+from models import Calendar, CalendarMembership, Contact, Event, EventBan, EventCancellation, EventCancellationView, EventInteraction, RecurringEventConfig, User, UserBlock
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -79,42 +79,49 @@ def insert_sample_data():
             contact_id=contact_sonia.id,
             auth_provider="phone",
             auth_id=contact_sonia.phone,
+            is_public=False,
             last_login=now,
         )
         miquel = User(
             contact_id=contact_miquel.id,
             auth_provider="phone",
             auth_id=contact_miquel.phone,
+            is_public=False,
             last_login=now,
         )
         ada = User(
             contact_id=contact_ada.id,
             auth_provider="phone",
             auth_id=contact_ada.phone,
+            is_public=False,
             last_login=now,
         )
         sara = User(
             contact_id=contact_sara.id,
             auth_provider="phone",
             auth_id=contact_sara.phone,
+            is_public=False,
             last_login=now,
         )
         tdb = User(
             contact_id=contact_tdb.id,
             auth_provider="phone",
             auth_id=contact_tdb.phone,
+            is_public=False,
             last_login=now,
         )
         polr = User(
             contact_id=contact_polr.id,
             auth_provider="phone",
             auth_id=contact_polr.phone,
+            is_public=False,
             last_login=now,
         )
         fcbarcelona = User(
             username="fcbarcelona",
             auth_provider="instagram",
             auth_id="ig_fcbarcelona",
+            is_public=True,
             profile_picture_url="https://example.com/fcb-logo.png",
             last_login=now,
         )

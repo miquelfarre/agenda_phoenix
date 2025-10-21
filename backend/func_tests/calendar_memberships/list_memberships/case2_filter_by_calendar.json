@@ -58,5 +58,30 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": [
+      {
+        "role": "member",
+        "status": "accepted",
+        "id": "{{ID}}",
+        "calendar_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "role": "member",
+        "status": "accepted",
+        "id": "{{ID}}",
+        "calendar_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
   }
 }

@@ -2,8 +2,16 @@
   "description": "Create a new user block successfully",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ]
   },
   "request": {
@@ -15,6 +23,13 @@
     }
   },
   "expected": {
-    "status_code": 201
+    "status_code": 201,
+    "body": {
+      "id": "{{ID}}",
+      "blocker_user_id": "{{ID}}",
+      "blocked_user_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

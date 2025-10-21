@@ -34,6 +34,8 @@ from config import (
     url_interactions,
     url_interaction,
     url_recurring_configs,
+    url_event_cancellations,
+    url_event_cancellation_view,
 )
 
 
@@ -70,6 +72,9 @@ def menu_eventos(_show_header_wrapper, handle_api_error, pause, modo_actual, usu
     def eliminar_evento_wrapper():
         eliminar_evento(_show_header_wrapper, handle_api_error, pause)
 
+    def ver_cancelaciones_wrapper():
+        ver_cancelaciones_eventos(_show_header_wrapper, handle_api_error, pause, usuario_actual)
+
     while True:
         clear_screen()
         _show_header_wrapper()
@@ -77,6 +82,7 @@ def menu_eventos(_show_header_wrapper, handle_api_error, pause, modo_actual, usu
         if modo_actual == MODO_USUARIO:
             choices = [
                 "Ver MIS invitaciones pendientes",
+                "Ver cancelaciones de eventos",
                 "Ver MIS eventos",
                 "Ver detalles de un evento",
                 "Crear nuevo evento",
@@ -103,6 +109,8 @@ def menu_eventos(_show_header_wrapper, handle_api_error, pause, modo_actual, usu
 
         if choice == "Ver MIS invitaciones pendientes":
             ver_mis_invitaciones_wrapper()
+        elif choice == "Ver cancelaciones de eventos":
+            ver_cancelaciones_wrapper()
         elif choice == "Ver MIS eventos":
             ver_mis_eventos_wrapper()
         elif choice == "Ver eventos de un usuario":
@@ -310,18 +318,108 @@ def ver_mis_invitaciones(_show_header_wrapper, handle_api_error, pause, usuario_
 
     new_status = "accepted" if action == "Aceptar invitacion" else "rejected"
 
+    # Si se rechaza, preguntar opcionalmente por un mensaje
+    rejection_message = None
+    if new_status == "rejected":
+        if questionary.confirm("Deseas enviar un mensaje al organizador? (opcional)", default=False, style=custom_style).ask():
+            rejection_message = questionary.text("Mensaje de rechazo:", style=custom_style).ask()
+
     console.print(f"\n[cyan]Actualizando invitacion...[/cyan]\n")
 
     # Actualizar el estado de la invitacion
     update_data = {"status": new_status}
+    if rejection_message:
+        update_data["rejection_message"] = rejection_message
 
     response = api_client.patch(url_interaction(inv_id), json=update_data)
 
     if response.status_code in [200, 204]:
         status_text = "aceptada" if new_status == "accepted" else "rechazada"
         console.print(f"[bold green]Invitacion {status_text} exitosamente[/bold green]\n")
+        if rejection_message:
+            console.print(f"[cyan]Mensaje enviado al organizador[/cyan]\n")
     else:
         handle_api_error(response)
+
+    pause()
+
+
+def ver_cancelaciones_eventos(_show_header_wrapper, handle_api_error, pause, usuario_actual):
+    """Muestra las cancelaciones de eventos no vistas del usuario actual"""
+    clear_screen()
+    _show_header_wrapper()
+
+    console.print(f"[cyan]Consultando cancelaciones de eventos...[/cyan]\n")
+
+    # Obtener cancelaciones no vistas
+    response = api_client.get(url_event_cancellations(), params={"user_id": usuario_actual})
+    cancellations = handle_api_error(response)
+
+    if not cancellations:
+        console.print("[yellow]No tienes cancelaciones de eventos pendientes de ver[/yellow]\n")
+        pause()
+        return
+
+    # Mostrar tabla de cancelaciones
+    table = Table(title="Cancelaciones de Eventos", show_header=True, header_style="bold red")
+    table.add_column("ID", style="cyan", justify="right", width=7)
+    table.add_column("Evento", style="yellow", width=30)
+    table.add_column("Cancelado Por", style="magenta", width=15)
+    table.add_column("Fecha", style="green", width=18)
+    table.add_column("Mensaje", style="white", width=40)
+
+    for cancel in cancellations:
+        message = truncate_text(cancel.get("message") or "-", 38)
+        table.add_row(
+            str(cancel["id"]),
+            truncate_text(cancel["event_name"], 28),
+            f"Usuario #{cancel['cancelled_by_user_id']}",
+            format_datetime(cancel.get("cancelled_at")),
+            message
+        )
+
+    console.print(table)
+    console.print(f"\n[cyan]Total: {format_count_message(len(cancellations), 'cancelacion pendiente', 'cancelaciones pendientes')}[/cyan]\n")
+
+    # Preguntar si desea marcar alguna como vista
+    marcar = questionary.confirm("Deseas marcar alguna cancelacion como vista?", default=True, style=custom_style).ask()
+
+    if not marcar:
+        return
+
+    # Seleccionar cancelacion a marcar
+    cancel_choices = []
+    for cancel in cancellations:
+        cancel_choices.append(f"ID {cancel['id']} - {cancel['event_name'][:40]}")
+
+    cancel_choices.append("Marcar TODAS como vistas")
+    cancel_choices.append("Cancelar")
+
+    cancel_choice = questionary.select("Selecciona la cancelacion:", choices=cancel_choices, style=custom_style).ask()
+
+    if cancel_choice == "Cancelar":
+        return
+
+    console.print(f"\n[cyan]Marcando como vista(s)...[/cyan]\n")
+
+    if cancel_choice == "Marcar TODAS como vistas":
+        # Marcar todas
+        success_count = 0
+        for cancel in cancellations:
+            response = api_client.post(url_event_cancellation_view(cancel['id']), params={"user_id": usuario_actual})
+            if response.status_code in [200, 201]:
+                success_count += 1
+
+        console.print(f"[bold green]{success_count} cancelaciones marcadas como vistas[/bold green]\n")
+    else:
+        # Marcar una sola
+        cancel_id = int(cancel_choice.split(" - ")[0].split()[1])
+        response = api_client.post(url_event_cancellation_view(cancel_id), params={"user_id": usuario_actual})
+
+        if response.status_code in [200, 201]:
+            console.print(f"[bold green]Cancelacion marcada como vista[/bold green]\n")
+        else:
+            handle_api_error(response)
 
     pause()
 
@@ -490,6 +588,73 @@ def ver_evento(_show_header_wrapper, handle_api_error, pause, modo_actual, usuar
         console.print(f"\n[cyan]Total: {format_count_message(len(interactions), 'invitacion', 'invitaciones')}[/cyan]\n")
     else:
         console.print("[dim]No hay invitaciones para este evento[/dim]\n")
+
+    # Si es modo usuario, verificar si tiene interaccion para gestionar nota
+    user_interaction = None
+    if modo_actual == MODO_USUARIO and interactions:
+        for interaction in interactions:
+            if interaction.get('user_id') == usuario_actual:
+                user_interaction = interaction
+                break
+
+    # Mostrar y gestionar nota personal del usuario
+    if modo_actual == MODO_USUARIO and user_interaction:
+        current_note = user_interaction.get('note')
+
+        if current_note:
+            console.print(Panel(
+                f"[cyan]{current_note}[/cyan]",
+                title="[bold yellow]Tu Nota Personal[/bold yellow]",
+                border_style="yellow"
+            ))
+            console.print()
+
+        gestionar_nota = questionary.confirm(
+            "Deseas agregar/editar tu nota personal para este evento?" if current_note else "Deseas agregar una nota personal a este evento?",
+            default=False,
+            style=custom_style
+        ).ask()
+
+        if gestionar_nota:
+            nota_choices = ["Editar nota", "Eliminar nota", "Cancelar"] if current_note else ["Agregar nota", "Cancelar"]
+            nota_action = questionary.select(
+                "Que deseas hacer?",
+                choices=nota_choices,
+                style=custom_style
+            ).ask()
+
+            if nota_action in ["Editar nota", "Agregar nota"]:
+                nueva_nota = questionary.text(
+                    "Escribe tu nota personal:",
+                    default=current_note if current_note else "",
+                    style=custom_style
+                ).ask()
+
+                if nueva_nota:
+                    console.print(f"\n[cyan]Actualizando nota...[/cyan]\n")
+                    response = api_client.patch(url_interaction(user_interaction['id']), json={"note": nueva_nota})
+
+                    if response.status_code in [200, 204]:
+                        console.print(f"[bold green]Nota actualizada exitosamente[/bold green]\n")
+                    else:
+                        handle_api_error(response)
+
+                    pause()
+                    return
+
+            elif nota_action == "Eliminar nota":
+                confirmar = questionary.confirm("Estas seguro de eliminar tu nota?", default=False).ask()
+                if confirmar:
+                    console.print(f"\n[cyan]Eliminando nota...[/cyan]\n")
+                    response = api_client.patch(url_interaction(user_interaction['id']), json={"note": None})
+
+                    if response.status_code in [200, 204]:
+                        console.print(f"[bold green]Nota eliminada exitosamente[/bold green]\n")
+                    else:
+                        handle_api_error(response)
+
+                    pause()
+                    return
 
     # Si es modo usuario y es propio, ofrecer opciones
     is_owner = (modo_actual == MODO_USUARIO and event.get('owner_id') == usuario_actual)
@@ -1156,7 +1321,7 @@ def crear_evento_recurrente(_show_header_wrapper, handle_api_error, pause, owner
     pause()
 
 
-def eliminar_evento(_show_header_wrapper, handle_api_error, pause):
+def eliminar_evento(_show_header_wrapper, handle_api_error, pause, usuario_actual=None):
     """Elimina un evento (solo Modo Backoffice)"""
     clear_screen()
     _show_header_wrapper()
@@ -1173,12 +1338,42 @@ def eliminar_evento(_show_header_wrapper, handle_api_error, pause):
         pause()
         return
 
+    # Preguntar por notificación de cancelación
+    send_cancellation = False
+    cancellation_message = None
+    cancelled_by_user_id = None
+
+    if questionary.confirm("Deseas enviar notificacion de cancelacion a los participantes?", default=False, style=custom_style).ask():
+        send_cancellation = True
+
+        # Pedir ID del usuario que cancela
+        if usuario_actual:
+            cancelled_by_user_id = usuario_actual
+        else:
+            cancelled_by_input = questionary.text("ID del usuario que cancela el evento:", validate=lambda text: text.isdigit() or "Debe ser un numero").ask()
+            if cancelled_by_input:
+                cancelled_by_user_id = int(cancelled_by_input)
+
+        # Pedir mensaje opcional
+        if questionary.confirm("Deseas incluir un mensaje? (opcional)", default=False, style=custom_style).ask():
+            cancellation_message = questionary.text("Mensaje de cancelacion:", style=custom_style).ask()
+
     console.print(f"\n[cyan]Eliminando evento #{event_id}...[/cyan]\n")
 
-    response = api_client.delete(url_event(event_id))
+    # Preparar body si hay cancelación
+    delete_body = None
+    if send_cancellation and cancelled_by_user_id:
+        delete_body = {
+            "cancelled_by_user_id": cancelled_by_user_id,
+            "cancellation_message": cancellation_message
+        }
+
+    response = api_client.delete(url_event(event_id), json=delete_body)
 
     if response.status_code in [200, 204]:
         console.print(f"[bold green]Evento #{event_id} eliminado exitosamente[/bold green]\n")
+        if send_cancellation:
+            console.print(f"[cyan]Notificacion de cancelacion enviada a los participantes[/cyan]\n")
     else:
         handle_api_error(response)
 

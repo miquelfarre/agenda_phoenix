@@ -40,6 +40,7 @@ class UserBase(BaseModel):
     username: Optional[str] = None
     auth_provider: str
     auth_id: str
+    is_public: bool = False
     profile_picture_url: Optional[str] = None
 
 
@@ -110,6 +111,8 @@ class EventInteractionBase(BaseModel):
     interaction_type: str
     status: Optional[str] = None
     role: Optional[str] = None
+    note: Optional[str] = None
+    rejection_message: Optional[str] = None
 
 
 class EventInteractionCreate(EventInteractionBase):
@@ -125,6 +128,8 @@ class EventInteractionUpdate(BaseModel):
     interaction_type: Optional[str] = None
     status: Optional[str] = None
     role: Optional[str] = None
+    note: Optional[str] = None
+    rejection_message: Optional[str] = None
 
 
 class EventInteractionResponse(EventInteractionBase):
@@ -397,5 +402,51 @@ class AppBanResponse(AppBanBase):
     banned_by: int
     banned_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ============================================================================
+# EVENT CANCELLATION SCHEMAS
+# ============================================================================
+
+
+class EventCancellationBase(BaseModel):
+    message: Optional[str] = None
+
+
+class EventDeleteRequest(BaseModel):
+    """Request body for deleting an event with optional cancellation message"""
+
+    cancelled_by_user_id: int
+    cancellation_message: Optional[str] = None
+
+
+class EventCancellationCreate(EventCancellationBase):
+    event_id: int
+    event_name: str
+    cancelled_by_user_id: int
+
+
+class EventCancellationResponse(EventCancellationBase):
+    id: int
+    event_id: int
+    event_name: str
+    cancelled_by_user_id: int
+    cancelled_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EventCancellationViewCreate(BaseModel):
+    cancellation_id: int
+    user_id: int
+
+
+class EventCancellationViewResponse(BaseModel):
+    id: int
+    cancellation_id: int
+    user_id: int
+    viewed_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

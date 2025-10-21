@@ -96,6 +96,16 @@ def url_event_available_invitees(event_id):
     return f"{API_BASE_URL}/events/{event_id}/available-invitees"
 
 
+def url_event_cancellations():
+    """GET /events/cancellations - Get event cancellations for a user"""
+    return f"{API_BASE_URL}/events/cancellations"
+
+
+def url_event_cancellation_view(cancellation_id):
+    """POST /events/cancellations/{cancellation_id}/view - Mark cancellation as viewed"""
+    return f"{API_BASE_URL}/events/cancellations/{cancellation_id}/view"
+
+
 # ============================================================================
 # INTERACTIONS
 # ============================================================================

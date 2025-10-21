@@ -38,5 +38,37 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": [
+      {
+        "name": "Calendario Personal",
+        "start_date": null,
+        "end_date": null,
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "name": "Calendario de Trabajo",
+        "start_date": null,
+        "end_date": null,
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "name": "Calendario Familiar",
+        "start_date": null,
+        "end_date": null,
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
   }
 }

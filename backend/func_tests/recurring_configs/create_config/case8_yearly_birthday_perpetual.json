@@ -3,7 +3,11 @@
   "description": "Cumpleaños que se repite indefinidamente (sin recurrence_end_date)",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      }
     ],
     "events": [
       {
@@ -24,12 +28,32 @@
       "event_id": 100,
       "recurrence_type": "yearly",
       "schedule": [
-        {"month": "6", "day": "14"}
+        {
+          "month": "6",
+          "day": "14"
+        }
       ],
       "recurrence_end_date": null
     }
   },
   "expected_response": {
     "status_code": 201
+  },
+  "expected": {
+    "status_code": 201,
+    "body": {
+      "recurrence_type": "yearly",
+      "schedule": [
+        {
+          "month": "6",
+          "day": "14"
+        }
+      ],
+      "recurrence_end_date": null,
+      "id": "{{ID}}",
+      "event_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

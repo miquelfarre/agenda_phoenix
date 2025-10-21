@@ -23,5 +23,17 @@
   },
   "expected_response": {
     "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "name": "Mi Calendario Principal",
+      "start_date": null,
+      "end_date": null,
+      "id": "{{ID}}",
+      "owner_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

@@ -3,7 +3,11 @@
   "description": "Evento que se repite cada año el 25 de diciembre (Navidad)",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      }
     ],
     "events": [
       {
@@ -24,12 +28,32 @@
       "event_id": 100,
       "recurrence_type": "yearly",
       "schedule": [
-        {"month": "12", "day": "25"}
+        {
+          "month": "12",
+          "day": "25"
+        }
       ],
       "recurrence_end_date": "2030-12-31T23:59:59"
     }
   },
   "expected_response": {
     "status_code": 201
+  },
+  "expected": {
+    "status_code": 201,
+    "body": {
+      "recurrence_type": "yearly",
+      "schedule": [
+        {
+          "month": "12",
+          "day": "25"
+        }
+      ],
+      "recurrence_end_date": "2030-12-31T23:59:59",
+      "id": "{{ID}}",
+      "event_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

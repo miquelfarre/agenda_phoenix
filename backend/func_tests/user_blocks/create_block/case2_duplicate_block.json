@@ -2,11 +2,23 @@
   "description": "Create duplicate user block returns 400",
   "setup": {
     "users": [
-      {"id": 1, "name": "Alice", "phone": "+1234567890"},
-      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
     ],
     "user_blocks": [
-      {"id": 1, "blocker_user_id": 1, "blocked_user_id": 2}
+      {
+        "id": 1,
+        "blocker_user_id": 1,
+        "blocked_user_id": 2
+      }
     ]
   },
   "request": {
@@ -19,6 +31,11 @@
   },
   "expected": {
     "status_code": 400,
-    "body_contains": ["User is already blocked"]
+    "body_contains": [
+      "User is already blocked"
+    ],
+    "body": {
+      "detail": "User is already blocked"
+    }
   }
 }

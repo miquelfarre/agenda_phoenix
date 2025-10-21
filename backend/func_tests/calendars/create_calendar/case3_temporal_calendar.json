@@ -22,5 +22,17 @@
   },
   "expected_response": {
     "status_code": 201
+  },
+  "expected": {
+    "status_code": 201,
+    "body": {
+      "name": "Vacaciones Verano 2025",
+      "start_date": "2025-07-01T00:00:00",
+      "end_date": "2025-08-31T23:59:59",
+      "id": "{{ID}}",
+      "owner_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }

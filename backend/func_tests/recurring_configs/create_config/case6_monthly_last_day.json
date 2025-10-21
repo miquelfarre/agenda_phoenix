@@ -3,7 +3,11 @@
   "description": "Evento que se repite el último día de cada mes",
   "setup": {
     "users": [
-      {"id": 1, "name": "Sonia", "phone": "+34606014680"}
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      }
     ],
     "events": [
       {
@@ -24,12 +28,30 @@
       "event_id": 100,
       "recurrence_type": "monthly",
       "schedule": [
-        {"day": "last"}
+        {
+          "day": "last"
+        }
       ],
       "recurrence_end_date": "2026-12-31T23:59:59"
     }
   },
   "expected_response": {
     "status_code": 201
+  },
+  "expected": {
+    "status_code": 201,
+    "body": {
+      "recurrence_type": "monthly",
+      "schedule": [
+        {
+          "day": "last"
+        }
+      ],
+      "recurrence_end_date": "2026-12-31T23:59:59",
+      "id": "{{ID}}",
+      "event_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
   }
 }
