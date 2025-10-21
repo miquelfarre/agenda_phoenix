@@ -1,0 +1,24 @@
+{
+  "status_code": 422,
+  "body": {
+    "_status_code": 422,
+    "body": {
+      "detail": [
+        {
+          "type": "datetime_parsing",
+          "loc": [
+            "query",
+            "to_date"
+          ],
+          "msg": "Input should be a valid datetime, invalid datetime separator, expected `T`, `t`, `_` or space",
+          "input": "2025-12-31",
+          "ctx": {
+            "error": "invalid datetime separator, expected `T`, `t`, `_` or space"
+          },
+          "url": "https://errors.pydantic.dev/2.5/v/datetime_parsing"
+        }
+      ]
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

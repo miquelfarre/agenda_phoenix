@@ -251,26 +251,3 @@ async def delete_event(event_id: int, db: Session = Depends(get_db)):
     db.delete(db_event)
     db.commit()
     return {"message": "Event deleted successfully", "id": event_id}
-
-
-# Alias endpoint for creating event interactions
-@router.post("/event-interactions", response_model=EventInteractionResponse, status_code=201)
-async def create_event_interaction_alias(interaction: EventInteractionCreate, db: Session = Depends(get_db)):
-    """Create a new event interaction (alias for /interactions)"""
-    event = db.query(Event).filter(Event.id == interaction.event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    user = db.query(User).filter(User.id == interaction.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    existing = db.query(EventInteraction).filter(EventInteraction.event_id == interaction.event_id, EventInteraction.user_id == interaction.user_id).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="User already has an interaction with this event")
-
-    db_interaction = EventInteraction(**interaction.model_dump())
-    db.add(db_interaction)
-    db.commit()
-    db.refresh(db_interaction)
-    return db_interaction

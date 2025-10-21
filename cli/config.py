@@ -132,7 +132,7 @@ def url_calendar_memberships_nested(calendar_id):
 
 
 def url_calendars_memberships_create():
-    """POST /calendars/memberships - Create calendar membership (nested route)"""
+    """POST /calendars/memberships - Create calendar membership (alias endpoint)"""
     return f"{API_BASE_URL}/calendars/memberships"
 
 

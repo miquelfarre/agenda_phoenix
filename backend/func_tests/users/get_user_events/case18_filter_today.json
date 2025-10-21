@@ -1,0 +1,22 @@
+{
+  "description": "Filter events for today using predefined filter",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+    ],
+    "events": [
+      {"id": 1, "name": "Yesterday", "start_date": "2025-10-20T10:00:00", "owner_id": 1},
+      {"id": 2, "name": "Today Morning", "start_date": "2025-10-21T09:00:00", "owner_id": 1},
+      {"id": 3, "name": "Today Evening", "start_date": "2025-10-21T18:00:00", "owner_id": 1},
+      {"id": 4, "name": "Tomorrow", "start_date": "2025-10-22T10:00:00", "owner_id": 1}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/1/events?filter=today"
+  },
+  "expected": {
+    "status_code": 200,
+    "note": "Should return ONLY today's events (id=2,3), assuming today is 2025-10-21"
+  }
+}

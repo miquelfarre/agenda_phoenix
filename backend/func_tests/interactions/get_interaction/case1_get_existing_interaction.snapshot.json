@@ -1,10 +1,10 @@
 {
-  "status_code": 201,
+  "status_code": 200,
   "body": {
-    "_status_code": 201,
+    "_status_code": 200,
     "body": {
-      "interaction_type": "subscribed",
-      "status": null,
+      "interaction_type": "invited",
+      "status": "pending",
       "role": null,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

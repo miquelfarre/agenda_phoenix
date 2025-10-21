@@ -1,0 +1,14 @@
+{
+  "status_code": 403,
+  "body": {
+    "_status_code": 403,
+    "body": {
+      "detail": {
+        "message": "User is banned from the application",
+        "reason": "Spam",
+        "banned_at": "{{TIMESTAMP}}"
+      }
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

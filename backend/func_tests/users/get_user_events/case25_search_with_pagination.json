@@ -1,0 +1,23 @@
+{
+  "description": "Combine search with pagination (limit and offset)",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+    ],
+    "events": [
+      {"id": 1, "name": "Meeting 1", "start_date": "2025-12-01T10:00:00", "owner_id": 1},
+      {"id": 2, "name": "Meeting 2", "start_date": "2025-12-02T10:00:00", "owner_id": 1},
+      {"id": 3, "name": "Lunch Break", "start_date": "2025-12-03T12:00:00", "owner_id": 1},
+      {"id": 4, "name": "Meeting 3", "start_date": "2025-12-04T10:00:00", "owner_id": 1},
+      {"id": 5, "name": "Meeting 4", "start_date": "2025-12-05T10:00:00", "owner_id": 1}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/1/events?search=meeting&limit=2&offset=1"
+  },
+  "expected": {
+    "status_code": 200,
+    "note": "Should filter for 'meeting' (id=1,2,4,5), then skip 1 and return next 2 (id=2,4)"
+  }
+}

@@ -40,7 +40,6 @@ from config import (
     url_calendar_memberships,
     url_calendar_membership,
     url_recurring_configs,
-    url_recurring_config,
 )
 from ui.header import show_header
 

@@ -200,7 +200,7 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     event = db.query(Event).filter(Event.id == db_interaction.event_id).first()
 
     # Only update fields that are explicitly provided (exclude None values)
-    for key, value in interaction.dict(exclude_unset=True).items():
+    for key, value in interaction.model_dump(exclude_unset=True).items():
         if value is not None:
             setattr(db_interaction, key, value)
 

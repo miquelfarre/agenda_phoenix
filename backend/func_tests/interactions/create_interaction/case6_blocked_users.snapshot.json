@@ -1,0 +1,10 @@
+{
+  "status_code": 403,
+  "body": {
+    "_status_code": 403,
+    "body": {
+      "detail": "Cannot interact with this user due to blocking"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

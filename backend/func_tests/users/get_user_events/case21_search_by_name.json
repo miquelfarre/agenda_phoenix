@@ -1,0 +1,22 @@
+{
+  "description": "Search events by name (case-insensitive)",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+    ],
+    "events": [
+      {"id": 1, "name": "Team Meeting", "start_date": "2025-12-01T10:00:00", "owner_id": 1},
+      {"id": 2, "name": "Team Lunch", "start_date": "2025-12-02T12:00:00", "owner_id": 1},
+      {"id": 3, "name": "Client Presentation", "start_date": "2025-12-03T14:00:00", "owner_id": 1},
+      {"id": 4, "name": "TEAM Workshop", "start_date": "2025-12-04T09:00:00", "owner_id": 1}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/1/events?search=team"
+  },
+  "expected": {
+    "status_code": 200,
+    "note": "Should return events with 'team' in name (id=1,2,4), case-insensitive, NOT id=3"
+  }
+}

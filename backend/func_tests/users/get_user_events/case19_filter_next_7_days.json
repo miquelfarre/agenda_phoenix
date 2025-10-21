@@ -1,0 +1,23 @@
+{
+  "description": "Filter events for next 7 days using predefined filter",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+    ],
+    "events": [
+      {"id": 1, "name": "Yesterday", "start_date": "2025-10-20T10:00:00", "owner_id": 1},
+      {"id": 2, "name": "Today", "start_date": "2025-10-21T10:00:00", "owner_id": 1},
+      {"id": 3, "name": "In 3 days", "start_date": "2025-10-24T10:00:00", "owner_id": 1},
+      {"id": 4, "name": "In 6 days", "start_date": "2025-10-27T10:00:00", "owner_id": 1},
+      {"id": 5, "name": "In 8 days", "start_date": "2025-10-29T10:00:00", "owner_id": 1}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/1/events?filter=next_7_days"
+  },
+  "expected": {
+    "status_code": 200,
+    "note": "Should return events in next 7 days (id=2,3,4), NOT id=1 (past) or id=5 (8 days away), assuming today is 2025-10-21"
+  }
+}

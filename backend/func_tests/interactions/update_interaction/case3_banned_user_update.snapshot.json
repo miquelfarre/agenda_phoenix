@@ -1,9 +1,9 @@
 {
-  "status_code": 201,
+  "status_code": 200,
   "body": {
-    "_status_code": 201,
+    "_status_code": 200,
     "body": {
-      "interaction_type": "joined",
+      "interaction_type": "invited",
       "status": "accepted",
       "role": null,
       "id": "{{ID}}",

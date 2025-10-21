@@ -1,0 +1,27 @@
+{
+  "description": "Get user events including calendar events (user is calendar owner/admin)",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"},
+      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+    ],
+    "calendars": [
+      {"id": 1, "name": "Team Calendar", "owner_id": 2}
+    ],
+    "events": [
+      {"id": 1, "name": "Alice Event", "start_date": "2025-12-01T18:00:00", "owner_id": 1},
+      {"id": 2, "name": "Team Meeting", "start_date": "2025-12-02T10:00:00", "owner_id": 2, "calendar_id": 1}
+    ],
+    "calendar_memberships": [
+      {"calendar_id": 1, "user_id": 1, "role": "admin", "status": "accepted", "invited_by_user_id": 2}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/1/events"
+  },
+  "expected": {
+    "status_code": 200,
+    "note": "Should return Alice's event and Team Meeting (Alice is admin in calendar)"
+  }
+}

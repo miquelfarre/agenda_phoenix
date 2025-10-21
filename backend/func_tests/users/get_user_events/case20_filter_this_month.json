@@ -1,0 +1,23 @@
+{
+  "description": "Filter events for this month using predefined filter",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+    ],
+    "events": [
+      {"id": 1, "name": "Last Month", "start_date": "2025-09-30T10:00:00", "owner_id": 1},
+      {"id": 2, "name": "Oct Start", "start_date": "2025-10-01T10:00:00", "owner_id": 1},
+      {"id": 3, "name": "Oct Mid", "start_date": "2025-10-15T10:00:00", "owner_id": 1},
+      {"id": 4, "name": "Oct End", "start_date": "2025-10-31T10:00:00", "owner_id": 1},
+      {"id": 5, "name": "Next Month", "start_date": "2025-11-01T10:00:00", "owner_id": 1}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/1/events?filter=this_month"
+  },
+  "expected": {
+    "status_code": 200,
+    "note": "Should return ONLY October events (id=2,3,4), assuming current month is October 2025"
+  }
+}
