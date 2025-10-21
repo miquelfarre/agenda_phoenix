@@ -1,0 +1,24 @@
+{
+  "description": "List event bans filtered by event_id",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"},
+      {"id": 2, "name": "Bob", "phone": "+1234567891"}
+    ],
+    "events": [
+      {"id": 1, "name": "Party", "start_date": "2025-12-01T18:00:00", "owner_id": 1},
+      {"id": 2, "name": "Meeting", "start_date": "2025-12-02T10:00:00", "owner_id": 1}
+    ],
+    "event_bans": [
+      {"id": 1, "event_id": 1, "user_id": 2, "banned_by": 1},
+      {"id": 2, "event_id": 2, "user_id": 2, "banned_by": 1}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/event_bans?event_id=1"
+  },
+  "expected": {
+    "status_code": 200
+  }
+}

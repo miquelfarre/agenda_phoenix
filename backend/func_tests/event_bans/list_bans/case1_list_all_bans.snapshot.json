@@ -1,0 +1,27 @@
+{
+  "status_code": 200,
+  "body": {
+    "_status_code": 200,
+    "body": [
+      {
+        "reason": "Spam",
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "banned_by": 1,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "reason": "Abuse",
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "banned_by": 1,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

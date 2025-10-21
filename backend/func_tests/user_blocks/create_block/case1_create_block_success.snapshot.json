@@ -1,0 +1,14 @@
+{
+  "status_code": 201,
+  "body": {
+    "_status_code": 201,
+    "body": {
+      "id": "{{ID}}",
+      "blocker_user_id": 1,
+      "blocked_user_id": 2,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

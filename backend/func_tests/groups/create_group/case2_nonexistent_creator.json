@@ -1,0 +1,17 @@
+{
+  "description": "Create group with nonexistent creator returns 404",
+  "setup": {},
+  "request": {
+    "method": "POST",
+    "endpoint": "/groups",
+    "body": {
+      "name": "Invalid Team",
+      "description": "Team with invalid creator",
+      "created_by": 999
+    }
+  },
+  "expected": {
+    "status_code": 404,
+    "body_contains": ["Creator user not found"]
+  }
+}

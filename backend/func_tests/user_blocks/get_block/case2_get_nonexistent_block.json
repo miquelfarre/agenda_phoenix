@@ -1,0 +1,12 @@
+{
+  "description": "Get a nonexistent user block returns 404",
+  "setup": {},
+  "request": {
+    "method": "GET",
+    "endpoint": "/user_blocks/999"
+  },
+  "expected": {
+    "status_code": 404,
+    "body_contains": ["User block not found"]
+  }
+}

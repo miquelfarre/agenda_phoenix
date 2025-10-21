@@ -1,0 +1,14 @@
+{
+  "status_code": 200,
+  "body": {
+    "_status_code": 200,
+    "body": {
+      "id": "{{ID}}",
+      "group_id": 1,
+      "user_id": "{{ID}}",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

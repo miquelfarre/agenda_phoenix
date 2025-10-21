@@ -1,0 +1,21 @@
+{
+  "description": "List app bans filtered by user_id",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Admin", "phone": "+1234567890"},
+      {"id": 2, "name": "Bob", "phone": "+1234567891"},
+      {"id": 3, "name": "Charlie", "phone": "+1234567892"}
+    ],
+    "app_bans": [
+      {"user_id": 2, "banned_by": 1},
+      {"user_id": 3, "banned_by": 1}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/app_bans?user_id=2"
+  },
+  "expected": {
+    "status_code": 200
+  }
+}

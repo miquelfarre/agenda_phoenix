@@ -1,0 +1,25 @@
+{
+  "status_code": 200,
+  "body": {
+    "_status_code": 200,
+    "body": [
+      {
+        "name": "Team A",
+        "description": "First team",
+        "id": "{{ID}}",
+        "created_by": 1,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "name": "Team C",
+        "description": "Third team",
+        "id": "{{ID}}",
+        "created_by": 1,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

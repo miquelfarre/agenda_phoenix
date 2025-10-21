@@ -27,7 +27,7 @@ def setup_test_data(db, setup_config: Dict):
     """
     from datetime import datetime, timezone
 
-    from models import AppBan, Calendar, CalendarMembership, Contact, Event, EventInteraction, Group, RecurringEventConfig, User
+    from models import AppBan, Calendar, CalendarMembership, Contact, Event, EventBan, EventInteraction, Group, GroupMembership, RecurringEventConfig, User, UserBlock
 
     created_objects = {}
 
@@ -120,6 +120,27 @@ def setup_test_data(db, setup_config: Dict):
         for membership_config in setup_config["calendar_memberships"]:
             membership = CalendarMembership(calendar_id=membership_config["calendar_id"], user_id=membership_config["user_id"], role=membership_config.get("role", "member"), status=membership_config.get("status", "pending"), invited_by_user_id=membership_config.get("invited_by_user_id"))
             db.add(membership)
+            db.flush()
+
+    # Crear memberships de grupo
+    if "group_memberships" in setup_config:
+        for membership_config in setup_config["group_memberships"]:
+            membership = GroupMembership(id=membership_config.get("id"), group_id=membership_config["group_id"], user_id=membership_config["user_id"])
+            db.add(membership)
+            db.flush()
+
+    # Crear user blocks
+    if "user_blocks" in setup_config:
+        for block_config in setup_config["user_blocks"]:
+            block = UserBlock(id=block_config.get("id"), blocker_user_id=block_config["blocker_user_id"], blocked_user_id=block_config["blocked_user_id"])
+            db.add(block)
+            db.flush()
+
+    # Crear event bans
+    if "event_bans" in setup_config:
+        for ban_config in setup_config["event_bans"]:
+            ban = EventBan(id=ban_config.get("id"), event_id=ban_config["event_id"], user_id=ban_config["user_id"], banned_by=ban_config["banned_by"], reason=ban_config.get("reason"))
+            db.add(ban)
             db.flush()
 
     db.commit()

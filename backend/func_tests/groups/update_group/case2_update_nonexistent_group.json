@@ -1,0 +1,16 @@
+{
+  "description": "Update nonexistent group returns 404",
+  "setup": {},
+  "request": {
+    "method": "PUT",
+    "endpoint": "/groups/999",
+    "body": {
+      "name": "Updated Name",
+      "description": "Updated description"
+    }
+  },
+  "expected": {
+    "status_code": 404,
+    "body_contains": ["Group not found"]
+  }
+}

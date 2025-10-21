@@ -1,0 +1,19 @@
+{
+  "description": "Delete an existing group successfully",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+    ],
+    "groups": [
+      {"id": 1, "name": "Team A", "description": "First team", "created_by": 1}
+    ]
+  },
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/groups/1"
+  },
+  "expected": {
+    "status_code": 200,
+    "body_contains": ["Group deleted successfully"]
+  }
+}

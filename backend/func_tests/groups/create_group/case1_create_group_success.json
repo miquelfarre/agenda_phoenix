@@ -1,0 +1,21 @@
+{
+  "description": "Create a new group successfully",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"}
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/groups",
+    "body": {
+      "name": "New Team",
+      "description": "A brand new team",
+      "created_by": 1
+    }
+  },
+  "expected": {
+    "status_code": 201,
+    "body_contains": ["New Team", "A brand new team"]
+  }
+}

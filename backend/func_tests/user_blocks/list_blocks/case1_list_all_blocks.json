@@ -1,0 +1,21 @@
+{
+  "description": "List all user blocks successfully",
+  "setup": {
+    "users": [
+      {"id": 1, "name": "Alice", "phone": "+1234567890"},
+      {"id": 2, "name": "Bob", "phone": "+1234567891"},
+      {"id": 3, "name": "Charlie", "phone": "+1234567892"}
+    ],
+    "user_blocks": [
+      {"id": 1, "blocker_user_id": 1, "blocked_user_id": 2},
+      {"id": 2, "blocker_user_id": 1, "blocked_user_id": 3}
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/user_blocks"
+  },
+  "expected": {
+    "status_code": 200
+  }
+}
