@@ -349,6 +349,10 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
                             "role": interaction.role,
                             "invited_by_user_id": interaction.invited_by_user_id,
                             "invited_via_group_id": interaction.invited_via_group_id,
+                            "note": interaction.note,
+                            "rejection_message": interaction.rejection_message,
+                            "read_at": interaction.read_at,
+                            "is_new": interaction.is_new,
                             "created_at": interaction.created_at,
                             "updated_at": interaction.updated_at,
                             "event_name": event.name,
@@ -366,6 +370,64 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
         else:
             interactions = query.all()
             return interactions
+
+    def mark_as_read(self, db: Session, *, interaction_id: int) -> tuple[Optional[EventInteraction], Optional[str]]:
+        """
+        Mark an interaction as read by setting read_at to current timestamp.
+
+        Args:
+            db: Database session
+            interaction_id: Interaction ID
+
+        Returns:
+            (EventInteraction, None) if successful
+            (None, error_message) if failed
+        """
+        from datetime import datetime, timezone
+
+        interaction = self.get(db, id=interaction_id)
+        if not interaction:
+            return None, "Interaction not found"
+
+        # Set read_at to current timestamp
+        interaction.read_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(interaction)
+
+        return interaction, None
+
+    def get_invitation_stats(self, db: Session, *, event_id: int) -> dict:
+        """
+        Get invitation statistics for an event.
+
+        Args:
+            db: Database session
+            event_id: Event ID
+
+        Returns:
+            Dictionary with invitation statistics:
+            - total_invited: total number of invited users
+            - accepted: number of accepted invitations
+            - pending: number of pending invitations
+            - rejected: number of rejected invitations
+        """
+        # Get all invitations for this event
+        invitations = db.query(EventInteraction).filter(
+            EventInteraction.event_id == event_id,
+            EventInteraction.interaction_type == "invited"
+        ).all()
+
+        total_invited = len(invitations)
+        accepted = sum(1 for i in invitations if i.status == "accepted")
+        pending = sum(1 for i in invitations if i.status == "pending")
+        rejected = sum(1 for i in invitations if i.status == "rejected")
+
+        return {
+            "total_invited": total_invited,
+            "accepted": accepted,
+            "pending": pending,
+            "rejected": rejected
+        }
 
 
 # Singleton instance

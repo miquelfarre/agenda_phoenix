@@ -207,6 +207,65 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         return users
 
+    def get_public_user_stats(self, db: Session, *, user_id: int) -> Optional[dict]:
+        """
+        Get statistics for a public user.
+
+        Args:
+            db: Database session
+            user_id: User ID
+
+        Returns:
+            Dictionary with statistics or None if user doesn't exist or isn't public:
+            - user_id: User ID
+            - username: Username
+            - total_subscribers: Number of subscribers
+            - total_events: Total number of events created
+            - events_stats: List of event statistics (event_id, event_name, event_start_date, total_joined)
+        """
+        from models import Event, EventInteraction
+
+        # Get user and verify it's public
+        db_user = self.get(db, id=user_id)
+        if not db_user or not db_user.is_public:
+            return None
+
+        # Count total subscribers (users with "subscribed" interaction to any event from this user)
+        from sqlalchemy import func
+        total_subscribers = db.query(func.count(func.distinct(EventInteraction.user_id))).join(
+            Event, EventInteraction.event_id == Event.id
+        ).filter(
+            Event.owner_id == user_id,
+            EventInteraction.interaction_type == "subscribed"
+        ).scalar()
+
+        # Get all events created by this user
+        events = db.query(Event).filter(Event.owner_id == user_id).all()
+        total_events = len(events)
+
+        # Get stats for each event (number of "joined" users)
+        events_stats = []
+        for event in events:
+            total_joined = db.query(EventInteraction).filter(
+                EventInteraction.event_id == event.id,
+                EventInteraction.interaction_type == "joined"
+            ).count()
+
+            events_stats.append({
+                "event_id": event.id,
+                "event_name": event.name,
+                "event_start_date": event.start_date,
+                "total_joined": total_joined
+            })
+
+        return {
+            "user_id": user_id,
+            "username": db_user.username,
+            "total_subscribers": total_subscribers,
+            "total_events": total_events,
+            "events_stats": events_stats
+        }
+
 
 # Singleton instance
 user = CRUDUser(User)

@@ -425,6 +425,25 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
 
         return query.order_by(Event.start_date).all()
 
+    def get_upcoming_events_by_owner(self, db: Session, *, owner_id: int, limit: int = 10) -> List[Event]:
+        """
+        Get upcoming events for a specific owner (used for public users).
+
+        Args:
+            db: Database session
+            owner_id: User ID of the owner
+            limit: Maximum number of events to return (default 10)
+
+        Returns:
+            List of upcoming events ordered by start_date
+        """
+        now = datetime.now(timezone.utc)
+
+        return db.query(Event).filter(
+            Event.owner_id == owner_id,
+            Event.start_date >= now
+        ).order_by(Event.start_date.asc()).limit(limit).all()
+
 
 # Singleton instance
 event = CRUDEvent(Event)

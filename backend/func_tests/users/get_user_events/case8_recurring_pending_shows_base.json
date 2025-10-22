@@ -86,7 +86,7 @@
       {
         "name": "Weekly Meeting",
         "description": null,
-        "start_date": "2025-12-01T10:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "recurring",
         "id": "{{ID}}",
@@ -100,12 +100,17 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}"
-        }
+        },
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       },
       {
         "name": "Weekly Meeting",
         "description": null,
-        "start_date": "2025-12-08T10:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -119,12 +124,17 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}"
-        }
+        },
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       },
       {
         "name": "Weekly Meeting",
         "description": null,
-        "start_date": "2025-12-15T10:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -138,7 +148,12 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}"
-        }
+        },
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       }
     ]
   }

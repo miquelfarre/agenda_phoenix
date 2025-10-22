@@ -1,0 +1,86 @@
+{
+  "description": "Event owner can see invitation statistics",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice (Owner)",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      },
+      {
+        "id": 3,
+        "name": "Charlie",
+        "phone": "+1234567892"
+      },
+      {
+        "id": 4,
+        "name": "David",
+        "phone": "+1234567893"
+      }
+    ],
+    "events": [
+      {
+        "id": 1,
+        "name": "Party",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 1
+      }
+    ],
+    "event_interactions": [
+      {
+        "event_id": 1,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "accepted"
+      },
+      {
+        "event_id": 1,
+        "user_id": 3,
+        "interaction_type": "invited",
+        "status": "pending"
+      },
+      {
+        "event_id": 1,
+        "user_id": 4,
+        "interaction_type": "invited",
+        "status": "rejected"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/events/1?current_user_id=1"
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "id": "{{ID}}",
+      "name": "Party",
+      "description": null,
+      "start_date": "{{TIMESTAMP}}",
+      "end_date": null,
+      "event_type": "regular",
+      "owner_id": "{{ID}}",
+      "calendar_id": null,
+      "parent_recurring_event_id": null,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}",
+      "interaction": null,
+      "is_owner_public": false,
+      "can_subscribe_to_owner": null,
+      "is_subscribed_to_owner": null,
+      "owner_upcoming_events": null,
+      "invitation_stats": {
+        "total_invited": 3,
+        "accepted": 1,
+        "pending": 1,
+        "rejected": 1
+      }
+    }
+  }
+}

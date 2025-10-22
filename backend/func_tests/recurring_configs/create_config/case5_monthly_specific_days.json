@@ -1,6 +1,6 @@
 {
   "name": "Monthly recurrence - 1st and 15th",
-  "description": "Evento que se repite el día 1 y 15 de cada mes",
+  "description": "Evento que se repite el d\u00eda 1 y 15 de cada mes",
   "setup": {
     "users": [
       {
@@ -12,7 +12,7 @@
     "events": [
       {
         "id": 100,
-        "name": "Pago de nómina",
+        "name": "Pago de n\u00f3mina",
         "description": "Procesar pagos quincenales",
         "start_date": "2025-11-01T09:00:00",
         "end_date": "2025-11-01T10:00:00",
@@ -53,7 +53,7 @@
           "day": "15"
         }
       ],
-      "recurrence_end_date": "2026-12-31T23:59:59",
+      "recurrence_end_date": "{{TIMESTAMP}}",
       "id": "{{ID}}",
       "event_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

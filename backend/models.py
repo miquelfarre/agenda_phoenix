@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 
@@ -289,6 +291,7 @@ class EventInteraction(Base):
     invited_via_group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
     note = Column(Text, nullable=True)  # Personal note for this event
     rejection_message = Column(Text, nullable=True)  # Message when rejecting invitation
+    read_at = Column(TIMESTAMP(timezone=True), nullable=True)  # Timestamp when interaction was marked as read
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -300,6 +303,36 @@ class EventInteraction(Base):
     user = relationship("User", foreign_keys=[user_id], back_populates="interactions")
     invited_by = relationship("User", foreign_keys=[invited_by_user_id])
     invited_via_group = relationship("Group")
+
+    @property
+    def is_new(self) -> bool:
+        """
+        Determine if this interaction is "new" (unread and created within last 24 hours).
+
+        Returns True if:
+        - read_at is NULL (not yet read) AND
+        - created_at is within the last 24 hours
+        """
+        if self.read_at is not None:
+            # Already read
+            return False
+
+        if self.created_at is None:
+            return False
+
+        # Check if created within last 24 hours
+        # Handle both timezone-aware and naive datetimes
+        if self.created_at.tzinfo is None:
+            # Naive datetime - assume UTC
+            now = datetime.now()
+            created_at = self.created_at
+        else:
+            # Aware datetime
+            now = datetime.now(timezone.utc)
+            created_at = self.created_at
+
+        time_diff = now - created_at
+        return time_diff < timedelta(hours=24)
 
     def __repr__(self):
         return f"<EventInteraction(id={self.id}, event_id={self.event_id}, user_id={self.user_id}, type='{self.interaction_type}')>"
@@ -316,6 +349,8 @@ class EventInteraction(Base):
             "invited_via_group_id": self.invited_via_group_id,
             "note": self.note,
             "rejection_message": self.rejection_message,
+            "read_at": self.read_at.isoformat() if self.read_at else None,
+            "is_new": self.is_new,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

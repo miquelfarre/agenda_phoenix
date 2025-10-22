@@ -1,0 +1,23 @@
+{
+  "description": "Private users cannot access stats - returns 403",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890",
+        "is_public": false
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/users/1/stats"
+  },
+  "expected": {
+    "status_code": 403,
+    "body": {
+      "detail": "Statistics are only available for public users"
+    }
+  }
+}

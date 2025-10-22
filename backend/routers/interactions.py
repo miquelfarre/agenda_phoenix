@@ -210,3 +210,19 @@ async def delete_interaction(interaction_id: int, db: Session = Depends(get_db))
 
     event_interaction.delete(db, id=interaction_id)
     return {"message": "Interaction deleted successfully", "id": interaction_id}
+
+
+@router.post("/{interaction_id}/mark-read", response_model=EventInteractionResponse)
+async def mark_interaction_as_read(interaction_id: int, db: Session = Depends(get_db)):
+    """
+    Mark an event interaction as read.
+
+    This sets the read_at timestamp and causes is_new to become False.
+    Useful for tracking which events/invitations the user has seen.
+    """
+    interaction, error = event_interaction.mark_as_read(db, interaction_id=interaction_id)
+
+    if error:
+        raise HTTPException(status_code=404, detail=error)
+
+    return interaction

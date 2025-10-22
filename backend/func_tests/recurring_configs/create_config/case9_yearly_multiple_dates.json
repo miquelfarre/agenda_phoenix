@@ -1,6 +1,6 @@
 {
   "name": "Yearly recurrence - multiple dates",
-  "description": "Evento anual con múltiples fechas (Navidad y Año Nuevo)",
+  "description": "Evento anual con m\u00faltiples fechas (Navidad y A\u00f1o Nuevo)",
   "setup": {
     "users": [
       {
@@ -12,7 +12,7 @@
     "events": [
       {
         "id": 100,
-        "name": "Fiestas de fin de año",
+        "name": "Fiestas de fin de a\u00f1o",
         "description": "Celebraciones anuales",
         "start_date": "2025-12-25T00:00:00",
         "end_date": "2025-12-25T23:59:00",
@@ -57,7 +57,7 @@
           "day": "1"
         }
       ],
-      "recurrence_end_date": "2035-12-31T23:59:59",
+      "recurrence_end_date": "{{TIMESTAMP}}",
       "id": "{{ID}}",
       "event_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

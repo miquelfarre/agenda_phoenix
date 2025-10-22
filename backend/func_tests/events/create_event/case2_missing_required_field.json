@@ -39,7 +39,7 @@
           "msg": "Field required",
           "input": {
             "description": "Evento sin nombre",
-            "start_date": "2025-11-15T20:00:00",
+            "start_date": "{{TIMESTAMP}}",
             "event_type": "regular",
             "owner_id": "{{ID}}"
           },

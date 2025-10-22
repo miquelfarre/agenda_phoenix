@@ -13,7 +13,7 @@
       {
         "id": 100,
         "name": "Cena original",
-        "description": "Descripción original",
+        "description": "Descripci\u00f3n original",
         "start_date": "2025-11-15T20:00:00",
         "event_type": "regular",
         "owner_id": 1
@@ -25,7 +25,7 @@
     "endpoint": "/events/100",
     "body": {
       "name": "Cena actualizada",
-      "description": "Nueva descripción",
+      "description": "Nueva descripci\u00f3n",
       "start_date": "2025-11-15T21:00:00",
       "event_type": "regular",
       "owner_id": 1
@@ -38,8 +38,8 @@
     "status_code": 200,
     "body": {
       "name": "Cena actualizada",
-      "description": "Nueva descripción",
-      "start_date": "2025-11-15T21:00:00",
+      "description": "Nueva descripci\u00f3n",
+      "start_date": "{{TIMESTAMP}}",
       "end_date": null,
       "event_type": "regular",
       "id": "{{ID}}",
@@ -48,7 +48,12 @@
       "parent_recurring_event_id": null,
       "created_at": "{{TIMESTAMP}}",
       "updated_at": "{{TIMESTAMP}}",
-      "interaction": null
+      "interaction": null,
+      "is_owner_public": null,
+      "can_subscribe_to_owner": null,
+      "is_subscribed_to_owner": null,
+      "owner_upcoming_events": null,
+      "invitation_stats": null
     }
   }
 }

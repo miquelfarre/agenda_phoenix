@@ -1,0 +1,94 @@
+{
+  "description": "Get event from public owner - user not subscribed - should show subscription suggestion and upcoming events",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "FC Barcelona",
+        "phone": "+34123456789",
+        "is_public": true
+      },
+      {
+        "id": 2,
+        "name": "Alice",
+        "phone": "+1234567890"
+      }
+    ],
+    "events": [
+      {
+        "id": 1,
+        "name": "Barcelona vs Real Madrid",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 2,
+        "name": "Barcelona vs Atletico",
+        "start_date": "2025-12-05T20:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 3,
+        "name": "Barcelona vs Sevilla",
+        "start_date": "2025-12-10T19:00:00",
+        "owner_id": 1
+      }
+    ],
+    "event_interactions": [
+      {
+        "event_id": 1,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "pending"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/events/1?current_user_id=2"
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "id": "{{ID}}",
+      "name": "Barcelona vs Real Madrid",
+      "description": null,
+      "start_date": "{{TIMESTAMP}}",
+      "end_date": null,
+      "event_type": "regular",
+      "owner_id": "{{ID}}",
+      "calendar_id": null,
+      "parent_recurring_event_id": null,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}",
+      "interaction": null,
+      "is_owner_public": true,
+      "can_subscribe_to_owner": true,
+      "is_subscribed_to_owner": false,
+      "owner_upcoming_events": [
+        {
+          "id": "{{ID}}",
+          "name": "Barcelona vs Real Madrid",
+          "start_date": "{{TIMESTAMP}}",
+          "end_date": null,
+          "event_type": "regular"
+        },
+        {
+          "id": "{{ID}}",
+          "name": "Barcelona vs Atletico",
+          "start_date": "{{TIMESTAMP}}",
+          "end_date": null,
+          "event_type": "regular"
+        },
+        {
+          "id": "{{ID}}",
+          "name": "Barcelona vs Sevilla",
+          "start_date": "{{TIMESTAMP}}",
+          "end_date": null,
+          "event_type": "regular"
+        }
+      ],
+      "invitation_stats": null
+    }
+  }
+}

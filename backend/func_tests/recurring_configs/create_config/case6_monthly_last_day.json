@@ -1,6 +1,6 @@
 {
   "name": "Monthly recurrence - last day of month",
-  "description": "Evento que se repite el último día de cada mes",
+  "description": "Evento que se repite el \u00faltimo d\u00eda de cada mes",
   "setup": {
     "users": [
       {
@@ -13,7 +13,7 @@
       {
         "id": 100,
         "name": "Cierre mensual",
-        "description": "Revisión de cuentas",
+        "description": "Revisi\u00f3n de cuentas",
         "start_date": "2025-11-30T17:00:00",
         "end_date": "2025-11-30T18:00:00",
         "event_type": "recurring",
@@ -47,7 +47,7 @@
           "day": "last"
         }
       ],
-      "recurrence_end_date": "2026-12-31T23:59:59",
+      "recurrence_end_date": "{{TIMESTAMP}}",
       "id": "{{ID}}",
       "event_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

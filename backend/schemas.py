@@ -71,6 +71,25 @@ class UserEnrichedResponse(UserBase):
     updated_at: datetime
 
 
+class EventStats(BaseModel):
+    """Statistics for a single event of a public user"""
+
+    event_id: int
+    event_name: str
+    event_start_date: datetime
+    total_joined: int  # Number of users who joined this event
+
+
+class UserPublicStats(BaseModel):
+    """Statistics for a public user"""
+
+    user_id: int
+    username: Optional[str]
+    total_subscribers: int  # Total number of subscribers
+    total_events: int  # Total number of events created
+    events_stats: List[EventStats]  # Stats for each event
+
+
 # ============================================================================
 # EVENT SCHEMAS
 # ============================================================================
@@ -90,6 +109,27 @@ class EventCreate(EventBase):
     parent_recurring_event_id: Optional[int] = None
 
 
+class UpcomingEventSummary(BaseModel):
+    """Simplified event schema for upcoming events list"""
+
+    id: int
+    name: str
+    start_date: datetime
+    end_date: Optional[datetime]
+    event_type: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class InvitationStats(BaseModel):
+    """Statistics for event invitations"""
+
+    total_invited: int  # Total number of users invited
+    accepted: int  # Number of accepted invitations
+    pending: int  # Number of pending invitations
+    rejected: int  # Number of rejected invitations
+
+
 class EventResponse(EventBase):
     id: int
     owner_id: int
@@ -98,6 +138,13 @@ class EventResponse(EventBase):
     created_at: datetime
     updated_at: datetime
     interaction: Optional[dict] = None  # User's interaction with this event (type, status, role) - only for /users/{id}/events
+    # Public owner fields (only when owner is public user)
+    is_owner_public: Optional[bool] = None  # True if event owner is a public user
+    can_subscribe_to_owner: Optional[bool] = None  # True if current user can subscribe to owner
+    is_subscribed_to_owner: Optional[bool] = None  # True if current user is already subscribed to owner
+    owner_upcoming_events: Optional[List[UpcomingEventSummary]] = None  # Next 10 events from public owner
+    # Invitation stats (only when current user is owner/admin)
+    invitation_stats: Optional[InvitationStats] = None  # Statistics about invitations to this event
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -138,6 +185,8 @@ class EventInteractionResponse(EventInteractionBase):
     user_id: int
     invited_by_user_id: Optional[int]
     invited_via_group_id: Optional[int]
+    read_at: Optional[datetime]
+    is_new: bool
     created_at: datetime
     updated_at: datetime
 
@@ -155,6 +204,8 @@ class EventInteractionEnrichedResponse(EventInteractionBase):
     user_contact_name: Optional[str]
     invited_by_user_id: Optional[int]
     invited_via_group_id: Optional[int]
+    read_at: Optional[datetime]
+    is_new: bool
     created_at: datetime
     updated_at: datetime
 
@@ -176,6 +227,8 @@ class EventInteractionWithEventResponse(EventInteractionBase):
     user_id: int
     invited_by_user_id: Optional[int]
     invited_via_group_id: Optional[int]
+    read_at: Optional[datetime]
+    is_new: bool
     created_at: datetime
     updated_at: datetime
     # Event information

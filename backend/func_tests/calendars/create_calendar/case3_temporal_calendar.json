@@ -5,7 +5,7 @@
     "users": [
       {
         "id": 1,
-        "name": "Carlos López",
+        "name": "Carlos L\u00f3pez",
         "phone": "+34600333444"
       }
     ]
@@ -27,8 +27,8 @@
     "status_code": 201,
     "body": {
       "name": "Vacaciones Verano 2025",
-      "start_date": "2025-07-01T00:00:00",
-      "end_date": "2025-08-31T23:59:59",
+      "start_date": "{{TIMESTAMP}}",
+      "end_date": "{{TIMESTAMP}}",
       "id": "{{ID}}",
       "owner_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

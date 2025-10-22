@@ -10,10 +10,10 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from crud import event, event_cancellation, event_interaction
+from crud import event, event_cancellation, event_interaction, user
 from dependencies import check_user_not_banned, get_db
-from models import Contact, User, UserBlock
-from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventResponse
+from models import Contact, EventInteraction, User, UserBlock
+from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventResponse, UpcomingEventSummary
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -54,6 +54,11 @@ async def get_event(event_id: int, current_user_id: Optional[int] = None, db: Se
     - Event owner
     - Has EventInteraction (invited or subscribed)
     - Member of calendar containing the event (owner/admin with accepted status)
+
+    For events owned by public users, includes:
+    - Subscription status (is_subscribed_to_owner)
+    - Ability to subscribe (can_subscribe_to_owner)
+    - Next 10 upcoming events from the public owner (owner_upcoming_events)
     """
     db_event = event.get(db, id=event_id)
     if not db_event:
@@ -69,7 +74,86 @@ async def get_event(event_id: int, current_user_id: Optional[int] = None, db: Se
         if not has_access:
             raise HTTPException(status_code=403, detail="You do not have permission to view this event")
 
-    return db_event
+    # Get owner information
+    owner = user.get(db, id=db_event.owner_id)
+    if not owner:
+        raise HTTPException(status_code=404, detail="Event owner not found")
+
+    # Build response dict from event
+    response_data = {
+        "id": db_event.id,
+        "name": db_event.name,
+        "description": db_event.description,
+        "start_date": db_event.start_date,
+        "end_date": db_event.end_date,
+        "event_type": db_event.event_type,
+        "owner_id": db_event.owner_id,
+        "calendar_id": db_event.calendar_id,
+        "parent_recurring_event_id": db_event.parent_recurring_event_id,
+        "created_at": db_event.created_at,
+        "updated_at": db_event.updated_at,
+        "is_owner_public": owner.is_public,
+    }
+
+    # If owner is public and current_user_id is provided, add subscription info
+    if owner.is_public and current_user_id is not None:
+        # Check if user is subscribed to owner (any event from this owner)
+        # A subscription is an interaction of type "subscribed" to any event owned by the public user
+        subscriptions = db.query(EventInteraction).join(
+            event.model, EventInteraction.event_id == event.model.id
+        ).filter(
+            event.model.owner_id == owner.id,
+            EventInteraction.user_id == current_user_id,
+            EventInteraction.interaction_type == "subscribed"
+        ).first()
+        is_subscribed = subscriptions is not None
+
+        # Check if there's a block between users
+        is_blocked = db.query(UserBlock).filter(
+            ((UserBlock.blocker_user_id == current_user_id) & (UserBlock.blocked_user_id == owner.id)) |
+            ((UserBlock.blocker_user_id == owner.id) & (UserBlock.blocked_user_id == current_user_id))
+        ).first() is not None
+
+        # User can subscribe if not already subscribed and not blocked
+        can_subscribe = not is_subscribed and not is_blocked
+
+        # Get upcoming events from public owner
+        upcoming_events = event.get_upcoming_events_by_owner(db, owner_id=owner.id, limit=10)
+        upcoming_events_data = [
+            {
+                "id": e.id,
+                "name": e.name,
+                "start_date": e.start_date,
+                "end_date": e.end_date,
+                "event_type": e.event_type,
+            }
+            for e in upcoming_events
+        ]
+
+        response_data["is_subscribed_to_owner"] = is_subscribed
+        response_data["can_subscribe_to_owner"] = can_subscribe
+        response_data["owner_upcoming_events"] = upcoming_events_data
+
+    # If current_user_id is provided and user is owner or admin, add invitation stats
+    if current_user_id is not None:
+        is_owner = db_event.owner_id == current_user_id
+        is_admin = False
+
+        # Check if user is admin of the calendar containing this event
+        if db_event.calendar_id:
+            from crud import calendar_membership
+            membership = calendar_membership.get_by_calendar_and_user(
+                db, calendar_id=db_event.calendar_id, user_id=current_user_id
+            )
+            if membership and membership.role in ["owner", "admin"] and membership.status == "accepted":
+                is_admin = True
+
+        # If user is owner or admin, get invitation stats
+        if is_owner or is_admin:
+            stats = event_interaction.get_invitation_stats(db, event_id=event_id)
+            response_data["invitation_stats"] = stats
+
+    return EventResponse(**response_data)
 
 
 @router.get("/{event_id}/interactions", response_model=List[EventInteractionResponse])
@@ -120,8 +204,12 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
                 "interaction_type": interaction.interaction_type,
                 "status": interaction.status,
                 "role": interaction.role,
+                "note": interaction.note,
+                "rejection_message": interaction.rejection_message,
                 "invited_by_user_id": interaction.invited_by_user_id,
                 "invited_via_group_id": interaction.invited_via_group_id,
+                "read_at": interaction.read_at,
+                "is_new": interaction.is_new,
                 "created_at": interaction.created_at,
                 "updated_at": interaction.updated_at,
             }

@@ -1,6 +1,6 @@
 {
   "name": "Create recurring event (basic)",
-  "description": "Crear un evento de tipo recurrente (sin configuración de recurrencia)",
+  "description": "Crear un evento de tipo recurrente (sin configuraci\u00f3n de recurrencia)",
   "setup": {
     "users": [
       {
@@ -15,7 +15,7 @@
     "endpoint": "/events",
     "body": {
       "name": "Sincro semanal",
-      "description": "Reunión de sincronización todos los lunes",
+      "description": "Reuni\u00f3n de sincronizaci\u00f3n todos los lunes",
       "start_date": "2025-11-17T10:00:00",
       "end_date": "2025-11-17T11:00:00",
       "event_type": "recurring",
@@ -29,9 +29,9 @@
     "status_code": 201,
     "body": {
       "name": "Sincro semanal",
-      "description": "Reunión de sincronización todos los lunes",
-      "start_date": "2025-11-17T10:00:00",
-      "end_date": "2025-11-17T11:00:00",
+      "description": "Reuni\u00f3n de sincronizaci\u00f3n todos los lunes",
+      "start_date": "{{TIMESTAMP}}",
+      "end_date": "{{TIMESTAMP}}",
       "event_type": "recurring",
       "id": "{{ID}}",
       "owner_id": "{{ID}}",
@@ -39,7 +39,12 @@
       "parent_recurring_event_id": null,
       "created_at": "{{TIMESTAMP}}",
       "updated_at": "{{TIMESTAMP}}",
-      "interaction": null
+      "interaction": null,
+      "is_owner_public": null,
+      "can_subscribe_to_owner": null,
+      "is_subscribed_to_owner": null,
+      "owner_upcoming_events": null,
+      "invitation_stats": null
     }
   }
 }

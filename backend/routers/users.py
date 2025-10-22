@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from crud import calendar_membership, contact, event, event_interaction, recurring_config, user, user_block
 from dependencies import check_user_not_banned, get_db
 from models import EventInteraction
-from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserResponse
+from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserPublicStats, UserResponse
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,31 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
         )
 
     return db_user
+
+
+@router.get("/{user_id}/stats", response_model=UserPublicStats)
+async def get_user_stats(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get statistics for a public user.
+
+    Returns:
+    - Total number of subscribers
+    - Total number of events created
+    - Stats for each event (event_id, event_name, event_start_date, total_joined)
+
+    Only available for public users. Returns 403 for private users.
+    """
+    stats = user.get_public_user_stats(db, user_id=user_id)
+
+    if not stats:
+        # User doesn't exist or is not public
+        db_user = user.get(db, id=user_id)
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        else:
+            raise HTTPException(status_code=403, detail="Statistics are only available for public users")
+
+    return UserPublicStats(**stats)
 
 
 @router.post("", response_model=UserResponse, status_code=201)

@@ -52,7 +52,7 @@
       {
         "name": "Today",
         "description": null,
-        "start_date": "2025-10-22T10:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -61,12 +61,17 @@
         "parent_recurring_event_id": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "interaction": null
+        "interaction": null,
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       },
       {
         "name": "In 3 days",
         "description": null,
-        "start_date": "2025-10-25T10:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -75,12 +80,17 @@
         "parent_recurring_event_id": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "interaction": null
+        "interaction": null,
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       },
       {
         "name": "In 6 days",
         "description": null,
-        "start_date": "2025-10-28T10:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -89,7 +99,12 @@
         "parent_recurring_event_id": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "interaction": null
+        "interaction": null,
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       }
     ]
   }

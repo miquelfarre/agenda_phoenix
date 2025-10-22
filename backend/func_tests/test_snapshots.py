@@ -227,13 +227,13 @@ def normalize_response(data):
         # IDs: reemplazar con placeholder solo si no es null (todos los campos que terminen en _id o sean "id")
         if (key == "id" or key.endswith("_id")) and value is not None:
             normalized[key] = "{{ID}}"
-        # Timestamps: reemplazar con placeholder (todos los campos que terminen en _at)
-        elif key.endswith("_at"):
+        # Timestamps: reemplazar con placeholder solo si no es null (todos los campos que terminen en _at o _date)
+        elif (key.endswith("_at") or key.endswith("_date")) and value is not None:
             normalized[key] = "{{TIMESTAMP}}"
         # Recursivo para objetos y arrays
         elif isinstance(value, (dict, list)):
             normalized[key] = normalize_response(value)
-        # Otros valores: mantener como están (incluyendo IDs null)
+        # Otros valores: mantener como están (incluyendo IDs null y timestamps null)
         else:
             normalized[key] = value
 

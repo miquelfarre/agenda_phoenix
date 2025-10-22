@@ -13,7 +13,7 @@
       {
         "id": 100,
         "name": "Sincro semanal",
-        "description": "Reunión de equipo",
+        "description": "Reuni\u00f3n de equipo",
         "start_date": "2025-11-03T10:00:00",
         "end_date": "2025-11-03T11:00:00",
         "event_type": "recurring",
@@ -47,7 +47,7 @@
           "day": "monday"
         }
       ],
-      "recurrence_end_date": "2025-12-31T23:59:59",
+      "recurrence_end_date": "{{TIMESTAMP}}",
       "id": "{{ID}}",
       "event_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

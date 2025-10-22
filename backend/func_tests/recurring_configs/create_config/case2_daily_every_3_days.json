@@ -1,6 +1,6 @@
 {
   "name": "Daily recurrence - every 3 days",
-  "description": "Evento que se repite cada 3 días",
+  "description": "Evento que se repite cada 3 d\u00edas",
   "setup": {
     "users": [
       {
@@ -13,7 +13,7 @@
       {
         "id": 100,
         "name": "Entrenamiento intercalado",
-        "description": "Gym cada 3 días",
+        "description": "Gym cada 3 d\u00edas",
         "start_date": "2025-11-01T18:00:00",
         "end_date": "2025-11-01T19:30:00",
         "event_type": "recurring",
@@ -47,7 +47,7 @@
           "interval": "3"
         }
       ],
-      "recurrence_end_date": "2026-01-31T23:59:59",
+      "recurrence_end_date": "{{TIMESTAMP}}",
       "id": "{{ID}}",
       "event_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

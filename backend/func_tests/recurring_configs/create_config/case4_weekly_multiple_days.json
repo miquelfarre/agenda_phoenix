@@ -1,6 +1,6 @@
 {
   "name": "Weekly recurrence - Mon, Wed, Fri",
-  "description": "Evento que se repite lunes, miércoles y viernes",
+  "description": "Evento que se repite lunes, mi\u00e9rcoles y viernes",
   "setup": {
     "users": [
       {
@@ -59,7 +59,7 @@
           "day": "friday"
         }
       ],
-      "recurrence_end_date": "2026-06-30T23:59:59",
+      "recurrence_end_date": "{{TIMESTAMP}}",
       "id": "{{ID}}",
       "event_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

@@ -25,8 +25,8 @@
       },
       {
         "id": 2,
-        "name": "Reunión de trabajo",
-        "description": "Reunión semanal",
+        "name": "Reuni\u00f3n de trabajo",
+        "description": "Reuni\u00f3n semanal",
         "start_date": "2025-11-16T10:00:00",
         "event_type": "regular",
         "owner_id": 2
@@ -46,7 +46,7 @@
       {
         "name": "Cena con amigos",
         "description": "Cena en casa de Sonia",
-        "start_date": "2025-11-15T20:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -55,12 +55,17 @@
         "parent_recurring_event_id": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "interaction": null
+        "interaction": null,
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       },
       {
-        "name": "Reunión de trabajo",
-        "description": "Reunión semanal",
-        "start_date": "2025-11-16T10:00:00",
+        "name": "Reuni\u00f3n de trabajo",
+        "description": "Reuni\u00f3n semanal",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -69,7 +74,12 @@
         "parent_recurring_event_id": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "interaction": null
+        "interaction": null,
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       }
     ]
   }

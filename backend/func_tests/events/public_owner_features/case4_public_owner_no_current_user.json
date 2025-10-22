@@ -1,0 +1,47 @@
+{
+  "description": "Get event from public owner without current_user_id - should show is_owner_public but no subscription info",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "FC Barcelona",
+        "phone": "+34123456789",
+        "is_public": true
+      }
+    ],
+    "events": [
+      {
+        "id": 1,
+        "name": "Barcelona vs Real Madrid",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/events/1"
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "id": "{{ID}}",
+      "name": "Barcelona vs Real Madrid",
+      "description": null,
+      "start_date": "{{TIMESTAMP}}",
+      "end_date": null,
+      "event_type": "regular",
+      "owner_id": "{{ID}}",
+      "calendar_id": null,
+      "parent_recurring_event_id": null,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}",
+      "interaction": null,
+      "is_owner_public": true,
+      "can_subscribe_to_owner": null,
+      "is_subscribed_to_owner": null,
+      "owner_upcoming_events": null,
+      "invitation_stats": null
+    }
+  }
+}

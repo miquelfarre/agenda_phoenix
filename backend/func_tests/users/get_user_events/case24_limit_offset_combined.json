@@ -58,7 +58,7 @@
       {
         "name": "Event 3",
         "description": null,
-        "start_date": "2025-12-03T10:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -67,12 +67,17 @@
         "parent_recurring_event_id": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "interaction": null
+        "interaction": null,
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       },
       {
         "name": "Event 4",
         "description": null,
-        "start_date": "2025-12-04T10:00:00",
+        "start_date": "{{TIMESTAMP}}",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -81,7 +86,12 @@
         "parent_recurring_event_id": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "interaction": null
+        "interaction": null,
+        "is_owner_public": null,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "invitation_stats": null
       }
     ]
   }
