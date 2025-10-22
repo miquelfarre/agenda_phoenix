@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/events/9999",
+    "endpoint": "/events/9999?current_user_id=1",
     "body": {
       "name": "Evento fantasma",
       "start_date": "2025-11-15T20:00:00",

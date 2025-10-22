@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/users/1",
+    "endpoint": "/users/1?current_user_id=1",
     "body": {
       "contact_id": 1,
       "username": "sonia_updated",
@@ -30,6 +30,7 @@
       "auth_provider": "phone",
       "auth_id": "{{ID}}",
       "is_public": false,
+      "is_admin": false,
       "profile_picture_url": null,
       "id": "{{ID}}",
       "contact_id": "{{ID}}",

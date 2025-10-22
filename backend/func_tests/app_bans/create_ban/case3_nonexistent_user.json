@@ -5,13 +5,14 @@
       {
         "id": 1,
         "name": "Admin",
-        "phone": "+1234567890"
+        "phone": "+1234567890",
+        "is_admin": true
       }
     ]
   },
   "request": {
     "method": "POST",
-    "endpoint": "/app_bans",
+    "endpoint": "/app_bans?current_user_id=1",
     "body": {
       "user_id": 999,
       "banned_by": 1

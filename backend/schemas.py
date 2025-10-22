@@ -20,11 +20,12 @@ class ContactBase(BaseModel):
 
 
 class ContactCreate(ContactBase):
-    pass
+    owner_id: Optional[int] = None
 
 
 class ContactResponse(ContactBase):
     id: int
+    owner_id: Optional[int]
     created_at: datetime
     updated_at: datetime
 
@@ -41,6 +42,7 @@ class UserBase(BaseModel):
     auth_provider: str
     auth_id: str
     is_public: bool = False
+    is_admin: bool = False
     profile_picture_url: Optional[str] = None
 
 

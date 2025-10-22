@@ -2,11 +2,17 @@
   "name": "Update non-existent user (should fail)",
   "description": "Intentar actualizar un usuario que no existe",
   "setup": {
-    "users": []
+    "users": [
+      {
+        "id": 1,
+        "name": "Test User",
+        "phone": "+34600000000"
+      }
+    ]
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/users/9999",
+    "endpoint": "/users/9999?current_user_id=1",
     "body": {
       "username": "fantasma",
       "auth_provider": "phone",

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from crud import group
-from dependencies import get_db
+from dependencies import check_group_permission, get_db
 from schemas import GroupBase, GroupCreate, GroupResponse
 
 router = APIRouter(prefix="/groups", tags=["groups"])
@@ -62,8 +62,16 @@ async def create_group(group_data: GroupCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{group_id}", response_model=GroupResponse)
-async def update_group(group_id: int, group_data: GroupBase, db: Session = Depends(get_db)):
-    """Update an existing group"""
+async def update_group(group_id: int, group_data: GroupBase, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Update an existing group.
+
+    Requires current_user_id to verify permissions.
+    Only the group creator can update groups.
+    """
+    # Check permissions (creator only)
+    check_group_permission(group_id, current_user_id, db)
+
     db_group = group.get(db, id=group_id)
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
@@ -73,8 +81,16 @@ async def update_group(group_id: int, group_data: GroupBase, db: Session = Depen
 
 
 @router.delete("/{group_id}")
-async def delete_group(group_id: int, db: Session = Depends(get_db)):
-    """Delete a group"""
+async def delete_group(group_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a group.
+
+    Requires current_user_id to verify permissions.
+    Only the group creator can delete groups.
+    """
+    # Check permissions (creator only)
+    check_group_permission(group_id, current_user_id, db)
+
     db_group = group.get(db, id=group_id)
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")

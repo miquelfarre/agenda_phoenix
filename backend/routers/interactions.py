@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from crud import event, event_interaction, recurring_config, user
-from dependencies import check_user_not_banned, check_users_not_blocked, get_db
+from dependencies import check_user_not_banned, check_user_not_public, check_users_not_blocked, get_db, is_event_owner_or_admin
 from models import EventInteraction
 from schemas import EventInteractionBase, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventInteractionWithEventResponse
 
@@ -85,6 +85,32 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
     # Check if there's a block between event owner and invitee
     check_users_not_blocked(db_event.owner_id, interaction.user_id, db)
 
+    # VALIDATION: role='admin' can only be assigned with 'joined' interaction type
+    if interaction.role == "admin" and interaction.interaction_type != "joined":
+        raise HTTPException(
+            status_code=400,
+            detail="Admins must be added directly using 'joined' interaction type, not 'invited'. Use 'joined' with role='admin' to add an admin without requiring acceptance."
+        )
+
+    # VALIDATION: Public users cannot be admins
+    if interaction.role == "admin":
+        check_user_not_public(interaction.user_id, db, "be added as admin to events")
+
+    # VALIDATION: For 'joined' interactions, only the event owner can add users directly
+    if interaction.interaction_type == "joined":
+        # For 'joined' interactions, invited_by_user_id must be provided and must be the owner
+        if not interaction.invited_by_user_id:
+            raise HTTPException(
+                status_code=400,
+                detail="For 'joined' interaction type, 'invited_by_user_id' must be provided (the event owner)."
+            )
+
+        if interaction.invited_by_user_id != db_event.owner_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Only the event owner can add users directly with 'joined' interaction type."
+            )
+
     # VALIDATION: For invitations, verify the inviter has permission to invite
     if interaction.interaction_type == "invited" and interaction.invited_by_user_id:
         inviter_id = interaction.invited_by_user_id
@@ -145,20 +171,38 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
 
 
 @router.put("/{interaction_id}", response_model=EventInteractionResponse)
-async def update_interaction(interaction_id: int, interaction_data: EventInteractionBase, db: Session = Depends(get_db)):
-    """Update an existing interaction (typically to change type or status)"""
+async def update_interaction(interaction_id: int, interaction_data: EventInteractionBase, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Update an existing interaction (typically to change type or status).
+
+    Requires current_user_id to verify permissions.
+    Either the event owner/admin OR the user of the interaction can update it.
+    """
     db_interaction = event_interaction.get(db, id=interaction_id)
     if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
+
+    # Check if user is event owner/admin OR the interaction user
+    is_event_admin = is_event_owner_or_admin(db_interaction.event_id, current_user_id, db)
+    is_self = db_interaction.user_id == current_user_id
+
+    if not (is_event_admin or is_self):
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to update this interaction. Only the event owner/admin or the user themselves can do this."
+        )
 
     updated_interaction = event_interaction.update(db, db_obj=db_interaction, obj_in=interaction_data)
     return updated_interaction
 
 
 @router.patch("/{interaction_id}", response_model=EventInteractionResponse)
-async def patch_interaction(interaction_id: int, interaction: EventInteractionUpdate, db: Session = Depends(get_db)):
+async def patch_interaction(interaction_id: int, interaction: EventInteractionUpdate, current_user_id: int, db: Session = Depends(get_db)):
     """
-    Partially update an existing interaction (typically to change status) - PATCH alias for PUT
+    Partially update an existing interaction (typically to change status) - PATCH alias for PUT.
+
+    Requires current_user_id to verify permissions.
+    Only the user of the interaction can patch it (to accept/reject invitations).
 
     Special cascade behavior for recurring events:
     - If rejecting a base recurring event invitation (event_type='recurring' and status='rejected'),
@@ -167,6 +211,13 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     db_interaction = event_interaction.get(db, id=interaction_id)
     if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
+
+    # Check if user is the interaction user
+    if db_interaction.user_id != current_user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to update this interaction. Only the user themselves can accept/reject invitations."
+        )
 
     # Check if user is banned
     check_user_not_banned(db_interaction.user_id, db)
@@ -202,11 +253,26 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
 
 
 @router.delete("/{interaction_id}")
-async def delete_interaction(interaction_id: int, db: Session = Depends(get_db)):
-    """Delete an interaction"""
+async def delete_interaction(interaction_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Delete an interaction.
+
+    Requires current_user_id to verify permissions.
+    Either the event owner/admin OR the user of the interaction can delete it.
+    """
     db_interaction = event_interaction.get(db, id=interaction_id)
     if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
+
+    # Check if user is event owner/admin OR the interaction user
+    is_event_admin = is_event_owner_or_admin(db_interaction.event_id, current_user_id, db)
+    is_self = db_interaction.user_id == current_user_id
+
+    if not (is_event_admin or is_self):
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to delete this interaction. Only the event owner/admin or the user themselves can do this."
+        )
 
     event_interaction.delete(db, id=interaction_id)
     return {"message": "Interaction deleted successfully", "id": interaction_id}

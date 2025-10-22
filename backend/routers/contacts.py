@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from crud import contact
-from dependencies import get_db
+from dependencies import check_contact_permission, get_db
 from schemas import ContactCreate, ContactResponse
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
@@ -58,24 +58,40 @@ async def create_contact(contact_in: ContactCreate, db: Session = Depends(get_db
 
 
 @router.put("/{contact_id}", response_model=ContactResponse)
-async def update_contact(contact_id: int, contact_in: ContactCreate, db: Session = Depends(get_db)):
-    """Update an existing contact"""
+async def update_contact(contact_id: int, contact_in: ContactCreate, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Update an existing contact.
+
+    Requires current_user_id to verify permissions.
+    Only the contact owner can update contacts.
+    """
+    # Check permissions (owner only)
+    check_contact_permission(contact_id, current_user_id, db)
+
     # Get existing contact
     db_contact = contact.get(db, id=contact_id)
     if not db_contact:
         raise HTTPException(status_code=404, detail="Contact not found")
 
-    # Check if new phone already exists for another contact
+    # Check if new phone already exists for another contact of the same owner
     existing_contact = contact.get_by_phone(db, phone=contact_in.phone)
-    if existing_contact and existing_contact.id != contact_id:
-        raise HTTPException(status_code=400, detail="Phone number already exists")
+    if existing_contact and existing_contact.id != contact_id and existing_contact.owner_id == current_user_id:
+        raise HTTPException(status_code=400, detail="Phone number already exists in your contacts")
 
     return contact.update(db, db_obj=db_contact, obj_in=contact_in)
 
 
 @router.delete("/{contact_id}")
-async def delete_contact(contact_id: int, db: Session = Depends(get_db)):
-    """Delete a contact"""
+async def delete_contact(contact_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a contact.
+
+    Requires current_user_id to verify permissions.
+    Only the contact owner can delete contacts.
+    """
+    # Check permissions (owner only)
+    check_contact_permission(contact_id, current_user_id, db)
+
     deleted = contact.delete(db, id=contact_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Contact not found")

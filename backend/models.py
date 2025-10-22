@@ -9,18 +9,21 @@ from database import Base
 class Contact(Base):
     """
     Contact model - Phone contacts from user's device.
+    Each user has their own contact list.
     """
 
     __tablename__ = "contacts"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)  # Owner of this contact (NULL for contacts that represent registered users)
     name = Column(String(255), nullable=False)
-    phone = Column(String(50), unique=True, nullable=False, index=True)
+    phone = Column(String(50), unique=True, nullable=False, index=True)  # Keep phone unique globally
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    # Relationship
-    user = relationship("User", back_populates="contact", uselist=False)
+    # Relationships
+    owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_contacts")
+    user = relationship("User", foreign_keys="User.contact_id", back_populates="contact", uselist=False)
 
     def __repr__(self):
         return f"<Contact(id={self.id}, name='{self.name}', phone='{self.phone}')>"
@@ -28,6 +31,7 @@ class Contact(Base):
     def to_dict(self):
         return {
             "id": self.id,
+            "owner_id": self.owner_id,
             "name": self.name,
             "phone": self.phone,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -49,13 +53,15 @@ class User(Base):
     auth_provider = Column(String(20), nullable=False)  # 'phone' or 'instagram'
     auth_id = Column(String(255), nullable=False, unique=True, index=True)  # Phone number or Instagram user ID
     is_public = Column(Boolean, nullable=False, default=False, index=True)  # True for instagram users, False for phone users
+    is_admin = Column(Boolean, nullable=False, default=False, index=True)  # True for super admins
     profile_picture_url = Column(String(500), nullable=True)
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
-    contact = relationship("Contact", back_populates="user")
+    contact = relationship("Contact", foreign_keys=[contact_id], back_populates="user")
+    owned_contacts = relationship("Contact", foreign_keys="Contact.owner_id", back_populates="owner", cascade="all, delete-orphan")
     calendars = relationship("Calendar", back_populates="user", cascade="all, delete-orphan")
     calendar_memberships = relationship("CalendarMembership", foreign_keys="CalendarMembership.user_id", back_populates="user", cascade="all, delete-orphan")
     created_groups = relationship("Group", back_populates="creator", cascade="all, delete-orphan")
@@ -76,6 +82,7 @@ class User(Base):
             "auth_provider": self.auth_provider,
             "auth_id": self.auth_id,
             "is_public": self.is_public,
+            "is_admin": self.is_admin,
             "profile_picture_url": self.profile_picture_url,
             "last_login": self.last_login.isoformat() if self.last_login else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,

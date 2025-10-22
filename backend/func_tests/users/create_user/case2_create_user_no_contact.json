@@ -24,6 +24,7 @@
       "auth_provider": "instagram",
       "auth_id": "{{ID}}",
       "is_public": false,
+      "is_admin": false,
       "profile_picture_url": "https://example.com/profile.jpg",
       "id": "{{ID}}",
       "contact_id": null,

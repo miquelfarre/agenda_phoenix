@@ -117,22 +117,48 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-async def update_user(user_id: int, user_data: UserCreate, db: Session = Depends(get_db)):
-    """Update an existing user"""
+async def update_user(user_id: int, user_data: UserCreate, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Update an existing user.
+
+    Requires current_user_id to verify permissions.
+    Only the user themselves can update their account.
+    """
+    # Check if user exists first
     db_user = user.get(db, id=user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Check if user is updating their own account
+    if user_id != current_user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to update this user. You can only update your own account."
+        )
 
     updated_user = user.update(db, db_obj=db_user, obj_in=user_data)
     return updated_user
 
 
 @router.delete("/{user_id}")
-async def delete_user(user_id: int, db: Session = Depends(get_db)):
-    """Delete a user"""
+async def delete_user(user_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a user.
+
+    Requires current_user_id to verify permissions.
+    Only the user themselves can delete their account.
+    """
+    # Check if user exists first
     db_user = user.get(db, id=user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Check if user is deleting their own account
+    if user_id != current_user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to delete this user. You can only delete your own account."
+        )
 
     user.delete(db, id=user_id)
     return {"message": "User deleted successfully", "id": user_id}

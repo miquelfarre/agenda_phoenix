@@ -3,7 +3,7 @@
   "setup": {},
   "request": {
     "method": "PUT",
-    "endpoint": "/interactions/999",
+    "endpoint": "/interactions/999?current_user_id=1",
     "body": {
       "interaction_type": "invited",
       "status": "accepted"

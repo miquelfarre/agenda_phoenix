@@ -32,7 +32,7 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/calendar_memberships/1",
+    "endpoint": "/calendar_memberships/1?current_user_id=1",
     "body": {
       "role": "admin",
       "status": "accepted"

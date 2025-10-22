@@ -32,7 +32,7 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/interactions/1"
+    "endpoint": "/interactions/1?current_user_id=2"
   },
   "expected": {
     "status_code": 200,

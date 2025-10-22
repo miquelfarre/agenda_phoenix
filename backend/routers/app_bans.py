@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from crud import app_ban
-from dependencies import get_db
+from dependencies import check_is_admin, get_db
 from schemas import AppBanCreate, AppBanResponse
 
 router = APIRouter(prefix="/app_bans", tags=["app_bans"])
@@ -53,8 +53,16 @@ async def get_app_ban(ban_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=AppBanResponse, status_code=201)
-async def create_app_ban(ban_data: AppBanCreate, db: Session = Depends(get_db)):
-    """Ban a user from the entire application (admin only)"""
+async def create_app_ban(ban_data: AppBanCreate, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Ban a user from the entire application (admin only).
+
+    Requires current_user_id to verify permissions.
+    Only super admins can ban users from the application.
+    """
+    # Check if current user is admin
+    check_is_admin(current_user_id, db)
+
     # Create with validation (all checks in CRUD layer)
     db_ban, error = app_ban.create_with_validation(db, obj_in=ban_data)
 
@@ -69,8 +77,16 @@ async def create_app_ban(ban_data: AppBanCreate, db: Session = Depends(get_db)):
 
 
 @router.delete("/{ban_id}")
-async def delete_app_ban(ban_id: int, db: Session = Depends(get_db)):
-    """Unban a user from the application (admin only)"""
+async def delete_app_ban(ban_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Unban a user from the application (admin only).
+
+    Requires current_user_id to verify permissions.
+    Only super admins can unban users from the application.
+    """
+    # Check if current user is admin
+    check_is_admin(current_user_id, db)
+
     db_ban = app_ban.get(db, id=ban_id)
     if not db_ban:
         raise HTTPException(status_code=404, detail="App ban not found")

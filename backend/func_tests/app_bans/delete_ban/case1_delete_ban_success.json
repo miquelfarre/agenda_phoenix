@@ -5,7 +5,8 @@
       {
         "id": 1,
         "name": "Admin",
-        "phone": "+1234567890"
+        "phone": "+1234567890",
+        "is_admin": true
       },
       {
         "id": 2,
@@ -22,7 +23,7 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/app_bans/1"
+    "endpoint": "/app_bans/1?current_user_id=1"
   },
   "expected": {
     "status_code": 200,

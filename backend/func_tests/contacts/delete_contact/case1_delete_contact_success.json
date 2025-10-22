@@ -5,17 +5,21 @@
     "users": [
       {
         "id": 1,
-        "name": "Contacto a eliminar",
+        "name": "Alice",
+        "phone": "+34900000001"
+      }
+    ],
+    "contacts": [
+      {
+        "owner_id": 1,
+        "name": "Miquel",
         "phone": "+34606014680"
       }
     ]
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/contacts/1"
-  },
-  "expected_response": {
-    "status_code": 200
+    "endpoint": "/contacts/2?current_user_id=1"
   },
   "expected": {
     "status_code": 200,

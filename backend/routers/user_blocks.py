@@ -68,11 +68,23 @@ async def create_user_block(block_data: UserBlockCreate, db: Session = Depends(g
 
 
 @router.delete("/{block_id}")
-async def delete_user_block(block_id: int, db: Session = Depends(get_db)):
-    """Unblock a user"""
+async def delete_user_block(block_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Unblock a user.
+
+    Requires current_user_id to verify permissions.
+    Only the blocker can unblock a user.
+    """
     db_block = user_block.get(db, id=block_id)
     if not db_block:
         raise HTTPException(status_code=404, detail="User block not found")
+
+    # Check if user is the blocker
+    if db_block.blocker_user_id != current_user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to delete this block. Only the blocker can unblock."
+        )
 
     user_block.delete(db, id=block_id)
     return {"message": "User block deleted successfully", "id": block_id}

@@ -19,7 +19,7 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/groups/1"
+    "endpoint": "/groups/1?current_user_id=1"
   },
   "expected": {
     "status_code": 200,

@@ -51,12 +51,26 @@ def setup_test_data(db, setup_config: Dict):
                 contact_id=contact.id,
                 auth_provider=auth_provider,
                 auth_id=contact.phone,
-                is_public=is_public
+                is_public=is_public,
+                is_admin=user_config.get("is_admin", False)
             )
             db.add(user)
             db.flush()
 
             created_objects[f"user_{user.id}"] = user
+
+    # Crear contacts (agenda contacts with owner_id)
+    if "contacts" in setup_config:
+        for contact_config in setup_config["contacts"]:
+            contact = Contact(
+                id=contact_config.get("id"),
+                owner_id=contact_config["owner_id"],
+                name=contact_config["name"],
+                phone=contact_config["phone"]
+            )
+            db.add(contact)
+            db.flush()
+            created_objects[f"contact_{contact.id}"] = contact
 
     # Crear grupos
     if "groups" in setup_config:

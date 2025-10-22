@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from crud import event_ban
-from dependencies import get_db
+from dependencies import check_event_permission, get_db
 from schemas import EventBanCreate, EventBanResponse
 
 router = APIRouter(prefix="/event_bans", tags=["event_bans"])
@@ -68,11 +68,19 @@ async def create_event_ban(ban_data: EventBanCreate, db: Session = Depends(get_d
 
 
 @router.delete("/{ban_id}")
-async def delete_event_ban(ban_id: int, db: Session = Depends(get_db)):
-    """Unban a user from an event"""
+async def delete_event_ban(ban_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Unban a user from an event.
+
+    Requires current_user_id to verify permissions.
+    Only the event owner or event admins can unban users.
+    """
     db_ban = event_ban.get(db, id=ban_id)
     if not db_ban:
         raise HTTPException(status_code=404, detail="Event ban not found")
+
+    # Check permissions on the event
+    check_event_permission(db_ban.event_id, current_user_id, db)
 
     event_ban.delete(db, id=ban_id)
     return {"message": "Event ban deleted successfully", "id": ban_id}

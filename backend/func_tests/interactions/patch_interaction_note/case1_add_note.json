@@ -28,7 +28,7 @@
   },
   "request": {
     "method": "PATCH",
-    "endpoint": "/interactions/1",
+    "endpoint": "/interactions/1?current_user_id=1",
     "body": {
       "note": "llevar los patines"
     }

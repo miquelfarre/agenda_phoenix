@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from crud import calendar, calendar_membership
-from dependencies import get_db
+from dependencies import check_calendar_permission, get_db
 from schemas import CalendarBase, CalendarCreate, CalendarMembershipCreate, CalendarMembershipResponse, CalendarResponse
 
 router = APIRouter(prefix="/calendars", tags=["calendars"])
@@ -62,8 +62,16 @@ async def create_calendar(calendar_data: CalendarCreate, db: Session = Depends(g
 
 
 @router.put("/{calendar_id}", response_model=CalendarResponse)
-async def update_calendar(calendar_id: int, calendar_data: CalendarBase, db: Session = Depends(get_db)):
-    """Update an existing calendar"""
+async def update_calendar(calendar_id: int, calendar_data: CalendarBase, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Update an existing calendar.
+
+    Requires current_user_id to verify permissions.
+    Only the calendar owner or calendar admins can update calendars.
+    """
+    # Check permissions (owner or admin)
+    check_calendar_permission(calendar_id, current_user_id, db)
+
     db_calendar = calendar.get(db, id=calendar_id)
     if not db_calendar:
         raise HTTPException(status_code=404, detail="Calendar not found")
@@ -73,8 +81,16 @@ async def update_calendar(calendar_id: int, calendar_data: CalendarBase, db: Ses
 
 
 @router.delete("/{calendar_id}")
-async def delete_calendar(calendar_id: int, db: Session = Depends(get_db)):
-    """Delete a calendar"""
+async def delete_calendar(calendar_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a calendar.
+
+    Requires current_user_id to verify permissions.
+    Only the calendar owner or calendar admins can delete calendars.
+    """
+    # Check permissions (owner or admin)
+    check_calendar_permission(calendar_id, current_user_id, db)
+
     db_calendar = calendar.get(db, id=calendar_id)
     if not db_calendar:
         raise HTTPException(status_code=404, detail="Calendar not found")

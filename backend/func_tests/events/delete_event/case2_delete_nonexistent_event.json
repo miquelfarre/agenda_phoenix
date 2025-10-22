@@ -6,7 +6,7 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/events/9999"
+    "endpoint": "/events/9999?current_user_id=1"
   },
   "expected_response": {
     "status_code": 404

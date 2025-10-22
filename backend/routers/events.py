@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from crud import event, event_cancellation, event_interaction, user
-from dependencies import check_user_not_banned, get_db
+from dependencies import check_event_permission, check_user_not_banned, get_db
 from models import Contact, EventInteraction, User, UserBlock
 from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventResponse, UpcomingEventSummary
 
@@ -269,8 +269,16 @@ async def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{event_id}", response_model=EventResponse)
-async def update_event(event_id: int, event_data: EventCreate, db: Session = Depends(get_db)):
-    """Update an existing event"""
+async def update_event(event_id: int, event_data: EventCreate, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Update an existing event.
+
+    Requires current_user_id to verify permissions.
+    Only the event owner or event admins can update events.
+    """
+    # Check permissions (owner or admin)
+    check_event_permission(event_id, current_user_id, db)
+
     # Update with validation (all checks in CRUD layer)
     db_event, error = event.update_with_validation(db, event_id=event_id, obj_in=event_data)
 
@@ -285,15 +293,29 @@ async def update_event(event_id: int, event_data: EventCreate, db: Session = Dep
 
 
 @router.delete("/{event_id}")
-async def delete_event(event_id: int, delete_request: Optional[EventDeleteRequest] = None, db: Session = Depends(get_db)):
+async def delete_event(event_id: int, current_user_id: int, delete_request: Optional[EventDeleteRequest] = None, db: Session = Depends(get_db)):
     """
     Delete an event and optionally create cancellation notifications.
+
+    Requires current_user_id to verify permissions.
+    Only the event owner or event admins can delete events.
 
     If delete_request is provided with cancelled_by_user_id, creates EventCancellation records
     for all users with interactions to this event.
 
     For recurring events: deleting the base event also deletes all instances.
     """
+    # Check permissions (owner or admin)
+    check_event_permission(event_id, current_user_id, db)
+
+    # If delete_request is provided, verify cancelled_by_user_id matches current_user_id
+    if delete_request and delete_request.cancelled_by_user_id:
+        if delete_request.cancelled_by_user_id != current_user_id:
+            raise HTTPException(
+                status_code=400,
+                detail="cancelled_by_user_id in request body must match current_user_id"
+            )
+
     # Delete with cancellations (using CRUD method)
     cancelled_by = delete_request.cancelled_by_user_id if delete_request else None
     cancellation_msg = delete_request.cancellation_message if delete_request else None

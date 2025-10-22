@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from crud import recurring_config
-from dependencies import get_db
+from dependencies import check_event_permission, get_db
 from schemas import RecurringEventConfigBase, RecurringEventConfigCreate, RecurringEventConfigResponse
 
 router = APIRouter(prefix="/recurring_configs", tags=["recurring_configs"])
@@ -66,22 +66,38 @@ async def create_recurring_config(config_data: RecurringEventConfigCreate, db: S
 
 
 @router.put("/{config_id}", response_model=RecurringEventConfigResponse)
-async def update_recurring_config(config_id: int, config_data: RecurringEventConfigBase, db: Session = Depends(get_db)):
-    """Update an existing recurring config"""
+async def update_recurring_config(config_id: int, config_data: RecurringEventConfigBase, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Update an existing recurring config.
+
+    Requires current_user_id to verify permissions.
+    Only the event owner or event admins can update recurring configs.
+    """
     db_config = recurring_config.get(db, id=config_id)
     if not db_config:
         raise HTTPException(status_code=404, detail="Recurring config not found")
+
+    # Check permissions on the event
+    check_event_permission(db_config.event_id, current_user_id, db)
 
     updated_config = recurring_config.update(db, db_obj=db_config, obj_in=config_data)
     return updated_config
 
 
 @router.delete("/{config_id}")
-async def delete_recurring_config(config_id: int, db: Session = Depends(get_db)):
-    """Delete a recurring config"""
+async def delete_recurring_config(config_id: int, current_user_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a recurring config.
+
+    Requires current_user_id to verify permissions.
+    Only the event owner or event admins can delete recurring configs.
+    """
     db_config = recurring_config.get(db, id=config_id)
     if not db_config:
         raise HTTPException(status_code=404, detail="Recurring config not found")
+
+    # Check permissions on the event
+    check_event_permission(db_config.event_id, current_user_id, db)
 
     recurring_config.delete(db, id=config_id)
     return {"message": "Recurring config deleted successfully", "id": config_id}

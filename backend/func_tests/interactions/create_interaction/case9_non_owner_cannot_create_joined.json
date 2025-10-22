@@ -1,5 +1,5 @@
 {
-  "description": "Admin with accepted status can invite others",
+  "description": "Non-owner cannot create 'joined' interaction (only owner can add directly)",
   "setup": {
     "users": [
       {
@@ -21,8 +21,8 @@
     "events": [
       {
         "id": 100,
-        "name": "Company Meeting",
-        "start_date": "2025-12-15T09:00:00",
+        "name": "Alice's Event",
+        "start_date": "2025-12-20T10:00:00",
         "owner_id": 1
       }
     ],
@@ -43,29 +43,16 @@
     "body": {
       "event_id": 100,
       "user_id": 3,
-      "interaction_type": "invited",
-      "status": "pending",
+      "interaction_type": "joined",
+      "role": "member",
       "invited_by_user_id": 2
     }
   },
   "expected": {
-    "status_code": 201,
-    "note": "Bob (admin with accepted status) can invite Charlie to the event",
+    "status_code": 403,
+    "note": "Bob (admin but not owner) cannot add Charlie with 'joined' type - only owner can",
     "body": {
-      "interaction_type": "invited",
-      "status": "pending",
-      "role": null,
-      "note": null,
-      "rejection_message": null,
-      "read_at": null,
-      "is_new": true,
-      "id": "{{ID}}",
-      "event_id": "{{ID}}",
-      "user_id": "{{ID}}",
-      "invited_by_user_id": "{{ID}}",
-      "invited_via_group_id": null,
-      "created_at": "{{TIMESTAMP}}",
-      "updated_at": "{{TIMESTAMP}}"
+      "detail": "Only the event owner can add users directly with 'joined' interaction type."
     }
   }
 }

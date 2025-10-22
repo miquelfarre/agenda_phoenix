@@ -1,29 +1,21 @@
 {
-  "description": "Create app ban with nonexistent admin/banner returns 404",
+  "description": "Create ban with nonexistent admin (banner user doesn't exist)",
   "setup": {
-    "users": [
-      {
-        "id": 2,
-        "name": "Bob",
-        "phone": "+1234567891"
-      }
-    ]
+    "users": []
   },
   "request": {
     "method": "POST",
-    "endpoint": "/app_bans",
+    "endpoint": "/app_bans?current_user_id=1",
     "body": {
       "user_id": 2,
-      "banned_by": 999
+      "banned_by": 1,
+      "reason": "Test"
     }
   },
   "expected": {
     "status_code": 404,
-    "body_contains": [
-      "Banner user (admin) not found"
-    ],
     "body": {
-      "detail": "Banner user (admin) not found"
+      "detail": "User not found"
     }
   }
 }
