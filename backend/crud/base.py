@@ -157,7 +157,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Returns:
             Deleted model instance or None if not found
         """
-        obj = db.query(self.model).get(id)
+        # Use db.get() instead of query().get() for SQLAlchemy 2.0+ compatibility
+        obj = db.get(self.model, id)
         if obj:
             db.delete(obj)
             db.commit()
@@ -176,7 +177,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Returns:
             True if exists, False otherwise
         """
-        return db.query(db.query(self.model).filter(self.model.id == id).exists()).scalar()
+        return db.query(self.model.id).filter(self.model.id == id).first() is not None
 
     def count(self, db: Session, filters: Optional[Dict[str, Any]] = None) -> int:
         """

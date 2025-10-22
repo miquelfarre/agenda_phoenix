@@ -29,7 +29,7 @@ class CRUDContact(CRUDBase[Contact, ContactCreate, ContactBase]):
 
     def exists_phone(self, db: Session, phone: str) -> bool:
         """
-        Check if phone number already exists.
+        Check if phone number already exists (optimized).
 
         Args:
             db: Database session
@@ -38,7 +38,7 @@ class CRUDContact(CRUDBase[Contact, ContactCreate, ContactBase]):
         Returns:
             True if exists, False otherwise
         """
-        return db.query(db.query(Contact).filter(Contact.phone == phone).exists()).scalar()
+        return db.query(Contact.id).filter(Contact.phone == phone).first() is not None
 
 
 # Singleton instance

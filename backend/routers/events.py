@@ -10,34 +10,39 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from crud import event, event_cancellation, event_interaction
 from dependencies import check_user_not_banned, get_db
-from models import CalendarMembership, Contact, Event, EventCancellation, EventCancellationView, EventInteraction, User, UserBlock
+from models import Contact, User, UserBlock
 from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventResponse
 
 router = APIRouter(prefix="/events", tags=["events"])
 
 
 @router.get("", response_model=List[EventResponse])
-async def get_events(owner_id: Optional[int] = None, calendar_id: Optional[int] = None, current_user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: Optional[str] = "start_date", order_dir: str = "asc", db: Session = Depends(get_db)):
+async def get_events(
+    owner_id: Optional[int] = None,
+    calendar_id: Optional[int] = None,
+    current_user_id: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: Optional[str] = "start_date",
+    order_dir: str = "asc",
+    db: Session = Depends(get_db)
+):
     """Get all events, optionally filtered by owner_id or calendar_id"""
-    query = db.query(Event)
-    if owner_id:
-        query = query.filter(Event.owner_id == owner_id)
-    if calendar_id:
-        query = query.filter(Event.calendar_id == calendar_id)
+    # Validate and limit pagination
+    limit = max(1, min(200, limit))
+    offset = max(0, offset)
 
-    # Apply ordering safely
-    order_col = getattr(Event, order_by) if order_by and hasattr(Event, str(order_by)) else Event.start_date if hasattr(Event, "start_date") else Event.id
-    if order_dir and order_dir.lower() == "desc":
-        query = query.order_by(order_col.desc())
-    else:
-        query = query.order_by(order_col.asc())
-
-    # Pagination
-    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
-
-    events = query.all()
-    return events
+    return event.get_multi_filtered(
+        db,
+        owner_id=owner_id,
+        calendar_id=calendar_id,
+        skip=offset,
+        limit=limit,
+        order_by=order_by or "start_date",
+        order_dir=order_dir
+    )
 
 
 @router.get("/{event_id}", response_model=EventResponse)
@@ -50,60 +55,40 @@ async def get_event(event_id: int, current_user_id: Optional[int] = None, db: Se
     - Has EventInteraction (invited or subscribed)
     - Member of calendar containing the event (owner/admin with accepted status)
     """
-    event = db.query(Event).filter(Event.id == event_id).first()
-    if not event:
+    db_event = event.get(db, id=event_id)
+    if not db_event:
         raise HTTPException(status_code=404, detail="Event not found")
 
     # Validate access if current_user_id provided
     if current_user_id is not None:
         # Check if user is banned
-        from dependencies import check_user_not_banned
-
         check_user_not_banned(current_user_id, db)
-        has_access = False
 
-        # Check 1: Is owner
-        if event.owner_id == current_user_id:
-            has_access = True
-
-        # Check 2: Has EventInteraction (invited or subscribed)
-        if not has_access:
-            interaction = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id).first()
-            if interaction:
-                has_access = True
-
-        # Check 3: Member of calendar containing the event
-        if not has_access and event.calendar_id:
-            calendar_membership = db.query(CalendarMembership).filter(CalendarMembership.calendar_id == event.calendar_id, CalendarMembership.user_id == current_user_id, CalendarMembership.status == "accepted", CalendarMembership.role.in_(["owner", "admin"])).first()
-            if calendar_membership:
-                has_access = True
-
+        # Check access using CRUD method
+        has_access = event.check_user_access(db, event_id=event_id, user_id=current_user_id)
         if not has_access:
             raise HTTPException(status_code=403, detail="You do not have permission to view this event")
 
-    return event
+    return db_event
 
 
 @router.get("/{event_id}/interactions", response_model=List[EventInteractionResponse])
 async def get_event_interactions(event_id: int, db: Session = Depends(get_db)):
     """Get all interactions for a specific event"""
-    event = db.query(Event).filter(Event.id == event_id).first()
-    if not event:
+    if not event.exists_event(db, event_id=event_id):
         raise HTTPException(status_code=404, detail="Event not found")
 
-    interactions = db.query(EventInteraction).filter(EventInteraction.event_id == event_id).all()
-    return interactions
+    return event_interaction.get_by_event(db, event_id=event_id)
 
 
 @router.get("/{event_id}/interactions-enriched", response_model=List[EventInteractionEnrichedResponse])
 async def get_event_interactions_enriched(event_id: int, db: Session = Depends(get_db)):
     """Get all interactions for a specific event with enriched user information"""
-    event = db.query(Event).filter(Event.id == event_id).first()
-    if not event:
+    if not event.exists_event(db, event_id=event_id):
         raise HTTPException(status_code=404, detail="Event not found")
 
-    # Use JOIN to get all data in a single query
-    results = db.query(EventInteraction, User, Contact).outerjoin(User, EventInteraction.user_id == User.id).outerjoin(Contact, User.contact_id == Contact.id).filter(EventInteraction.event_id == event_id).all()
+    # Use CRUD to get enriched interactions (single JOIN query)
+    results = event_interaction.get_enriched_by_event(db, event_id=event_id)
 
     # Build enriched responses
     enriched = []
@@ -148,24 +133,17 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
 @router.get("/{event_id}/available-invitees", response_model=List[AvailableInviteeResponse])
 async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     """Get list of users available to be invited to an event (excludes owner, already invited users, blocked users, and public users)"""
-    event = db.query(Event).filter(Event.id == event_id).first()
-    if not event:
+    db_event = event.get(db, id=event_id)
+    if not db_event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    # Get user IDs that already have interactions with this event (in a single subquery)
-    # Use scalar_subquery() for SQLAlchemy 2.0+ compatibility
-    invited_user_ids_subquery = db.query(EventInteraction.user_id).filter(EventInteraction.event_id == event_id).scalar_subquery()
-
-    # Get user IDs that have mutual blocks with the event owner
-    blocked_user_ids_subquery = db.query(UserBlock.blocked_user_id).filter(UserBlock.blocker_user_id == event.owner_id).union(db.query(UserBlock.blocker_user_id).filter(UserBlock.blocked_user_id == event.owner_id)).scalar_subquery()
-
-    # Get all users NOT in the invited list, NOT the owner, NOT blocked, NOT public, with Contact info in one query
-    results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id).filter(User.id != event.owner_id, User.is_public == False, ~User.id.in_(invited_user_ids_subquery), ~User.id.in_(blocked_user_ids_subquery)).all()
+    # Use CRUD to get available invitees
+    results = event.get_available_invitees(db, event_id=event_id)
 
     # Build available invitees list
     available = []
-    for user, contact in results:
-        username = user.username
+    for user_obj, contact in results:
+        username = user_obj.username
         contact_name = contact.name if contact else None
 
         # Build display name
@@ -176,69 +154,45 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
         elif contact_name:
             display_name = contact_name
         else:
-            display_name = f"Usuario #{user.id}"
+            display_name = f"Usuario #{user_obj.id}"
 
-        available.append({"id": user.id, "username": username, "contact_name": contact_name, "display_name": display_name})
+        available.append({"id": user_obj.id, "username": username, "contact_name": contact_name, "display_name": display_name})
 
     return available
 
 
 @router.post("", response_model=EventResponse, status_code=201)
-async def create_event(event: EventCreate, db: Session = Depends(get_db)):
-    """Create a new event."""
-    owner = db.query(User).filter(User.id == event.owner_id).first()
-    if not owner:
-        raise HTTPException(status_code=404, detail="Owner user not found")
+async def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
+    """Create a new event"""
+    # Create with validation (all checks in CRUD layer)
+    db_event, error, error_detail = event.create_with_validation(db, obj_in=event_data)
 
-    # Check if owner is banned
-    check_user_not_banned(event.owner_id, db)
+    if error:
+        # Map error messages to appropriate status codes
+        if "not found" in error.lower():
+            raise HTTPException(status_code=404, detail=error)
+        elif "banned" in error.lower():
+            # Use detailed error info if available
+            raise HTTPException(status_code=403, detail=error_detail if error_detail else error)
+        else:
+            raise HTTPException(status_code=400, detail=error)
 
-    # Ensure dates are timezone-aware before saving to database
-    event_data = event.model_dump()
-    if event_data["start_date"].tzinfo is None:
-        event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
-    if event_data.get("end_date") and event_data["end_date"].tzinfo is None:
-        event_data["end_date"] = event_data["end_date"].replace(tzinfo=timezone.utc)
-
-    # VALIDATION: Only recurring events can have end_date
-    if event_data.get("event_type") == "regular":
-        event_data["end_date"] = None
-
-    db_event = Event(**event_data)
-    db.add(db_event)
-    db.commit()
-    db.refresh(db_event)
     return db_event
 
 
 @router.put("/{event_id}", response_model=EventResponse)
-async def update_event(event_id: int, event: EventCreate, db: Session = Depends(get_db)):
+async def update_event(event_id: int, event_data: EventCreate, db: Session = Depends(get_db)):
     """Update an existing event"""
-    db_event = db.query(Event).filter(Event.id == event_id).first()
-    if not db_event:
-        raise HTTPException(status_code=404, detail="Event not found")
+    # Update with validation (all checks in CRUD layer)
+    db_event, error = event.update_with_validation(db, event_id=event_id, obj_in=event_data)
 
-    if event.owner_id != db_event.owner_id:
-        owner = db.query(User).filter(User.id == event.owner_id).first()
-        if not owner:
-            raise HTTPException(status_code=404, detail="Owner user not found")
+    if error:
+        # Map error messages to appropriate status codes
+        if "not found" in error.lower():
+            raise HTTPException(status_code=404, detail=error)
+        else:
+            raise HTTPException(status_code=400, detail=error)
 
-    # Ensure dates are timezone-aware before updating
-    event_data = event.model_dump()
-    if event_data["start_date"].tzinfo is None:
-        event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
-    if event_data.get("end_date") and event_data["end_date"].tzinfo is None:
-        event_data["end_date"] = event_data["end_date"].replace(tzinfo=timezone.utc)
-
-    # VALIDATION: Only recurring events can have end_date
-    if event_data.get("event_type") == "regular":
-        event_data["end_date"] = None
-
-    for key, value in event_data.items():
-        setattr(db_event, key, value)
-
-    db.commit()
-    db.refresh(db_event)
     return db_event
 
 
@@ -252,45 +206,20 @@ async def delete_event(event_id: int, delete_request: Optional[EventDeleteReques
 
     For recurring events: deleting the base event also deletes all instances.
     """
-    db_event = db.query(Event).filter(Event.id == event_id).first()
-    if not db_event:
-        raise HTTPException(status_code=404, detail="Event not found")
+    # Delete with cancellations (using CRUD method)
+    cancelled_by = delete_request.cancelled_by_user_id if delete_request else None
+    cancellation_msg = delete_request.cancellation_message if delete_request else None
 
-    events_to_delete = [db_event]
+    deleted_count, error = event.delete_with_cancellations(
+        db,
+        event_id=event_id,
+        cancelled_by_user_id=cancelled_by,
+        cancellation_message=cancellation_msg
+    )
 
-    # If it's a recurring base event, get all instances
-    if db_event.event_type == "recurring":
-        instances = db.query(Event).filter(
-            Event.parent_recurring_event_id == event_id
-        ).all()
-        events_to_delete.extend(instances)
+    if error:
+        raise HTTPException(status_code=404, detail=error)
 
-    # Create cancellation records if requested
-    if delete_request and delete_request.cancelled_by_user_id:
-        for event in events_to_delete:
-            # Get all users with interactions to this event
-            interactions = db.query(EventInteraction).filter(
-                EventInteraction.event_id == event.id
-            ).all()
-
-            if interactions:
-                # Create cancellation record
-                cancellation = EventCancellation(
-                    event_id=event.id,
-                    event_name=event.name,
-                    cancelled_by_user_id=delete_request.cancelled_by_user_id,
-                    message=delete_request.cancellation_message
-                )
-                db.add(cancellation)
-                db.flush()  # Get the cancellation ID
-
-    # Delete all events
-    for event in events_to_delete:
-        db.delete(event)
-
-    db.commit()
-
-    deleted_count = len(events_to_delete)
     return {
         "message": f"Event deleted successfully ({'with ' + str(deleted_count - 1) + ' instances' if deleted_count > 1 else 'single event'})",
         "id": event_id,
@@ -306,30 +235,7 @@ async def get_event_cancellations(user_id: int, db: Session = Depends(get_db)):
     Returns cancellations for events where the user had an interaction
     and hasn't viewed the cancellation message yet.
     """
-    # Get all cancellations that this user hasn't viewed
-    viewed_cancellation_ids = db.query(EventCancellationView.cancellation_id).filter(
-        EventCancellationView.user_id == user_id
-    ).all()
-    viewed_ids = [v[0] for v in viewed_cancellation_ids]
-
-    # Get cancellations for events where user had interactions
-    # and hasn't viewed the cancellation
-    cancellations = db.query(EventCancellation).filter(
-        EventCancellation.id.not_in(viewed_ids) if viewed_ids else True
-    ).all()
-
-    # Filter to only cancellations where the user had an interaction with the event
-    # Note: We can't use a JOIN because the event might be deleted
-    # So we need to check if user had any interaction with that event_id
-    user_cancellations = []
-    for cancellation in cancellations:
-        # Check if this cancellation's event_id was ever in the user's interactions
-        # This requires checking deleted interactions, but we're storing event_id in cancellation
-        # For now, return all unviewed cancellations for simplicity
-        # In production, you might want to add a junction table for affected users
-        user_cancellations.append(cancellation)
-
-    return user_cancellations
+    return event_cancellation.get_unviewed_by_user(db, user_id=user_id)
 
 
 @router.post("/cancellations/{cancellation_id}/view")
@@ -339,27 +245,9 @@ async def mark_cancellation_as_viewed(cancellation_id: int, user_id: int, db: Se
 
     After viewing, the cancellation will no longer appear in the user's list.
     """
-    # Check if cancellation exists
-    cancellation = db.query(EventCancellation).filter(EventCancellation.id == cancellation_id).first()
-    if not cancellation:
-        raise HTTPException(status_code=404, detail="Cancellation not found")
+    view_id, error = event_cancellation.mark_as_viewed(db, cancellation_id=cancellation_id, user_id=user_id)
 
-    # Check if already viewed
-    existing_view = db.query(EventCancellationView).filter(
-        EventCancellationView.cancellation_id == cancellation_id,
-        EventCancellationView.user_id == user_id
-    ).first()
+    if error:
+        raise HTTPException(status_code=404, detail=error)
 
-    if existing_view:
-        return {"message": "Cancellation already marked as viewed", "id": existing_view.id}
-
-    # Create view record
-    view = EventCancellationView(
-        cancellation_id=cancellation_id,
-        user_id=user_id
-    )
-    db.add(view)
-    db.commit()
-    db.refresh(view)
-
-    return {"message": "Cancellation marked as viewed", "id": view.id}
+    return {"message": "Cancellation marked as viewed", "id": view_id}

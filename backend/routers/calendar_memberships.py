@@ -9,8 +9,8 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from crud import calendar_membership
 from dependencies import get_db
-from models import Calendar, CalendarMembership, User
 from schemas import CalendarMembershipBase, CalendarMembershipCreate, CalendarMembershipEnrichedResponse, CalendarMembershipResponse
 
 router = APIRouter(prefix="/calendar_memberships", tags=["calendar_memberships"])
@@ -18,154 +18,121 @@ router = APIRouter(prefix="/calendar_memberships", tags=["calendar_memberships"]
 
 @router.get("", response_model=List[Union[CalendarMembershipResponse, CalendarMembershipEnrichedResponse]])
 async def get_calendar_memberships(
-    calendar_id: Optional[int] = None, user_id: Optional[int] = None, status: Optional[str] = None, enriched: bool = False, exclude_owned: bool = False, limit: int = 50, offset: int = 0, order_by: Optional[str] = "created_at", order_dir: str = "desc", db: Session = Depends(get_db)
+    calendar_id: Optional[int] = None,
+    user_id: Optional[int] = None,
+    status: Optional[str] = None,
+    enriched: bool = False,
+    exclude_owned: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+    order_by: Optional[str] = "created_at",
+    order_dir: str = "desc",
+    db: Session = Depends(get_db)
 ):
     """Get all calendar memberships, optionally filtered, optionally enriched with calendar info
 
     Args:
-        exclude_owned: If True and user_id is provided, exclude calendars where user_id is the calendar owner
+        calendar_id: Filter by calendar ID
+        user_id: Filter by user ID
+        status: Filter by status (pending, accepted, rejected)
+        enriched: If True, include calendar info (name, owner_id)
+        exclude_owned: If True and user_id provided, exclude calendars owned by user
+        limit: Max results (1-200)
+        offset: Skip results
+        order_by: Column to order by
+        order_dir: Order direction (asc/desc)
     """
-    query = db.query(CalendarMembership)
-    if calendar_id:
-        query = query.filter(CalendarMembership.calendar_id == calendar_id)
-    if user_id:
-        query = query.filter(CalendarMembership.user_id == user_id)
-    if status:
-        query = query.filter(CalendarMembership.status == status)
+    # Validate and limit pagination
+    limit = max(1, min(200, limit))
+    offset = max(0, offset)
 
-    # Apply ordering and pagination to base query (used when not enriched)
-    order_col = getattr(CalendarMembership, order_by) if order_by and hasattr(CalendarMembership, str(order_by)) else CalendarMembership.created_at if hasattr(CalendarMembership, "created_at") else CalendarMembership.id
-    if order_dir and order_dir.lower() == "asc":
-        query = query.order_by(order_col.asc())
-    else:
-        query = query.order_by(order_col.desc())
-
-    memberships = query.all()
-
-    # If enriched, add calendar information
+    # If enriched, return with calendar information
     if enriched:
-        # Use JOIN to get calendar data efficiently
-        results = db.query(CalendarMembership, Calendar).join(Calendar, CalendarMembership.calendar_id == Calendar.id)
+        results = calendar_membership.get_enriched(
+            db,
+            calendar_id=calendar_id,
+            user_id=user_id,
+            status=status,
+            exclude_owned=exclude_owned,
+            skip=offset,
+            limit=limit,
+            order_by=order_by or "created_at",
+            order_dir=order_dir
+        )
 
-        if calendar_id:
-            results = results.filter(CalendarMembership.calendar_id == calendar_id)
-        if user_id:
-            results = results.filter(CalendarMembership.user_id == user_id)
-            # If exclude_owned, filter out calendars where user_id is the owner
-            if exclude_owned:
-                results = results.filter(Calendar.owner_id != user_id)
-        if status:
-            results = results.filter(CalendarMembership.status == status)
-
-        # Apply ordering and pagination on enriched path
-        order_col = getattr(CalendarMembership, order_by) if order_by and hasattr(CalendarMembership, str(order_by)) else CalendarMembership.created_at if hasattr(CalendarMembership, "created_at") else CalendarMembership.id
-        if order_dir and order_dir.lower() == "asc":
-            results = results.order_by(order_col.asc())
-        else:
-            results = results.order_by(order_col.desc())
-
-        results = results.offset(max(0, offset)).limit(max(1, min(200, limit))).all()
-
-        enriched_memberships = []
-        for membership, calendar in results:
-            # Create CalendarMembershipEnrichedResponse instance directly
-            enriched_memberships.append(
-                CalendarMembershipEnrichedResponse(
-                    id=membership.id,
-                    calendar_id=membership.calendar_id,
-                    user_id=membership.user_id,
-                    role=membership.role,
-                    status=membership.status,
-                    invited_by_user_id=membership.invited_by_user_id,
-                    created_at=membership.created_at,
-                    updated_at=membership.updated_at,
-                    calendar_name=calendar.name,
-                    calendar_owner_id=calendar.owner_id,
-                )
+        # Transform to enriched response
+        return [
+            CalendarMembershipEnrichedResponse(
+                id=membership.id,
+                calendar_id=membership.calendar_id,
+                user_id=membership.user_id,
+                role=membership.role,
+                status=membership.status,
+                invited_by_user_id=membership.invited_by_user_id,
+                created_at=membership.created_at,
+                updated_at=membership.updated_at,
+                calendar_name=calendar.name,
+                calendar_owner_id=calendar.owner_id,
             )
+            for membership, calendar in results
+        ]
 
-        return enriched_memberships
-
-    # For non-enriched, apply exclude_owned filter if needed
-    if exclude_owned and user_id:
-        # Use single JOIN-based query to avoid N+1
-        q = db.query(CalendarMembership).join(Calendar, CalendarMembership.calendar_id == Calendar.id)
-        if calendar_id:
-            q = q.filter(CalendarMembership.calendar_id == calendar_id)
-        q = q.filter(CalendarMembership.user_id == user_id)
-        if status:
-            q = q.filter(CalendarMembership.status == status)
-        q = q.filter(Calendar.owner_id != user_id)
-
-        # Apply ordering and pagination
-        order_col = getattr(CalendarMembership, order_by) if order_by and hasattr(CalendarMembership, str(order_by)) else CalendarMembership.created_at if hasattr(CalendarMembership, "created_at") else CalendarMembership.id
-        if order_dir and order_dir.lower() == "asc":
-            q = q.order_by(order_col.asc())
-        else:
-            q = q.order_by(order_col.desc())
-
-        q = q.offset(max(0, offset)).limit(max(1, min(200, limit)))
-        return q.all()
-
-    return memberships
+    # Return plain memberships
+    return calendar_membership.get_multi_filtered(
+        db,
+        calendar_id=calendar_id,
+        user_id=user_id,
+        status=status,
+        exclude_owned=exclude_owned,
+        skip=offset,
+        limit=limit,
+        order_by=order_by or "created_at",
+        order_dir=order_dir
+    )
 
 
 @router.get("/{membership_id}", response_model=CalendarMembershipResponse)
 async def get_calendar_membership(membership_id: int, db: Session = Depends(get_db)):
     """Get a single calendar membership by ID"""
-    membership = db.query(CalendarMembership).filter(CalendarMembership.id == membership_id).first()
+    membership = calendar_membership.get(db, id=membership_id)
     if not membership:
         raise HTTPException(status_code=404, detail="Calendar membership not found")
     return membership
 
 
 @router.post("", response_model=CalendarMembershipResponse, status_code=201)
-async def create_calendar_membership(membership: CalendarMembershipCreate, db: Session = Depends(get_db)):
+async def create_calendar_membership(membership_data: CalendarMembershipCreate, db: Session = Depends(get_db)):
     """Add a user to a calendar (invite or add directly)"""
-    # Verify calendar exists
-    calendar = db.query(Calendar).filter(Calendar.id == membership.calendar_id).first()
-    if not calendar:
-        raise HTTPException(status_code=404, detail="Calendar not found")
+    # Create with validation (all checks in CRUD layer)
+    db_membership, error = calendar_membership.create_with_validation(db, obj_in=membership_data)
 
-    # Verify user exists
-    user = db.query(User).filter(User.id == membership.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    if error:
+        # Map error messages to appropriate status codes
+        if "not found" in error.lower():
+            raise HTTPException(status_code=404, detail=error)
+        else:
+            raise HTTPException(status_code=400, detail=error)
 
-    # Check if membership already exists
-    existing = db.query(CalendarMembership).filter(CalendarMembership.calendar_id == membership.calendar_id, CalendarMembership.user_id == membership.user_id).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="User already has a membership in this calendar")
-
-    db_membership = CalendarMembership(**membership.model_dump())
-    db.add(db_membership)
-    db.commit()
-    db.refresh(db_membership)
     return db_membership
 
 
 @router.put("/{membership_id}", response_model=CalendarMembershipResponse)
-async def update_calendar_membership(membership_id: int, membership: CalendarMembershipBase, db: Session = Depends(get_db)):
+async def update_calendar_membership(membership_id: int, membership_data: CalendarMembershipBase, db: Session = Depends(get_db)):
     """Update a calendar membership (e.g., change status from pending to accepted, or change role)"""
-    db_membership = db.query(CalendarMembership).filter(CalendarMembership.id == membership_id).first()
+    db_membership = calendar_membership.get(db, id=membership_id)
     if not db_membership:
         raise HTTPException(status_code=404, detail="Calendar membership not found")
 
-    for key, value in membership.model_dump().items():
-        setattr(db_membership, key, value)
-
-    db.commit()
-    db.refresh(db_membership)
-    return db_membership
+    updated_membership = calendar_membership.update(db, db_obj=db_membership, obj_in=membership_data)
+    return updated_membership
 
 
 @router.delete("/{membership_id}")
 async def delete_calendar_membership(membership_id: int, db: Session = Depends(get_db)):
     """Remove a user from a calendar"""
-    db_membership = db.query(CalendarMembership).filter(CalendarMembership.id == membership_id).first()
+    db_membership = calendar_membership.get(db, id=membership_id)
     if not db_membership:
         raise HTTPException(status_code=404, detail="Calendar membership not found")
 
-    db.delete(db_membership)
-    db.commit()
+    calendar_membership.delete(db, id=membership_id)
     return {"message": "Calendar membership deleted successfully", "id": membership_id}

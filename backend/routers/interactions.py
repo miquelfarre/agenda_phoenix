@@ -7,11 +7,11 @@ Handles all event interaction endpoints including invitations and subscriptions.
 from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from crud import event, event_interaction, recurring_config, user
 from dependencies import check_user_not_banned, check_users_not_blocked, get_db
-from models import Event, EventInteraction, RecurringEventConfig, User
+from models import EventInteraction
 from schemas import EventInteractionBase, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventInteractionWithEventResponse
 
 router = APIRouter(prefix="/interactions", tags=["interactions"])
@@ -30,109 +30,44 @@ async def get_interactions(
     - Regular events (not instances of recurring events)
     - Instances of recurring events ONLY if the parent recurring event invitation is NOT pending
     """
-    # OPTIMIZATION: Use JOIN from the start if enriched=True or if we need hierarchical filtering
-    needs_event_data = enriched or (user_id and interaction_type == "invited" and status == "pending")
-
-    if needs_event_data:
-        # Single optimized query with JOIN
-        query = db.query(EventInteraction, Event).join(Event, EventInteraction.event_id == Event.id)
-    else:
-        query = db.query(EventInteraction)
-
-    # Apply filters
-    if event_id:
-        query = query.filter(EventInteraction.event_id == event_id)
-    if user_id:
-        query = query.filter(EventInteraction.user_id == user_id)
-    if interaction_type:
-        query = query.filter(EventInteraction.interaction_type == interaction_type)
-    if status:
-        query = query.filter(EventInteraction.status == status)
-
-    # OPTIMIZATION: Apply hierarchical filtering in SQL instead of Python
-    if user_id and interaction_type == "invited" and status == "pending":
-        # Subquery to get config IDs of base recurring events where THIS USER has a pending invitation
-        pending_recurring_config_subquery = (
-            select(RecurringEventConfig.id)
-            .join(Event, RecurringEventConfig.event_id == Event.id)
-            .join(EventInteraction, EventInteraction.event_id == Event.id)
-            .where(Event.event_type == "recurring", EventInteraction.user_id == user_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "pending")
-        )
-
-        # Filter: Include all non-instances OR instances where parent config is NOT in pending list
-        query = query.filter(or_(Event.parent_recurring_event_id.is_(None), ~Event.parent_recurring_event_id.in_(pending_recurring_config_subquery)))  # Not an instance  # Instance but parent not pending
-
-    # Apply ordering
-    order_col = getattr(EventInteraction, order_by) if order_by and hasattr(EventInteraction, str(order_by)) else EventInteraction.created_at
-    if order_dir and order_dir.lower() == "asc":
-        query = query.order_by(order_col.asc())
-    else:
-        query = query.order_by(order_col.desc())
-
-    # Apply pagination
-    query = query.offset(max(0, offset)).limit(max(1, min(200, limit)))
-
-    # Execute query
-    if needs_event_data:
-        results = query.all()  # List of (EventInteraction, Event) tuples
-
-        if enriched:
-            # Build enriched responses directly from joined data
-            enriched_interactions = []
-            for interaction, event in results:
-                enriched_interactions.append(
-                    {
-                        "id": interaction.id,
-                        "event_id": interaction.event_id,
-                        "user_id": interaction.user_id,
-                        "interaction_type": interaction.interaction_type,
-                        "status": interaction.status,
-                        "role": interaction.role,
-                        "invited_by_user_id": interaction.invited_by_user_id,
-                        "invited_via_group_id": interaction.invited_via_group_id,
-                        "created_at": interaction.created_at,
-                        "updated_at": interaction.updated_at,
-                        "event_name": event.name,
-                        "event_start_date": event.start_date,
-                        "event_end_date": event.end_date,
-                        "event_type": event.event_type,
-                        "event_start_date_formatted": event.start_date.strftime("%Y-%m-%d %H:%M"),
-                        "event_end_date_formatted": event.end_date.strftime("%Y-%m-%d %H:%M") if event.end_date else None,
-                    }
-                )
-            return enriched_interactions
-        else:
-            # Return only interactions (extract from tuples)
-            return [interaction for interaction, _ in results]
-    else:
-        interactions = query.all()
-        return interactions
+    return event_interaction.get_multi_with_optional_enrichment(
+        db,
+        event_id=event_id,
+        user_id=user_id,
+        interaction_type=interaction_type,
+        status=status,
+        enriched=enriched,
+        skip=offset,
+        limit=limit,
+        order_by=order_by or "created_at",
+        order_dir=order_dir
+    )
 
 
 @router.get("/{interaction_id}", response_model=EventInteractionResponse)
 async def get_interaction(interaction_id: int, db: Session = Depends(get_db)):
     """Get a single interaction by ID"""
-    interaction = db.query(EventInteraction).filter(EventInteraction.id == interaction_id).first()
-    if not interaction:
+    db_interaction = event_interaction.get(db, id=interaction_id)
+    if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
-    return interaction
+    return db_interaction
 
 
 @router.post("", response_model=EventInteractionResponse, status_code=201)
 async def create_interaction(interaction: EventInteractionCreate, db: Session = Depends(get_db)):
     """Create a new event interaction"""
     # Verify event exists
-    event = db.query(Event).filter(Event.id == interaction.event_id).first()
-    if not event:
+    db_event = event.get(db, id=interaction.event_id)
+    if not db_event:
         raise HTTPException(status_code=404, detail="Event not found")
 
     # Verify user exists
-    user = db.query(User).filter(User.id == interaction.user_id).first()
-    if not user:
+    db_user = user.get(db, id=interaction.user_id)
+    if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
     # Public users cannot be invited to events (they can only manage their own events)
-    if interaction.interaction_type == "invited" and user.is_public:
+    if interaction.interaction_type == "invited" and db_user.is_public:
         raise HTTPException(
             status_code=403,
             detail="Public users cannot be invited to events. Only private users can receive invitations."
@@ -148,14 +83,14 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
         check_users_not_blocked(interaction.invited_by_user_id, interaction.user_id, db)
 
     # Check if there's a block between event owner and invitee
-    check_users_not_blocked(event.owner_id, interaction.user_id, db)
+    check_users_not_blocked(db_event.owner_id, interaction.user_id, db)
 
     # VALIDATION: For invitations, verify the inviter has permission to invite
     if interaction.interaction_type == "invited" and interaction.invited_by_user_id:
         inviter_id = interaction.invited_by_user_id
 
         # Get inviter user to check if they're public
-        inviter_user = db.query(User).filter(User.id == inviter_id).first()
+        inviter_user = user.get(db, id=inviter_id)
         if not inviter_user:
             raise HTTPException(status_code=404, detail="Inviter user not found")
 
@@ -167,14 +102,11 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
             )
 
         # Check if inviter is the event owner
-        is_owner = (event.owner_id == inviter_id)
+        is_owner = (db_event.owner_id == inviter_id)
 
         if not is_owner:
             # Check if inviter is an admin or accepted participant of this event
-            inviter_interaction = db.query(EventInteraction).filter(
-                EventInteraction.event_id == interaction.event_id,
-                EventInteraction.user_id == inviter_id
-            ).first()
+            inviter_interaction = event_interaction.get_interaction(db, event_id=interaction.event_id, user_id=inviter_id)
 
             has_permission = False
             if inviter_interaction:
@@ -192,8 +124,7 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
                 )
 
     # Check if interaction already exists (unique constraint)
-    existing = db.query(EventInteraction).filter(EventInteraction.event_id == interaction.event_id, EventInteraction.user_id == interaction.user_id).first()
-    if existing:
+    if event_interaction.exists_interaction(db, event_id=interaction.event_id, user_id=interaction.user_id):
         raise HTTPException(status_code=400, detail="User already has an interaction with this event")
 
     # Set default status if not provided
@@ -214,18 +145,14 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
 
 
 @router.put("/{interaction_id}", response_model=EventInteractionResponse)
-async def update_interaction(interaction_id: int, interaction: EventInteractionBase, db: Session = Depends(get_db)):
+async def update_interaction(interaction_id: int, interaction_data: EventInteractionBase, db: Session = Depends(get_db)):
     """Update an existing interaction (typically to change type or status)"""
-    db_interaction = db.query(EventInteraction).filter(EventInteraction.id == interaction_id).first()
+    db_interaction = event_interaction.get(db, id=interaction_id)
     if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
 
-    for key, value in interaction.model_dump().items():
-        setattr(db_interaction, key, value)
-
-    db.commit()
-    db.refresh(db_interaction)
-    return db_interaction
+    updated_interaction = event_interaction.update(db, db_obj=db_interaction, obj_in=interaction_data)
+    return updated_interaction
 
 
 @router.patch("/{interaction_id}", response_model=EventInteractionResponse)
@@ -237,7 +164,7 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     - If rejecting a base recurring event invitation (event_type='recurring' and status='rejected'),
       automatically reject all pending invitations to instance events of that recurring event
     """
-    db_interaction = db.query(EventInteraction).filter(EventInteraction.id == interaction_id).first()
+    db_interaction = event_interaction.get(db, id=interaction_id)
     if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
 
@@ -245,7 +172,7 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     check_user_not_banned(db_interaction.user_id, db)
 
     # Get the event to check if it's a recurring event
-    event = db.query(Event).filter(Event.id == db_interaction.event_id).first()
+    db_event = event.get(db, id=db_interaction.event_id)
 
     # Only update fields that are explicitly provided (exclude None values)
     for key, value in interaction.model_dump(exclude_unset=True).items():
@@ -256,21 +183,20 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     db.refresh(db_interaction)
 
     # Cascade rejection logic: if rejecting a base recurring event invitation
-    if event and event.event_type == "recurring" and db_interaction.interaction_type == "invited" and db_interaction.status == "rejected":
+    if db_event and db_event.event_type == "recurring" and db_interaction.interaction_type == "invited" and db_interaction.status == "rejected":
 
         # Find the recurring config for this event
-        config = db.query(RecurringEventConfig).filter(RecurringEventConfig.event_id == event.id).first()
+        config = recurring_config.get_by_event(db, event_id=db_event.id)
 
         if config:
             # Find all instance events of this recurring event
-            instance_events = db.query(Event).filter(Event.parent_recurring_event_id == config.id).all()
+            instance_events = event.get_instances_by_parent_config(db, parent_config_id=config.id)
 
             instance_event_ids = [e.id for e in instance_events]
 
             if instance_event_ids:
                 # Update all pending invitations to these instances to 'rejected'
-                db.query(EventInteraction).filter(EventInteraction.event_id.in_(instance_event_ids), EventInteraction.user_id == db_interaction.user_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "pending").update({"status": "rejected"}, synchronize_session=False)
-                db.commit()
+                event_interaction.bulk_reject_pending_instances(db, instance_event_ids=instance_event_ids, user_id=db_interaction.user_id)
 
     return db_interaction
 
@@ -278,10 +204,9 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
 @router.delete("/{interaction_id}")
 async def delete_interaction(interaction_id: int, db: Session = Depends(get_db)):
     """Delete an interaction"""
-    db_interaction = db.query(EventInteraction).filter(EventInteraction.id == interaction_id).first()
+    db_interaction = event_interaction.get(db, id=interaction_id)
     if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
 
-    db.delete(db_interaction)
-    db.commit()
+    event_interaction.delete(db, id=interaction_id)
     return {"message": "Interaction deleted successfully", "id": interaction_id}

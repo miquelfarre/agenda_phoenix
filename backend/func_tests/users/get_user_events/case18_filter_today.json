@@ -12,25 +12,25 @@
       {
         "id": 1,
         "name": "Yesterday",
-        "start_date": "2025-10-20T10:00:00",
+        "start_date": "2025-10-21T10:00:00",
         "owner_id": 1
       },
       {
         "id": 2,
         "name": "Today Morning",
-        "start_date": "2025-10-21T09:00:00",
+        "start_date": "2025-10-22T09:00:00",
         "owner_id": 1
       },
       {
         "id": 3,
         "name": "Today Evening",
-        "start_date": "2025-10-21T18:00:00",
+        "start_date": "2025-10-22T18:00:00",
         "owner_id": 1
       },
       {
         "id": 4,
         "name": "Tomorrow",
-        "start_date": "2025-10-22T10:00:00",
+        "start_date": "2025-10-23T10:00:00",
         "owner_id": 1
       }
     ]
@@ -41,12 +41,12 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY today's events (id=2,3), assuming today is 2025-10-21",
+    "note": "Should return ONLY today's events (id=2,3), assuming today is 2025-10-22",
     "body": [
       {
         "name": "Today Morning",
         "description": null,
-        "start_date": "2025-10-21T09:00:00",
+        "start_date": "2025-10-22T09:00:00",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
@@ -60,7 +60,7 @@
       {
         "name": "Today Evening",
         "description": null,
-        "start_date": "2025-10-21T18:00:00",
+        "start_date": "2025-10-22T18:00:00",
         "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
