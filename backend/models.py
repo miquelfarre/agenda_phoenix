@@ -15,7 +15,7 @@ class Contact(Base):
     __tablename__ = "contacts"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)  # Owner of this contact (NULL for contacts that represent registered users)
+    owner_id = Column(Integer, ForeignKey("users.id", use_alter=True, name="fk_contact_owner"), nullable=True, index=True)  # Owner of this contact (NULL for contacts that represent registered users)
     name = Column(String(255), nullable=False)
     phone = Column(String(50), unique=True, nullable=False, index=True)  # Keep phone unique globally
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
