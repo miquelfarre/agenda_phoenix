@@ -80,7 +80,8 @@
           "interaction_type": "joined",
           "status": "accepted",
           "role": "member",
-          "invited_by_user_id": null
+          "invited_by_user_id": null,
+          "note": null
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,

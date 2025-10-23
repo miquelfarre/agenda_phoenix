@@ -99,7 +99,8 @@
           "interaction_type": "invited",
           "status": "pending",
           "role": null,
-          "invited_by_user_id": "{{ID}}"
+          "invited_by_user_id": "{{ID}}",
+          "note": null
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,
@@ -123,7 +124,8 @@
           "interaction_type": "invited",
           "status": "pending",
           "role": null,
-          "invited_by_user_id": "{{ID}}"
+          "invited_by_user_id": "{{ID}}",
+          "note": null
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,
@@ -147,7 +149,8 @@
           "interaction_type": "invited",
           "status": "pending",
           "role": null,
-          "invited_by_user_id": "{{ID}}"
+          "invited_by_user_id": "{{ID}}",
+          "note": null
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,

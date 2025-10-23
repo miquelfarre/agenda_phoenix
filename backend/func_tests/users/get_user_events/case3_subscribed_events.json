@@ -78,7 +78,8 @@
           "interaction_type": "subscribed",
           "status": null,
           "role": null,
-          "invited_by_user_id": null
+          "invited_by_user_id": null,
+          "note": null
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,
