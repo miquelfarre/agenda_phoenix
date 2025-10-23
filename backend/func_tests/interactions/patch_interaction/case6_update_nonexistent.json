@@ -3,10 +3,11 @@
   "setup": {},
   "request": {
     "method": "PATCH",
-    "endpoint": "/api/v1/interactions/999?current_user_id=1",
+    "endpoint": "/api/v1/interactions/999",
     "body": {
       "status": "accepted"
-    }
+    },
+    "auth_user_id": 1
   },
   "expected": {
     "status_code": 404,

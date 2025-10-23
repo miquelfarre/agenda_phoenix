@@ -1,6 +1,6 @@
 {
   "name": "Delete membership successfully",
-  "description": "Eliminar una membresía existente con éxito (usuario sale del calendario)",
+  "description": "Eliminar una membres\u00eda existente con \u00e9xito (usuario sale del calendario)",
   "setup": {
     "users": [
       {
@@ -32,7 +32,8 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/api/v1/calendar_memberships/1?current_user_id=2"
+    "endpoint": "/api/v1/calendar_memberships/1",
+    "auth_user_id": 2
   },
   "expected_response": {
     "status_code": 200

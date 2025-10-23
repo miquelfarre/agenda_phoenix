@@ -96,13 +96,15 @@ def setup_test_data(db, setup_config: Dict):
             if start_date.tzinfo is None:
                 start_date = start_date.replace(tzinfo=timezone.utc)
 
-            end_date = None
-            if event_config.get("end_date"):
-                end_date = datetime.fromisoformat(event_config["end_date"])
-                if end_date.tzinfo is None:
-                    end_date = end_date.replace(tzinfo=timezone.utc)
-
-            event = Event(id=event_config.get("id"), name=event_config["name"], description=event_config.get("description"), start_date=start_date, end_date=end_date, event_type=event_config.get("event_type", "regular"), owner_id=event_config["owner_id"], calendar_id=event_config.get("calendar_id"))
+            event = Event(
+                id=event_config.get("id"),
+                name=event_config["name"],
+                description=event_config.get("description"),
+                start_date=start_date,
+                event_type=event_config.get("event_type", "regular"),
+                owner_id=event_config["owner_id"],
+                calendar_id=event_config.get("calendar_id")
+            )
             db.add(event)
             db.flush()
             created_objects[f"event_{event.id}"] = event
@@ -419,6 +421,10 @@ def test_snapshot_match(test_id, test_path, test_data, client, test_db, request)
     method = req["method"].lower()
     endpoint = req["endpoint"]
     body = req.get("body")
+
+    # Set auth_user_id if specified in test JSON
+    if "auth_user_id" in req:
+        request._auth_user_id = req["auth_user_id"]
 
     if method == "post":
         response = client.post(endpoint, json=body)

@@ -3,11 +3,12 @@
   "setup": {},
   "request": {
     "method": "PUT",
-    "endpoint": "/api/v1/groups/999?current_user_id=1",
+    "endpoint": "/api/v1/groups/999",
     "body": {
       "name": "Updated Name",
       "description": "Updated description"
-    }
+    },
+    "auth_user_id": 1
   },
   "expected": {
     "status_code": 404,

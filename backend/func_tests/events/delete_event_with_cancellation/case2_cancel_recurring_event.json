@@ -89,11 +89,12 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/api/v1/events/1?current_user_id=1",
+    "endpoint": "/api/v1/events/1",
     "body": {
       "cancelled_by_user_id": 1,
       "cancellation_message": "Serie de reuniones cancelada"
-    }
+    },
+    "auth_user_id": 1
   },
   "expected": {
     "status_code": 200,

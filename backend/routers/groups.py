@@ -9,6 +9,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import group
 from dependencies import check_group_permission, get_db
 from schemas import GroupBase, GroupCreate, GroupResponse
@@ -62,11 +63,16 @@ async def create_group(group_data: GroupCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{group_id}", response_model=GroupResponse)
-async def update_group(group_id: int, group_data: GroupBase, current_user_id: int, db: Session = Depends(get_db)):
+async def update_group(
+    group_id: int,
+    group_data: GroupBase,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Update an existing group.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the group creator can update groups.
     """
     # Check permissions (creator only)
@@ -81,11 +87,15 @@ async def update_group(group_id: int, group_data: GroupBase, current_user_id: in
 
 
 @router.delete("/{group_id}")
-async def delete_group(group_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_group(
+    group_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Delete a group.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the group creator can delete groups.
     """
     # Check permissions (creator only)

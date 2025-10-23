@@ -32,12 +32,13 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/api/v1/interactions/1?current_user_id=2",
+    "endpoint": "/api/v1/interactions/1",
     "body": {
       "interaction_type": "invited",
       "status": "accepted",
       "role": "admin"
-    }
+    },
+    "auth_user_id": 2
   },
   "expected": {
     "status_code": 200,

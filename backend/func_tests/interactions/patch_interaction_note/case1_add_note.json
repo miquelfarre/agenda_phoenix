@@ -28,10 +28,11 @@
   },
   "request": {
     "method": "PATCH",
-    "endpoint": "/api/v1/interactions/1?current_user_id=1",
+    "endpoint": "/api/v1/interactions/1",
     "body": {
       "note": "llevar los patines"
-    }
+    },
+    "auth_user_id": 1
   },
   "expected": {
     "status_code": 200,

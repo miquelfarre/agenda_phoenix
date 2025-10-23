@@ -9,6 +9,7 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import calendar_membership
 from dependencies import check_user_not_public, get_db, is_calendar_owner_or_admin
 from schemas import CalendarMembershipBase, CalendarMembershipCreate, CalendarMembershipEnrichedResponse, CalendarMembershipResponse
@@ -120,11 +121,16 @@ async def create_calendar_membership(membership_data: CalendarMembershipCreate, 
 
 
 @router.put("/{membership_id}", response_model=CalendarMembershipResponse)
-async def update_calendar_membership(membership_id: int, membership_data: CalendarMembershipBase, current_user_id: int, db: Session = Depends(get_db)):
+async def update_calendar_membership(
+    membership_id: int,
+    membership_data: CalendarMembershipBase,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Update a calendar membership (e.g., change status from pending to accepted, or change role).
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Either the calendar owner/admin OR the user themselves can update the membership.
     """
     db_membership = calendar_membership.get(db, id=membership_id)
@@ -146,11 +152,15 @@ async def update_calendar_membership(membership_id: int, membership_data: Calend
 
 
 @router.delete("/{membership_id}")
-async def delete_calendar_membership(membership_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_calendar_membership(
+    membership_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Remove a user from a calendar.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Either the calendar owner/admin OR the user themselves can delete the membership.
     """
     db_membership = calendar_membership.get(db, id=membership_id)

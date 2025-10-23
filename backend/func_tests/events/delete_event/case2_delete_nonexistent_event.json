@@ -6,7 +6,8 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/api/v1/events/9999?current_user_id=1"
+    "endpoint": "/api/v1/events/9999",
+    "auth_user_id": 1
   },
   "expected_response": {
     "status_code": 404

@@ -1,11 +1,11 @@
 {
   "name": "Delete calendar successfully",
-  "description": "Eliminar un calendario existente con éxito",
+  "description": "Eliminar un calendario existente con \u00e9xito",
   "setup": {
     "users": [
       {
         "id": 1,
-        "name": "Sofía Torres",
+        "name": "Sof\u00eda Torres",
         "phone": "+34600123321"
       }
     ],
@@ -19,7 +19,8 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/api/v1/calendars/1?current_user_id=1"
+    "endpoint": "/api/v1/calendars/1",
+    "auth_user_id": 1
   },
   "expected_response": {
     "status_code": 200

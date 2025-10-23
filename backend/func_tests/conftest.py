@@ -51,7 +51,7 @@ def test_db(test_engine):
 
 
 @pytest.fixture
-def client(test_db, monkeypatch):
+def client(test_db, monkeypatch, request):
     """Cliente HTTP de test con TestClient de FastAPI"""
 
     # Override dependency
@@ -61,14 +61,34 @@ def client(test_db, monkeypatch):
         finally:
             pass
 
+    # Mock JWT authentication - returns user_id from test request context
+    # Tests can specify auth_user_id in the request to set the authenticated user
+    def mock_get_current_user_id():
+        # Get auth_user_id from test context if available
+        if hasattr(request, '_auth_user_id'):
+            return request._auth_user_id
+        # Default to user 1 if not specified
+        return 1
+
+    # Mock optional JWT authentication - same as above
+    def mock_get_current_user_id_optional():
+        if hasattr(request, '_auth_user_id'):
+            return request._auth_user_id
+        return None
+
     # Mock the init_database function to do nothing during tests
     def mock_init_database():
         pass
 
     monkeypatch.setattr("main.init_database", mock_init_database)
 
-    # Override the get_db dependency
+    # Import auth dependencies
+    from auth import get_current_user_id, get_current_user_id_optional
+
+    # Override dependencies
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user_id] = mock_get_current_user_id
+    app.dependency_overrides[get_current_user_id_optional] = mock_get_current_user_id_optional
 
     with TestClient(app, raise_server_exceptions=True) as test_client:
         yield test_client

@@ -19,11 +19,12 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/api/v1/calendars/1?current_user_id=1",
+    "endpoint": "/api/v1/calendars/1",
     "body": {
       "name": "Calendario Actualizado",
-      "start_date": "2025-01-01T00:00:00",
-    }
+      "start_date": "2025-01-01T00:00:00"
+    },
+    "auth_user_id": 1
   },
   "expected_response": {
     "status_code": 200

@@ -11,6 +11,7 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id, get_current_user_id_optional
 from crud import calendar_membership, contact, event, event_interaction, recurring_config, user, user_block
 from dependencies import check_user_not_banned, get_db
 from models import EventInteraction
@@ -37,8 +38,14 @@ async def get_users(public: Optional[bool] = None, enriched: bool = False, limit
 
 
 @router.get("/me", response_model=Union[UserResponse, UserEnrichedResponse])
-async def get_current_user(current_user_id: int, enriched: bool = False, db: Session = Depends(get_db)):
-    """Get the current user's information"""
+async def get_current_user(
+    current_user_id: int = Depends(get_current_user_id),
+    enriched: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Get the current authenticated user's information.
+
+    Requires JWT authentication - provide token in Authorization header."""
     db_user = user.get(db, id=current_user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -160,11 +167,16 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-async def update_user(user_id: int, user_data: UserCreate, current_user_id: int, db: Session = Depends(get_db)):
+async def update_user(
+    user_id: int,
+    user_data: UserCreate,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Update an existing user.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the user themselves can update their account.
     """
     # Check if user exists first
@@ -184,11 +196,15 @@ async def update_user(user_id: int, user_data: UserCreate, current_user_id: int,
 
 
 @router.delete("/{user_id}")
-async def delete_user(user_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_user(
+    user_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Delete a user.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the user themselves can delete their account.
     """
     # Check if user exists first
@@ -445,16 +461,22 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     return result
 
 
-@router.post("/{user_id}/subscribe/{target_user_id}")
-async def subscribe_to_user(user_id: int, target_user_id: int, db: Session = Depends(get_db)):
+@router.post("/{target_user_id}/subscribe")
+async def subscribe_to_user(
+    target_user_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
-    Subscribe a user to all events of another user (bulk operation).
+    Subscribe the authenticated user to all events of another user (bulk operation).
+
+    Requires JWT authentication - provide token in Authorization header.
 
     This creates 'subscribed' interactions for all events owned by target_user_id.
     Returns the count of successful subscriptions and any errors.
     """
     # Verify both users exist
-    db_user = user.get(db, id=user_id)
+    db_user = user.get(db, id=current_user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -474,7 +496,7 @@ async def subscribe_to_user(user_id: int, target_user_id: int, db: Session = Dep
 
     for db_event in events:
         # Check if subscription already exists
-        existing = event_interaction.get_interaction(db, event_id=db_event.id, user_id=user_id)
+        existing = event_interaction.get_interaction(db, event_id=db_event.id, user_id=current_user_id)
 
         if existing and existing.interaction_type == "subscribed":
             already_subscribed_count += 1
@@ -482,7 +504,7 @@ async def subscribe_to_user(user_id: int, target_user_id: int, db: Session = Dep
 
         try:
             # Create subscription
-            interaction = EventInteraction(event_id=db_event.id, user_id=user_id, interaction_type="subscribed")
+            interaction = EventInteraction(event_id=db_event.id, user_id=current_user_id, interaction_type="subscribed")
             db.add(interaction)
             subscribed_count += 1
         except Exception as e:

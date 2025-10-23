@@ -9,6 +9,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import user_block
 from dependencies import get_db
 from schemas import UserBlockCreate, UserBlockResponse
@@ -68,11 +69,15 @@ async def create_user_block(block_data: UserBlockCreate, db: Session = Depends(g
 
 
 @router.delete("/{block_id}")
-async def delete_user_block(block_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_user_block(
+    block_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Unblock a user.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the blocker can unblock a user.
     """
     db_block = user_block.get(db, id=block_id)

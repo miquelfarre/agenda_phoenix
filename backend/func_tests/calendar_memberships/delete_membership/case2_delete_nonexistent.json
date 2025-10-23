@@ -1,6 +1,6 @@
 {
   "name": "Delete nonexistent membership (should fail)",
-  "description": "Intentar eliminar una membresía que no existe",
+  "description": "Intentar eliminar una membres\u00eda que no existe",
   "setup": {
     "users": [
       {
@@ -12,7 +12,8 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/api/v1/calendar_memberships/9999?current_user_id=1"
+    "endpoint": "/api/v1/calendar_memberships/9999",
+    "auth_user_id": 1
   },
   "expected_response": {
     "status_code": 404

@@ -9,6 +9,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import recurring_config
 from dependencies import check_event_permission, get_db
 from schemas import RecurringEventConfigBase, RecurringEventConfigCreate, RecurringEventConfigResponse
@@ -66,11 +67,16 @@ async def create_recurring_config(config_data: RecurringEventConfigCreate, db: S
 
 
 @router.put("/{config_id}", response_model=RecurringEventConfigResponse)
-async def update_recurring_config(config_id: int, config_data: RecurringEventConfigBase, current_user_id: int, db: Session = Depends(get_db)):
+async def update_recurring_config(
+    config_id: int,
+    config_data: RecurringEventConfigBase,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Update an existing recurring config.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the event owner or event admins can update recurring configs.
     """
     db_config = recurring_config.get(db, id=config_id)
@@ -85,11 +91,15 @@ async def update_recurring_config(config_id: int, config_data: RecurringEventCon
 
 
 @router.delete("/{config_id}")
-async def delete_recurring_config(config_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_recurring_config(
+    config_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Delete a recurring config.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the event owner or event admins can delete recurring configs.
     """
     db_config = recurring_config.get(db, id=config_id)

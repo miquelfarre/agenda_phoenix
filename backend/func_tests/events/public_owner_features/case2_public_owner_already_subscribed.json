@@ -45,7 +45,8 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/api/v1/events/1?current_user_id=2"
+    "endpoint": "/api/v1/events/1",
+    "auth_user_id": 2
   },
   "expected": {
     "status_code": 200,

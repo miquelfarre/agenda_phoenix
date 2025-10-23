@@ -9,6 +9,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import group_membership
 from dependencies import check_user_not_public, get_db
 from models import Group
@@ -72,11 +73,15 @@ async def create_group_membership(membership_data: GroupMembershipCreate, db: Se
 
 
 @router.delete("/{membership_id}")
-async def delete_group_membership(membership_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_group_membership(
+    membership_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Remove a user from a group.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Either the group creator OR the user themselves can delete the membership.
     """
     db_membership = group_membership.get(db, id=membership_id)

@@ -3,11 +3,12 @@
   "setup": {},
   "request": {
     "method": "PUT",
-    "endpoint": "/api/v1/interactions/999?current_user_id=1",
+    "endpoint": "/api/v1/interactions/999",
     "body": {
       "interaction_type": "invited",
       "status": "accepted"
-    }
+    },
+    "auth_user_id": 1
   },
   "expected": {
     "status_code": 404,

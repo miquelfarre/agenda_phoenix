@@ -9,6 +9,7 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import event, event_interaction, recurring_config, user
 from dependencies import check_user_not_banned, check_user_not_public, check_users_not_blocked, get_db, is_event_owner_or_admin
 from models import EventInteraction
@@ -171,11 +172,16 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
 
 
 @router.put("/{interaction_id}", response_model=EventInteractionResponse)
-async def update_interaction(interaction_id: int, interaction_data: EventInteractionBase, current_user_id: int, db: Session = Depends(get_db)):
+async def update_interaction(
+    interaction_id: int,
+    interaction_data: EventInteractionBase,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Update an existing interaction (typically to change type or status).
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Either the event owner/admin OR the user of the interaction can update it.
     """
     db_interaction = event_interaction.get(db, id=interaction_id)
@@ -197,11 +203,16 @@ async def update_interaction(interaction_id: int, interaction_data: EventInterac
 
 
 @router.patch("/{interaction_id}", response_model=EventInteractionResponse)
-async def patch_interaction(interaction_id: int, interaction: EventInteractionUpdate, current_user_id: int, db: Session = Depends(get_db)):
+async def patch_interaction(
+    interaction_id: int,
+    interaction: EventInteractionUpdate,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Partially update an existing interaction (typically to change status) - PATCH alias for PUT.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the user of the interaction can patch it (to accept/reject invitations).
 
     Special cascade behavior for recurring events:
@@ -253,11 +264,15 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
 
 
 @router.delete("/{interaction_id}")
-async def delete_interaction(interaction_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_interaction(
+    interaction_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Delete an interaction.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Either the event owner/admin OR the user of the interaction can delete it.
     """
     db_interaction = event_interaction.get(db, id=interaction_id)

@@ -16,7 +16,7 @@
     "body": {
       "name": "Vacaciones Verano 2025",
       "owner_id": 1,
-      "start_date": "2025-07-01T00:00:00",
+      "start_date": "2025-07-01T00:00:00"
     }
   },
   "expected_response": {

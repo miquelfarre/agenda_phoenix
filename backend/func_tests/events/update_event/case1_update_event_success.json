@@ -22,14 +22,15 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/api/v1/events/100?current_user_id=1",
+    "endpoint": "/api/v1/events/100",
     "body": {
       "name": "Cena actualizada",
       "description": "Nueva descripci\u00f3n",
       "start_date": "2025-11-15T21:00:00",
       "event_type": "regular",
       "owner_id": 1
-    }
+    },
+    "auth_user_id": 1
   },
   "expected_response": {
     "status_code": 200

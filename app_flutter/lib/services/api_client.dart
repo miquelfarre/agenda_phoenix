@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config/app_constants.dart';
 import '../config/debug_config.dart';
-import 'config_service.dart';
+import 'supabase_service.dart';
 import '../utils/app_exceptions.dart' as app_exceptions;
 import 'contracts/api_client_contract.dart';
 
@@ -13,16 +13,27 @@ class ApiClient implements IApiClient {
   Future<Map<String, String>> _getHeaders() async {
     final headers = <String, String>{'Content-Type': 'application/json'};
 
+    // Get JWT token from Supabase session
+    try {
+      final session = SupabaseService.instance.client.auth.currentSession;
+      if (session != null && session.accessToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer ${session.accessToken}';
+        DebugConfig.info('Added JWT token to request headers', tag: 'API');
+      } else {
+        DebugConfig.info('No Supabase session found - request will be unauthenticated', tag: 'API');
+      }
+    } catch (e) {
+      DebugConfig.error('Failed to get Supabase session: $e', tag: 'API');
+    }
+
     return headers;
   }
 
   Uri _buildUri(String path, {Map<String, dynamic>? queryParams}) {
-    final configService = ConfigService.instance;
     final params = Map<String, dynamic>.from(queryParams ?? {});
 
-    if (!params.containsKey('current_user_id')) {
-      params['current_user_id'] = configService.currentUserId;
-    }
+    // Note: current_user_id is no longer sent as query param
+    // User identity is now determined from JWT token in Authorization header
 
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
     if (params.isNotEmpty) {
@@ -242,7 +253,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/users/$userId/events',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -333,7 +343,6 @@ class ApiClient implements IApiClient {
       queryParams: {
         if (ownerId != null) 'owner_id': ownerId,
         if (calendarId != null) 'calendar_id': calendarId,
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -347,7 +356,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/events/$eventId',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return result as Map<String, dynamic>;
@@ -361,7 +369,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/api/v1/events/$eventId/interactions',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -375,7 +382,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/api/v1/events/$eventId/interactions-enriched',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -389,7 +395,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/events/$eventId/available-invitees',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -402,7 +407,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/events/cancellations',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -456,7 +460,6 @@ class ApiClient implements IApiClient {
         if (userId != null) 'user_id': userId,
         if (interactionType != null) 'interaction_type': interactionType,
         if (status != null) 'status': status,
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -470,7 +473,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/interactions/$interactionId',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return result as Map<String, dynamic>;
@@ -530,7 +532,6 @@ class ApiClient implements IApiClient {
       '/calendars',
       queryParams: {
         if (ownerId != null) 'owner_id': ownerId,
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -544,7 +545,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/calendars/$calendarId',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return result as Map<String, dynamic>;
@@ -558,7 +558,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/calendars/$calendarId/memberships',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -609,7 +608,6 @@ class ApiClient implements IApiClient {
       queryParams: {
         if (calendarId != null) 'calendar_id': calendarId,
         if (userId != null) 'user_id': userId,
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -623,7 +621,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/calendar_memberships/$membershipId',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return result as Map<String, dynamic>;
@@ -665,7 +662,6 @@ class ApiClient implements IApiClient {
       '/groups',
       queryParams: {
         if (createdBy != null) 'created_by': createdBy,
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -679,7 +675,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/groups/$groupId',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return result as Map<String, dynamic>;
@@ -752,7 +747,6 @@ class ApiClient implements IApiClient {
       '/recurring_configs',
       queryParams: {
         if (eventId != null) 'event_id': eventId,
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -766,7 +760,6 @@ class ApiClient implements IApiClient {
     final result = await get(
       '/recurring_configs/$configId',
       queryParams: {
-        if (currentUserId != null) 'current_user_id': currentUserId,
       },
     );
     return result as Map<String, dynamic>;
@@ -832,7 +825,6 @@ class ApiClient implements IApiClient {
   }) async {
     await delete(
       '/user_blocks/$blockId',
-      queryParams: {'current_user_id': currentUserId},
     );
   }
 

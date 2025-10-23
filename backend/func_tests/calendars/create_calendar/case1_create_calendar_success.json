@@ -16,7 +16,7 @@
     "body": {
       "name": "Calendario de trabajo",
       "owner_id": 1,
-      "start_date": null,
+      "start_date": null
     }
   },
   "expected_response": {

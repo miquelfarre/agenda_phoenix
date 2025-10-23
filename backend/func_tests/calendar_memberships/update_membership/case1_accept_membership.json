@@ -1,6 +1,6 @@
 {
   "name": "Accept pending membership",
-  "description": "Aceptar una membresía pendiente (cambiar status de pending a accepted)",
+  "description": "Aceptar una membres\u00eda pendiente (cambiar status de pending a accepted)",
   "setup": {
     "users": [
       {
@@ -33,11 +33,12 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/api/v1/calendar_memberships/1?current_user_id=2",
+    "endpoint": "/api/v1/calendar_memberships/1",
     "body": {
       "role": "member",
       "status": "accepted"
-    }
+    },
+    "auth_user_id": 2
   },
   "expected_response": {
     "status_code": 200

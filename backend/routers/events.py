@@ -10,6 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id, get_current_user_id_optional
 from crud import event, event_cancellation, event_interaction, user
 from dependencies import check_event_permission, check_user_not_banned, get_db
 from models import Contact, EventInteraction, User, UserBlock
@@ -22,14 +23,16 @@ router = APIRouter(prefix="/api/v1/events", tags=["events"])
 async def get_events(
     owner_id: Optional[int] = None,
     calendar_id: Optional[int] = None,
-    current_user_id: Optional[int] = None,
+    current_user_id: Optional[int] = Depends(get_current_user_id_optional),
     limit: int = 50,
     offset: int = 0,
     order_by: Optional[str] = "start_date",
     order_dir: str = "asc",
     db: Session = Depends(get_db)
 ):
-    """Get all events, optionally filtered by owner_id or calendar_id"""
+    """Get all events, optionally filtered by owner_id or calendar_id.
+
+    Authentication is optional - provide JWT token in Authorization header for authenticated access."""
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
@@ -46,9 +49,15 @@ async def get_events(
 
 
 @router.get("/{event_id}", response_model=EventResponse)
-async def get_event(event_id: int, current_user_id: Optional[int] = None, db: Session = Depends(get_db)):
+async def get_event(
+    event_id: int,
+    current_user_id: Optional[int] = Depends(get_current_user_id_optional),
+    db: Session = Depends(get_db)
+):
     """
     Get a single event by ID.
+
+    Authentication is optional - provide JWT token in Authorization header for authenticated access.
 
     Access control: Only users with one of these relationships can view the event:
     - Event owner
@@ -267,11 +276,16 @@ async def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{event_id}", response_model=EventResponse)
-async def update_event(event_id: int, event_data: EventCreate, current_user_id: int, db: Session = Depends(get_db)):
+async def update_event(
+    event_id: int,
+    event_data: EventCreate,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
     Update an existing event.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the event owner or event admins can update events.
     """
     # Check permissions (owner or admin)
@@ -291,11 +305,16 @@ async def update_event(event_id: int, event_data: EventCreate, current_user_id: 
 
 
 @router.delete("/{event_id}")
-async def delete_event(event_id: int, current_user_id: int, delete_request: Optional[EventDeleteRequest] = None, db: Session = Depends(get_db)):
+async def delete_event(
+    event_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    delete_request: Optional[EventDeleteRequest] = None,
+    db: Session = Depends(get_db)
+):
     """
     Delete an event and optionally create cancellation notifications.
 
-    Requires current_user_id to verify permissions.
+    Requires JWT authentication - provide token in Authorization header.
     Only the event owner or event admins can delete events.
 
     If delete_request is provided with cancelled_by_user_id, creates EventCancellation records
@@ -336,24 +355,35 @@ async def delete_event(event_id: int, current_user_id: int, delete_request: Opti
 
 
 @router.get("/cancellations", response_model=List[EventCancellationResponse])
-async def get_event_cancellations(user_id: int, db: Session = Depends(get_db)):
+async def get_event_cancellations(
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
-    Get all event cancellations that a user hasn't viewed yet.
+    Get all event cancellations that the authenticated user hasn't viewed yet.
+
+    Requires JWT authentication - provide token in Authorization header.
 
     Returns cancellations for events where the user had an interaction
     and hasn't viewed the cancellation message yet.
     """
-    return event_cancellation.get_unviewed_by_user(db, user_id=user_id)
+    return event_cancellation.get_unviewed_by_user(db, user_id=current_user_id)
 
 
 @router.post("/cancellations/{cancellation_id}/view")
-async def mark_cancellation_as_viewed(cancellation_id: int, user_id: int, db: Session = Depends(get_db)):
+async def mark_cancellation_as_viewed(
+    cancellation_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """
-    Mark an event cancellation as viewed by a user.
+    Mark an event cancellation as viewed by the authenticated user.
+
+    Requires JWT authentication - provide token in Authorization header.
 
     After viewing, the cancellation will no longer appear in the user's list.
     """
-    view_id, error = event_cancellation.mark_as_viewed(db, cancellation_id=cancellation_id, user_id=user_id)
+    view_id, error = event_cancellation.mark_as_viewed(db, cancellation_id=cancellation_id, user_id=current_user_id)
 
     if error:
         raise HTTPException(status_code=404, detail=error)

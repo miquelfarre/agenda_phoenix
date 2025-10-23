@@ -17,12 +17,13 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/api/v1/app_bans?current_user_id=1",
+    "endpoint": "/api/v1/app_bans",
     "body": {
       "user_id": 2,
       "banned_by": 1,
       "reason": "Spam behavior"
-    }
+    },
+    "auth_user_id": 1
   },
   "expected": {
     "status_code": 201,

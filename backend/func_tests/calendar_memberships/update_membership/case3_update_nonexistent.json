@@ -1,6 +1,6 @@
 {
   "name": "Update nonexistent membership (should fail)",
-  "description": "Intentar actualizar una membresía que no existe",
+  "description": "Intentar actualizar una membres\u00eda que no existe",
   "setup": {
     "users": [
       {
@@ -12,11 +12,12 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/api/v1/calendar_memberships/9999?current_user_id=1",
+    "endpoint": "/api/v1/calendar_memberships/9999",
     "body": {
       "role": "admin",
       "status": "accepted"
-    }
+    },
+    "auth_user_id": 1
   },
   "expected_response": {
     "status_code": 404

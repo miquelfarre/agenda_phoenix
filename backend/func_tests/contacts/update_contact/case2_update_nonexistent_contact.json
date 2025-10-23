@@ -12,12 +12,13 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/api/v1/contacts/9999?current_user_id=1",
+    "endpoint": "/api/v1/contacts/9999",
     "body": {
       "owner_id": 1,
       "name": "Contacto Fantasma",
       "phone": "+34600000000"
-    }
+    },
+    "auth_user_id": 1
   },
   "expected": {
     "status_code": 404,

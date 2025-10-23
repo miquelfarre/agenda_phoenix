@@ -19,7 +19,8 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/api/v1/contacts/2?current_user_id=1"
+    "endpoint": "/api/v1/contacts/2",
+    "auth_user_id": 1
   },
   "expected": {
     "status_code": 200,
