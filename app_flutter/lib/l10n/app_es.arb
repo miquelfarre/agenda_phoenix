@@ -150,12 +150,15 @@
   "preview": "Vista previa",
   "download": "Descargar",
   "upload": "Subir",
-  
+  "leave": "Salir",
+  "stay": "Quedarse",
+
   "@_COMMON_STATES": {
     "description": "Estados comunes de la aplicación"
   },
   "loading": "Cargando...",
   "loadingData": "Cargando datos...",
+  "loadingForm": "Cargando formulario...",
   "saving": "Guardando...",
   "updating": "Actualizando...",
   "deleting": "Eliminando...",
@@ -165,7 +168,11 @@
   "processing": "Procesando...",
   "searching": "Buscando...",
   "creating": "Creando...",
-  
+  "accepted": "Aceptado",
+  "declined": "Rechazado",
+  "postponed": "Pospuesto",
+  "pending": "Pendiente",
+
   "@_COMMON_RESULTS": {
     "description": "Estados de resultados comunes y mensajes"
   },
@@ -175,13 +182,23 @@
   "info": "Información",
   "appErrorLoadingData": "Error al cargar datos",
   "noData": "No hay datos disponibles",
+  "noResults": "No se encontraron resultados",
+  "noCalendarsAvailable": "No hay calendarios disponibles",
+  "noTimeOptionsAvailable": "No hay opciones de hora disponibles",
   "noInternetConnection": "Sin conexión a internet",
   "connectionError": "Error de conexión",
+  "connectionErrorCheckInternet": "Error de conexión. Verifica tu internet.",
   "unexpectedError": "Ocurrió un error inesperado",
+  "operationTookTooLong": "La operación tardó demasiado. Por favor, inténtalo de nuevo.",
+  "dataFormatError": "Error de formato de datos. Por favor, inténtalo de nuevo.",
   "tryAgain": "Intentar de nuevo",
   "somethingWentWrong": "Algo salió mal",
-  "noResults": "No se encontraron resultados",
-  
+  "anErrorOccurred": "Ocurrió un error",
+  "pleaseCorrectErrors": "Por favor, corrige los errores a continuación",
+  "failedToSubmitForm": "Error al enviar el formulario",
+  "formSubmittedSuccessfully": "Formulario enviado exitosamente",
+  "failedToRefresh": "Error al actualizar",
+
   "@_SPLASH_SCREEN": {
     "description": "Mensajes de la pantalla de inicio"
   },
@@ -242,7 +259,11 @@
   "writeAdditionalMessage": "Escribe un mensaje adicional para los usuarios...",
   "unknownUser": "Usuario Desconocido",
   "eventTitle": "Título del Evento",
+  "title": "Título",
+  "eventNamePlaceholder": "Nombre del evento",
   "eventDescription": "Descripción del Evento",
+  "description": "Descripción",
+  "addDetailsPlaceholder": "Añade detalles...",
   "eventDate": "Fecha del Evento",
   "eventTime": "Hora del Evento",
   "eventLocation": "Ubicación del Evento",
@@ -264,7 +285,9 @@
   "leaveEvent": "Salir del Evento",
   "eventMembers": "Miembros del Evento",
   "eventInvitations": "Invitaciones de Eventos",
+  "invitedUsers": "Usuarios Invitados",
   "attendees": "Asistentes",
+  "viewCalendarEvents": "Ver Eventos del Calendario",
 
   "startingAutomaticSync": "Iniciando sincronización automática...",
   "loadingLocalData": "Cargando datos locales...",
@@ -406,6 +429,9 @@
   "yesterday": "Ayer",
   "tomorrow": "Mañana",
   "now": "Ahora",
+  "month": "Mes",
+  "day": "Día",
+  "hour": "Hora",
   "soon": "Pronto",
   "recently": "Recientemente",
   "thisWeek": "Esta Semana",
@@ -493,10 +519,14 @@
     "description": "Configuración de ubicación y zona horaria"
   },
   "countryAndTimezone": "País y zona horaria",
+  "country": "País",
   "timezone": "Zona horaria",
   "@timezone": {
     "description": "Etiqueta de zona horaria"
   },
+  "cityOrTimezone": "Ciudad / Zona horaria",
+  "noCountriesAvailable": "No hay países disponibles",
+  "noTimezonesAvailable": "No hay zonas horarias disponibles",
   "currentTimezone": "Zona horaria actual",
   "@currentTimezone": {
     "description": "Etiqueta para mostrar la configuración de zona horaria actual del usuario en la pantalla de configuración"
@@ -749,7 +779,7 @@
   "contacts": "Contactos",
   "contactsPermissionInstructions": "Para encontrar amigos que usan EventyPop, necesitamos acceso a tus contactos. Por favor, concede el permiso en la configuración.",
   "contactsPermissionRequired": "Permiso de contactos requerido.",
-  "couldNotGetFirebaseToken": "No se pudo obtener el token de Firebase.",
+  "couldNotGetAuthToken": "No se pudo obtener el token de autenticación.",
   "createGroup": "Crear Grupo",
   "createRecurringEvent": "Crear Evento Recurrente",
   "createRecurringEventQuestion": "¿Crear evento recurrente?",
@@ -781,14 +811,15 @@
   "errors": "Errores",
   "eventDescriptionRequired": "La descripción del evento es obligatoria",
   "february": "Febrero",
-  "firebasePhoneAuthLimitationMessage": "La autenticación de teléfono de Firebase tiene limitaciones en los simuladores de iOS. Para una funcionalidad completa, por favor, usa un dispositivo iOS físico, un emulador de Android o la versión web.",
-  "firebasePhoneAuthSimulatorError": "Firebase Phone Auth no es compatible con el simulador de iOS. Por favor, usa un dispositivo físico o un emulador de Android.",
+  "phoneAuthLimitationMessage": "La autenticación por teléfono tiene limitaciones en los simuladores de iOS. Para una funcionalidad completa, por favor, usa un dispositivo iOS físico, un emulador de Android o la versión web.",
+  "phoneAuthSimulatorError": "La autenticación por teléfono no es compatible con el simulador de iOS. Por favor, usa un dispositivo físico o un emulador de Android.",
   "follow": "Seguir",
   "followers": "Seguidores",
   "following": "Siguiendo",
   "friday": "Viernes",
   "fullName": "Nombre Completo",
   "group": "Grupo",
+  "groupDetails": "Detalles del Grupo",
   "groupAdmin": "Administrador del Grupo",
   "groupInitialFallback": "G",
   "avatarUnknownInitial": "?",
@@ -924,7 +955,7 @@
   "onlineSaveMessage": "Tus cambios han sido guardados.",
   "offlineEventCreationMessage": "El evento se guardará localmente y se creará en el servidor automáticamente cuando tengas conexión.",
   "openSettings": "Abrir Configuración",
-  "operationNotAllowed": "El inicio de sesión con número de teléfono no está habilitado. Por favor, habilítalo en la consola de Firebase.",
+  "operationNotAllowed": "El inicio de sesión con número de teléfono no está habilitado. Por favor, habilítalo en la consola de autenticación.",
   "organizer": "Organizador",
   "pendingInvitations": "Invitaciones Pendientes",
   "phone": "Teléfono",
@@ -998,7 +1029,7 @@
   },
   "sunday": "Domingo",
   "syncingContacts": "Sincronizando contactos...",
-  "testPhoneAuthInstructions": "Para propósitos de prueba en el simulador de iOS, puedes usar un número de teléfono de prueba y un código de verificación configurados en la Consola de Firebase.",
+  "testPhoneAuthInstructions": "Para propósitos de prueba en el simulador de iOS, puedes usar un número de teléfono de prueba y un código de verificación configurados en la consola de autenticación.",
   "thursday": "Jueves",
   "tooManyRequests": "Demasiadas solicitudes. Por favor, inténtalo de nuevo más tarde.",
   "tuesday": "Martes",
@@ -1300,7 +1331,7 @@
   "@_EXCEPTION_MESSAGES": {
     "description": "Mensajes de excepciones del sistema"
   },
-  "couldNotGetFirebaseToken": "No se pudo obtener el token de Firebase",
+  "couldNotGetAuthToken": "No se pudo obtener el token de autenticación",
   "failedToLoadGroups": "Error al cargar grupos",
   "userNotAuthenticated": "Usuario no autenticado",
   "failedToCreateGroup": "Error al crear grupo",
@@ -1458,6 +1489,27 @@
   "@associateWithCalendar": {
     "description": "Etiqueta del checkbox en el formulario de evento"
   },
+  "calendarNameRequired": "El nombre del calendario es obligatorio",
+  "calendarNameTooLong": "El nombre del calendario debe tener 100 caracteres o menos",
+  "calendarDescriptionTooLong": "La descripción debe tener 500 caracteres o menos",
+  "noInternetCheckNetwork": "Sin conexión a internet. Por favor, verifica tu red e inténtalo de nuevo.",
+  "requestTimedOut": "Tiempo de espera agotado. Por favor, inténtalo de nuevo.",
+  "serverError": "Error del servidor. Por favor, inténtalo más tarde.",
+  "calendarNameExists": "Ya existe un calendario con este nombre.",
+  "sessionExpired": "Sesión expirada. Por favor, inicia sesión de nuevo.",
+  "noPermission": "No tienes permiso para realizar esta acción.",
+  "failedToCreateCalendar": "Error al crear el calendario. Por favor, inténtalo de nuevo.",
+  "publicCalendar": "Calendario Público",
+  "othersCanSearchAndSubscribe": "Otros pueden buscar y suscribirse",
+  "deleteEventsWithCalendar": "Eliminar eventos cuando se elimine este calendario",
+  "confirmDeleteCalendarWithEvents": "Esto eliminará el calendario y todos los eventos asociados. Esta acción no se puede deshacer.",
+  "confirmDeleteCalendarKeepEvents": "Esto eliminará el calendario pero mantendrá los eventos. Esta acción no se puede deshacer.",
+  "visibleToOthers": "Visible para otros",
+  "private": "Privado",
+  "eventsWillBeDeleted": "Los eventos se eliminarán con el calendario",
+  "eventsWillBeKept": "Los eventos se mantendrán cuando se elimine el calendario",
+  "calendarNotFound": "Calendario no encontrado",
+  "failedToLoadCalendar": "Error al cargar el calendario",
   "isBirthday": "Es Cumpleaños",
   "@isBirthday": {
     "description": "Toggle para eventos de cumpleaños"

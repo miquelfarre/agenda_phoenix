@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../models/month_option.dart';
 import '../models/day_option.dart';
 import '../models/time_option.dart';
@@ -394,7 +395,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
             child: TextButton.icon(
               onPressed: scrollToToday,
               icon: const Icon(Icons.today),
-              label: const Text('Hoy'),
+              label: Text(context.l10n.today),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -409,7 +410,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
         ],
 
         _buildHorizontalScrollList<MonthOption>(
-          label: 'Mes',
+          label: context.l10n.month,
           icon: Icons.calendar_month,
           items: monthOptions,
           selectedIndex: selectedMonthIndex,
@@ -420,7 +421,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
         const SizedBox(height: 16),
 
         _buildHorizontalScrollList<DayOption>(
-          label: 'Día',
+          label: context.l10n.day,
           icon: Icons.today,
           items: dayOptions,
           selectedIndex: selectedDayIndex,
@@ -432,7 +433,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
         if (widget.showTimePicker) ...[
           const SizedBox(height: 16),
           _buildHorizontalScrollList<TimeOption>(
-            label: 'Hora',
+            label: context.l10n.hour,
             icon: Icons.access_time,
             items: timeOptions,
             selectedIndex: selectedTimeIndex,

@@ -1071,7 +1071,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     return [
       AdaptiveButton(
         config: AdaptiveButtonConfig.secondary(),
-        text: 'View Calendar Events',
+        text: context.l10n.viewCalendarEvents,
         icon: CupertinoIcons.calendar,
         onPressed: () => _viewCalendarEvents(),
       ),
@@ -1128,6 +1128,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       return const SizedBox.shrink();
     }
 
+    final l10n = context.l10n;
     final invitations = _composite!.otherInvitations;
 
     return Column(
@@ -1147,7 +1148,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  Text('Invited Users', style: AppStyles.cardTitle),
+                  Text(l10n.invitedUsers, style: AppStyles.cardTitle),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1236,16 +1237,17 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   String _getStatusText(String status) {
+    final l10n = context.l10n;
     switch (status) {
       case 'accepted':
-        return 'Accepted';
+        return l10n.accepted;
       case 'declined':
-        return 'Declined';
+        return l10n.declined;
       case 'postponed':
-        return 'Postponed';
+        return l10n.postponed;
       case 'pending':
       default:
-        return 'Pending';
+        return l10n.pending;
     }
   }
 

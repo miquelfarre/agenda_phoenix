@@ -1,6 +1,5 @@
 import 'package:eventypop/app.dart';
 import 'package:eventypop/core/storage/hive_migration.dart';
-import 'package:eventypop/firebase_options.dart';
 import 'package:eventypop/models/birthday_event_hive.dart';
 import 'package:eventypop/models/calendar_hive.dart';
 import 'package:eventypop/models/calendar_share_hive.dart';
@@ -21,7 +20,8 @@ import 'package:eventypop/services/config_service.dart';
 import 'package:eventypop/services/group_service.dart';
 import 'package:eventypop/services/sync_service.dart';
 import 'package:eventypop/services/timezone_service.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:eventypop/services/supabase_service.dart';
+import 'package:eventypop/services/app_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,9 +37,7 @@ void main() async {
       return true;
     };
 
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    await _initializeSupabase();
 
     await _initializeApiClient();
 
@@ -111,6 +109,17 @@ void main() async {
 
     runApp(ProviderScope(child: MyApp(env: env)));
   } catch (e, _) {
+    rethrow;
+  }
+}
+
+Future<void> _initializeSupabase() async {
+  try {
+    await SupabaseService.initialize(
+      supabaseUrl: AppConfig.supabaseUrl,
+      supabaseAnonKey: AppConfig.supabaseAnonKey,
+    );
+  } catch (e) {
     rethrow;
   }
 }

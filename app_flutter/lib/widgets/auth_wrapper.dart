@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/widgets.dart';
-import 'package:eventypop/services/firebase_auth_service.dart';
+import 'package:eventypop/services/supabase_auth_service.dart';
 import 'package:eventypop/screens/login/phone_login_screen.dart';
 import 'package:eventypop/widgets/user_type_checker.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
@@ -12,8 +12,8 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuthService.authStateChanges,
+    return StreamBuilder<AuthState>(
+      stream: SupabaseAuthService.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           final l10n = context.l10n;
@@ -31,7 +31,7 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        if (snapshot.hasData && snapshot.data != null) {
+        if (snapshot.hasData && snapshot.data?.session != null) {
           return UserTypeChecker(env: 'production');
         }
 

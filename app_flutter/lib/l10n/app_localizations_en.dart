@@ -1,5 +1,10 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
 class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
@@ -206,10 +211,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upload => 'Upload';
 
   @override
+  String get leave => 'Leave';
+
+  @override
+  String get stay => 'Stay';
+
+  @override
   String get loading => 'Loading...';
 
   @override
   String get loadingData => 'Loading data...';
+
+  @override
+  String get loadingForm => 'Loading form...';
 
   @override
   String get saving => 'Saving...';
@@ -239,6 +253,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creating => 'Creating...';
 
   @override
+  String get accepted => 'Accepted';
+
+  @override
+  String get declined => 'Declined';
+
+  @override
+  String get postponed => 'Postponed';
+
+  @override
+  String get pending => 'Pending';
+
+  @override
   String get success => 'Success';
 
   @override
@@ -260,19 +286,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noResults => 'No results found';
 
   @override
+  String get noCalendarsAvailable => 'No calendars available';
+
+  @override
+  String get noTimeOptionsAvailable => 'No time options available';
+
+  @override
   String get noInternetConnection => 'No internet connection';
 
   @override
   String get connectionError => 'Connection error';
 
   @override
+  String get connectionErrorCheckInternet =>
+      'Connection error. Check your internet.';
+
+  @override
   String get unexpectedError => 'Unexpected error occurred';
+
+  @override
+  String get operationTookTooLong =>
+      'Operation took too long. Please try again.';
+
+  @override
+  String get dataFormatError => 'Data format error. Please try again.';
 
   @override
   String get tryAgain => 'Try again';
 
   @override
   String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get anErrorOccurred => 'An error occurred';
+
+  @override
+  String get pleaseCorrectErrors => 'Please correct the errors below';
+
+  @override
+  String get failedToSubmitForm => 'Failed to submit form';
+
+  @override
+  String get formSubmittedSuccessfully => 'Form submitted successfully';
+
+  @override
+  String get failedToRefresh => 'Failed to refresh';
 
   @override
   String get startingEventyPop => 'Starting EventyPop...';
@@ -402,7 +460,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eventTitle => 'Event Title';
 
   @override
+  String get title => 'Title';
+
+  @override
+  String get eventNamePlaceholder => 'Event name';
+
+  @override
   String get eventDescription => 'Event Description';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get addDetailsPlaceholder => 'Add details...';
 
   @override
   String get eventDate => 'Event Date';
@@ -470,7 +540,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eventInvitations => 'Event Invitations';
 
   @override
+  String get invitedUsers => 'Invited Users';
+
+  @override
   String get attendees => 'Attendees';
+
+  @override
+  String get viewCalendarEvents => 'View Calendar Events';
 
   @override
   String get saveChangesOffline => 'Save changes offline';
@@ -510,6 +586,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get group => 'Group';
+
+  @override
+  String get groupDetails => 'Group Details';
 
   @override
   String get groupInitialFallback => 'G';
@@ -967,6 +1046,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get now => 'Now';
 
   @override
+  String get month => 'Month';
+
+  @override
+  String get day => 'Day';
+
+  @override
+  String get hour => 'Hour';
+
+  @override
   String get soon => 'Soon';
 
   @override
@@ -1141,7 +1229,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get countryAndTimezone => 'Country and timezone';
 
   @override
+  String get country => 'Country';
+
+  @override
   String get timezone => 'Timezone';
+
+  @override
+  String get cityOrTimezone => 'City / Timezone';
+
+  @override
+  String get noCountriesAvailable => 'No countries available';
+
+  @override
+  String get noTimezonesAvailable => 'No timezones available';
 
   @override
   String get currentTimezone => 'Current Timezone';
@@ -1540,15 +1640,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationError => 'Verification Error';
 
   @override
-  String get firebasePhoneAuthSimulatorError =>
-      'Firebase Phone Auth is not supported on iOS simulator. Please use a physical device or Android emulator.';
+  String get phoneAuthSimulatorError =>
+      'Phone authentication is not supported on iOS simulator. Please use a physical device or Android emulator.';
 
   @override
   String get tooManyRequests => 'Too many requests. Please try again later.';
 
   @override
   String get operationNotAllowed =>
-      'Phone number sign-in is not enabled. Please enable it in Firebase console.';
+      'Phone number sign-in is not enabled. Please enable it in the authentication console.';
 
   @override
   String smsCodeSentTo(String phoneNumber) {
@@ -1565,24 +1665,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidVerificationCode => 'Invalid verification code.';
 
   @override
-  String get sessionExpired => 'Session expired. Please try again.';
+  String get sessionExpired => 'Session expired. Please login again.';
 
   @override
   String get errorVerifyingCode => 'Error verifying code.';
 
   @override
-  String get couldNotGetFirebaseToken => 'Could not get Firebase token';
+  String get couldNotGetAuthToken => 'Could not get authentication token';
 
   @override
   String get iosSimulatorDetected => 'iOS Simulator Detected';
 
   @override
-  String get firebasePhoneAuthLimitationMessage =>
-      'Firebase Phone Authentication is not fully supported on iOS simulators. For full functionality, please use a physical iOS device, an Android emulator, or the web version.';
+  String get phoneAuthLimitationMessage =>
+      'Phone authentication is not fully supported on iOS simulators. For full functionality, please use a physical iOS device, an Android emulator, or the web version.';
 
   @override
   String get testPhoneAuthInstructions =>
-      'For testing purposes on iOS simulator, you can use a test phone number and verification code configured in Firebase Console.';
+      'For testing purposes on iOS simulator, you can use a test phone number and verification code configured in the authentication console.';
 
   @override
   String get understood => 'Understood';
@@ -2572,8 +2672,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToUpdateFCMToken => 'Failed to update FCM token';
 
   @override
-  String get firebaseUserHasNoPhoneNumber =>
-      'Firebase user has no phone number';
+  String get authUserHasNoPhoneNumber =>
+      'Authenticated user has no phone number';
 
   @override
   String eventsBy(String name) {
@@ -2655,6 +2755,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get associateWithCalendar => 'Associate with Calendar';
+
+  @override
+  String get calendarNameRequired => 'Calendar name is required';
+
+  @override
+  String get calendarNameTooLong =>
+      'Calendar name must be 100 characters or less';
+
+  @override
+  String get calendarDescriptionTooLong =>
+      'Description must be 500 characters or less';
+
+  @override
+  String get noInternetCheckNetwork =>
+      'No internet connection. Please check your network and try again.';
+
+  @override
+  String get requestTimedOut => 'Request timed out. Please try again.';
+
+  @override
+  String get serverError => 'Server error. Please try again later.';
+
+  @override
+  String get calendarNameExists => 'A calendar with this name already exists.';
+
+  @override
+  String get noPermission =>
+      'You don\'t have permission to perform this action.';
+
+  @override
+  String get failedToCreateCalendar =>
+      'Failed to create calendar. Please try again.';
+
+  @override
+  String get publicCalendar => 'Public Calendar';
+
+  @override
+  String get othersCanSearchAndSubscribe => 'Others can search and subscribe';
+
+  @override
+  String get deleteEventsWithCalendar =>
+      'Delete events when this calendar is deleted';
+
+  @override
+  String get confirmDeleteCalendarWithEvents =>
+      'This will delete the calendar and all associated events. This action cannot be undone.';
+
+  @override
+  String get confirmDeleteCalendarKeepEvents =>
+      'This will delete the calendar but keep the events. This action cannot be undone.';
+
+  @override
+  String get visibleToOthers => 'Visible to others';
+
+  @override
+  String get private => 'Private';
+
+  @override
+  String get eventsWillBeDeleted => 'Events will be deleted with calendar';
+
+  @override
+  String get eventsWillBeKept => 'Events will be kept when calendar is deleted';
+
+  @override
+  String get calendarNotFound => 'Calendar not found';
+
+  @override
+  String get failedToLoadCalendar => 'Failed to load calendar';
 
   @override
   String get isBirthday => 'Is Birthday';

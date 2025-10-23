@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'platform_detection.dart';
 import '../../styles/app_styles.dart';
+import '../l10n/l10n_helpers.dart';
 
 class PlatformAction<T> {
   final String? text;
@@ -28,12 +29,12 @@ class PlatformDialogHelpers {
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text(cancelText ?? l10n['cancel'] ?? 'Cancel'),
+              child: Text(cancelText ?? l10n['cancel']!),
             ),
             CupertinoDialogAction(
               isDestructiveAction: isDestructive,
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(confirmText ?? l10n['confirm'] ?? 'OK'),
+              child: Text(confirmText ?? l10n['confirm']!),
             ),
           ],
         ),
@@ -87,7 +88,7 @@ class PlatformDialogHelpers {
               ? CupertinoActionSheetAction(
                   onPressed: () => Navigator.of(context).pop(),
                   isDefaultAction: true,
-                  child: Text(cancelText ?? l10n['cancel'] ?? 'Cancel'),
+                  child: Text(cancelText ?? l10n['cancel']!),
                 )
               : null,
         ),
@@ -138,7 +139,7 @@ class PlatformDialogHelpers {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: CupertinoButton(
                           onPressed: () => Navigator.of(ctx).pop(),
-                          child: Text(cancelText ?? l10n['cancel'] ?? 'Cancel'),
+                          child: Text(cancelText ?? l10n['cancel']!),
                         ),
                       ),
                     const SizedBox(height: 16),
@@ -217,7 +218,7 @@ class PlatformDialogHelpers {
     );
   }
 
-  static String cleanApiError(String error) {
+  static String cleanApiError(String error, BuildContext context) {
     if (error.contains('Exception:')) {
       error = error.replaceAll('Exception:', '').trim();
     }
@@ -225,13 +226,13 @@ class PlatformDialogHelpers {
       error = error.replaceAll('Error:', '').trim();
     }
     if (error.contains('SocketException:')) {
-      return 'Connection error. Check your internet.';
+      return context.l10n.connectionErrorCheckInternet;
     }
     if (error.contains('TimeoutException')) {
-      return 'Operation took too long. Please try again.';
+      return context.l10n.operationTookTooLong;
     }
     if (error.contains('FormatException')) {
-      return 'Data format error. Please try again.';
+      return context.l10n.dataFormatError;
     }
 
     return error;
@@ -262,7 +263,7 @@ class PlatformDialogHelpers {
   }
 
   static void showCleanError(BuildContext context, String error) {
-    showError(context, cleanApiError(error));
+    showError(context, cleanApiError(error, context));
   }
 
   static void showNetworkError(
@@ -270,13 +271,13 @@ class PlatformDialogHelpers {
     required VoidCallback onRetry,
     String? message,
   }) {
-    final errorMessage = message ?? 'No internet connection';
+    final errorMessage = message ?? context.l10n.noInternetConnection;
 
     _showDismissibleBanner(
       context,
       message: errorMessage,
       isError: true,
-      actionLabel: 'Retry',
+      actionLabel: context.l10n.retry,
       onAction: onRetry,
       duration: const Duration(seconds: 5),
     );
@@ -410,7 +411,8 @@ class PlatformDialogHelpers {
   }
 
   static Map<String, String> _l10n(BuildContext ctx) {
-    return {'cancel': 'Cancel', 'confirm': 'OK'};
+    final l10n = ctx.l10n;
+    return {'cancel': l10n.cancel, 'confirm': l10n.ok};
   }
 }
 

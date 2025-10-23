@@ -13,7 +13,7 @@ import '../../services/event_interaction_service.dart';
 import '../../services/sync_service.dart';
 import '../../services/composite_sync_service.dart';
 import '../../services/config_service.dart';
-import '../../services/firebase_auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../services/logo_service.dart';
 import '../../services/api_client.dart';
 import '../../repositories/event_repository.dart';
@@ -59,7 +59,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       if (configService.isTestMode) {
         isAuth = true;
       } else {
-        isAuth = FirebaseAuthService.isLoggedIn;
+        isAuth = SupabaseAuthService.isLoggedIn;
       }
 
       final user = await UnifiedUserService.getCurrentUser();
@@ -88,7 +88,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       final user = await UnifiedUserService.getCurrentUser();
 
       final configService = ConfigService.instance;
-      final isAuth = configService.isTestMode || FirebaseAuthService.isLoggedIn;
+      final isAuth = configService.isTestMode || SupabaseAuthService.isLoggedIn;
 
       return currentState.copyWith(
         currentUser: user,

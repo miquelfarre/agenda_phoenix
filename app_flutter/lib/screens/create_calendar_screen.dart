@@ -44,18 +44,18 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      _showError('Calendar name is required');
+      _showError(context.l10n.calendarNameRequired);
       return;
     }
 
     if (name.length > 100) {
-      _showError('Calendar name must be 100 characters or less');
+      _showError(context.l10n.calendarNameTooLong);
       return;
     }
 
     final description = _descriptionController.text.trim();
     if (description.length > 500) {
-      _showError('Description must be 500 characters or less');
+      _showError(context.l10n.calendarDescriptionTooLong);
       return;
     }
 
@@ -93,34 +93,35 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
 
   String _parseErrorMessage(dynamic error) {
     final errorStr = error.toString().toLowerCase();
+    final l10n = context.l10n;
 
     if (errorStr.contains('socket') ||
         errorStr.contains('network') ||
         errorStr.contains('connection')) {
-      return 'No internet connection. Please check your network and try again.';
+      return l10n.noInternetCheckNetwork;
     }
 
     if (errorStr.contains('timeout')) {
-      return 'Request timed out. Please try again.';
+      return l10n.requestTimedOut;
     }
 
     if (errorStr.contains('500') || errorStr.contains('server error')) {
-      return 'Server error. Please try again later.';
+      return l10n.serverError;
     }
 
     if (errorStr.contains('duplicate') || errorStr.contains('already exists')) {
-      return 'A calendar with this name already exists.';
+      return l10n.calendarNameExists;
     }
 
     if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
-      return 'Session expired. Please login again.';
+      return l10n.sessionExpired;
     }
 
     if (errorStr.contains('forbidden') || errorStr.contains('403')) {
-      return 'You don\'t have permission to perform this action.';
+      return l10n.noPermission;
     }
 
-    return 'Failed to create calendar. Please try again.';
+    return l10n.failedToCreateCalendar;
   }
 
   void _showError(String message) {
@@ -129,14 +130,14 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
       barrierDismissible: false,
       builder: (context) => CupertinoAlertDialog(
         title: Row(
-          children: const [
-            Icon(
+          children: [
+            const Icon(
               CupertinoIcons.exclamationmark_triangle,
               color: CupertinoColors.systemRed,
               size: 20,
             ),
-            SizedBox(width: 8),
-            Text('Error'),
+            const SizedBox(width: 8),
+            Text(context.l10n.error),
           ],
         ),
         content: Padding(
@@ -146,7 +147,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
         actions: [
           CupertinoDialogAction(
             isDefaultAction: true,
-            child: const Text('OK'),
+            child: Text(context.l10n.ok),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -163,7 +164,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
       leading: CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: () => context.pop(),
-        child: const Text('Cancel'),
+        child: Text(l10n.cancel),
       ),
       actions: [
         CupertinoButton(
@@ -171,7 +172,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
           onPressed: _isLoading ? null : _createCalendar,
           child: _isLoading
               ? const CupertinoActivityIndicator()
-              : const Text('Create'),
+              : Text(l10n.create),
         ),
       ],
       body: ListView(
@@ -232,8 +233,8 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
           const SizedBox(height: 24),
 
           CupertinoListTile(
-            title: const Text('Public Calendar'),
-            subtitle: const Text('Others can search and subscribe'),
+            title: Text(l10n.publicCalendar),
+            subtitle: Text(l10n.othersCanSearchAndSubscribe),
             trailing: CupertinoSwitch(
               value: _isPublic,
               onChanged: _isLoading
@@ -248,7 +249,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
 
           CupertinoListTile(
             title: Text(l10n.deleteAssociatedEvents),
-            subtitle: const Text('Delete events when this calendar is deleted'),
+            subtitle: Text(l10n.deleteEventsWithCalendar),
             trailing: CupertinoSwitch(
               value: _deleteAssociatedEvents,
               onChanged: _isLoading

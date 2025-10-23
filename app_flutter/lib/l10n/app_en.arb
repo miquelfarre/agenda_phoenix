@@ -150,12 +150,15 @@
   "preview": "Preview",
   "download": "Download",
   "upload": "Upload",
-  
+  "leave": "Leave",
+  "stay": "Stay",
+
   "@_COMMON_STATES": {
     "description": "Common application states"
   },
   "loading": "Loading...",
   "loadingData": "Loading data...",
+  "loadingForm": "Loading form...",
   "saving": "Saving...",
   "updating": "Updating...",
   "deleting": "Deleting...",
@@ -165,7 +168,23 @@
   "processing": "Processing...",
   "searching": "Searching...",
   "creating": "Creating...",
-  
+  "accepted": "Accepted",
+  "@accepted": {
+    "description": "Status for accepted invitations"
+  },
+  "declined": "Declined",
+  "@declined": {
+    "description": "Status for declined invitations"
+  },
+  "postponed": "Postponed",
+  "@postponed": {
+    "description": "Status for postponed invitations"
+  },
+  "pending": "Pending",
+  "@pending": {
+    "description": "Status for pending invitations or actions"
+  },
+
   "@_COMMON_RESULTS": {
     "description": "Common result states and messages"
   },
@@ -176,12 +195,37 @@
   "appErrorLoadingData": "Error loading data",
   "noData": "No data available",
   "noResults": "No results found",
+  "noCalendarsAvailable": "No calendars available",
+  "@noCalendarsAvailable": {
+    "description": "Empty state when no calendars exist"
+  },
+  "noTimeOptionsAvailable": "No time options available",
+  "@noTimeOptionsAvailable": {
+    "description": "Empty state when no time options exist"
+  },
   "noInternetConnection": "No internet connection",
   "connectionError": "Connection error",
+  "connectionErrorCheckInternet": "Connection error. Check your internet.",
+  "@connectionErrorCheckInternet": {
+    "description": "Connection error message with action"
+  },
   "unexpectedError": "Unexpected error occurred",
+  "operationTookTooLong": "Operation took too long. Please try again.",
+  "@operationTookTooLong": {
+    "description": "Timeout error message"
+  },
+  "dataFormatError": "Data format error. Please try again.",
+  "@dataFormatError": {
+    "description": "Data format error message"
+  },
   "tryAgain": "Try again",
   "somethingWentWrong": "Something went wrong",
-  
+  "anErrorOccurred": "An error occurred",
+  "pleaseCorrectErrors": "Please correct the errors below",
+  "failedToSubmitForm": "Failed to submit form",
+  "formSubmittedSuccessfully": "Form submitted successfully",
+  "failedToRefresh": "Failed to refresh",
+
   "@_SPLASH_SCREEN": {
     "description": "Splash screen messages"
   },
@@ -242,7 +286,23 @@
   "writeAdditionalMessage": "Write an additional message for users...",
   "unknownUser": "Unknown User",
   "eventTitle": "Event Title",
+  "title": "Title",
+  "@title": {
+    "description": "Generic title label"
+  },
+  "eventNamePlaceholder": "Event name",
+  "@eventNamePlaceholder": {
+    "description": "Placeholder for event name input"
+  },
   "eventDescription": "Event Description",
+  "description": "Description",
+  "@description": {
+    "description": "Generic description label"
+  },
+  "addDetailsPlaceholder": "Add details...",
+  "@addDetailsPlaceholder": {
+    "description": "Placeholder for details input"
+  },
   "eventDate": "Event Date",
   "eventTime": "Event Time",
   "eventLocation": "Event Location",
@@ -264,7 +324,15 @@
   "leaveEvent": "Leave Event",
   "eventMembers": "Event Members",
   "eventInvitations": "Event Invitations",
+  "invitedUsers": "Invited Users",
+  "@invitedUsers": {
+    "description": "List of users invited to event"
+  },
   "attendees": "Attendees",
+  "viewCalendarEvents": "View Calendar Events",
+  "@viewCalendarEvents": {
+    "description": "Button to view all calendar events"
+  },
   "saveChangesOffline": "Save changes offline",
   "saveEventOffline": "Save event offline",
   "updateEvent": "Update Event",
@@ -282,6 +350,10 @@
   },
   "group": "Group",
   "groups": "Groups",
+  "groupDetails": "Group Details",
+  "@groupDetails": {
+    "description": "Title for group details dialog"
+  },
   "groupInitialFallback": "G",
   "avatarUnknownInitial": "?",
   "myGroups": "My Groups",
@@ -554,6 +626,18 @@
   "yesterday": "Yesterday",
   "tomorrow": "Tomorrow",
   "now": "Now",
+  "month": "Month",
+  "@month": {
+    "description": "Month label"
+  },
+  "day": "Day",
+  "@day": {
+    "description": "Day label"
+  },
+  "hour": "Hour",
+  "@hour": {
+    "description": "Hour label"
+  },
   "soon": "Soon",
   "recently": "Recently",
   "thisWeek": "This Week",
@@ -632,9 +716,25 @@
     "description": "Location and timezone settings"
   },
   "countryAndTimezone": "Country and timezone",
+  "country": "Country",
+  "@country": {
+    "description": "Country label"
+  },
   "timezone": "Timezone",
   "@timezone": {
     "description": "Timezone label"
+  },
+  "cityOrTimezone": "City / Timezone",
+  "@cityOrTimezone": {
+    "description": "City or timezone selector label"
+  },
+  "noCountriesAvailable": "No countries available",
+  "@noCountriesAvailable": {
+    "description": "Message when no countries are available"
+  },
+  "noTimezonesAvailable": "No timezones available",
+  "@noTimezonesAvailable": {
+    "description": "Message when no timezones are available"
   },
   "currentTimezone": "Current Timezone",
   "@currentTimezone": {
@@ -918,9 +1018,9 @@
   "changeNumber": "Change Number",
   "automaticVerificationError": "Automatic verification failed. Please enter the code manually.",
   "verificationError": "Verification Error",
-  "firebasePhoneAuthSimulatorError": "Firebase Phone Auth is not supported on iOS simulator. Please use a physical device or Android emulator.",
+  "phoneAuthSimulatorError": "Phone authentication is not supported on iOS simulator. Please use a physical device or Android emulator.",
   "tooManyRequests": "Too many requests. Please try again later.",
-  "operationNotAllowed": "Phone number sign-in is not enabled. Please enable it in Firebase console.",
+  "operationNotAllowed": "Phone number sign-in is not enabled. Please enable it in the authentication console.",
   "smsCodeSentTo": "SMS code sent to {phoneNumber}.",
   "@smsCodeSentTo": {
     "placeholders": {
@@ -934,10 +1034,10 @@
   "invalidVerificationCode": "Invalid verification code.",
   "sessionExpired": "Session expired. Please try again.",
   "errorVerifyingCode": "Error verifying code.",
-  "couldNotGetFirebaseToken": "Could not get Firebase token.",
+  "couldNotGetAuthToken": "Could not get authentication token.",
   "iosSimulatorDetected": "iOS Simulator Detected",
-  "firebasePhoneAuthLimitationMessage": "Firebase Phone Authentication is not fully supported on iOS simulators. For full functionality, please use a physical iOS device, an Android emulator, or the web version.",
-  "testPhoneAuthInstructions": "For testing purposes on iOS simulator, you can use a test phone number and verification code configured in Firebase Console.",
+  "phoneAuthLimitationMessage": "Phone authentication is not fully supported on iOS simulators. For full functionality, please use a physical iOS device, an Android emulator, or the web version.",
+  "testPhoneAuthInstructions": "For testing purposes on iOS simulator, you can use a test phone number and verification code configured in the authentication console.",
   "understood": "Understood",
 
   "@_NOTIFICATIONS_SCREEN": {
@@ -1427,7 +1527,7 @@
   "@_EXCEPTION_MESSAGES": {
     "description": "System exception messages"
   },
-  "couldNotGetFirebaseToken": "Could not get Firebase token",
+  "couldNotGetAuthToken": "Could not get authentication token",
   "failedToLoadGroups": "Failed to load groups",
   "userNotAuthenticated": "User not authenticated",
   "failedToCreateGroup": "Failed to create group",
@@ -1476,7 +1576,7 @@
   "noCurrentUserToUpdate": "No current user to update",
   "failedToUpdateProfile": "Failed to update profile",
   "failedToUpdateFCMToken": "Failed to update FCM token",
-  "firebaseUserHasNoPhoneNumber": "Firebase user has no phone number",
+  "authUserHasNoPhoneNumber": "Authenticated user has no phone number",
   
   "@_PUBLIC_USER_EVENTS_SCREEN": {
     "description": "Text specific to the public user events screen"
@@ -1575,6 +1675,90 @@
   "associateWithCalendar": "Associate with Calendar",
   "@associateWithCalendar": {
     "description": "Checkbox label in event form"
+  },
+  "calendarNameRequired": "Calendar name is required",
+  "@calendarNameRequired": {
+    "description": "Validation error when calendar name is empty"
+  },
+  "calendarNameTooLong": "Calendar name must be 100 characters or less",
+  "@calendarNameTooLong": {
+    "description": "Validation error when calendar name exceeds limit"
+  },
+  "calendarDescriptionTooLong": "Description must be 500 characters or less",
+  "@calendarDescriptionTooLong": {
+    "description": "Validation error when description exceeds limit"
+  },
+  "noInternetCheckNetwork": "No internet connection. Please check your network and try again.",
+  "@noInternetCheckNetwork": {
+    "description": "Error message for no internet connection"
+  },
+  "requestTimedOut": "Request timed out. Please try again.",
+  "@requestTimedOut": {
+    "description": "Error message when request times out"
+  },
+  "serverError": "Server error. Please try again later.",
+  "@serverError": {
+    "description": "Error message for server errors"
+  },
+  "calendarNameExists": "A calendar with this name already exists.",
+  "@calendarNameExists": {
+    "description": "Error when calendar name is duplicated"
+  },
+  "sessionExpired": "Session expired. Please login again.",
+  "@sessionExpired": {
+    "description": "Error when user session expires"
+  },
+  "noPermission": "You don't have permission to perform this action.",
+  "@noPermission": {
+    "description": "Error when user lacks permissions"
+  },
+  "failedToCreateCalendar": "Failed to create calendar. Please try again.",
+  "@failedToCreateCalendar": {
+    "description": "Error when calendar creation fails"
+  },
+  "publicCalendar": "Public Calendar",
+  "@publicCalendar": {
+    "description": "Label for public calendar toggle"
+  },
+  "othersCanSearchAndSubscribe": "Others can search and subscribe",
+  "@othersCanSearchAndSubscribe": {
+    "description": "Description for public calendar feature"
+  },
+  "deleteEventsWithCalendar": "Delete events when this calendar is deleted",
+  "@deleteEventsWithCalendar": {
+    "description": "Option to delete events when calendar is deleted"
+  },
+  "confirmDeleteCalendarWithEvents": "This will delete the calendar and all associated events. This action cannot be undone.",
+  "@confirmDeleteCalendarWithEvents": {
+    "description": "Warning when deleting calendar with events"
+  },
+  "confirmDeleteCalendarKeepEvents": "This will delete the calendar but keep the events. This action cannot be undone.",
+  "@confirmDeleteCalendarKeepEvents": {
+    "description": "Warning when deleting calendar without events"
+  },
+  "visibleToOthers": "Visible to others",
+  "@visibleToOthers": {
+    "description": "Status text for public calendar"
+  },
+  "private": "Private",
+  "@private": {
+    "description": "Status text for private calendar"
+  },
+  "eventsWillBeDeleted": "Events will be deleted with calendar",
+  "@eventsWillBeDeleted": {
+    "description": "Status for cascade delete option"
+  },
+  "eventsWillBeKept": "Events will be kept when calendar is deleted",
+  "@eventsWillBeKept": {
+    "description": "Status for keeping events when deleting calendar"
+  },
+  "calendarNotFound": "Calendar not found",
+  "@calendarNotFound": {
+    "description": "Error when calendar doesn't exist"
+  },
+  "failedToLoadCalendar": "Failed to load calendar",
+  "@failedToLoadCalendar": {
+    "description": "Error when loading calendar fails"
   },
   "isBirthday": "Is Birthday",
   "@isBirthday": {

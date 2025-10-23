@@ -7,7 +7,7 @@ import '../models/user_hive.dart';
 import '../utils/app_exceptions.dart';
 import '../services/config_service.dart';
 import 'api_client.dart';
-import 'firebase_auth_service.dart';
+import 'supabase_auth_service.dart';
 
 class UnifiedUserService {
   static final UnifiedUserService _instance = UnifiedUserService._internal();
@@ -38,7 +38,7 @@ class UnifiedUserService {
     return Hive.box<UserHive>('users').get(userId)?.toUser();
   }
 
-  bool get isLoggedIn => currentUser != null && FirebaseAuthService.isLoggedIn;
+  bool get isLoggedIn => currentUser != null && SupabaseAuthService.isLoggedIn;
 
   Future<User> createOrUpdateUser({
     required String firebaseUid,
@@ -52,10 +52,10 @@ class UnifiedUserService {
     String? defaultCity,
   }) async {
     try {
-      final idToken = await FirebaseAuthService.getCurrentUserToken();
+      final idToken = await SupabaseAuthService.getCurrentUserToken();
       if (idToken == null) {
         throw AppException(
-          message: 'No Firebase token available',
+          message: 'No authentication token available',
           code: 1001,
           tag: 'AUTH',
         );
@@ -101,15 +101,15 @@ class UnifiedUserService {
         return user;
       }
 
-      final firebaseUser = FirebaseAuthService.currentUser;
-      if (firebaseUser == null) {
+      final supabaseUser = SupabaseAuthService.currentUser;
+      if (supabaseUser == null) {
         return null;
       }
 
-      final idToken = await FirebaseAuthService.getCurrentUserToken();
+      final idToken = await SupabaseAuthService.getCurrentUserToken();
       if (idToken == null) {
         throw AppException(
-          message: 'No Firebase token available',
+          message: 'No authentication token available',
           code: 1001,
           tag: 'AUTH',
         );
@@ -274,7 +274,7 @@ class UnifiedUserService {
 
   Future<void> logout() async {
     try {
-      await FirebaseAuthService.signOut();
+      await SupabaseAuthService.signOut();
       clearCache();
     } catch (e) {
       rethrow;

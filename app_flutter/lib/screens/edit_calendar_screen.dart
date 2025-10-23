@@ -56,7 +56,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
       if (calendar == null) {
         if (!mounted) return;
-        _showError('Calendar not found');
+        _showError(context.l10n.calendarNotFound);
         context.pop();
         return;
       }
@@ -72,7 +72,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      _showError('Failed to load calendar');
+      _showError(context.l10n.failedToLoadCalendar);
       context.pop();
     }
   }
@@ -81,18 +81,18 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      _showError('Calendar name is required');
+      _showError(context.l10n.calendarNameRequired);
       return;
     }
 
     if (name.length > 100) {
-      _showError('Calendar name must be 100 characters or less');
+      _showError(context.l10n.calendarNameTooLong);
       return;
     }
 
     final description = _descriptionController.text.trim();
     if (description.length > 500) {
-      _showError('Description must be 500 characters or less');
+      _showError(context.l10n.calendarDescriptionTooLong);
       return;
     }
 
@@ -161,18 +161,18 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         title: Text(context.l10n.deleteCalendar),
         content: Text(
           _deleteAssociatedEvents
-              ? 'This will delete the calendar and all associated events. This action cannot be undone.'
-              : 'This will delete the calendar but keep the events. This action cannot be undone.',
+              ? context.l10n.confirmDeleteCalendarWithEvents
+              : context.l10n.confirmDeleteCalendarKeepEvents,
         ),
         actions: [
           CupertinoDialogAction(
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
             onPressed: () => Navigator.of(context).pop(false),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -182,40 +182,39 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
   String _parseErrorMessage(dynamic error, String operation) {
     final errorStr = error.toString().toLowerCase();
+    final l10n = context.l10n;
 
     if (errorStr.contains('socket') ||
         errorStr.contains('network') ||
         errorStr.contains('connection')) {
-      return 'No internet connection. Please check your network and try again.';
+      return l10n.noInternetCheckNetwork;
     }
 
     if (errorStr.contains('timeout')) {
-      return 'Request timed out. Please try again.';
+      return l10n.requestTimedOut;
     }
 
     if (errorStr.contains('500') || errorStr.contains('server error')) {
-      return 'Server error. Please try again later.';
+      return l10n.serverError;
     }
 
     if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
-      return 'Session expired. Please login again.';
+      return l10n.sessionExpired;
     }
 
     if (errorStr.contains('forbidden') || errorStr.contains('403')) {
-      return 'You don\'t have permission to $operation this calendar.';
+      return l10n.noPermission;
     }
 
     if (errorStr.contains('not found') || errorStr.contains('404')) {
-      return 'Calendar not found. It may have been deleted.';
+      return l10n.calendarNotFound;
     }
 
     if (errorStr.contains('conflict') || errorStr.contains('409')) {
-      if (operation == 'delete') {
-        return 'Cannot delete calendar with associated events. Please remove events first or enable cascade delete.';
-      }
+      return l10n.failedToCreateCalendar;
     }
 
-    return 'Failed to $operation calendar. Please try again.';
+    return l10n.failedToLoadCalendar;
   }
 
   void _showError(String message) {
@@ -224,14 +223,14 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       barrierDismissible: false,
       builder: (context) => CupertinoAlertDialog(
         title: Row(
-          children: const [
-            Icon(
+          children: [
+            const Icon(
               CupertinoIcons.exclamationmark_triangle,
               color: CupertinoColors.systemRed,
               size: 20,
             ),
-            SizedBox(width: 8),
-            Text('Error'),
+            const SizedBox(width: 8),
+            Text(context.l10n.error),
           ],
         ),
         content: Padding(
@@ -241,7 +240,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         actions: [
           CupertinoDialogAction(
             isDefaultAction: true,
-            child: const Text('OK'),
+            child: Text(context.l10n.ok),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -265,7 +264,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       leading: CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: () => context.pop(),
-        child: const Text('Cancel'),
+        child: Text(l10n.cancel),
       ),
       actions: [
         CupertinoButton(
@@ -273,7 +272,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
           onPressed: _isLoading ? null : _updateCalendar,
           child: _isLoading
               ? const CupertinoActivityIndicator()
-              : const Text('Save'),
+              : Text(l10n.save),
         ),
       ],
       body: ListView(
@@ -334,8 +333,8 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
           const SizedBox(height: 24),
 
           CupertinoListTile(
-            title: const Text('Public Calendar'),
-            subtitle: Text(_isPublic ? 'Visible to others' : 'Private'),
+            title: Text(l10n.publicCalendar),
+            subtitle: Text(_isPublic ? l10n.visibleToOthers : l10n.private),
             trailing: CupertinoSwitch(value: _isPublic, onChanged: null),
           ),
 
@@ -343,8 +342,8 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
             title: Text(l10n.deleteAssociatedEvents),
             subtitle: Text(
               _deleteAssociatedEvents
-                  ? 'Events will be deleted with calendar'
-                  : 'Events will be kept when calendar is deleted',
+                  ? l10n.eventsWillBeDeleted
+                  : l10n.eventsWillBeKept,
             ),
             trailing: CupertinoSwitch(
               value: _deleteAssociatedEvents,

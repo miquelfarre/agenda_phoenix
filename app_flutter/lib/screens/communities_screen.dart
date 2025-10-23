@@ -72,7 +72,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
         if (calendars.isEmpty) {
           return EmptyState(
             icon: CupertinoIcons.rectangle_stack_person_crop,
-            message: 'No calendars yet',
+            message: context.l10n.noCalendarsYet,
             subtitle:
                 'Organize your events by creating calendars or subscribe to public ones',
             actionLabel: 'Create Calendar',

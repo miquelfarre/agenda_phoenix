@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../models/country.dart';
 import '../models/selector_option.dart';
 import '../services/country_service.dart';
@@ -107,9 +108,9 @@ class _TimezoneHorizontalSelectorState
         HorizontalSelectorWidget<Country>(
           options: _getCountryOptions(),
           onSelected: _onCountrySelected,
-          label: 'País',
+          label: context.l10n.country,
           icon: Icons.flag,
-          emptyMessage: 'No countries available',
+          emptyMessage: context.l10n.noCountriesAvailable,
         ),
 
         const SizedBox(height: 12),
@@ -118,9 +119,9 @@ class _TimezoneHorizontalSelectorState
           HorizontalSelectorWidget<String>(
             options: _getTimezoneOptions(),
             onSelected: _onTimezoneSelected,
-            label: 'Ciudad / Zona horaria',
+            label: context.l10n.cityOrTimezone,
             icon: Icons.location_city,
-            emptyMessage: 'No timezones available',
+            emptyMessage: context.l10n.noTimezonesAvailable,
           ),
         ],
       ],

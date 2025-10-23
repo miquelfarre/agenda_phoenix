@@ -391,7 +391,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
             showCupertinoDialog(
               context: context,
               builder: (context) => CupertinoAlertDialog(
-                title: Text('Group Details'),
+                title: Text(context.l10n.groupDetails),
                 content: Text(
                   AppLocalizations.of(context)?.seriesEditNotAvailable ??
                       'This feature will be available soon',

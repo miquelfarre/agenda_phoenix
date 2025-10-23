@@ -1,6 +1,6 @@
 import '../models/user.dart';
 import 'api_client.dart';
-import 'firebase_auth_service.dart';
+import 'supabase_auth_service.dart';
 import '../core/services/base_service.dart';
 import '../utils/app_exceptions.dart';
 import 'unified_user_service.dart';
@@ -36,10 +36,10 @@ class UserManagementService extends BaseService {
     String? defaultCity,
   }) async {
     try {
-      final idToken = await FirebaseAuthService.getCurrentUserToken();
+      final idToken = await SupabaseAuthService.getCurrentUserToken();
       if (idToken == null) {
         throw AppException(
-          message: 'No Firebase token available',
+          message: 'No authentication token available',
           code: 1001,
           tag: 'AUTH',
         );

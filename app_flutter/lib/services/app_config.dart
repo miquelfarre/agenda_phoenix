@@ -19,4 +19,18 @@ class AppConfig {
 
     return 'http://localhost:8000';
   }
+
+  static String get supabaseUrl {
+    return const String.fromEnvironment(
+      'SUPABASE_URL',
+      defaultValue: 'https://your-project.supabase.co',
+    );
+  }
+
+  static String get supabaseAnonKey {
+    return const String.fromEnvironment(
+      'SUPABASE_ANON_KEY',
+      defaultValue: 'your-anon-key-here',
+    );
+  }
 }

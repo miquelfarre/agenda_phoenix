@@ -16,7 +16,7 @@ import '../../screens/birthdays_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../../screens/create_edit_event_screen.dart';
 import '../../screens/event_detail_screen.dart';
-import '../../services/firebase_auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../navigation/navigation_shell.dart';
 import '../../models/event.dart';
 
@@ -165,13 +165,13 @@ class AppRouter {
 
   static String? _redirect(BuildContext context, GoRouterState state) {
     final configService = ConfigService.instance;
-    final isFirebaseAuthenticated = FirebaseAuthService.currentUser != null;
+    final isSupabaseAuthenticated = SupabaseAuthService.currentUser != null;
     final isTestMode = configService.isTestMode;
     final currentLocation = state.uri.path;
 
     final isAuthenticated = _checkAuthentication(
       isTestMode,
-      isFirebaseAuthenticated,
+      isSupabaseAuthenticated,
     );
 
     if (kDebugMode) {

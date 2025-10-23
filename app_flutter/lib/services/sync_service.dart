@@ -16,7 +16,7 @@ import '../models/event_interaction_hive.dart';
 import '../utils/temp_id_generator.dart';
 import 'api_client.dart';
 import '../models/user_event_note_hive.dart';
-import 'firebase_auth_service.dart';
+import 'supabase_auth_service.dart';
 import 'config_service.dart';
 
 class SyncService {
@@ -27,7 +27,7 @@ class SyncService {
     if (configService.isTestMode) {
       return true;
     }
-    return FirebaseAuthService.isLoggedIn;
+    return SupabaseAuthService.isLoggedIn;
   }
 
   static Future<List<Event>> syncEvents() async {

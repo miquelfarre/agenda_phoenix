@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'base_screen_state.dart';
 
 abstract class BaseFormScreen extends ConsumerStatefulWidget {
@@ -99,7 +100,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
 
     final isValid = await validateForm();
     if (!isValid) {
-      showErrorDialog('Please correct the errors below');
+      showErrorDialog(context.l10n.pleaseCorrectErrors);
       return;
     }
 
@@ -113,7 +114,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
         onFormSubmitSuccess();
       }
     } catch (e) {
-      setError('Failed to submit form: $e');
+      setError('${context.l10n.failedToSubmitForm}: $e');
     } finally {
       _isSubmitting = false;
       if (mounted) setState(() {});
@@ -121,7 +122,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
   }
 
   void onFormSubmitSuccess() {
-    showSuccessMessage('Form submitted successfully');
+    showSuccessMessage(context.l10n.formSubmittedSuccessfully);
     goBack();
   }
 
@@ -137,21 +138,22 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
   }
 
   Future<bool?> showCancelConfirmationDialog() {
+    final l10n = context.l10n;
     return showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('Unsaved Changes'),
+        title: Text(l10n.unsavedChanges),
         content: Text(unsavedChangesMessage),
         actions: [
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Leave'),
+            child: Text(l10n.leave),
           ),
           CupertinoDialogAction(
             isDefaultAction: true,
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Stay'),
+            child: Text(l10n.stay),
           ),
         ],
       ),
@@ -190,7 +192,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
 
   Widget buildBody() {
     if (isLoading) {
-      return buildLoadingWidget(message: 'Loading form...');
+      return buildLoadingWidget(message: context.l10n.loadingForm);
     }
 
     if (errorMessage != null) {

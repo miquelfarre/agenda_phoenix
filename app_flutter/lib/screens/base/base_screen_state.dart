@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/navigation_service.dart';
 import '../../core/monitoring/performance_monitor.dart';
+import '../../ui/helpers/l10n/l10n_helpers.dart';
 
 mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   bool _isLoading = false;
@@ -100,11 +101,11 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }
 
   void showErrorDialog(String message, {String? title}) {
-    navigationService.showAlert(message, title: title ?? 'Error');
+    navigationService.showAlert(message, title: title ?? context.l10n.error);
   }
 
   void showSuccessMessage(String message) {
-    navigationService.showAlert(message, title: 'Success');
+    navigationService.showAlert(message, title: context.l10n.success);
   }
 
   Future<R?> navigateToScreen<R extends Object?>(
@@ -150,7 +151,7 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   Future<void> refreshScreen() async {
     await handleAsyncOperation(
       () => onRefresh(),
-      errorPrefix: 'Failed to refresh screen',
+      errorPrefix: context.l10n.failedToRefresh,
     );
   }
 
@@ -165,7 +166,7 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     VoidCallback? onRetry,
     bool showRetry = true,
   }) {
-    final errorMsg = message ?? errorMessage ?? 'An error occurred';
+    final errorMsg = message ?? errorMessage ?? context.l10n.anErrorOccurred;
 
     return Center(
       child: Padding(
@@ -191,7 +192,7 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
               const SizedBox(height: 24),
               CupertinoButton.filled(
                 onPressed: onRetry,
-                child: const Text('Retry'),
+                child: Text(context.l10n.retry),
               ),
             ],
           ],

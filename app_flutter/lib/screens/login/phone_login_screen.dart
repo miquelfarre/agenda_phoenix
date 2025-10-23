@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/firebase_auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/config_service.dart';
 import '../../services/country_service.dart';
@@ -258,11 +257,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       final result = await PlatformDialogHelpers.showPlatformConfirmDialog(
         context,
         title: l10n.iosSimulatorDetected,
-        message:
-            'Firebase Phone Auth is not supported on iOS Simulator.\n\n'
-            'For testing, we will use a mock authentication flow.\n\n'
-            'Press "Continue" to proceed with test user ID 21 (Kate Bell).',
-        confirmText: 'Continue with Test User',
+        message: l10n.firebasePhoneAuthSimulatorError,
+        confirmText: l10n.continueAction,
         cancelText: l10n.cancel,
       );
 
@@ -275,54 +271,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     }
 
     try {
-      await FirebaseAuthService.verifyPhoneNumber(
+      await SupabaseAuthService.signInWithPhone(
         phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          try {
-            await FirebaseAuthService.signInWithPhoneCredential(credential);
-            await _onAuthSuccess();
-          } catch (e) {
-            if (mounted && context.mounted) {
-              final l10n = context.l10n;
-              PlatformDialogHelpers.showSnackBar(
-                context: context,
-                message: l10n.automaticVerificationError,
-                isError: true,
-              );
-            }
-          }
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          if (!mounted || !context.mounted) return;
-          final l10n = context.l10n;
-          String errorMessage = l10n.verificationError;
-
-          switch (e.code) {
-            case 'simulator-not-supported':
-              errorMessage = e.message ?? l10n.firebasePhoneAuthSimulatorError;
-              break;
-            case 'invalid-phone-number':
-              errorMessage = l10n.invalidPhone;
-              break;
-            case 'too-many-requests':
-              errorMessage = l10n.tooManyRequests;
-              break;
-            case 'operation-not-allowed':
-              errorMessage = l10n.operationNotAllowed;
-              break;
-            default:
-              errorMessage = e.message ?? l10n.unexpectedError;
-          }
-
-          PlatformDialogHelpers.showSnackBar(
-            context: context,
-            message: errorMessage,
-            isError: true,
-          );
-        },
-        codeSent: (String verificationId, int? resendToken) {
+        onCodeSent: () {
           setState(() {
-            _verificationId = verificationId;
             _codeSent = true;
           });
           if (mounted && context.mounted) {
@@ -333,8 +285,26 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
             );
           }
         },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          _verificationId = verificationId;
+        onError: (String error) {
+          if (!mounted || !context.mounted) return;
+          final l10n = context.l10n;
+          String errorMessage = l10n.verificationError;
+
+          if (error.contains('invalid-phone-number') ||
+              error.contains('Invalid phone')) {
+            errorMessage = l10n.invalidPhone;
+          } else if (error.contains('too-many-requests') ||
+              error.contains('rate limit')) {
+            errorMessage = l10n.tooManyRequests;
+          } else {
+            errorMessage = error;
+          }
+
+          PlatformDialogHelpers.showSnackBar(
+            context: context,
+            message: errorMessage,
+            isError: true,
+          );
         },
       );
     } catch (e) {
@@ -342,16 +312,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       final l10n = context.l10n;
       String errorMessage = l10n.errorSendingCode;
 
-      if (e is FirebaseAuthException && e.code == 'simulator-not-supported') {
-        errorMessage = e.message ?? errorMessage;
-        _showSimulatorDialog();
-      } else {
-        PlatformDialogHelpers.showSnackBar(
-          context: context,
-          message: errorMessage,
-          isError: true,
-        );
-      }
+      PlatformDialogHelpers.showSnackBar(
+        context: context,
+        message: '$errorMessage: ${e.toString()}',
+        isError: true,
+      );
     }
 
     setState(() => _isLoading = false);
@@ -360,30 +325,28 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   Future<void> _verifyOTP() async {
     setState(() => _isLoading = true);
 
+    final phoneNumber =
+        '${_selectedCountry.dialCode}${_phoneController.text.trim()}';
+
     try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId,
-        smsCode: _codeController.text.trim(),
+      await SupabaseAuthService.verifyOTP(
+        phoneNumber: phoneNumber,
+        token: _codeController.text.trim(),
       );
 
-      await FirebaseAuthService.signInWithPhoneCredential(credential);
       await _onAuthSuccess();
     } catch (e) {
       if (!mounted || !context.mounted) return;
       final l10n = context.l10n;
       String errorMessage = l10n.incorrectCode;
 
-      if (e is FirebaseAuthException) {
-        switch (e.code) {
-          case 'invalid-verification-code':
-            errorMessage = l10n.invalidVerificationCode;
-            break;
-          case 'session-expired':
-            errorMessage = l10n.sessionExpired;
-            break;
-          default:
-            errorMessage = e.message ?? l10n.errorVerifyingCode;
-        }
+      if (e.toString().contains('invalid') ||
+          e.toString().contains('Invalid')) {
+        errorMessage = l10n.invalidVerificationCode;
+      } else if (e.toString().contains('expired')) {
+        errorMessage = l10n.sessionExpired;
+      } else {
+        errorMessage = l10n.errorVerifyingCode;
       }
 
       PlatformDialogHelpers.showSnackBar(
@@ -398,13 +361,13 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
   Future<void> _onAuthSuccess() async {
     try {
-      final idToken = await FirebaseAuthService.getCurrentUserToken();
+      final idToken = await SupabaseAuthService.getCurrentUserToken();
       if (idToken == null) {
         if (mounted && context.mounted) {
           final l10n = context.l10n;
           throw Exception(l10n.couldNotGetFirebaseToken);
         } else {
-          throw Exception('Could not get Firebase token');
+          throw Exception('Could not get authentication token');
         }
       }
 

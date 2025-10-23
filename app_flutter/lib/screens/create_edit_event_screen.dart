@@ -253,6 +253,7 @@ class CreateEditEventScreenState
 
   @override
   List<Widget> buildFormFields() {
+    final l10n = context.l10n;
     return [
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -410,8 +411,8 @@ class CreateEditEventScreenState
 
       buildTextField(
         fieldName: 'title',
-        label: 'Título',
-        placeholder: 'Nombre del evento',
+        label: l10n.title,
+        placeholder: l10n.eventNamePlaceholder,
         controller: _titleController,
         required: true,
       ),
@@ -420,8 +421,8 @@ class CreateEditEventScreenState
         const SizedBox(height: 16),
         buildTextField(
           fieldName: 'description',
-          label: 'Descripción',
-          placeholder: 'Añade detalles...',
+          label: l10n.description,
+          placeholder: l10n.addDetailsPlaceholder,
           controller: _descriptionController,
           maxLines: 3,
         ),
@@ -558,7 +559,7 @@ class CreateEditEventScreenState
                       children: [
                         Icon(Icons.today, size: 16),
                         SizedBox(width: 4),
-                        Text('Hoy', style: TextStyle(fontSize: 14)),
+                        Text(l10n.today, style: TextStyle(fontSize: 14)),
                       ],
                     ),
                   ),
@@ -611,7 +612,7 @@ class CreateEditEventScreenState
                       const Icon(CupertinoIcons.calendar_badge_plus, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'Fecha de fin',
+                        l10n.endDate,
                         style: AppStyles.bodyText.copyWith(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -635,7 +636,7 @@ class CreateEditEventScreenState
                       children: [
                         Icon(Icons.today, size: 16),
                         SizedBox(width: 4),
-                        Text('Hoy', style: TextStyle(fontSize: 14)),
+                        Text(l10n.today, style: TextStyle(fontSize: 14)),
                       ],
                     ),
                   ),
