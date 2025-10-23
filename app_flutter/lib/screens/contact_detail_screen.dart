@@ -81,7 +81,9 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     });
 
     try {
-      final data = await SupabaseService.instance.fetchContactDetail(widget.contact.id);
+      final data = await SupabaseService.instance.fetchContactDetail(
+        widget.contact.id,
+      );
 
       if (mounted) {
         setState(() {
@@ -283,12 +285,15 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
               }
 
               final allEvents = ref.watch(eventStateProvider);
-              final contactEvents = allEvents.where((e) =>
-                e.attendees.any((a) =>
-                  (a is User && a.id == widget.contact.id) ||
-                  (a is Map && a['id'] == widget.contact.id)
-                )
-              ).toList();
+              final contactEvents = allEvents
+                  .where(
+                    (e) => e.attendees.any(
+                      (a) =>
+                          (a is User && a.id == widget.contact.id) ||
+                          (a is Map && a['id'] == widget.contact.id),
+                    ),
+                  )
+                  .toList();
               final availableEvents = _filterAvailableEvents(contactEvents);
 
               return PlatformRefresh(

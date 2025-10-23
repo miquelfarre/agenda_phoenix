@@ -80,8 +80,12 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
       final data = await SupabaseService.instance.fetchPeopleAndGroups(userId);
       if (mounted) {
         setState(() {
-          _contacts = (data['contacts'] as List).map((c) => User.fromJson(c)).toList();
-          _groups = (data['groups'] as List).map((g) => Group.fromJson(g)).toList();
+          _contacts = (data['contacts'] as List)
+              .map((c) => User.fromJson(c))
+              .toList();
+          _groups = (data['groups'] as List)
+              .map((g) => Group.fromJson(g))
+              .toList();
           _isLoading = false;
         });
       }

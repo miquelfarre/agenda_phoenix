@@ -61,8 +61,13 @@ class _PublicUserEventsScreenState
 
     try {
       final userId = ConfigService.instance.currentUserId;
-      final events = await SupabaseService.instance.fetchPublicUserEvents(widget.publicUser.id);
-      final isSubscribed = await SupabaseService.instance.isSubscribedToUser(userId, widget.publicUser.id);
+      final events = await SupabaseService.instance.fetchPublicUserEvents(
+        widget.publicUser.id,
+      );
+      final isSubscribed = await SupabaseService.instance.isSubscribedToUser(
+        userId,
+        widget.publicUser.id,
+      );
 
       if (mounted) {
         setState(() {

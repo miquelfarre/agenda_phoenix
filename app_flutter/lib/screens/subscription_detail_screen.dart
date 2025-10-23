@@ -43,11 +43,11 @@ class _SubscriptionDetailScreenState
     });
 
     try {
-      print(
-        '🔵 [SubscriptionDetailScreen] Calling fetchPublicUserEvents...',
-      );
+      print('🔵 [SubscriptionDetailScreen] Calling fetchPublicUserEvents...');
       final publicUserId = widget.subscription.subscribedToId;
-      final eventsData = await SupabaseService.instance.fetchPublicUserEvents(publicUserId);
+      final eventsData = await SupabaseService.instance.fetchPublicUserEvents(
+        publicUserId,
+      );
       final events = eventsData.map((e) => Event.fromJson(e)).toList();
       print(
         '🔵 [SubscriptionDetailScreen] fetchPublicUserEvents completed, events count: ${events.length}',

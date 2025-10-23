@@ -214,7 +214,9 @@ class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
       state = const AsyncValue.loading();
 
       final userId = ConfigService.instance.currentUserId;
-      final usersData = await SupabaseService.instance.fetchSubscriptions(userId);
+      final usersData = await SupabaseService.instance.fetchSubscriptions(
+        userId,
+      );
 
       final subscriptions = usersData.map((userData) {
         final user = User.fromJson(userData);

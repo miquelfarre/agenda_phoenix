@@ -1165,69 +1165,74 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              ...invitations.where((invitation) => invitation.user != null).map((invitation) {
-                final user = invitation.user!;
-                final status = invitation.participationStatus ?? 'pending';
+              ...invitations.where((invitation) => invitation.user != null).map(
+                (invitation) {
+                  final user = invitation.user!;
+                  final status = invitation.participationStatus ?? 'pending';
 
-                final statusColor = _getStatusColor(status);
-                final statusText = _getStatusText(status);
+                  final statusColor = _getStatusColor(status);
+                  final statusText = _getStatusText(status);
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      UserAvatar(user: user, radius: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user.displayName,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: AppStyles.black87,
-                              ),
-                            ),
-                            if (user.displaySubtitle != null) ...[
-                              const SizedBox(height: 2),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        UserAvatar(user: user, radius: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                user.displaySubtitle!,
+                                user.displayName,
                                 style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppStyles.grey600,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppStyles.black87,
                                 ),
                               ),
+                              if (user.displaySubtitle != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  user.displaySubtitle!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppStyles.grey600,
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppStyles.colorWithOpacity(statusColor, 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppStyles.colorWithOpacity(statusColor, 0.3),
                           ),
                         ),
-                        child: Text(
-                          statusText,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppStyles.colorWithOpacity(statusColor, 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppStyles.colorWithOpacity(
+                                statusColor,
+                                0.3,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),

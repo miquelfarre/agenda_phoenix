@@ -19,6 +19,7 @@ import '../services/supabase_service.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
+
 // Helper class to store event with interaction type
 class EventWithInteraction {
   final Event event;
@@ -78,7 +79,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     try {
       print('🔵 [EventsScreen] Loading events from Supabase...');
       final userId = ConfigService.instance.currentUserId;
-      final eventsData = await SupabaseService.instance.fetchEventsForUser(userId);
+      final eventsData = await SupabaseService.instance.fetchEventsForUser(
+        userId,
+      );
 
       // Convert Supabase data to EventListItem
       final eventItems = <EventWithInteraction>[];
@@ -91,25 +94,40 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
         final eventOwnerId = data['owner_id'] as int?;
         final isOwner = eventOwnerId == userId;
-        final interactionType = isOwner ? null : (myInteraction?['interaction_type'] as String?);
-        final invitationStatus = myInteraction?['participation_status'] as String?;
+        final interactionType = isOwner
+            ? null
+            : (myInteraction?['interaction_type'] as String?);
+        final invitationStatus =
+            myInteraction?['participation_status'] as String?;
 
         final event = Event.fromJson(data);
 
-        eventItems.add(EventWithInteraction(event, interactionType, invitationStatus));
+        eventItems.add(
+          EventWithInteraction(event, interactionType, invitationStatus),
+        );
       }
 
       // Calculate filters
-      final myEvents = eventItems.where((e) => e.event.ownerId == userId).length;
-      final invitations = eventItems.where((e) =>
-        e.event.ownerId != userId && e.interactionType == 'invited' && e.invitationStatus == 'pending'
-      ).length;
-      final subscribed = eventItems.where((e) =>
-        e.event.ownerId != userId && (
-          e.interactionType == 'subscribed' ||
-          (e.interactionType == 'joined' && e.invitationStatus == 'accepted')
-        )
-      ).length;
+      final myEvents = eventItems
+          .where((e) => e.event.ownerId == userId)
+          .length;
+      final invitations = eventItems
+          .where(
+            (e) =>
+                e.event.ownerId != userId &&
+                e.interactionType == 'invited' &&
+                e.invitationStatus == 'pending',
+          )
+          .length;
+      final subscribed = eventItems
+          .where(
+            (e) =>
+                e.event.ownerId != userId &&
+                (e.interactionType == 'subscribed' ||
+                    (e.interactionType == 'joined' &&
+                        e.invitationStatus == 'accepted')),
+          )
+          .length;
 
       final data = EventsData(
         events: eventItems,
@@ -119,7 +137,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         allCount: eventItems.length,
       );
 
-      print('🔵 [EventsScreen] Loaded ${eventItems.length} events from Supabase');
+      print(
+        '🔵 [EventsScreen] Loaded ${eventItems.length} events from Supabase',
+      );
 
       if (mounted) {
         setState(() {

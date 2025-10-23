@@ -65,7 +65,9 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
     try {
       final userId = ConfigService.instance.currentUserId;
-      final subscriptions = await SupabaseService.instance.fetchSubscriptions(userId);
+      final subscriptions = await SupabaseService.instance.fetchSubscriptions(
+        userId,
+      );
       if (mounted) {
         setState(() {
           _subscriptions = subscriptions;
@@ -81,7 +83,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       }
     }
   }
-
 
   Widget _buildSearchField(bool isIOS) {
     final l10n = context.l10n;
@@ -349,15 +350,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             if (_searchQuery.isEmpty) return true;
             final query = _searchQuery.toLowerCase();
             return (user.fullName?.toLowerCase().contains(query) ?? false) ||
-                   (user.instagramName?.toLowerCase().contains(query) ?? false);
+                (user.instagramName?.toLowerCase().contains(query) ?? false);
           }).toList();
 
-          return _buildScrollableContent(
-            filteredUsers,
-            isIOS,
-            l10n,
-            ref,
-          );
+          return _buildScrollableContent(filteredUsers, isIOS, l10n, ref);
         },
       ),
     );
@@ -371,10 +367,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     );
   }
 
-  Future<void> _removeUser(
-    User user,
-    WidgetRef ref,
-  ) async {
+  Future<void> _removeUser(User user, WidgetRef ref) async {
     final l10n = context.l10n;
     try {
       final subscriptionsAsync = ref.read(subscriptionsProvider);
@@ -385,13 +378,13 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
       final currentUserId = ConfigService.instance.currentUserId;
       final subscription = subscriptions.firstWhere(
-        (sub) =>
-            sub.userId == currentUserId &&
-            sub.subscribedToId == user.id,
+        (sub) => sub.userId == currentUserId && sub.subscribedToId == user.id,
         orElse: () => throw Exception('Subscription not found'),
       );
 
-      await SubscriptionService().deleteSubscription(subscriptionId: subscription.id);
+      await SubscriptionService().deleteSubscription(
+        subscriptionId: subscription.id,
+      );
 
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
 

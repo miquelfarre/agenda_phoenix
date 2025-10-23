@@ -89,8 +89,13 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
       final currentUserId = ConfigService.instance.currentUserId;
       print('🔵 [InviteUsersScreen] Calling fetchAvailableInvitees...');
-      final users = await SupabaseService.instance.fetchAvailableInvitees(eventId, currentUserId);
-      print('🔵 [InviteUsersScreen] fetchAvailableInvitees completed, available users: ${users.length}');
+      final users = await SupabaseService.instance.fetchAvailableInvitees(
+        eventId,
+        currentUserId,
+      );
+      print(
+        '🔵 [InviteUsersScreen] fetchAvailableInvitees completed, available users: ${users.length}',
+      );
 
       if (mounted) {
         setState(() {

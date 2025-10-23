@@ -242,10 +242,7 @@ class UserService implements ISyncable, ICacheManager {
 
   @override
   Future<void> performFullSync() async {
-    _emitSyncEvent(
-      SyncEventType.started,
-      message: 'Starting full user sync',
-    );
+    _emitSyncEvent(SyncEventType.started, message: 'Starting full user sync');
     _syncStatus = SyncStatus.syncing;
 
     try {
@@ -396,10 +393,7 @@ class UserService implements ISyncable, ICacheManager {
 
   @override
   Future<void> resolveConflict(dynamic local, dynamic remote) async {
-    _emitSyncEvent(
-      SyncEventType.started,
-      message: 'Resolving user conflict',
-    );
+    _emitSyncEvent(SyncEventType.started, message: 'Resolving user conflict');
     _syncStatus = SyncStatus.conflict;
 
     try {
@@ -487,8 +481,7 @@ class UserService implements ISyncable, ICacheManager {
   Future<List<T>> batchDownloadEntities<T>(List<int> entityIds) async {
     _emitSyncEvent(
       SyncEventType.started,
-      message:
-          'Starting batch download of ${entityIds.length} user entities',
+      message: 'Starting batch download of ${entityIds.length} user entities',
     );
 
     try {

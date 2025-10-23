@@ -92,10 +92,7 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
         arguments: arguments,
       );
     } else {
-      return navigationService.pushNamed<R>(
-        routeName,
-        arguments: arguments,
-      );
+      return navigationService.pushNamed<R>(routeName, arguments: arguments);
     }
   }
 
