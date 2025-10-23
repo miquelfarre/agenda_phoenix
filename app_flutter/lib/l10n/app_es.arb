@@ -1,0 +1,1569 @@
+{
+  "@@locale": "es",
+  "@@last_modified": "2025-01-18T00:00:00.000000",
+  
+  "@_APP_INFO": {
+    "description": "Información básica de la aplicación"
+  },
+  "appTitle": "EventyPop",
+  "@appTitle": {
+    "description": "El título de la aplicación"
+  },
+  "appName": "EventyPop",
+  "@appName": {
+    "description": "El nombre de la aplicación"
+  },
+
+  "@_MISSING_TRANSLATIONS": {
+    "description": "Traducciones faltantes identificadas en auditoría"
+  },
+  "untitledEvent": "Evento sin título",
+  "@untitledEvent": {
+    "description": "Título por defecto para eventos sin nombre"
+  },
+  "untitled": "Sin título",
+  "@untitled": {
+    "description": "Texto genérico para elementos sin título"
+  },
+  "guestUser": "Usuario",
+  "@guestUser": {
+    "description": "Nombre por defecto para usuarios invitados"
+  },
+  "anonymousUser": "Anónimo",
+  "@anonymousUser": {
+    "description": "Nombre por defecto para usuarios anónimos"
+  },
+  "manageBlockedUsersDescription": "Gestiona los usuarios que has bloqueado para que no te contacten",
+  "@manageBlockedUsersDescription": {
+    "description": "Descripción para la gestión de usuarios bloqueados"
+  },
+  "userNotLoggedIn": "Usuario no ha iniciado sesión",
+  "@userNotLoggedIn": {
+    "description": "Error cuando el usuario no está autenticado"
+  },
+  "failedToLoadEvents": "Error al cargar eventos",
+  "@failedToLoadEvents": {
+    "description": "Error genérico al cargar eventos"
+  },
+  "failedToCreateEvent": "Error al crear evento",
+  "@failedToCreateEvent": {
+    "description": "Error al crear un nuevo evento"
+  },
+  "cannotUpdateEventWithoutId": "No se puede actualizar evento sin ID",
+  "@cannotUpdateEventWithoutId": {
+    "description": "Error de validación al actualizar evento"
+  },
+  "searchGroups": "Buscar grupos...",
+  "@searchGroups": {
+    "description": "Texto de placeholder para el campo de búsqueda de grupos"
+  },
+  "createGroup": "Crear Grupo",
+  "@createGroup": {
+    "description": "Texto del botón para crear un nuevo grupo"
+  },
+  "errorLoadingGroups": "Error al cargar grupos",
+  "@errorLoadingGroups": {
+    "description": "Mensaje de error cuando los grupos no se cargan"
+  },
+  "errorLoadingUsers": "Error al cargar usuarios",
+  "@errorLoadingUsers": {
+    "description": "Mensaje de error cuando los usuarios no se cargan"
+  },
+  "errorLoadingContacts": "Error al cargar contactos",
+  "@errorLoadingContacts": {
+    "description": "Mensaje de error cuando los contactos no se cargan"
+  },
+  "retry": "Reintentar",
+  "@retry": {
+    "description": "Texto del botón para reintentar una acción"
+  },
+  "noGroupsMessage": "Sin Grupos\nCrea tu primer grupo para empezar",
+  "@noGroupsMessage": {
+    "description": "Mensaje de estado vacío cuando el usuario no tiene grupos"
+  },
+  "noGroupsSearchMessage": "Sin Resultados\nNingún grupo coincide con tu búsqueda",
+  "@noGroupsSearchMessage": {
+    "description": "Mensaje de estado vacío cuando la búsqueda de grupos no devuelve resultados"
+  },
+  "failedToUpdateEvent": "Error al actualizar evento",
+  "@failedToUpdateEvent": {
+    "description": "Error al actualizar evento existente"
+  },
+  "failedToDeleteEvent": "Error al eliminar evento",
+  "@failedToDeleteEvent": {
+    "description": "Error al eliminar evento"
+  },
+  "failedToSavePersonalNote": "Error al guardar nota personal",
+  "@failedToSavePersonalNote": {
+    "description": "Error al guardar nota personal de evento"
+  },
+  "failedToDeletePersonalNote": "Error al eliminar nota personal",
+  "@failedToDeletePersonalNote": {
+    "description": "Error al eliminar nota personal de evento"
+  },
+  
+  "@_COMMON_ACTIONS": {
+    "description": "Botones de acción comunes y etiquetas"
+  },
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "create": "Crear",
+  "update": "Actualizar",
+  "add": "Añadir",
+  "remove": "Quitar",
+  "close": "Cerrar",
+  "done": "Hecho",
+  "next": "Siguiente",
+  "back": "Atrás",
+  "retry": "Reintentar",
+  "refresh": "Actualizar",
+  "load": "Cargar",
+  "send": "Enviar",
+  "share": "Compartir",
+  "copy": "Copiar",
+  "paste": "Pegar",
+  "select": "Seleccionar",
+  "selectAll": "Seleccionar Todo",
+  "clear": "Limpiar",
+  "reset": "Resetear",
+  "confirm": "Confirmar",
+  "accept": "Aceptar",
+  "reject": "Rechazar",
+  "approve": "Aprobar",
+  "decline": "Declinar",
+  "cancelAttendance": "Cancelar Asistencia",
+  "submit": "Enviar",
+  "continueAction": "Continuar",
+  "skip": "Omitir",
+  "finish": "Terminar",
+  "start": "Comenzar",
+  "stop": "Parar",
+  "pause": "Pausar",
+  "resume": "Reanudar",
+  "enable": "Habilitar",
+  "disable": "Deshabilitar",
+  "show": "Mostrar",
+  "hide": "Ocultar",
+  "view": "Ver",
+  "preview": "Vista previa",
+  "download": "Descargar",
+  "upload": "Subir",
+  
+  "@_COMMON_STATES": {
+    "description": "Estados comunes de la aplicación"
+  },
+  "loading": "Cargando...",
+  "loadingData": "Cargando datos...",
+  "saving": "Guardando...",
+  "updating": "Actualizando...",
+  "deleting": "Eliminando...",
+  "sending": "Enviando...",
+  "connecting": "Conectando...",
+  "syncing": "Sincronizando...",
+  "processing": "Procesando...",
+  "searching": "Buscando...",
+  "creating": "Creando...",
+  
+  "@_COMMON_RESULTS": {
+    "description": "Estados de resultados comunes y mensajes"
+  },
+  "success": "Éxito",
+  "error": "Error",
+  "warning": "Advertencia",
+  "info": "Información",
+  "appErrorLoadingData": "Error al cargar datos",
+  "noData": "No hay datos disponibles",
+  "noInternetConnection": "Sin conexión a internet",
+  "connectionError": "Error de conexión",
+  "unexpectedError": "Ocurrió un error inesperado",
+  "tryAgain": "Intentar de nuevo",
+  "somethingWentWrong": "Algo salió mal",
+  "noResults": "No se encontraron resultados",
+  
+  "@_SPLASH_SCREEN": {
+    "description": "Mensajes de la pantalla de inicio"
+  },
+  "startingEventyPop": "Iniciando EventyPop...",
+  "initializingOfflineSystem": "Inicializando sistema offline...",
+  "loadingConfiguration": "Cargando configuración...",
+  "verifyingAccess": "Verificando acceso...",
+  "testEventCreated": "¡Evento de prueba creado!",
+  "testEventTitle": "Evento de prueba {timestamp}",
+  "@testEventTitle": {
+    "placeholders": { "timestamp": { "type": "String" } }
+  },
+  "testEventDescription": "Evento de prueba creado offline-first",
+  "syncCompleted": "¡Sincronización completada!",
+  "localizationNotAvailable": "Localización no disponible",
+
+  "@_NAVIGATION": {
+    "description": "Texto relacionado con navegación"
+  },
+  "home": "Inicio",
+  "events": "Eventos",
+  "groups": "Grupos",
+  "profile": "Perfil",
+  "settings": "Configuración",
+  "notifications": "Notificaciones",
+  "search": "Buscar",
+  "help": "Ayuda",
+  "about": "Acerca de",
+  "logout": "Cerrar sesión",
+  "login": "Iniciar sesión",
+  "register": "Registrarse",
+  
+  "@_CONFIRMATION_DIALOGS": {
+    "description": "Mensajes de diálogos de confirmación"
+  },
+  "confirmDelete": "¿Estás seguro de que quieres eliminar esto?",
+  "confirmDeleteTitle": "Confirmar Eliminación",
+  "confirmLogout": "¿Estás seguro de que quieres cerrar sesión?",
+  "confirmLogoutTitle": "Confirmar Cierre de Sesión",
+  "unsavedChanges": "Tienes cambios sin guardar",
+  "unsavedChangesMessage": "¿Estás seguro de que quieres salir sin guardar?",
+  "confirmLeave": "Confirmar Salida",
+  
+  "@_EVENTS": {
+    "description": "Texto relacionado con eventos"
+  },
+  "event": "Evento",
+  "events": "Eventos",
+  "myEvents": "Mis Eventos",
+  "createEvent": "Crear Evento",
+  "editEvent": "Editar Evento",
+  "deleteEvent": "Eliminar Evento",
+  "removeFromMyList": "Quitar de Mi Lista",
+  "notifyCancellation": "Notificar cancelación",
+  "sendCancellationNotification": "Enviar una notificación a todos los usuarios que tienen este evento informándoles sobre su cancelación.",
+  "sendNotification": "Enviar notificación",
+  "customMessageOptional": "Mensaje personalizado (opcional)",
+  "writeAdditionalMessage": "Escribe un mensaje adicional para los usuarios...",
+  "unknownUser": "Usuario Desconocido",
+  "eventTitle": "Título del Evento",
+  "eventDescription": "Descripción del Evento",
+  "eventDate": "Fecha del Evento",
+  "eventTime": "Hora del Evento",
+  "eventLocation": "Ubicación del Evento",
+  "inviteToEvent": "Invitar al Evento",
+  "inviteUsers": "Invitar Usuarios",
+  "eventCreated": "Evento creado exitosamente",
+  "eventUpdated": "Evento actualizado exitosamente",
+  "eventDeleted": "Evento eliminado exitosamente",
+  "eventRemoved": "Evento removido exitosamente",
+  "seriesDeleted": "Serie eliminada exitosamente",
+  "seriesEditNotAvailable": "La edición de series recurrentes estará disponible pronto",
+  "noEvents": "No hay eventos disponibles",
+  "upcomingEvents": "Eventos Próximos",
+  "pastEvents": "Eventos Pasados",
+  "eventDetails": "Detalles del Evento",
+  "joinEvent": "Unirse al Evento",
+  "acceptEventButRejectInvitation": "Aceptar evento pero rechazar invitación",
+  "acceptEventButRejectInvitationAck": "Has aceptado el evento pero rechazado la invitación",
+  "leaveEvent": "Salir del Evento",
+  "eventMembers": "Miembros del Evento",
+  "eventInvitations": "Invitaciones de Eventos",
+  "attendees": "Asistentes",
+
+  "startingAutomaticSync": "Iniciando sincronización automática...",
+  "loadingLocalData": "Cargando datos locales...",
+  "verifyingSync": "Verificando sincronización...",
+  "checkingContactsPermissions": "Comprobando permisos de contactos...",
+  "dataUpdated": "¡Datos actualizados!",
+  "readyToUse": "¡Listo para usar!",
+  "errorInitializingApp": "Error al inicializar la aplicación:",
+  "retrying": "Reintentando...",
+  "yourEventsAlwaysWithYou": "Tus eventos, siempre contigo.",
+  "oopsSomethingWentWrong": "¡Ups! Algo salió mal.",
+  "pleaseWait": "Por favor espera...",
+
+  "invitationMessage": "Mensaje de Invitación",
+  "confirmInviteUser": "¿Estás seguro de que quieres invitar a {displayName} a {eventTitle}?",
+  "@confirmInviteUser": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      },
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmCancelInvitation": "¿Estás seguro de que quieres cancelar la invitación para {eventTitle}?",
+  "@confirmCancelInvitation": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "@_NOTIFICATIONS": {
+    "description": "Texto relacionado con notificaciones"
+  },
+  "notification": "Notificación",
+  "notifications": "Notificaciones",
+  "noNotifications": "No hay notificaciones",
+  "markAsRead": "Marcar como Leído",
+  "markAllAsRead": "Marcar Todo como Leído",
+  "deleteNotification": "Eliminar Notificación",
+  "clearNotifications": "Limpiar Notificaciones",
+  "notificationSettings": "Configuración de Notificaciones",
+  "enableNotifications": "Habilitar Notificaciones",
+  "disableNotifications": "Deshabilitar Notificaciones",
+  "pushNotifications": "Notificaciones Push",
+  "emailNotifications": "Notificaciones por Correo",
+  "eventChangeNotification": "Notificación de Cambio de Evento",
+  "sendNotification": "Enviar Notificación",
+  "notificationMessage": "Mensaje de Notificación",
+  "notificationSent": "Notificación enviada exitosamente",
+  
+  "@_AUTHENTICATION": {
+    "description": "Texto relacionado con autenticación"
+  },
+  "login": "Iniciar Sesión",
+  "logout": "Cerrar Sesión",
+  "register": "Registrarse",
+  "signIn": "Iniciar Sesión",
+  "signOut": "Cerrar Sesión",
+  "signUp": "Registrarse",
+  "password": "Contraseña",
+  "confirmPassword": "Confirmar Contraseña",
+  "forgotPassword": "Olvidé mi Contraseña",
+  "resetPassword": "Restablecer Contraseña",
+  "changePassword": "Cambiar Contraseña",
+  "currentPassword": "Contraseña Actual",
+  "newPassword": "Nueva Contraseña",
+  "loginSuccess": "Inicio de sesión exitoso",
+  "logoutSuccess": "Cierre de sesión exitoso",
+  "registerSuccess": "Registro exitoso",
+  "invalidCredentials": "Credenciales inválidas",
+  "accountNotFound": "Cuenta no encontrada",
+  "emailInUse": "Correo electrónico ya en uso",
+  "weakPassword": "La contraseña es demasiado débil",
+  
+  "@_VALIDATION_MESSAGES": {
+    "description": "Mensajes de validación de formularios"
+  },
+  "fieldRequired": "Este campo es obligatorio",
+  "invalidEmail": "Por favor ingresa un correo electrónico válido",
+  "invalidPhone": "Por favor ingresa un número de teléfono válido",
+  "invalidInstagramName": "Formato de nombre de usuario de Instagram inválido",
+  "passwordTooShort": "La contraseña debe tener al menos {minLength} caracteres",
+  "@passwordTooShort": {
+    "placeholders": {
+      "minLength": {
+        "type": "int"
+      }
+    }
+  },
+  "passwordsDoNotMatch": "Las contraseñas no coinciden",
+  "textTooShort": "El texto debe tener al menos {minLength} caracteres",
+  "@textTooShort": {
+    "placeholders": {
+      "minLength": {
+        "type": "int"
+      }
+    }
+  },
+  "textTooLong": "El texto no puede exceder {maxLength} caracteres",
+  "@textTooLong": {
+    "placeholders": {
+      "maxLength": {
+        "type": "int"
+      }
+    }
+  },
+  "eventTitleRequired": "El título del evento es obligatorio",
+  "groupNameRequired": "El nombre del grupo es obligatorio",
+  "fullNameRequired": "El nombre completo es obligatorio",
+  "emailRequired": "El correo electrónico es obligatorio",
+  "passwordRequired": "La contraseña es obligatoria",
+  "messageRequired": "El mensaje es obligatorio",
+  "dateTooFarInFuture": "La fecha no puede estar muy lejos en el futuro",
+  
+  "@_OFFLINE_SYNC": {
+    "description": "Texto relacionado con offline y sincronización"
+  },
+  "offline": "Sin conexión",
+  "online": "En línea",
+  "syncPending": "Sincronización pendiente",
+  "syncing": "Sincronizando...",
+  "syncComplete": "Sincronización completa",
+  "syncFailed": "Sincronización fallida",
+  "offlineMode": "Modo sin conexión",
+  "noConnection": "Sin conexión",
+  "reconnecting": "Reconectando...",
+  "pendingChanges": "Cambios pendientes",
+  "syncWhenOnline": "Se sincronizará cuando esté en línea",
+  "dataWillSyncSoon": "Tus datos se sincronizarán cuando se restaure la conexión",
+  
+  "@_TIME_AND_DATES": {
+    "description": "Texto relacionado con tiempo y fechas"
+  },
+  "today": "Hoy",
+  "yesterday": "Ayer",
+  "tomorrow": "Mañana",
+  "now": "Ahora",
+  "soon": "Pronto",
+  "recently": "Recientemente",
+  "thisWeek": "Esta Semana",
+  "thisMonth": "Este Mes",
+  "thisYear": "Este Año",
+  "lastWeek": "La Semana Pasada",
+  "lastMonth": "El Mes Pasado",
+  "lastYear": "El Año Pasado",
+  "nextWeek": "La Próxima Semana",
+  "nextMonth": "El Próximo Mes",
+  "nextYear": "El Próximo Año",
+  "selectDate": "Seleccionar Fecha",
+  "selectTime": "Seleccionar Hora",
+  "selectDateTime": "Seleccionar Fecha y Hora",
+  "startDate": "Fecha de Inicio",
+  "endDate": "Fecha de Fin",
+  "startTime": "Hora de Inicio",
+  "endTime": "Hora de Fin",
+  "duration": "Duración",
+  "recurring": "Recurrente",
+  "oneTime": "Una Vez",
+  "daily": "Diario",
+  "weekly": "Semanal",
+  "monthly": "Mensual",
+  "yearly": "Anual",
+  "patternsConfigured": "Patrones configurados: {count}",
+  "@patternsConfigured": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "@_EMPTY_STATES": {
+    "description": "Mensajes de estados vacíos"
+  },
+  "noEventsMessage": "No hay eventos disponibles para invitación",
+  "noGroupsMessage": "No hay grupos disponibles para invitación", 
+  "noUsersMessage": "No hay usuarios disponibles para invitación",
+  "noContactsMessage": "No se encontraron contactos",
+  "noNotificationsMessage": "¡Estás al día! No hay notificaciones.",
+  "noInvitationsMessage": "No hay invitaciones en este momento",
+  "noSearchResults": "No se encontraron resultados para tu búsqueda",
+  "emptyEventsList": "Aún no tienes eventos",
+  "emptyGroupsList": "Aún no tienes grupos",
+  "createFirstEvent": "Crea tu primer evento",
+  "createFirstGroup": "Crea tu primer grupo",
+  "inviteFirstUser": "Invita a tu primer usuario",
+
+  "invitationDecisionTitle": "Decisión de invitación",
+  "optionalMessage": "Mensaje opcional",
+  "notifyInviter": "Notificar al remitente",
+  "postponeDecision": "Postergar decisión",
+  "decideInvitation": "Decidir invitación",
+  "decideNow": "Decidir ahora",
+  "postponedUntil": "Postpuesto hasta {date}",
+  "@postponedUntil": {"placeholders": {"date": {"type": "String"}} },
+  
+  "@_SETTINGS": {
+    "description": "Configuraciones y preferencias"
+  },
+  "settings": "Configuración",
+  "options": "Opciones",
+  "debugAmbiguousReconciliations": "Depurar reconciliaciones ambiguas",
+  "preferences": "Preferencias",
+  "account": "Cuenta",
+  "privacy": "Privacidad",
+  "security": "Seguridad",
+  "language": "Idioma",
+  "theme": "Tema",
+  "darkMode": "Modo Oscuro",
+  "lightMode": "Modo Claro",
+  "systemTheme": "Tema del Sistema",
+  "version": "Versión",
+  "buildNumber": "Número de Compilación",
+  "termsOfService": "Términos de Servicio",
+  "privacyPolicy": "Política de Privacidad",
+  "contactUs": "Contáctanos",
+  "feedback": "Comentarios",
+  "rateApp": "Calificar App",
+  "shareApp": "Compartir App",
+  
+  "@_LOCATION_SETTINGS": {
+    "description": "Configuración de ubicación y zona horaria"
+  },
+  "countryAndTimezone": "País y zona horaria",
+  "timezone": "Zona horaria",
+  "@timezone": {
+    "description": "Etiqueta de zona horaria"
+  },
+  "currentTimezone": "Zona horaria actual",
+  "@currentTimezone": {
+    "description": "Etiqueta para mostrar la configuración de zona horaria actual del usuario en la pantalla de configuración"
+  },
+  "selectTimezone": "Seleccionar Zona Horaria",
+  "@selectTimezone": {
+    "description": "Título para el selector de zona horaria"
+  },
+  "selectCountryTimezone": "Seleccionar País y Zona Horaria",
+  "defaultSettingsForNewEvents": "Configuración por defecto para nuevos eventos",
+  "connectionStatus": "Estado de Conexión",
+
+  "@_NAVIGATION": {
+    "description": "Etiquetas y títulos de navegación"
+  },
+  "subscription": "Suscripción",
+  "subscriptions": "Suscripciones",
+  "peopleAndGroups": "Personas y Grupos",
+
+  "@_CONTACTS_PERMISSIONS": {
+    "description": "Texto del diálogo de permisos de contactos"
+  },
+  "findYourFriends": "Encuentra a tus amigos",
+  "permissionsNeeded": "Permisos necesarios",
+  "contactsPermissionMessage": "EventyPop puede encontrar amigos que ya usan la app accediendo a tus contactos.",
+  "yourContactsStayPrivate": "Tus contactos se mantienen privados",
+  "onlyShowMutualFriends": "Solo mostramos amigos mutuos",
+  "goToSettings": "Ir a Configuración",
+  "contactsPermissionSettingsMessage": "Para encontrar amigos que usan EventyPop, necesitamos acceso a tus contactos.\n\nVe a Configuración > EventyPop > Contactos y habilítalo.",
+  "notNow": "Ahora no",
+  "allowAccess": "Permitir acceso",
+  "resetPreferences": "Resetear preferencias",
+  "resetContactsPermissions": "Resetear Permisos de Contactos",
+  "@resetContactsPermissions": {
+    "description": "Etiqueta del botón para resetear las preferencias de permisos de contactos en ajustes"
+  },
+  "openAppSettings": "Abrir Ajustes de la App",
+  "@openAppSettings": {
+    "description": "Etiqueta del botón para abrir los ajustes de la aplicación en el dispositivo"
+  },
+  "syncInfoMessage": "Los eventos, suscripciones, notificaciones e invitaciones se sincronizan automáticamente al iniciar la aplicación y en segundo plano para mantener la información actualizada.",
+  "settingsUpdated": "Configuración actualizada",
+  "errorUpdatingSettings": "Error al actualizar configuración",
+  "errorUpdatingContacts": "Error al actualizar contactos: {error}",
+  "@errorUpdatingContacts": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "creatorLabel": "Creador",
+  "adminsList": "Admins: {list}",
+  "@adminsList": {
+    "placeholders": {
+      "list": { "type": "String" }
+    }
+  },
+  "noAdmins": "Sin admins",
+  "membersAndAdmins": "Miembros: {count} • {admins}",
+  "@membersAndAdmins": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "admins": { "type": "String" }
+    }
+  },
+  "pendingStatus": "Pendiente",
+  "acceptedStatus": "Aceptado",
+  "rejectedStatus": "Rechazado",
+  "recurringShort": "R",
+
+  "@_EVENT_ACTIONS": {
+    "description": "Botones de acciones de eventos y diálogos"
+  },
+  "invite": "Invitar",
+  "confirmDelete": "Confirmar Eliminación",
+  "confirmDeleteEvent": "¿Estás seguro de que quieres eliminar el evento \"{eventTitle}\"?",
+  "@confirmDeleteEvent": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDeletedSuccessfully": "Evento eliminado exitosamente",
+  "deleteRecurringEvent": "Eliminar Evento Recurrente",
+  "deleteRecurringEventQuestion": "¿Qué quieres eliminar de \"{eventTitle}\"?",
+  "@deleteRecurringEventQuestion": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteOnlyThisInstance": "Solo esta instancia",
+  "deleteOnlyThisInstanceSubtitle": "Eliminar solo este evento específico",
+  "deleteEntireSeries": "Serie recurrente completa",
+  "deleteEntireSeriesSubtitle": "Eliminar todos los eventos de esta serie",
+  "confirmDeleteInstance": "¿Estás seguro de que quieres eliminar solo esta instancia del evento \"{eventTitle}\"?",
+  "@confirmDeleteInstance": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteInstance": "Eliminar instancia",
+  "confirmDeleteSeries": "Confirmar eliminación de serie",
+  "confirmDeleteSeriesMessage": "¿Estás seguro de que quieres eliminar TODA la serie recurrente \"{seriesTitle}\"? Esta acción no se puede deshacer.",
+  "@confirmDeleteSeriesMessage": {
+    "placeholders": {
+      "seriesTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCompleteSeries": "Eliminar serie completa",
+  "editRecurringEvent": "Editar Evento Recurrente",
+  "editRecurringEventQuestion": "¿Qué quieres editar de \"{eventTitle}\"?",
+  "@editRecurringEventQuestion": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "editOnlyThisInstance": "Solo esta instancia",
+  "editOnlyThisInstanceSubtitle": "Editar solo este evento específico",
+  "editEntireSeries": "Serie recurrente completa",
+  "editEntireSeriesSubtitle": "Editar todos los eventos de esta serie",
+
+  "@_LOGIN_SCREEN_SPECIFICS": {
+    "description": "Texto específico de la pantalla de inicio de sesión con teléfono"
+  },
+  "phoneHintExample": "+34666666666",
+  "smsCodeHintExample": "123456",
+  "errorCompletingRegistrationWithMessage": "Error completando el registro: {errorMessage}",
+  "@errorCompletingRegistrationWithMessage": {
+    "placeholders": {
+      "errorMessage": {
+        "type": "String"
+      }
+    }
+  },
+  "usePhysicalIosDevice": "• Usar un dispositivo iOS físico",
+  "useAndroidEmulator": "• Usar el emulador de Android",
+  "useWebVersion": "• Usar la versión web",
+
+  "@_CONTACT_DETAIL_SCREEN_SPECIFICS": {
+    "description": "Texto específico de la pantalla de detalles de contacto"
+  },
+  "userNotLoggedIn": "Usuario no ha iniciado sesión.",
+  "invalidEventId": "ID de evento inválido.",
+  "invitationSentTo": "Invitación enviada a {displayName}.",
+  "@invitationSentTo": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSendingInvitation": "Error enviando invitación.",
+  "blockUser": "Bloquear Usuario",
+  "unblockUser": "Desbloquear Usuario",
+  "confirmBlockUser": "¿Estás seguro de que quieres bloquear a {displayName}?",
+  "confirmUnblockUser": "¿Estás seguro de que quieres desbloquear a {displayName}?",
+  "@confirmBlockUser": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "@confirmUnblockUser": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "userBlockedSuccessfully": "Usuario bloqueado exitosamente.",
+  "userUnblockedSuccessfully": "Usuario desbloqueado exitosamente.",
+  "errorBlockingUser": "Error bloqueando usuario.",
+  "errorUnblockingUser": "Error desbloqueando usuario.",
+  "errorBlockingUserDetail": "Error bloqueando usuario: {errorMessage}",
+  "@errorBlockingUserDetail": {
+    "placeholders": {
+      "errorMessage": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsSentToUser": "Invitaciones enviadas a {displayName}",
+  "@invitationsSentToUser": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "eventNotAvailable": "Evento no disponible",
+  "blockingUser": "Bloqueando Usuario...",
+  "blockedUsers": "Usuarios Bloqueados",
+  "noBlockedUsers": "No hay usuarios bloqueados",
+  "noBlockedUsersDescription": "Aún no has bloqueado a nadie.",
+  "eventHidden": "Evento \"{eventTitle}\" oculto.",
+  "@eventHidden": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "no": "No",
+  "yesCancel": "Sí, Cancelar",
+  "inviteToOtherEvents": "Invitar a otros eventos",
+  "accessDeniedTitle": "Acceso Denegado",
+  "accessDeniedMessagePrimary": "Esta aplicación está disponible únicamente para usuarios privados.",
+  "accessDeniedMessageSecondary": "Los usuarios públicos no tienen acceso a esta aplicación móvil.",
+  "contactAdminIfError": "Contacta con el administrador si crees que esto es un error.",
+  "invitationCancelledSuccessfully": "Invitación cancelada exitosamente.",
+  "errorCancellingInvitation": "Error cancelando invitación: {errorMessage}",
+  "@errorCancellingInvitation": {
+    "placeholders": {
+      "errorMessage": {
+        "type": "String"
+      }
+    }
+  },
+
+  "acceptInvitation": "Aceptar Invitación",
+  "addAtLeastOnePattern": "Añade al menos un patrón de repetición.",
+  "addMembers": "Añadir Miembros",
+  "addSchedules": "Añadir Horarios",
+  "allGroupMembersAlreadyInvited": "Todos los miembros del grupo ya invitados.",
+  "alreadyInvited": "Ya invitado",
+  "april": "Abril",
+  "august": "Agosto",
+  "automaticVerificationError": "Error de verificación automática. Por favor, introduce el código manualmente.",
+  "bio": "Biografía",
+  "block": "Bloquear",
+  "cancelInvitation": "Cancelar Invitación",
+  "changeNumber": "Cambiar Número",
+  "codeSentTo": "Código enviado a {phoneNumber}",
+  "@codeSentTo": {
+    "placeholders": {
+      "phoneNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "contacts": "Contactos",
+  "contactsPermissionInstructions": "Para encontrar amigos que usan EventyPop, necesitamos acceso a tus contactos. Por favor, concede el permiso en la configuración.",
+  "contactsPermissionRequired": "Permiso de contactos requerido.",
+  "couldNotGetFirebaseToken": "No se pudo obtener el token de Firebase.",
+  "createGroup": "Crear Grupo",
+  "createRecurringEvent": "Crear Evento Recurrente",
+  "createRecurringEventQuestion": "¿Crear evento recurrente?",
+  "dayOfWeek": "Día de la Semana",
+  "december": "Diciembre",
+  "deleteGroup": "Eliminar Grupo",
+  "descriptionOptional": "Descripción (opcional)",
+  "addEventDetailsHint": "Añade detalles sobre tu evento...",
+  "editGroup": "Editar Grupo",
+  "editPattern": "Editar Patrón",
+  "editProfile": "Editar Perfil",
+  "email": "Correo Electrónico",
+  "errorCreatingEvent": "Error al crear evento.",
+  "errorInviting": "Error al invitar.",
+  "errorLoadingFriends": "Error al cargar amigos.",
+  "errorLoadingFriendsWithError": "Error al cargar amigos: {error}",
+  "@errorLoadingFriendsWithError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "errorLoadingGroups": "Error al cargar grupos.",
+  "errorLoadingNotifications": "Error al cargar notificaciones.",
+  "errorLoadingSubscriptions": "Error al cargar suscripciones.",
+  "errorRemovingSubscription": "Error al eliminar suscripción.",
+  "errorSendingCode": "Error al enviar código.",
+  "errorSendingInvitations": "Error al enviar invitaciones.",
+  "errorVerifyingCode": "Error al verificar código.",
+  "errors": "Errores",
+  "eventDescriptionRequired": "La descripción del evento es obligatoria",
+  "february": "Febrero",
+  "firebasePhoneAuthLimitationMessage": "La autenticación de teléfono de Firebase tiene limitaciones en los simuladores de iOS. Para una funcionalidad completa, por favor, usa un dispositivo iOS físico, un emulador de Android o la versión web.",
+  "firebasePhoneAuthSimulatorError": "Firebase Phone Auth no es compatible con el simulador de iOS. Por favor, usa un dispositivo físico o un emulador de Android.",
+  "follow": "Seguir",
+  "followers": "Seguidores",
+  "following": "Siguiendo",
+  "friday": "Viernes",
+  "fullName": "Nombre Completo",
+  "group": "Grupo",
+  "groupAdmin": "Administrador del Grupo",
+  "groupInitialFallback": "G",
+  "avatarUnknownInitial": "?",
+  "envDev": "DES",
+  "envProd": "PROD",
+  "deleteFromGroup": "Eliminar del grupo",
+  "noPermissionsToManageMember": "No tienes permisos para gestionar este miembro",
+  "confirmMakeAdmin": "¿Estás seguro de que quieres hacer administrador a {displayName}?",
+  "@confirmMakeAdmin": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
+  "confirmRemoveAdmin": "¿Estás seguro de que quieres revocar permisos de administrador a {displayName}?",
+  "@confirmRemoveAdmin": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
+  "memberMadeAdmin": "{displayName} hecho administrador",
+  "@memberMadeAdmin": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
+  "memberRemovedAdmin": "{displayName} revocado como administrador",
+  "@memberRemovedAdmin": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
+  "groupCreated": "Grupo creado exitosamente",
+  "groupDeleted": "Grupo eliminado exitosamente",
+  "groupDescription": "Descripción del Grupo",
+  "groupInfo": "Información del Grupo",
+  "groupInvitations": "Invitaciones de Grupos",
+  "groupMembers": "Miembros del Grupo",
+  "groupName": "Nombre del Grupo",
+  "groupUpdated": "Grupo actualizado exitosamente",
+  "groupsWillAppearHere": "Tus grupos aparecerán aquí.",
+  "hourLabel": "Hora",
+  "minutes": "Minutos",
+  "incorrectCode": "Código incorrecto. Por favor, inténtalo de nuevo.",
+  "instagramName": "Nombre de Instagram",
+  "invalidVerificationCode": "Código de verificación inválido.",
+  "invitation": "Invitación",
+  "invitationAccepted": "Invitación aceptada",
+  "invitationCancelled": "Invitación cancelada",
+  "invitationRejected": "Invitación rechazada",
+  "invitationSent": "Invitación enviada exitosamente",
+  "errorInvitingUser": "Error al invitar a {displayName}",
+  "@errorInvitingUser": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
+  "errorInvitingUserWithError": "Error al invitar a {displayName}: {error}",
+  "@errorInvitingUserWithError": {
+    "placeholders": {
+      "displayName": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+  "errorInvitingGroup": "Error al invitar al grupo {groupName}",
+  "@errorInvitingGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "errorInvitingGroupWithError": "Error al invitar al grupo {groupName}: {error}",
+  "@errorInvitingGroupWithError": {
+    "placeholders": {
+      "groupName": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+  "invitationsSentWithErrors": "{successful} invitaciones enviadas, {errors} errores",
+  "@invitationsSentWithErrors": {
+    "placeholders": {
+      "successful": { "type": "int" },
+      "errors": { "type": "int" }
+    }
+  },
+  "invitationToEvent": "Invitación al Evento",
+  "invitations": "Invitaciones",
+  "invitationsSent": "Invitaciones Enviadas",
+  "invitationsSentSuccessfully": "Invitaciones enviadas exitosamente a {destinations} usuarios.",
+  "@invitationsSentSuccessfully": {
+    "placeholders": {
+      "destinations": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteToGroup": "Invitar al Grupo",
+  "invitedPeople": "Personas Invitadas",
+  "iosSimulatorDetected": "Simulador iOS Detectado",
+  "january": "Enero",
+  "joinGroup": "Unirse al Grupo",
+  "july": "Julio",
+  "june": "Junio",
+  "leaveGroup": "Salir del Grupo",
+  "loginWithPhone": "Iniciar sesión con teléfono",
+  "makeAdmin": "Hacer Administrador",
+  "march": "Marzo",
+  "may": "Mayo",
+  "monday": "Lunes",
+  "myGroups": "Mis Grupos",
+  "myProfile": "Mi Perfil",
+  "mySubscriptions": "Mis Suscripciones",
+  "newPattern": "Nuevo Patrón",
+  "noContactsAvailable": "No hay contactos disponibles.",
+  "noDescription": "Sin descripción proporcionada.",
+  "noFriendsFoundWithName": "No se encontraron amigos con ese nombre",
+  "noFriendsToAdd": "No hay amigos para añadir",
+  "noFriendsYet": "Aún no hay amigos.",
+  "noGroups": "No hay grupos disponibles",
+  "noInvitations": "No hay invitaciones",
+  "noInvitedPeople": "No hay personas invitadas.",
+  "noPatternsConfigured": "No hay patrones configurados.",
+  "noSubscriptions": "No hay suscripciones todavía.",
+  "noUpcomingEventsScheduled": "No hay eventos próximos programados.",
+  "noUsers": "No se encontraron usuarios",
+  "noUsersFound": "No se encontraron usuarios.",
+  "noUsersOrGroupsAvailable": "No hay usuarios o grupos disponibles.",
+  "noGroupsLeftToInvite": "No quedan grupos por invitar.",
+  "noUsersLeftToInvite": "No quedan usuarios por invitar.",
+  "notInAnyGroup": "No estás en ningún grupo todavía.",
+  "notifyChanges": "Notificar Cambios",
+  "november": "Noviembre",
+  "october": "Octubre",
+  "offlineSaveMessage": "Tus cambios se guardarán sin conexión y se sincronizarán cuando estés en línea.",
+  "onlineSaveMessage": "Tus cambios han sido guardados.",
+  "offlineEventCreationMessage": "El evento se guardará localmente y se creará en el servidor automáticamente cuando tengas conexión.",
+  "openSettings": "Abrir Configuración",
+  "operationNotAllowed": "El inicio de sesión con número de teléfono no está habilitado. Por favor, habilítalo en la consola de Firebase.",
+  "organizer": "Organizador",
+  "pendingInvitations": "Invitaciones Pendientes",
+  "phone": "Teléfono",
+  "publicUser": "Usuario Público",
+  "receivedInvitations": "Invitaciones Recibidas",
+  "rejectInvitation": "Rechazar Invitación",
+  "removeAdmin": "Quitar Administrador",
+  "repetitionPatterns": "Patrones de Repetición",
+  "report": "Reportar",
+  "requestPermissions": "Solicitar Permisos",
+  "saturday": "Sábado",
+  "saveChangesOffline": "Guardar cambios sin conexión",
+  "saveEventOffline": "Guardar evento sin conexión",
+  "searchFriends": "Buscar Amigos",
+  "searchPublicUsers": "Buscar Usuarios Públicos",
+  "searchEvents": "Buscar Eventos",
+  "filters": "Filtros",
+  "clearFilters": "Limpiar filtros",
+  "allEvents": "Todos",
+  "myEventsFilter": "Mis Eventos",
+  "subscribedEvents": "Subs",
+  "invitationEvents": "Invites",
+  "dateRange": "Rango de fechas",
+  "categories": "Categorías",
+  "eventTypes": "Tipos de Eventos",
+  "showRecurringEvents": "Mostrar Eventos Recurrentes",
+  "showOwnedEvents": "Mostrar Eventos Propios",
+  "showInvitedEvents": "Mostrar Eventos Invitados",
+  "from": "Desde",
+  "until": "Hasta",
+  "noEventsFound": "No se encontraron eventos",
+  "personalNote": "Nota Personal",
+  "addPersonalNote": "Añadir Nota Personal",
+  "addPersonalNoteHint": "Añade una nota privada para este evento...",
+  "personalNoteUpdated": "Nota personal actualizada",
+  "personalNoteDeleted": "Nota personal eliminada",
+  "editPersonalNote": "Editar Nota",
+  "errorSavingNote": "Error al guardar la nota",
+  "deleteNote": "Eliminar Nota",
+  "deleteNoteConfirmation": "¿Estás seguro de que quieres eliminar esta nota personal?",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "privateNoteHint": "Añade una nota privada para este evento. Solo tú podrás verla.",
+  "searchUsers": "Buscar Usuarios",
+  "sendChangesNotificationMessage": "Enviar una notificación a todos los usuarios que tienen este evento informándoles sobre sus cambios.",
+  "utc": "UTC",
+  "worldFlag": "🌐",
+  "sendInvitation": "Enviar Invitación",
+  "sendInvitations": "Enviar Invitaciones",
+  "sendSmsCode": "Enviar Código SMS",
+  "sentInvitations": "Invitaciones Enviadas",
+  "september": "Septiembre",
+  "sessionExpired": "Sesión expirada. Por favor, inténtalo de nuevo.",
+  "smsCode": "Código SMS",
+  "smsCodeSentTo": "Código SMS enviado a {phoneNumber}.",
+  "@smsCodeSentTo": {
+    "placeholders": {
+      "phoneNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "startDateBeforeEndDate": "La fecha de inicio debe ser anterior a la fecha de fin.",
+  "subscribedToUser": "Suscrito a {displayName}",
+  "@subscribedToUser": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "sunday": "Domingo",
+  "syncingContacts": "Sincronizando contactos...",
+  "testPhoneAuthInstructions": "Para propósitos de prueba en el simulador de iOS, puedes usar un número de teléfono de prueba y un código de verificación configurados en la Consola de Firebase.",
+  "thursday": "Jueves",
+  "tooManyRequests": "Demasiadas solicitudes. Por favor, inténtalo de nuevo más tarde.",
+  "tuesday": "Martes",
+  "unblock": "Desbloquear",
+  "understood": "Entendido",
+  "unfollow": "Dejar de Seguir",
+  "unnamedGroup": "Grupo sin nombre",
+  "unsubscribedSuccessfully": "Suscripción cancelada exitosamente.",
+  "subscribedSuccessfully": "Suscrito exitosamente.",
+  "upcomingEventsOf": "Próximos eventos de {eventName}",
+  "@upcomingEventsOf": {
+    "placeholders": {
+      "eventName": {
+        "type": "String"
+      }
+    }
+  },
+  "updateEvent": "Actualizar Evento",
+  "user": "Usuario",
+  "userProfile": "Perfil de Usuario",
+  "users": "Usuarios",
+  "verificationError": "Error de Verificación",
+  "verifyCode": "Verificar Código",
+  "wednesday": "Miércoles",
+
+  "@_EVENT_CREATION_UNIFIED": {
+    "description": "Cadenas de interfaz unificada de creación de eventos"
+  },
+  "recurringEvent": "Evento Recurrente",
+  "startDateTime": "Fecha y Hora de Inicio",
+  "endDateTime": "Fecha y Hora de Fin",
+  "city": "Ciudad",
+  "cityHint": "Introduce nombre de ciudad", 
+  "noLocationSet": "Sin ubicación establecida",
+  "fieldRequired": "{fieldName} es obligatorio",
+  "recurrencePatterns": "Patrones de Recurrencia",
+  "addPattern": "Agregar Patrón",
+  "addAnotherPattern": "Agregar Otro Patrón",
+  "tapAddPatternToStart": "Toca Agregar Patrón para empezar",
+  "selectDayOfWeek": "Seleccionar Día de la Semana",
+  "noPatternsAdded": "No se han agregado patrones de recurrencia",
+  "addFirstPattern": "Agrega tu primer patrón de recurrencia",
+  "onePatternAdded": "1 patrón agregado",
+  "multiplePatternsAdded": "{count} patrones agregados",
+  "daily": "Diario",
+  "weekly": "Semanal",
+  "monthly": "Mensual", 
+  "yearly": "Anual",
+  "everyNDays": "Cada {count} días",
+  "everyNWeeks": "Cada {count} semanas",
+  "everyNMonths": "Cada {count} meses",
+  "everyNYears": "Cada {count} años",
+  "endsOn": "Termina el {date}",
+  "dayOfMonth": "Día {day}",
+  "noAdditionalSettings": "Sin configuraciones adicionales",
+  "frequency": "Frecuencia",
+  "interval": "Intervalo", 
+  "daysOfWeek": "Días de la Semana",
+  "selectDay": "Seleccionar Día",
+  "selectMonth": "Seleccionar Mes",
+  "selectEndDate": "Seleccionar Fecha de Fin",
+  "monthOfYear": "Mes",
+  "optional": "opcional",
+  "editPattern": "Editar Patrón",
+  "time": "Hora",
+  "noRecurrencePatterns": "No se han agregado patrones de recurrencia aún",
+  "deletePattern": "Eliminar Patrón",
+  "confirmDeletePattern": "¿Estás seguro de que quieres eliminar este patrón?",
+  "recurringEventHelperText": "Activa para crear un evento que se repita",
+  "endDateRequired": "La fecha de fin es requerida para eventos recurrentes",
+  "atLeastOnePatternRequired": "Se requiere al menos un patrón de recurrencia",
+  "eventCreatedSuccessfully": "Evento creado exitosamente",
+  "confirmRemoveFromGroup": "¿Estás seguro de que quieres eliminar a {displayName} del grupo?",
+  "@confirmRemoveFromGroup": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
+  "memberRemovedFromGroup": "{displayName} eliminado del grupo",
+  "@memberRemovedFromGroup": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
+  "eventUpdatedSuccessfully": "Evento actualizado exitosamente",
+  "eventCreatedOffline": "Evento creado (se sincronizará al estar en línea)",
+  "eventUpdatedOffline": "Evento actualizado (se sincronizará al estar en línea)",
+  "eventChangedNotification": "El evento \"{eventTitle}\" ha sido modificado",
+  "@eventChangedNotification": {
+    "placeholders": {
+      "eventTitle": { "type": "String" }
+    }
+  },
+  "errorSendingNotification": "Error enviando notificación.",
+  "offlineStatus": "Sin conexión - Eventos guardados localmente",
+  "onlineStatus": "En línea - Cambios guardados automáticamente",
+  "syncingData": "Sincronizando datos...",
+  "syncingPendingOperations": "Sincronizando {count} cambios pendientes",
+  "noDaysSelected": "Ningún día seleccionado",
+  "allDaysSelected": "Todos los días",
+  "weekdaysSelected": "Días laborales",
+  "weekendsSelected": "Fines de semana",
+  "createNormalEvent": "Crear Evento",
+  "createRecurringEvent": "Crear Evento Recurrente"
+
+  ,
+  "selectTimezoneForCountry": "Seleccionar zona horaria para {country}",
+  "@selectTimezoneForCountry": {
+    "placeholders": { "country": { "type": "String" } }
+  },
+  "searchCity": "Buscar Ciudad",
+  "citySearchPlaceholder": "Escribir nombre de ciudad...",
+  "offlineTestDashboard": "Panel de Pruebas Offline",
+  "pendingOperationsLabel": "Operaciones Pendientes:",
+  "totalLabel": "Total",
+  "eventsLabel": "Eventos",
+  "createLabel": "Crear",
+  "updateLabel": "Actualizar",
+  "deleteLabel": "Eliminar",
+  "connectionLabel": "Conexión",
+  "membersLabel": "Miembros: {count}",
+  "@membersLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "groupMembersHeading": "Miembros del grupo",
+  "noMembersInGroup": "No hay miembros en este grupo",
+  "testCreate": "Crear prueba",
+  "forceSync": "Forzar sincronización",
+  "checkNet": "Comprobar red",
+  "eventWithoutTitle": "Evento sin título",
+  "invitationFrom": "Invitado por",
+  "notificationDeleted": "Notificación eliminada",
+  "errorDeletingNotification": "Error al eliminar notificación: {error}",
+  "@errorDeletingNotification": { "placeholders": { "error": { "type": "String" } } },
+  "errorAcceptingInvitation": "Error al aceptar invitación",
+  "errorRejectingInvitation": "Error al rechazar invitación",
+  "specificTimezone": "Zona horaria específica",
+  "select": "Seleccionar"
+  ,
+  "hourSuffix": "h",
+  "offsetDotTimezone": "{offset} • {timezone}",
+  "@offsetDotTimezone": {
+    "placeholders": { "offset": { "type": "String" }, "timezone": { "type": "String" } }
+  },
+  "timezoneWithOffsetParen": "{timezone} ({offset})",
+  "@timezoneWithOffsetParen": {
+    "placeholders": { "timezone": { "type": "String" }, "offset": { "type": "String" } }
+  },
+  "countryCodeDotTimezone": "{countryCode} • {timezone}",
+  "@countryCodeDotTimezone": {
+    "placeholders": { "countryCode": { "type": "String" }, "timezone": { "type": "String" } }
+  },
+  "dotSeparator": " • ",
+  "utc": "UTC",
+  "worldFlag": "🌍",
+  "minuteSuffix": "m",
+  "colon": ":",
+  "errorCreatingTestEvent": "Error al crear evento de prueba: {error}",
+  "@errorCreatingTestEvent": { "placeholders": { "error": { "type": "String" } } },
+  "syncFailedWithError": "Sincronización fallida: {error}",
+  "@syncFailedWithError": { "placeholders": { "error": { "type": "String" } } },
+  "statusLabel": "Estado",
+  "errorDeletingGroup": "Error al eliminar grupo: {error}",
+  "@errorDeletingGroup": { "placeholders": { "error": { "type": "String" } } }
+
+  ,
+  "networkErrorDuringSync": "Error de red durante la sincronización",
+  "cannotSyncWhileOffline": "No se puede sincronizar sin conexión",
+  "timezoneServiceNotInitialized": "TimezoneService no inicializado. Llama initialize() primero.",
+
+  "notificationServiceNotInitialized": "NotificationService no inicializado"
+,
+  "pendingInvitationBanner": "Invitación pendiente",
+  "@pendingInvitationBanner": { "description": "Banda superior mostrada en tarjetas de evento para invitaciones que aún están pendientes" },
+  "viewOrganizerEvents": "Ver eventos del organizador",
+  "@viewOrganizerEvents": { "description": "Botón para ver todos los eventos del organizador" },
+  "viewEventSeries": "Ver serie del evento",
+  "@viewEventSeries": { "description": "Botón para ver la serie padre del evento" },
+  "andWord": "y",
+  "@andWord": { "description": "Palabra 'y' localizada" },
+  "everyWord": "Cada",
+  "@everyWord": { "description": "Palabra 'Cada' localizada" },
+  "atWord": "a las",
+  "@atWord": { "description": "Expresión 'a las' localizada para horas" },
+
+  "errorLoadingInvitations": "Error al cargar invitaciones",
+  "errorSendingGroupInvitation": "Error al enviar invitación al grupo",
+  "invitationNotFound": "Invitación no encontrada",
+  "unknownError": "Error desconocido",
+  "allGroupMembersAlreadyInvited": "Todos los miembros del grupo ya han sido invitados.",
+  "ok": "Aceptar",
+  "validationFailed": "Validación fallida",
+  "saveFailed": "Error al guardar",
+  "noInvitationsSent": "Aún no se han enviado invitaciones",
+  "eventDeletedSuccessfully": "Evento eliminado exitosamente",
+  "subscribeToOwner": "Suscribirse al Organizador",
+  "yourResponse": "Tu Respuesta",
+  "status": "Estado",
+  "eventManagement": "Gestión del Evento",
+  "successfully": "exitosamente",
+
+  "@_EVENT_ACTION_SECTION": {
+    "description": "Cadenas específicas de la sección de acciones de evento"
+  },
+  "eventActions": "Acciones del Evento",
+  "eventCancellation": "Cancelación del Evento",
+  "sendCancellationNotification": "Enviar notificación de cancelación",
+  "cancellationMessage": "Mensaje de cancelación",
+  "cancelEventWithNotification": "Cancelar Evento con Notificación",
+  "eventOptions": "Opciones del Evento",
+  "removeFromMyList": "Quitar de Mi Lista",
+  "cancelEvent": "Cancelar Evento",
+  "confirmCancelEvent": "¿Estás seguro de que quieres cancelar este evento?",
+  "doNotCancel": "No Cancelar",
+  "eventCancelledSuccessfully": "Evento cancelado exitosamente",
+  "failedToCancelEvent": "Error al cancelar evento",
+  "removeFromList": "Quitar de la Lista",
+  "confirmRemoveFromList": "¿Estás seguro de que quieres quitar este evento de tu lista?",
+  "eventRemovedFromList": "Evento quitado de la lista",
+  "failedToRemoveFromList": "Error al quitar de la lista",
+
+  "@_INVITATION_STATUS": {
+    "description": "Cadenas de estado de invitación"
+  },
+  "invitationAccepted": "Aceptado",
+  "invitationRejected": "Rechazado",
+  "invitationPostponed": "Postpuesto",
+  "invitationPending": "Pendiente",
+  "acceptedEventButDeclinedInvitation": "Evento aceptado / Invitación rechazada",
+
+  "@_GROUP_ACTIONS": {
+    "description": "Cadenas específicas de acciones de grupo"
+  },
+  "noDescription": "Sin descripción",
+  "confirmDeleteGroup": "¿Estás seguro de que quieres eliminar {groupName}?",
+  "@confirmDeleteGroup": {
+    "placeholders": {
+      "groupName": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDeleteGroup": "Error al eliminar grupo",
+
+  "@_DEBUG_SCREENS": {
+    "description": "Textos para pantallas de debug"
+  },
+  "resolveAmbiguousReconciliation": "Resolver reconciliación ambigua",
+  "confirmResolve": "Confirmar resolución",
+  "payload": "Carga útil",
+  "close": "Cerrar",
+  "copy": "Copiar",
+  "ambiguousReconciliations": "Reconciliaciones ambiguas",
+  "availableInDebugBuildsOnly": "Disponible solo en compilaciones de debug",
+  "noAmbiguousReconciliations": "Sin reconciliaciones ambiguas",
+  "show": "Mostrar",
+  "deleteAmbiguousEntry": "Eliminar entrada ambigua",
+  "export": "Exportar",
+  "resolveOptimisticToServerId": "¿Resolver optimista {optimisticId} al ID del servidor {serverId}?",
+  "@resolveOptimisticToServerId": {
+    "placeholders": {
+      "optimisticId": {"type": "String"},
+      "serverId": {"type": "String"}
+    }
+  },
+
+  "@_ERROR_MESSAGES": {
+    "description": "Mensajes de error del sistema"
+  },
+  "userNotLoggedIn": "Usuario no ha iniciado sesión",
+  "cannotUpdateEventWithoutId": "No se puede actualizar evento sin ID",
+  "contactSyncInProgress": "Sincronización de contactos en progreso",
+  "contactsPermissionNotGranted": "Permiso de contactos no concedido",
+  "failedToLoadInvitations": "Error al cargar invitaciones",
+  "failedToSendInvitation": "Error al enviar invitación",
+  "failedToSendInvitations": "Error al enviar invitaciones",
+  "failedToSendGroupInvitation": "Error al enviar invitación de grupo",
+  "failedToAcceptInvitation": "Error al aceptar invitación",
+  "failedToRejectInvitation": "Error al rechazar invitación",
+  "failedToCancelInvitation": "Error al cancelar invitación",
+  "failedToLoadEvents": "Error al cargar eventos",
+  "failedToCreateEvent": "Error al crear evento",
+  "failedToUpdateEvent": "Error al actualizar evento",
+  "failedToDeleteEvent": "Error al eliminar evento",
+  "failedToSavePersonalNote": "Error al guardar nota personal",
+  "failedToDeletePersonalNote": "Error al eliminar nota personal",
+  "titleIsRequired": "El título es obligatorio",
+  "endDateMustBeAfterStartDate": "La fecha de fin debe ser posterior a la fecha de inicio",
+  "failedToSaveEvent": "Error al guardar evento",
+  "failedToLoadEventData": "Error al cargar datos del evento",
+  "noInvitationFound": "No se encontró invitación",
+  "failedToSubmitDecision": "Error al enviar decisión",
+  "onlyEventOwnerCanEdit": "Solo el propietario del evento puede editarlo",
+  "onlyEventOwnerCanDelete": "Solo el propietario del evento puede eliminarlo",
+  "onlyEventOwnerCanInviteUsers": "Solo el propietario del evento puede invitar usuarios",
+  "failedToToggleSubscription": "Error al cambiar suscripción",
+  "failedToRefreshContacts": "Error al actualizar contactos",
+
+  "@_EXCEPTION_MESSAGES": {
+    "description": "Mensajes de excepciones del sistema"
+  },
+  "couldNotGetFirebaseToken": "No se pudo obtener el token de Firebase",
+  "failedToLoadGroups": "Error al cargar grupos",
+  "userNotAuthenticated": "Usuario no autenticado",
+  "failedToCreateGroup": "Error al crear grupo",
+  "failedToAddMember": "Error al agregar miembro",
+  "failedToRemoveMember": "Error al eliminar miembro",
+  "failedToLeaveGroup": "Error al salir del grupo",
+  "failedToGrantAdminPermission": "Error al otorgar permisos de administrador",
+  "failedToRemoveAdminPermission": "Error al eliminar permisos de administrador",
+  "failedToCreateContact": "Error al crear contacto",
+  "failedToUpdateContact": "Error al actualizar contacto",
+  "failedToDeleteContact": "Error al eliminar contacto",
+  "failedToReadDeviceContacts": "Error al leer contactos del dispositivo",
+  "errorFindingUsersByPhones": "Error al buscar usuarios por teléfonos",
+  "failedToBlockUser": "Error al bloquear usuario",
+  "failedToUnblockUser": "Error al desbloquear usuario",
+  "failedToLoadBlockedUsers": "Error al cargar usuarios bloqueados",
+  "couldNotCreateGroup": "No se pudo crear el grupo",
+  "failedToFetchEvents": "Error al obtener eventos",
+  "failedToFetchSubscriptions": "Error al obtener suscripciones",
+  "failedToFetchNotifications": "Error al obtener notificaciones",
+  "failedToFetchGroups": "Error al obtener grupos",
+  "failedToFetchContacts": "Error al obtener contactos",
+  "failedToFetchEventsHash": "Error al obtener hash de eventos",
+  "failedToFetchGroupsHash": "Error al obtener hash de grupos",
+  "failedToFetchContactsHash": "Error al obtener hash de contactos",
+  "failedToFetchInvitationsHash": "Error al obtener hash de invitaciones",
+  "failedToFetchSubscriptionsHash": "Error al obtener hash de suscripciones",
+  "failedToFetchNotificationsHash": "Error al obtener hash de notificaciones",
+  "failedToLeaveEvent": "Error al salir del evento",
+  "failedToDeleteRecurringSeries": "Error al eliminar serie recurrente",
+  "failedToAddMemberToGroup": "Error al agregar miembro al grupo",
+  "failedToRemoveMemberFromGroup": "Error al eliminar miembro del grupo",
+  "failedToAcceptNotification": "Error al aceptar notificación",
+  "failedToRejectNotification": "Error al rechazar notificación",
+  "failedToMarkNotificationAsSeen": "Error al marcar notificación como vista",
+  "failedToCreateSubscription": "Error al crear suscripción",
+  "failedToDeleteSubscription": "Error al eliminar suscripción",
+  "failedToFetchEventInvitations": "Error al obtener invitaciones de eventos",
+  "failedToFetchUserGroups": "Error al obtener grupos de usuario",
+  "failedToFetchUsers": "Error al obtener usuarios",
+  "failedToSearchPublicUsers": "Error al buscar usuarios públicos",
+  "subscriptionIdCannotBeNull": "El ID de suscripción no puede ser nulo",
+  "userIdCannotBeNull": "El ID de usuario no puede ser nulo",
+  "failedToCreateUpdateUser": "Error al crear/actualizar usuario",
+  "failedToLoadCurrentUser": "Error al cargar usuario actual",
+  "noCurrentUserToUpdate": "No hay usuario actual para actualizar",
+  "failedToUpdateProfile": "Error al actualizar perfil",
+  "failedToUpdateFCMToken": "Error al actualizar token FCM",
+  "firebaseUserHasNoPhoneNumber": "El usuario de Firebase no tiene número de teléfono",
+  
+  "@_PUBLIC_USER_EVENTS_SCREEN": {
+    "description": "Texto específico para la pantalla de eventos de usuario público"
+  },
+  "eventsBy": "Eventos de {name}",
+  "@eventsBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "publicOrganizerEvents": "Eventos de organizador público",
+  "noEventsFound": "No se encontraron eventos",
+  "errorLoadingEvents": "Error al cargar eventos",
+  "changeDecision": "Cambiar decisión",
+  "changeInvitationDecision": "Cambiar decisión de invitación",
+  "selectNewDecision": "Selecciona tu nueva decisión para este evento",
+  "errorProcessingInvitation": "Error al procesar invitación",
+
+  "@_FILTERED_EMPTY_STATES": {
+    "description": "Mensajes para estados vacíos filtrados"
+  },
+  "noEventsForFilter": "No hay eventos para este filtro",
+  "noMyEvents": "Aún no has creado eventos",
+  "noSubscribedEvents": "No hay eventos de usuarios suscritos",
+  "noInvitationEvents": "No hay eventos de invitación",
+  "searchSubscriptions": "Buscar suscripciones",
+  "newLabel": "Nuevo",
+  "@newLabel": {
+    "description": "Etiqueta mostrada en eventos del mismo día no vistos"
+  },
+
+  "@_COMMUNITIES_CALENDARS": {
+    "description": "Traducciones de comunidades y gestión de calendarios"
+  },
+  "communities": "Comunidades",
+  "@communities": {
+    "description": "Etiqueta de la pestaña Comunidades"
+  },
+  "calendar": "Calendario",
+  "@calendar": {
+    "description": "Calendario singular"
+  },
+  "calendars": "Calendarios",
+  "@calendars": {
+    "description": "Calendarios plural"
+  },
+  "myCalendars": "Mis Calendarios",
+  "@myCalendars": {
+    "description": "Sección de calendarios propios del usuario"
+  },
+  "subscribedCalendars": "Calendarios Suscritos",
+  "@subscribedCalendars": {
+    "description": "Calendarios a los que el usuario está suscrito"
+  },
+  "publicCalendars": "Calendarios Públicos",
+  "@publicCalendars": {
+    "description": "Calendarios disponibles públicamente"
+  },
+  "createCalendar": "Crear Calendario",
+  "@createCalendar": {
+    "description": "Botón para crear un nuevo calendario"
+  },
+  "editCalendar": "Editar Calendario",
+  "@editCalendar": {
+    "description": "Botón para editar un calendario"
+  },
+  "deleteCalendar": "Eliminar Calendario",
+  "@deleteCalendar": {
+    "description": "Botón para eliminar un calendario"
+  },
+  "calendarName": "Nombre del Calendario",
+  "@calendarName": {
+    "description": "Etiqueta para el campo de nombre del calendario"
+  },
+  "calendarDescription": "Descripción del Calendario",
+  "@calendarDescription": {
+    "description": "Etiqueta para el campo de descripción del calendario"
+  },
+  "calendarColor": "Color del Calendario",
+  "@calendarColor": {
+    "description": "Etiqueta para el selector de color del calendario"
+  },
+  "deleteAssociatedEvents": "Eliminar eventos asociados al eliminar el calendario",
+  "@deleteAssociatedEvents": {
+    "description": "Etiqueta del checkbox para el comportamiento de eliminación del calendario"
+  },
+  "subscribeToCalendar": "Suscribirse",
+  "@subscribeToCalendar": {
+    "description": "Botón para suscribirse a un calendario público"
+  },
+  "unsubscribeFromCalendar": "Desuscribirse",
+  "@unsubscribeFromCalendar": {
+    "description": "Botón para desuscribirse de un calendario"
+  },
+  "searchPublicCalendars": "Buscar calendarios públicos",
+  "@searchPublicCalendars": {
+    "description": "Placeholder para el campo de búsqueda de calendarios"
+  },
+  "noCalendarsYet": "Aún no hay calendarios",
+  "@noCalendarsYet": {
+    "description": "Mensaje de estado vacío cuando el usuario no tiene calendarios"
+  },
+  "associateWithCalendar": "Asociar con Calendario",
+  "@associateWithCalendar": {
+    "description": "Etiqueta del checkbox en el formulario de evento"
+  },
+  "isBirthday": "Es Cumpleaños",
+  "@isBirthday": {
+    "description": "Toggle para eventos de cumpleaños"
+  },
+  "birthdayIcon": "🎂",
+  "@birthdayIcon": {
+    "description": "Icono mostrado para eventos de cumpleaños"
+  },
+  "selectCalendar": "Seleccionar Calendario",
+  "@selectCalendar": {
+    "description": "Placeholder del dropdown para seleccionar calendario"
+  },
+  "invitationStatus": "Estado de Invitación",
+  "@invitationStatus": {
+    "description": "Etiqueta para el campo de estado de invitación en detalle de evento"
+  },
+  "changeInvitationStatus": "Cambiar Estado de Invitación",
+  "@changeInvitationStatus": {
+    "description": "Encabezado para la sección de botones de cambio de estado de invitación"
+  },
+  "attendIndependently": "Asistir Independientemente",
+  "@attendIndependently": {
+    "description": "Etiqueta para el botón de asistir al evento independientemente (rechazando la invitación pero asistiendo)"
+  },
+
+  "@_CALENDARS_BIRTHDAYS_SCREENS": {
+    "description": "Traducciones específicas de pantallas de calendarios y cumpleaños"
+  },
+  "searchCalendars": "Buscar calendarios...",
+  "@searchCalendars": {
+    "description": "Placeholder para el campo de búsqueda de calendarios"
+  },
+  "searchBirthdays": "Buscar cumpleaños...",
+  "@searchBirthdays": {
+    "description": "Placeholder para el campo de búsqueda de cumpleaños"
+  },
+  "noCalendarsFound": "No se encontraron calendarios",
+  "@noCalendarsFound": {
+    "description": "Mensaje de estado vacío cuando la búsqueda de calendarios no devuelve resultados"
+  },
+  "noCalendars": "No hay calendarios",
+  "@noCalendars": {
+    "description": "Mensaje de estado vacío cuando el usuario no tiene calendarios"
+  },
+  "noBirthdaysFound": "No se encontraron cumpleaños",
+  "@noBirthdaysFound": {
+    "description": "Mensaje de estado vacío cuando la búsqueda de cumpleaños no devuelve resultados"
+  },
+  "noBirthdays": "No hay cumpleaños",
+  "@noBirthdays": {
+    "description": "Mensaje de estado vacío cuando el usuario no tiene eventos de cumpleaños"
+  },
+  "birthdays": "Cumpleaños",
+  "@birthdays": {
+    "description": "Forma plural para eventos de cumpleaños, opción de menú"
+  },
+  "birthday": "Cumpleaños",
+  "@birthday": {
+    "description": "Un solo evento de cumpleaños"
+  },
+  "defaultCalendar": "Predeterminado",
+  "@defaultCalendar": {
+    "description": "Etiqueta de badge para calendario predeterminado"
+  },
+  "errorLoadingData": "Error al cargar datos",
+  "@errorLoadingData": {
+    "description": "Mensaje de error genérico cuando fallan los datos"
+  },
+  "inDays": "en {days} días",
+  "@inDays": {
+    "description": "Etiqueta para tiempo de cumpleaños (ej., 'en 5 días')",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "inOneWeek": "en 1 semana",
+  "@inOneWeek": {
+    "description": "Etiqueta para cumpleaños exactamente a una semana"
+  },
+  "inWeeks": "en {weeks} semanas",
+  "@inWeeks": {
+    "description": "Etiqueta para tiempo de cumpleaños (ej., 'en 3 semanas')",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "inOneMonth": "en 1 mes",
+  "@inOneMonth": {
+    "description": "Etiqueta para cumpleaños exactamente a un mes"
+  },
+  "inMonths": "en {months} meses",
+  "@inMonths": {
+    "description": "Etiqueta para tiempo de cumpleaños (ej., 'en 2 meses')",
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "inOneYear": "en 1 año",
+  "@inOneYear": {
+    "description": "Etiqueta para cumpleaños exactamente a un año"
+  }
+}
+

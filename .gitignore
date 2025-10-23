@@ -37,7 +37,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -158,3 +157,5 @@ build/
 # Docker volumes
 db_data/
 storage_data/
+.pytest_cache/
+.claude/
