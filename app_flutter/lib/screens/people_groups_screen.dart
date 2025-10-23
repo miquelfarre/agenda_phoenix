@@ -16,8 +16,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/widgets/adaptive/configs/button_config.dart';
-import '../models/people_groups_composite.dart';
-import '../services/composite_sync_service.dart';
+import '../services/supabase_service.dart';
 
 class PeopleGroupsScreen extends ConsumerStatefulWidget {
   const PeopleGroupsScreen({super.key});
@@ -33,7 +32,8 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
   int get userId => ConfigService.instance.currentUserId;
   bool _isRefreshing = false;
 
-  PeopleGroupsComposite? _composite;
+  List<User> _contacts = [];
+  List<Group> _groups = [];
   bool _isLoading = false;
   String? _error;
 
@@ -77,11 +77,11 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
 
     try {
       _isRefreshing = true;
-      final composite = await CompositeSyncService.instance
-          .smartSyncPeopleGroups();
+      final data = await SupabaseService.instance.fetchPeopleAndGroups(userId);
       if (mounted) {
         setState(() {
-          _composite = composite;
+          _contacts = (data['contacts'] as List).map((c) => User.fromJson(c)).toList();
+          _groups = (data['groups'] as List).map((g) => Group.fromJson(g)).toList();
           _isLoading = false;
         });
       }
@@ -102,8 +102,6 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
 
     try {
       _isRefreshing = true;
-
-      await CompositeSyncService.instance.clearPeopleGroupsCache();
       await _loadData();
     } catch (e) {
       if (mounted) {
@@ -150,8 +148,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
       return _buildContactsError(l10n, _error!);
     }
 
-    final contacts = _composite?.contacts ?? [];
-    return _buildContactsList(contacts, l10n);
+    return _buildContactsList(_contacts, l10n);
   }
 
   Widget _buildContactsError(AppLocalizations l10n, Object error) {
@@ -336,8 +333,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
       return Center(child: Text('${l10n.error}: $_error'));
     }
 
-    final groups = _composite?.groups ?? [];
-    final userGroups = groups
+    final userGroups = _groups
         .where((group) => group.members.any((member) => member.id == userId))
         .toList();
 

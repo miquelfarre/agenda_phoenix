@@ -4,7 +4,6 @@ import 'package:hive_ce/hive.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/user.dart';
 import '../models/user_hive.dart';
-import '../core/monitoring/performance_monitor.dart';
 import '../utils/app_exceptions.dart';
 import '../services/config_service.dart';
 import 'api_client.dart';
@@ -243,432 +242,367 @@ class UserService implements ISyncable, ICacheManager {
 
   @override
   Future<void> performFullSync() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.performFullSync',
-      () async {
-        _emitSyncEvent(
-          SyncEventType.started,
-          message: 'Starting full user sync',
-        );
-        _syncStatus = SyncStatus.syncing;
-
-        try {
-          await SyncService.clearAllUsersCache();
-
-          final currentUser = await getCurrentUser();
-          if (currentUser == null) {
-            throw ApiException('No current user found for sync');
-          }
-
-          _emitSyncEvent(
-            SyncEventType.progress,
-            progress: 0.2,
-            message: 'Fetching user contacts',
-          );
-
-          await _syncContactsInternal();
-
-          _emitSyncEvent(
-            SyncEventType.progress,
-            progress: 0.6,
-            message: 'Syncing user profile',
-          );
-
-          await _syncUserProfileInternal(currentUser.id);
-
-          _lastSyncTimestamp = DateTime.now();
-          _syncStatus = SyncStatus.completed;
-
-          _emitSyncEvent(
-            SyncEventType.completed,
-            progress: 1.0,
-            message: 'Full user sync completed successfully',
-          );
-        } catch (e) {
-          _syncStatus = SyncStatus.failed;
-          _emitSyncEvent(
-            SyncEventType.failed,
-            error: e,
-            message: 'Full user sync failed: ${e.toString()}',
-          );
-          rethrow;
-        }
-      },
-      metadata: {'syncType': 'full'},
+    _emitSyncEvent(
+      SyncEventType.started,
+      message: 'Starting full user sync',
     );
+    _syncStatus = SyncStatus.syncing;
+
+    try {
+      await SyncService.clearAllUsersCache();
+
+      final currentUser = await getCurrentUser();
+      if (currentUser == null) {
+        throw ApiException('No current user found for sync');
+      }
+
+      _emitSyncEvent(
+        SyncEventType.progress,
+        progress: 0.2,
+        message: 'Fetching user contacts',
+      );
+
+      await _syncContactsInternal();
+
+      _emitSyncEvent(
+        SyncEventType.progress,
+        progress: 0.6,
+        message: 'Syncing user profile',
+      );
+
+      await _syncUserProfileInternal(currentUser.id);
+
+      _lastSyncTimestamp = DateTime.now();
+      _syncStatus = SyncStatus.completed;
+
+      _emitSyncEvent(
+        SyncEventType.completed,
+        progress: 1.0,
+        message: 'Full user sync completed successfully',
+      );
+    } catch (e) {
+      _syncStatus = SyncStatus.failed;
+      _emitSyncEvent(
+        SyncEventType.failed,
+        error: e,
+        message: 'Full user sync failed: ${e.toString()}',
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<void> performIncrementalSync(DateTime lastSync) async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.performIncrementalSync',
-      () async {
-        _emitSyncEvent(
-          SyncEventType.started,
-          message: 'Starting incremental user sync',
-        );
-        _syncStatus = SyncStatus.syncing;
-
-        try {
-          final currentUser = await getCurrentUser();
-          if (currentUser == null) {
-            throw ApiException('No current user found for incremental sync');
-          }
-
-          _emitSyncEvent(
-            SyncEventType.progress,
-            progress: 0.3,
-            message: 'Checking for profile updates',
-          );
-
-          await _syncUserProfileInternal(currentUser.id);
-
-          _emitSyncEvent(
-            SyncEventType.progress,
-            progress: 0.7,
-            message: 'Checking for contact updates',
-          );
-
-          await _syncContactsInternal();
-
-          _lastSyncTimestamp = DateTime.now();
-          _syncStatus = SyncStatus.completed;
-
-          _emitSyncEvent(
-            SyncEventType.completed,
-            progress: 1.0,
-            message: 'Incremental user sync completed',
-          );
-        } catch (e) {
-          _syncStatus = SyncStatus.failed;
-          _emitSyncEvent(
-            SyncEventType.failed,
-            error: e,
-            message: 'Incremental user sync failed: ${e.toString()}',
-          );
-          rethrow;
-        }
-      },
-      metadata: {
-        'syncType': 'incremental',
-        'lastSync': lastSync.toIso8601String(),
-      },
+    _emitSyncEvent(
+      SyncEventType.started,
+      message: 'Starting incremental user sync',
     );
+    _syncStatus = SyncStatus.syncing;
+
+    try {
+      final currentUser = await getCurrentUser();
+      if (currentUser == null) {
+        throw ApiException('No current user found for incremental sync');
+      }
+
+      _emitSyncEvent(
+        SyncEventType.progress,
+        progress: 0.3,
+        message: 'Checking for profile updates',
+      );
+
+      await _syncUserProfileInternal(currentUser.id);
+
+      _emitSyncEvent(
+        SyncEventType.progress,
+        progress: 0.7,
+        message: 'Checking for contact updates',
+      );
+
+      await _syncContactsInternal();
+
+      _lastSyncTimestamp = DateTime.now();
+      _syncStatus = SyncStatus.completed;
+
+      _emitSyncEvent(
+        SyncEventType.completed,
+        progress: 1.0,
+        message: 'Incremental user sync completed',
+      );
+    } catch (e) {
+      _syncStatus = SyncStatus.failed;
+      _emitSyncEvent(
+        SyncEventType.failed,
+        error: e,
+        message: 'Incremental user sync failed: ${e.toString()}',
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<void> performHashBasedSync(String currentHash) async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.performHashBasedSync',
-      () async {
-        _emitSyncEvent(
-          SyncEventType.started,
-          message: 'Starting hash-based user sync',
-        );
-        _syncStatus = SyncStatus.syncing;
-
-        try {
-          final currentUser = await getCurrentUser();
-          if (currentUser == null) {
-            throw ApiException('No current user found for hash-based sync');
-          }
-
-          _emitSyncEvent(
-            SyncEventType.progress,
-            progress: 0.2,
-            message: 'Comparing user data hashes',
-          );
-
-          final localHash = await _getLocalUsersHash();
-
-          if (currentHash == localHash) {
-            _syncStatus = SyncStatus.completed;
-            _emitSyncEvent(
-              SyncEventType.completed,
-              progress: 1.0,
-              message: 'No user changes detected',
-            );
-            return;
-          }
-
-          _emitSyncEvent(
-            SyncEventType.progress,
-            progress: 0.4,
-            message: 'Changes detected, performing incremental sync',
-          );
-
-          if (_lastSyncTimestamp != null) {
-            await performIncrementalSync(_lastSyncTimestamp!);
-          } else {
-            await performFullSync();
-          }
-        } catch (e) {
-          _syncStatus = SyncStatus.failed;
-          _emitSyncEvent(
-            SyncEventType.failed,
-            error: e,
-            message: 'Hash-based user sync failed: ${e.toString()}',
-          );
-          rethrow;
-        }
-      },
-      metadata: {'syncType': 'hash-based', 'currentHash': currentHash},
+    _emitSyncEvent(
+      SyncEventType.started,
+      message: 'Starting hash-based user sync',
     );
+    _syncStatus = SyncStatus.syncing;
+
+    try {
+      final currentUser = await getCurrentUser();
+      if (currentUser == null) {
+        throw ApiException('No current user found for hash-based sync');
+      }
+
+      _emitSyncEvent(
+        SyncEventType.progress,
+        progress: 0.2,
+        message: 'Comparing user data hashes',
+      );
+
+      final localHash = await _getLocalUsersHash();
+
+      if (currentHash == localHash) {
+        _syncStatus = SyncStatus.completed;
+        _emitSyncEvent(
+          SyncEventType.completed,
+          progress: 1.0,
+          message: 'No user changes detected',
+        );
+        return;
+      }
+
+      _emitSyncEvent(
+        SyncEventType.progress,
+        progress: 0.4,
+        message: 'Changes detected, performing incremental sync',
+      );
+
+      if (_lastSyncTimestamp != null) {
+        await performIncrementalSync(_lastSyncTimestamp!);
+      } else {
+        await performFullSync();
+      }
+    } catch (e) {
+      _syncStatus = SyncStatus.failed;
+      _emitSyncEvent(
+        SyncEventType.failed,
+        error: e,
+        message: 'Hash-based user sync failed: ${e.toString()}',
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<void> resolveConflict(dynamic local, dynamic remote) async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.resolveConflict',
-      () async {
-        _emitSyncEvent(
-          SyncEventType.started,
-          message: 'Resolving user conflict',
-        );
-        _syncStatus = SyncStatus.conflict;
-
-        try {
-          final localUser = local is User ? local : User.fromJson(local);
-          final remoteUser = remote is User ? remote : User.fromJson(remote);
-
-          User resolvedUser;
-
-          resolvedUser = User(
-            id: remoteUser.id,
-            fullName: remoteUser.fullName,
-            instagramName: remoteUser.instagramName,
-            email: remoteUser.email,
-            phoneNumber: remoteUser.phoneNumber,
-            profilePicture: remoteUser.profilePicture,
-            isPublic: localUser.isPublic,
-          );
-
-          final userHive = _userToUserHive(resolvedUser);
-          await updateLocalCache(resolvedUser.id, userHive);
-
-          _syncStatus = SyncStatus.completed;
-          _emitSyncEvent(
-            SyncEventType.completed,
-            message: 'User conflict resolved successfully',
-          );
-        } catch (e) {
-          _syncStatus = SyncStatus.failed;
-          _emitSyncEvent(
-            SyncEventType.failed,
-            error: e,
-            message: 'User conflict resolution failed: ${e.toString()}',
-          );
-          rethrow;
-        }
-      },
-      metadata: {'conflictType': 'user'},
+    _emitSyncEvent(
+      SyncEventType.started,
+      message: 'Resolving user conflict',
     );
+    _syncStatus = SyncStatus.conflict;
+
+    try {
+      final localUser = local is User ? local : User.fromJson(local);
+      final remoteUser = remote is User ? remote : User.fromJson(remote);
+
+      User resolvedUser;
+
+      resolvedUser = User(
+        id: remoteUser.id,
+        fullName: remoteUser.fullName,
+        instagramName: remoteUser.instagramName,
+        email: remoteUser.email,
+        phoneNumber: remoteUser.phoneNumber,
+        profilePicture: remoteUser.profilePicture,
+        isPublic: localUser.isPublic,
+      );
+
+      final userHive = _userToUserHive(resolvedUser);
+      await updateLocalCache(resolvedUser.id, userHive);
+
+      _syncStatus = SyncStatus.completed;
+      _emitSyncEvent(
+        SyncEventType.completed,
+        message: 'User conflict resolved successfully',
+      );
+    } catch (e) {
+      _syncStatus = SyncStatus.failed;
+      _emitSyncEvent(
+        SyncEventType.failed,
+        error: e,
+        message: 'User conflict resolution failed: ${e.toString()}',
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<List<T>> batchUploadEntities<T>(List<T> entities) async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.batchUploadEntities',
-      () async {
-        _emitSyncEvent(
-          SyncEventType.started,
-          message: 'Starting batch upload of ${entities.length} user entities',
-        );
-
-        try {
-          final users = entities.cast<User>();
-          final uploadData = users
-              .map(
-                (user) => {
-                  'full_name': user.fullName,
-                  'instagram_name': user.instagramName,
-                  'email': user.email,
-                  'phone_number': user.phoneNumber,
-                  'is_public': user.isPublic,
-                },
-              )
-              .toList();
-
-          final response = await ApiClientFactory.instance.post(
-            '/api/v1/users/batch',
-            body: {'users': uploadData},
-          );
-
-          final uploadedUsers = (response['users'] as List)
-              .map((json) => User.fromJson(json))
-              .toList();
-
-          _emitSyncEvent(
-            SyncEventType.completed,
-            message: 'Batch user upload completed',
-          );
-
-          return uploadedUsers.cast<T>();
-        } catch (e) {
-          _emitSyncEvent(
-            SyncEventType.failed,
-            error: e,
-            message: 'Batch user upload failed: ${e.toString()}',
-          );
-          rethrow;
-        }
-      },
-      metadata: {'batchSize': entities.length, 'operation': 'upload'},
+    _emitSyncEvent(
+      SyncEventType.started,
+      message: 'Starting batch upload of ${entities.length} user entities',
     );
+
+    try {
+      final users = entities.cast<User>();
+      final uploadData = users
+          .map(
+            (user) => {
+              'full_name': user.fullName,
+              'instagram_name': user.instagramName,
+              'email': user.email,
+              'phone_number': user.phoneNumber,
+              'is_public': user.isPublic,
+            },
+          )
+          .toList();
+
+      final response = await ApiClientFactory.instance.post(
+        '/api/v1/users/batch',
+        body: {'users': uploadData},
+      );
+
+      final uploadedUsers = (response['users'] as List)
+          .map((json) => User.fromJson(json))
+          .toList();
+
+      _emitSyncEvent(
+        SyncEventType.completed,
+        message: 'Batch user upload completed',
+      );
+
+      return uploadedUsers.cast<T>();
+    } catch (e) {
+      _emitSyncEvent(
+        SyncEventType.failed,
+        error: e,
+        message: 'Batch user upload failed: ${e.toString()}',
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<List<T>> batchDownloadEntities<T>(List<int> entityIds) async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.batchDownloadEntities',
-      () async {
-        _emitSyncEvent(
-          SyncEventType.started,
-          message:
-              'Starting batch download of ${entityIds.length} user entities',
-        );
-
-        try {
-          final response = await ApiClientFactory.instance.post(
-            '/api/v1/users/batch-fetch',
-            body: {'user_ids': entityIds},
-          );
-
-          final users = (response['users'] as List)
-              .map((json) => User.fromJson(json))
-              .toList();
-
-          for (final user in users) {
-            final userHive = _userToUserHive(user);
-            await updateLocalCache(user.id, userHive);
-          }
-
-          _emitSyncEvent(
-            SyncEventType.completed,
-            message: 'Batch user download completed',
-          );
-
-          return users.cast<T>();
-        } catch (e) {
-          _emitSyncEvent(
-            SyncEventType.failed,
-            error: e,
-            message: 'Batch user download failed: ${e.toString()}',
-          );
-          rethrow;
-        }
-      },
-      metadata: {'batchSize': entityIds.length, 'operation': 'download'},
+    _emitSyncEvent(
+      SyncEventType.started,
+      message:
+          'Starting batch download of ${entityIds.length} user entities',
     );
+
+    try {
+      final response = await ApiClientFactory.instance.post(
+        '/api/v1/users/batch-fetch',
+        body: {'user_ids': entityIds},
+      );
+
+      final users = (response['users'] as List)
+          .map((json) => User.fromJson(json))
+          .toList();
+
+      for (final user in users) {
+        final userHive = _userToUserHive(user);
+        await updateLocalCache(user.id, userHive);
+      }
+
+      _emitSyncEvent(
+        SyncEventType.completed,
+        message: 'Batch user download completed',
+      );
+
+      return users.cast<T>();
+    } catch (e) {
+      _emitSyncEvent(
+        SyncEventType.failed,
+        error: e,
+        message: 'Batch user download failed: ${e.toString()}',
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<void> clearCache() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.clearCache',
-      () async {
-        try {
-          await hiveBox.clear();
-        } catch (e) {
-          rethrow;
-        }
-      },
-    );
+    try {
+      await hiveBox.clear();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
   Future<void> clearCacheForUser(int userId) async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.clearCacheForUser',
-      () async {
-        try {
-          await hiveBox.delete(userId);
-        } catch (e) {
-          rethrow;
-        }
-      },
-      metadata: {'userId': userId},
-    );
+    try {
+      await hiveBox.delete(userId);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
   Future<Map<String, dynamic>> getCacheStats() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.getCacheStats',
-      () async {
-        try {
-          final totalEntries = hiveBox.length;
-          final cacheSize = await getCacheSize();
+    try {
+      final totalEntries = hiveBox.length;
+      final cacheSize = await getCacheSize();
 
-          return {
-            'total_entries': totalEntries,
-            'cache_size_bytes': cacheSize,
-            'service_name': serviceName,
-            'box_name': hiveBoxName,
-          };
-        } catch (e) {
-          rethrow;
-        }
-      },
-    );
+      return {
+        'total_entries': totalEntries,
+        'cache_size_bytes': cacheSize,
+        'service_name': serviceName,
+        'box_name': hiveBoxName,
+      };
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
   Future<void> optimizeCache() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.optimizeCache',
-      () async {
+    try {
+      final keysToDelete = <dynamic>[];
+
+      for (final key in hiveBox.keys) {
         try {
-          final keysToDelete = <dynamic>[];
-
-          for (final key in hiveBox.keys) {
-            try {
-              final userHive = hiveBox.get(key);
-              if (userHive == null || userHive.id <= 0) {
-                keysToDelete.add(key);
-              }
-            } catch (e) {
-              keysToDelete.add(key);
-            }
-          }
-
-          for (final key in keysToDelete) {
-            await hiveBox.delete(key);
+          final userHive = hiveBox.get(key);
+          if (userHive == null || userHive.id <= 0) {
+            keysToDelete.add(key);
           }
         } catch (e) {
-          rethrow;
+          keysToDelete.add(key);
         }
-      },
-    );
+      }
+
+      for (final key in keysToDelete) {
+        await hiveBox.delete(key);
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
   Future<bool> validateCache() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'UserService.validateCache',
-      () async {
+    try {
+      int invalidEntries = 0;
+
+      for (final value in hiveBox.values) {
         try {
-          int invalidEntries = 0;
-
-          for (final value in hiveBox.values) {
-            try {
-              if (value.id > 0 && value.fullName?.isNotEmpty == true) {
-              } else {
-                invalidEntries++;
-              }
-            } catch (_) {
-              invalidEntries++;
-            }
+          if (value.id > 0 && value.fullName?.isNotEmpty == true) {
+          } else {
+            invalidEntries++;
           }
-
-          final isValid = invalidEntries == 0;
-
-          return isValid;
-        } catch (e) {
-          return false;
+        } catch (_) {
+          invalidEntries++;
         }
-      },
-    );
+      }
+
+      final isValid = invalidEntries == 0;
+
+      return isValid;
+    } catch (e) {
+      return false;
+    }
   }
 
   @override

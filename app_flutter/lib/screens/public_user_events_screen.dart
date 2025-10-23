@@ -4,9 +4,8 @@ import '../l10n/app_localizations.dart';
 import '../models/event.dart';
 import '../models/user.dart';
 import '../models/subscription.dart';
-import '../models/public_user_events_composite.dart';
 import '../services/config_service.dart';
-import '../services/composite_sync_service.dart';
+import '../services/supabase_service.dart';
 import '../core/state/app_state.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 import '../widgets/event_card.dart';
@@ -30,7 +29,8 @@ class _PublicUserEventsScreenState
 
   final Set<int> _hiddenEventIds = <int>{};
 
-  PublicUserEventsComposite? _composite;
+  List<Event> _events = [];
+  bool _isSubscribed = false;
   bool _isLoading = false;
   String? _error;
 
@@ -60,11 +60,14 @@ class _PublicUserEventsScreenState
     });
 
     try {
-      final composite = await CompositeSyncService.instance
-          .smartSyncPublicUserEvents(widget.publicUser.id);
+      final userId = ConfigService.instance.currentUserId;
+      final events = await SupabaseService.instance.fetchPublicUserEvents(widget.publicUser.id);
+      final isSubscribed = await SupabaseService.instance.isSubscribedToUser(userId, widget.publicUser.id);
+
       if (mounted) {
         setState(() {
-          _composite = composite;
+          _events = events.map((e) => Event.fromJson(e)).toList();
+          _isSubscribed = isSubscribed;
           _isLoading = false;
         });
       }
@@ -79,10 +82,6 @@ class _PublicUserEventsScreenState
   }
 
   Future<void> _refreshEvents() async {
-    await CompositeSyncService.instance.clearPublicUserEventsCache(
-      widget.publicUser.id,
-    );
-
     _hiddenEventIds.clear();
     await _loadData();
   }
@@ -108,9 +107,6 @@ class _PublicUserEventsScreenState
         );
       }
 
-      await CompositeSyncService.instance.clearPublicUserEventsCache(
-        widget.publicUser.id,
-      );
       await _loadData();
     } catch (e) {
       if (mounted) {
@@ -153,9 +149,6 @@ class _PublicUserEventsScreenState
         );
       }
 
-      await CompositeSyncService.instance.clearPublicUserEventsCache(
-        widget.publicUser.id,
-      );
       await _loadData();
     } catch (e) {
       if (mounted) {
@@ -187,8 +180,6 @@ class _PublicUserEventsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isSubscribed = _composite?.isSubscribed ?? false;
-
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(
@@ -199,22 +190,22 @@ class _PublicUserEventsScreenState
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           onPressed: _isProcessingSubscription
               ? null
-              : isSubscribed
+              : _isSubscribed
               ? _unsubscribeFromUser
               : _subscribeToUser,
           child: Text(
-            isSubscribed
+            _isSubscribed
                 ? AppLocalizations.of(context)!.unfollow
                 : AppLocalizations.of(context)!.follow,
           ),
         ),
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
       ),
-      child: SafeArea(child: _buildContent(isSubscribed)),
+      child: SafeArea(child: _buildContent()),
     );
   }
 
-  Widget _buildContent(bool isSubscribed) {
+  Widget _buildContent() {
     if (_isLoading) {
       return const Center(child: CupertinoActivityIndicator());
     }
@@ -241,12 +232,7 @@ class _PublicUserEventsScreenState
       );
     }
 
-    final events = _composite?.events ?? [];
-
-    List<Event> baseEvents = events;
-    if (!isSubscribed) {
-      baseEvents = events;
-    }
+    List<Event> baseEvents = _events;
 
     baseEvents = baseEvents
         .where((e) => e.id == null || !_hiddenEventIds.contains(e.id))

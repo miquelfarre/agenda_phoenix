@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
 import '../models/user.dart';
 import '../models/group.dart';
-import '../models/invite_users_composite.dart';
-import '../services/composite_sync_service.dart';
+import '../services/supabase_service.dart';
 import '../services/event_interaction_service.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
@@ -27,7 +26,8 @@ class InviteUsersScreen extends ConsumerStatefulWidget {
 
 class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
     with WidgetsBindingObserver {
-  InviteUsersComposite? _composite;
+  List<User> _availableUsers = [];
+  List<Group> _groups = [];
   final Set<int> _recentlyInvitedUserIds = {};
   Set<int> selectedUserIds = {};
   Set<int> selectedGroupIds = {};
@@ -87,16 +87,15 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
         return;
       }
 
-      print('🔵 [InviteUsersScreen] Calling smartSyncInviteUsers...');
-      final composite = await CompositeSyncService.instance
-          .smartSyncInviteUsers(eventId);
-      print(
-        '🔵 [InviteUsersScreen] smartSyncInviteUsers completed, available users: ${composite.availableUsers.length}',
-      );
+      final currentUserId = ConfigService.instance.currentUserId;
+      print('🔵 [InviteUsersScreen] Calling fetchAvailableInvitees...');
+      final users = await SupabaseService.instance.fetchAvailableInvitees(eventId, currentUserId);
+      print('🔵 [InviteUsersScreen] fetchAvailableInvitees completed, available users: ${users.length}');
 
       if (mounted) {
         setState(() {
-          _composite = composite;
+          _availableUsers = users.map((u) => User.fromJson(u)).toList();
+          _groups = [];
           _isLoading = false;
         });
         print('🔵 [InviteUsersScreen] setState completed, _isLoading=false');
@@ -129,11 +128,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
   }
 
   List<User> _getFilteredUsers() {
-    if (_composite == null) return [];
-
-    final users = _composite!.availableUsers;
-
-    final filteredUsers = users.where((user) {
+    final filteredUsers = _availableUsers.where((user) {
       return !_recentlyInvitedUserIds.contains(user.id);
     }).toList();
 
@@ -147,33 +142,13 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
   }
 
   List<Group> _getFilteredGroups() {
-    if (_composite == null) return [];
-
-    final groups = _composite!.groups;
-
-    final groupStates = {
-      for (var state in _composite!.groupStates) state.groupId: state,
-    };
-
-    final filteredGroups = groups.where((group) {
-      final state = groupStates[group.id];
-      return state != null &&
-          state.state != 'fully_invited' &&
-          state.state != 'empty';
-    }).toList();
-
-    if (searchQuery.isEmpty) return filteredGroups;
+    if (searchQuery.isEmpty) return _groups;
 
     final query = searchQuery.toLowerCase();
-    return filteredGroups.where((group) {
+    return _groups.where((group) {
       return group.name.toLowerCase().contains(query) ||
           group.description.toLowerCase().contains(query);
     }).toList();
-  }
-
-  Map<int, GroupInviteState> _getGroupStatesMap() {
-    if (_composite == null) return {};
-    return {for (var state in _composite!.groupStates) state.groupId: state};
   }
 
   Widget _buildSearchField() {
@@ -239,7 +214,6 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
     final users = _getFilteredUsers();
     final groups = _getFilteredGroups();
-    final groupStates = _getGroupStatesMap();
 
     if (users.isEmpty && groups.isEmpty && searchQuery.isEmpty) {
       return EmptyState(
@@ -250,9 +224,6 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
     return PlatformRefresh(
       onRefresh: () async {
-        await CompositeSyncService.instance.clearInviteUsersCache(
-          widget.event.id!,
-        );
         await _loadData();
       },
       child: ListView(
@@ -310,20 +281,10 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
             ),
             ...groups.map((group) {
               final isSelected = selectedGroupIds.contains(group.id);
-              final groupState = groupStates[group.id];
-
-              String subtitle = group.description;
-              if (groupState != null && groupState.isPartiallyInvited) {
-                final badgeText =
-                    '${groupState.invitedMembers}/${groupState.totalMembers} invitados';
-                subtitle = subtitle.isNotEmpty
-                    ? '$badgeText • $subtitle'
-                    : badgeText;
-              }
 
               return SelectableCard(
                 title: group.name,
-                subtitle: subtitle,
+                subtitle: group.description,
                 icon: CupertinoIcons.person_2,
                 color: AppStyles.blue600,
                 selected: isSelected,
@@ -359,7 +320,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
       final allUserIds = <int>{...selectedUserIds};
 
       for (final groupId in selectedGroupIds) {
-        final group = _composite?.groups.firstWhere((g) => g.id == groupId);
+        final group = _groups.where((g) => g.id == groupId).firstOrNull;
         if (group != null) {
           for (final member in group.members) {
             allUserIds.add(member.id);

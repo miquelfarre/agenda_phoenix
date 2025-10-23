@@ -6,10 +6,9 @@ import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user.dart';
 import '../models/event.dart';
-import '../models/contact_detail_composite.dart';
 import '../core/state/app_state.dart';
 import '../services/config_service.dart';
-import '../services/composite_sync_service.dart';
+import '../services/supabase_service.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/event_card.dart';
@@ -39,7 +38,7 @@ class ContactDetailScreen extends ConsumerStatefulWidget {
 
 class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     with WidgetsBindingObserver {
-  ContactDetailComposite? _composite;
+  Map<String, dynamic>? _contactData;
   bool _isLoading = false;
   String? _error;
 
@@ -82,12 +81,11 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     });
 
     try {
-      final composite = await CompositeSyncService.instance
-          .smartSyncContactDetail(widget.contact.id);
+      final data = await SupabaseService.instance.fetchContactDetail(widget.contact.id);
 
       if (mounted) {
         setState(() {
-          _composite = composite;
+          _contactData = data;
           _isLoading = false;
         });
       }
@@ -284,14 +282,17 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                 );
               }
 
-              final events = _composite?.myEvents ?? [];
-              final availableEvents = _filterAvailableEvents(events);
+              final allEvents = ref.watch(eventStateProvider);
+              final contactEvents = allEvents.where((e) =>
+                e.attendees.any((a) =>
+                  (a is User && a.id == widget.contact.id) ||
+                  (a is Map && a['id'] == widget.contact.id)
+                )
+              ).toList();
+              final availableEvents = _filterAvailableEvents(contactEvents);
 
               return PlatformRefresh(
                 onRefresh: () async {
-                  await CompositeSyncService.instance.clearContactDetailCache(
-                    widget.contact.id,
-                  );
                   await _loadContactDetail();
                 },
                 child: CustomScrollView(

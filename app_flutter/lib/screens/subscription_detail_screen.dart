@@ -6,8 +6,8 @@ import 'package:eventypop/ui/helpers/platform/platform_navigation.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../models/subscription.dart';
 import '../models/event.dart';
-import '../models/subscription_detail_composite.dart';
-import '../services/composite_sync_service.dart';
+import '../services/supabase_service.dart';
+import '../services/config_service.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/events_list.dart';
@@ -25,7 +25,7 @@ class SubscriptionDetailScreen extends ConsumerStatefulWidget {
 
 class _SubscriptionDetailScreenState
     extends ConsumerState<SubscriptionDetailScreen> {
-  SubscriptionDetailComposite? _composite;
+  List<Event> _events = [];
   bool _isLoading = false;
   String? _error;
 
@@ -44,17 +44,18 @@ class _SubscriptionDetailScreenState
 
     try {
       print(
-        '🔵 [SubscriptionDetailScreen] Calling smartSyncSubscriptionDetail...',
+        '🔵 [SubscriptionDetailScreen] Calling fetchPublicUserEvents...',
       );
-      final composite = await CompositeSyncService.instance
-          .smartSyncSubscriptionDetail(widget.subscription.id);
+      final publicUserId = widget.subscription.subscribedToId;
+      final eventsData = await SupabaseService.instance.fetchPublicUserEvents(publicUserId);
+      final events = eventsData.map((e) => Event.fromJson(e)).toList();
       print(
-        '🔵 [SubscriptionDetailScreen] smartSyncSubscriptionDetail completed, events count: ${composite.publicEvents.length}',
+        '🔵 [SubscriptionDetailScreen] fetchPublicUserEvents completed, events count: ${events.length}',
       );
 
       if (mounted) {
         setState(() {
-          _composite = composite;
+          _events = events;
           _isLoading = false;
         });
         print(
@@ -120,14 +121,12 @@ class _SubscriptionDetailScreenState
       );
     }
 
-    final events = _composite?.publicEvents ?? [];
-
-    if (events.isEmpty) {
+    if (_events.isEmpty) {
       return EmptyState(message: l10n.noEvents, icon: CupertinoIcons.calendar);
     }
 
     return EventsList(
-      events: events,
+      events: _events,
       onEventTap: _openEventDetail,
       onDelete: (Event event, {bool shouldNavigate = false}) async {},
       navigateAfterDelete: false,
@@ -152,7 +151,7 @@ class _SubscriptionDetailScreenState
 
     if (!mounted) return;
 
-    if (_composite?.publicEvents.isEmpty ?? true) {
+    if (_events.isEmpty) {
       if (mounted && Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }

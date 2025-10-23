@@ -756,6 +756,81 @@ def insert_sample_data():
         db.close()
 
 
+def setup_realtime():
+    """
+    Configure Supabase Realtime for all tables.
+    This enables automatic sync from FastAPI writes to Flutter app.
+
+    For each table:
+    1. Set REPLICA IDENTITY FULL (required for realtime updates)
+    2. Add table to supabase_realtime publication
+    """
+    logger.info("🔄 Setting up Supabase Realtime...")
+
+    try:
+        with engine.connect() as conn:
+            # Ensure supabase_realtime publication exists
+            # If using self-hosted Supabase, it should already exist
+            # If not, create it
+            try:
+                result = conn.execute(text(
+                    "SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime'"
+                ))
+                if result.fetchone() is None:
+                    # Publication doesn't exist, create it
+                    conn.execute(text(
+                        "CREATE PUBLICATION supabase_realtime FOR ALL TABLES"
+                    ))
+                    logger.info("  ✓ Created supabase_realtime publication")
+                    conn.commit()
+                else:
+                    logger.info("  ✓ supabase_realtime publication already exists")
+            except Exception as e:
+                logger.warning(f"  ⚠️  Could not check/create publication: {e}")
+
+            # List of tables to enable realtime sync
+            realtime_tables = [
+                'events',
+                'event_interactions',
+                'users',
+                'calendars',
+                'calendar_memberships',
+                'groups',
+                'contacts',
+                'event_bans',
+                'user_blocks',
+                'recurring_event_configs',
+                'event_cancellations'
+            ]
+
+            for table in realtime_tables:
+                # Set REPLICA IDENTITY FULL (required for Supabase Realtime)
+                conn.execute(text(f'ALTER TABLE {table} REPLICA IDENTITY FULL'))
+                logger.info(f"  ✓ Set REPLICA IDENTITY FULL for '{table}'")
+
+                # Add table to Supabase Realtime publication
+                # This makes changes visible to subscribed clients
+                try:
+                    conn.execute(text(f'ALTER PUBLICATION supabase_realtime ADD TABLE {table}'))
+                    logger.info(f"  ✓ Added '{table}' to supabase_realtime publication")
+                except Exception as e:
+                    # Table might already be in publication, that's ok
+                    error_msg = str(e).lower()
+                    if 'already a member' in error_msg or 'already exists' in error_msg:
+                        logger.info(f"  ℹ️  '{table}' already in publication (skipping)")
+                    else:
+                        logger.warning(f"  ⚠️  Could not add '{table}' to publication: {e}")
+
+            conn.commit()
+
+        logger.info("✅ Realtime setup completed successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Error setting up realtime: {e}")
+        # Don't raise - realtime is optional, backend can work without it
+        logger.warning("⚠️  Realtime sync may not work, but backend will continue")
+
+
 def init_database():
     """
     Main function to initialize the database.
@@ -772,7 +847,10 @@ def init_database():
         # Step 2: Create all tables
         create_all_tables()
 
-        # Step 3: Insert sample data
+        # Step 3: Setup Supabase Realtime (NEW!)
+        setup_realtime()
+
+        # Step 4: Insert sample data
         insert_sample_data()
 
         logger.info("=" * 60)

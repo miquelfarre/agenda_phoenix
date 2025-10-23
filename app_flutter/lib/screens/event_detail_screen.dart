@@ -5,12 +5,11 @@ import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
-import '../models/event_detail_composite.dart';
 import '../models/event_interaction.dart';
 import '../models/recurrence_pattern.dart';
 import '../models/user.dart';
 import '../services/event_service.dart';
-import '../services/composite_sync_service.dart';
+import '../services/supabase_service.dart';
 import '../core/state/app_state.dart';
 import 'create_edit_event_screen.dart';
 import 'invite_users_screen.dart';
@@ -55,7 +54,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   Color? _ephemeralMessageColor;
   Timer? _ephemeralTimer;
 
-  EventDetailComposite? _composite;
+  Event? _detailedEvent;
+  List<EventInteraction>? _otherInvitations;
   bool _isLoadingComposite = false;
 
   EventInteraction? _interaction;
@@ -70,19 +70,38 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     });
 
     try {
-      final composite = await CompositeSyncService.instance.smartSyncDetail(
+      final data = await SupabaseService.instance.fetchEventDetail(
         eventId,
+        currentUserId,
       );
 
+      final Event detailedEvent = Event.fromJson(data);
+
       EventInteraction? interaction;
-      if (!isEventOwner && composite.userInvitation != null) {
-        interaction = composite.userInvitation;
+      if (!isEventOwner && data['interactions'] != null) {
+        final interactions = (data['interactions'] as List)
+            .map((i) => EventInteraction.fromJson(i))
+            .where((i) => i.userId == currentUserId)
+            .toList();
+        if (interactions.isNotEmpty) {
+          interaction = interactions.first;
+        }
+      }
+
+      List<EventInteraction>? otherInvitations;
+      if (isEventOwner && data['interactions'] != null) {
+        otherInvitations = (data['interactions'] as List)
+            .map((i) => EventInteraction.fromJson(i))
+            .where((i) => i.userId != currentUserId)
+            .toList();
       }
 
       if (mounted) {
         setState(() {
-          _composite = composite;
+          _detailedEvent = detailedEvent;
+          _otherInvitations = otherInvitations;
           _interaction = interaction;
+          currentEvent = detailedEvent;
           _isLoadingComposite = false;
         });
       }
@@ -129,7 +148,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
 
     return AdaptivePageScaffold(title: event.title, body: _buildContent());
   }
@@ -181,7 +200,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             _buildAdditionalActions(),
 
             PersonalNoteWidget(
-              event: _composite?.event ?? currentEvent,
+              event: _detailedEvent ?? currentEvent,
               onEventUpdated: (updated) {
                 setState(() {
                   currentEvent = updated;
@@ -193,7 +212,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             if (isEventOwner) _buildInvitedUsersList(),
 
             _buildActionButtons(),
-            if ((_composite?.event ?? currentEvent).owner?.isPublic == true &&
+            if ((_detailedEvent ?? currentEvent).owner?.isPublic == true &&
                 !isEventOwner) ...[
               const SizedBox(height: 24),
               SizedBox(
@@ -232,7 +251,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   Widget _buildInfoSection() {
     final l10n = context.l10n;
 
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
 
     return Container(
       margin: EdgeInsets.zero,
@@ -285,7 +304,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   Widget _buildOrganizerRow() {
     final l10n = context.l10n;
 
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
     final owner = event.owner!;
 
     return Row(
@@ -341,7 +360,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
   Widget _buildEventBadges() {
     final l10n = context.l10n;
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
     final List<Widget> badges = [];
 
     if (event.calendarId != null && event.calendarName != null) {
@@ -534,7 +553,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   Widget _buildAttendeesSection() {
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
 
     final List<User> attendeeUsers = [];
     for (final a in event.attendees) {
@@ -653,7 +672,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   Widget _buildActionButtons() {
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
 
     return EventDetailActions(
       isEventOwner: isEventOwner,
@@ -664,7 +683,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   void _navigateToInviteScreen() {
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
 
     print('🔵 [EventDetailScreen] _navigateToInviteScreen called');
     print('🔵 [EventDetailScreen] event.id: ${event.id}');
@@ -702,9 +721,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final eventService = EventService();
     await eventService.deleteEvent(event.id!);
 
-    await CompositeSyncService.instance.clearDetailCache(event.id!);
-    await CompositeSyncService.instance.clearListCache();
-
     if (shouldNavigate && mounted) {
       Navigator.of(context).pop();
     }
@@ -713,9 +729,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   Future<void> _leaveEvent(Event event, {bool shouldNavigate = false}) async {
-    await CompositeSyncService.instance.clearDetailCache(event.id!);
-    await CompositeSyncService.instance.clearListCache();
-
     await ref.read(eventStateProvider.notifier).refresh();
 
     await _loadDetailData();
@@ -728,7 +741,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   Widget _buildPublicUserFutureEvents() {
     final l10n = context.l10n;
 
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
     final publicUserId = event.owner?.id;
 
     if (publicUserId == null) {
@@ -943,7 +956,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final l10n = context.l10n;
     final locale = l10n.localeName;
 
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
 
     if (event.recurrencePatterns.isEmpty) {
       return const SizedBox.shrink();
@@ -1048,7 +1061,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   Widget _buildAdditionalActions() {
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
     final actions = <Widget>[];
 
     if (event.calendarId != null && event.calendarName != null) {
@@ -1093,7 +1106,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   void _viewCalendarEvents() {
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
 
     if (event.calendarId != null && event.calendarName != null) {
       Navigator.of(context).push(
@@ -1109,7 +1122,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   void _viewPublicUserEvents() {
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
 
     if (event.owner != null) {
       Navigator.of(context).push(
@@ -1124,12 +1137,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   void _viewParentEventSeries() {}
 
   Widget _buildInvitedUsersList() {
-    if (_composite == null || _composite!.otherInvitations.isEmpty) {
+    if (_otherInvitations == null || _otherInvitations!.isEmpty) {
       return const SizedBox.shrink();
     }
 
     final l10n = context.l10n;
-    final invitations = _composite!.otherInvitations;
+    final invitations = _otherInvitations!;
 
     return Column(
       children: [
@@ -1152,11 +1165,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              ...invitations.map((invitation) {
-                final user = invitation.invitedUser;
+              ...invitations.where((invitation) => invitation.user != null).map((invitation) {
+                final user = invitation.user!;
+                final status = invitation.participationStatus ?? 'pending';
 
-                final statusColor = _getStatusColor(invitation.status);
-                final statusText = _getStatusText(invitation.status);
+                final statusColor = _getStatusColor(status);
+                final statusText = _getStatusText(status);
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -1310,7 +1324,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   Widget _buildParticipationStatusButtons() {
     final l10n = context.l10n;
 
-    final event = _composite?.event ?? currentEvent;
+    final event = _detailedEvent ?? currentEvent;
     final isPublicEvent = event.owner?.isPublic == true;
 
     if (_interaction == null) return const SizedBox.shrink();

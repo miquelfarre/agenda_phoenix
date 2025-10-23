@@ -15,7 +15,6 @@ import 'package:eventypop/services/api_client.dart';
 import 'package:eventypop/services/birthday_service.dart';
 import 'package:eventypop/services/calendar_service.dart';
 import 'package:eventypop/services/collection_service.dart';
-import 'package:eventypop/services/composite_sync_service.dart';
 import 'package:eventypop/services/config_service.dart';
 import 'package:eventypop/services/group_service.dart';
 import 'package:eventypop/services/sync_service.dart';
@@ -99,8 +98,6 @@ void main() async {
     await CalendarService().initialize();
 
     await CollectionService().initialize();
-
-    await CompositeSyncService.instance.initialize();
 
     const env = String.fromEnvironment(
       'FLUTTER_ENV',

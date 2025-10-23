@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:hive_ce/hive.dart';
 import '../models/event.dart';
 import '../models/event_hive.dart';
-import '../core/monitoring/performance_monitor.dart';
 import 'contracts/api_client_contract.dart';
 import 'api_client.dart';
 import '../utils/app_exceptions.dart' as app_exceptions;
@@ -165,127 +164,101 @@ class EventService {
   }
 
   Future<void> clearCache() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'EventService.clearCache',
-      () async {
-        try {
-          final eventsBox = Hive.box<EventHive>('events');
-          await eventsBox.clear();
-        } catch (e) {
-          rethrow;
-        }
-      },
-    );
+    try {
+      final eventsBox = Hive.box<EventHive>('events');
+      await eventsBox.clear();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> clearCacheForUser(int userId) async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'EventService.clearCacheForUser',
-      () async {
-        try {
-          final eventsBox = Hive.box<EventHive>('events');
+    try {
+      final eventsBox = Hive.box<EventHive>('events');
 
-          final keysToDelete = <dynamic>[];
-          for (final key in eventsBox.keys) {
-            final eventHive = eventsBox.get(key);
-            if (eventHive?.ownerId == userId) {
-              keysToDelete.add(key);
-            }
-          }
-
-          for (final key in keysToDelete) {
-            await eventsBox.delete(key);
-          }
-        } catch (e) {
-          rethrow;
+      final keysToDelete = <dynamic>[];
+      for (final key in eventsBox.keys) {
+        final eventHive = eventsBox.get(key);
+        if (eventHive?.ownerId == userId) {
+          keysToDelete.add(key);
         }
-      },
-      metadata: {'userId': userId},
-    );
+      }
+
+      for (final key in keysToDelete) {
+        await eventsBox.delete(key);
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> getCacheStats() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'EventService.getCacheStats',
-      () async {
-        try {
-          final eventsBox = Hive.box<EventHive>('events');
-          final totalEntries = eventsBox.length;
-          final cacheSize = await getCacheSize();
+    try {
+      final eventsBox = Hive.box<EventHive>('events');
+      final totalEntries = eventsBox.length;
+      final cacheSize = await getCacheSize();
 
-          final userCounts = <int, int>{};
-          for (final value in eventsBox.values) {
-            userCounts[value.ownerId] = (userCounts[value.ownerId] ?? 0) + 1;
-          }
+      final userCounts = <int, int>{};
+      for (final value in eventsBox.values) {
+        userCounts[value.ownerId] = (userCounts[value.ownerId] ?? 0) + 1;
+      }
 
-          return {
-            'total_entries': totalEntries,
-            'cache_size_bytes': cacheSize,
-            'users_with_data': userCounts.length,
-            'user_counts': userCounts,
-            'service_name': serviceName,
-            'box_name': hiveBoxName,
-          };
-        } catch (e) {
-          rethrow;
-        }
-      },
-    );
+      return {
+        'total_entries': totalEntries,
+        'cache_size_bytes': cacheSize,
+        'users_with_data': userCounts.length,
+        'user_counts': userCounts,
+        'service_name': serviceName,
+        'box_name': hiveBoxName,
+      };
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> optimizeCache() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'EventService.optimizeCache',
-      () async {
-        try {
-          final eventsBox = Hive.box<EventHive>('events');
+    try {
+      final eventsBox = Hive.box<EventHive>('events');
 
-          final cutoffDate = DateTime.now().subtract(Duration(days: 30));
-          final keysToDelete = <dynamic>[];
+      final cutoffDate = DateTime.now().subtract(Duration(days: 30));
+      final keysToDelete = <dynamic>[];
 
-          for (final key in eventsBox.keys) {
-            final eventHive = eventsBox.get(key);
-            if (eventHive != null && eventHive.startDate.isBefore(cutoffDate)) {
-              keysToDelete.add(key);
-            }
-          }
-
-          for (final key in keysToDelete) {
-            await eventsBox.delete(key);
-          }
-        } catch (e) {
-          rethrow;
+      for (final key in eventsBox.keys) {
+        final eventHive = eventsBox.get(key);
+        if (eventHive != null && eventHive.startDate.isBefore(cutoffDate)) {
+          keysToDelete.add(key);
         }
-      },
-    );
+      }
+
+      for (final key in keysToDelete) {
+        await eventsBox.delete(key);
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<bool> validateCache() async {
-    return PerformanceMonitor.instance.trackPerformance(
-      'EventService.validateCache',
-      () async {
+    try {
+      final eventsBox = Hive.box<EventHive>('events');
+
+      int invalidEntries = 0;
+
+      for (final value in eventsBox.values) {
         try {
-          final eventsBox = Hive.box<EventHive>('events');
-
-          int invalidEntries = 0;
-
-          for (final value in eventsBox.values) {
-            try {
-              if (value.id > 0 && value.name.isNotEmpty && value.ownerId > 0) {
-              } else {
-                invalidEntries++;
-              }
-            } catch (_) {
-              invalidEntries++;
-            }
+          if (value.id > 0 && value.name.isNotEmpty && value.ownerId > 0) {
+          } else {
+            invalidEntries++;
           }
-
-          return invalidEntries == 0;
-        } catch (e) {
-          return false;
+        } catch (_) {
+          invalidEntries++;
         }
-      },
-    );
+      }
+
+      return invalidEntries == 0;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<int> getCacheSize() async {

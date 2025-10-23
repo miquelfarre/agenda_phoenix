@@ -11,7 +11,7 @@ import '../../services/event_service.dart';
 import '../../services/subscription_service.dart';
 import '../../services/event_interaction_service.dart';
 import '../../services/sync_service.dart';
-import '../../services/composite_sync_service.dart';
+import '../../services/supabase_service.dart';
 import '../../services/config_service.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/logo_service.dart';
@@ -213,12 +213,18 @@ class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
     try {
       state = const AsyncValue.loading();
 
-      final composite = await CompositeSyncService.instance
-          .smartSyncSubscriptions();
+      final userId = ConfigService.instance.currentUserId;
+      final usersData = await SupabaseService.instance.fetchSubscriptions(userId);
 
-      final subscriptions = composite.subscriptions
-          .map((item) => item.toSubscription())
-          .toList();
+      final subscriptions = usersData.map((userData) {
+        final user = User.fromJson(userData);
+        return Subscription(
+          id: user.id,
+          userId: userId,
+          subscribedToId: user.id,
+          subscribed: user,
+        );
+      }).toList();
 
       state = AsyncValue.data(subscriptions);
     } catch (error, stackTrace) {

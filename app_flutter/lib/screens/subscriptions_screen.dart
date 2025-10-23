@@ -5,11 +5,12 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import '../models/subscription.dart';
-import '../models/subscription_list_composite.dart';
 import '../models/event.dart';
 import '../models/user.dart';
-import '../services/composite_sync_service.dart';
+import '../core/state/app_state.dart';
+import '../services/supabase_service.dart';
 import '../services/subscription_service.dart';
+import '../services/config_service.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_card/event_card_config.dart';
 import '../widgets/empty_state.dart';
@@ -17,8 +18,7 @@ import '../widgets/adaptive_scaffold.dart';
 import '../widgets/platform_refresh.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
-import 'subscription_detail_screen.dart';
-import 'package:eventypop/ui/helpers/platform/platform_navigation.dart';
+import 'public_user_events_screen.dart';
 
 class SubscriptionsScreen extends ConsumerStatefulWidget {
   const SubscriptionsScreen({super.key});
@@ -33,7 +33,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   bool _isRefreshing = false;
   String _searchQuery = '';
 
-  SubscriptionListComposite? _composite;
+  List<Map<String, dynamic>> _subscriptions = [];
   bool _isLoading = false;
   String? _error;
 
@@ -64,11 +64,11 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     });
 
     try {
-      final composite = await CompositeSyncService.instance
-          .smartSyncSubscriptions();
+      final userId = ConfigService.instance.currentUserId;
+      final subscriptions = await SupabaseService.instance.fetchSubscriptions(userId);
       if (mounted) {
         setState(() {
-          _composite = composite;
+          _subscriptions = subscriptions;
           _isLoading = false;
         });
       }
@@ -82,27 +82,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     }
   }
 
-  List<Subscription> _applySearchFilter(
-    List<Subscription> subscriptions,
-    String query,
-  ) {
-    if (query.isEmpty) return subscriptions;
-
-    final lowerQuery = query.toLowerCase();
-    return subscriptions.where((subscription) {
-      if (subscription.subscribed == null) return false;
-
-      final user = subscription.subscribed!;
-
-      final matchesInstagram =
-          user.instagramName?.toLowerCase().contains(lowerQuery) ?? false;
-
-      final matchesFullName =
-          user.fullName?.toLowerCase().contains(lowerQuery) ?? false;
-
-      return matchesInstagram || matchesFullName;
-    }).toList();
-  }
 
   Widget _buildSearchField(bool isIOS) {
     final l10n = context.l10n;
@@ -137,12 +116,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   }
 
   Widget _buildScrollableContent(
-    List<Subscription> subscriptions,
+    List<User> users,
     bool isIOS,
     AppLocalizations l10n,
     WidgetRef ref,
   ) {
-    if (subscriptions.isEmpty) {
+    if (users.isEmpty) {
       return CustomScrollView(
         physics: const ClampingScrollPhysics(),
         slivers: [
@@ -162,7 +141,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       onRefresh: () async {
         _isRefreshing = true;
         try {
-          await CompositeSyncService.instance.clearCache();
           await _loadData();
         } finally {
           if (mounted) _isRefreshing = false;
@@ -175,51 +153,27 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
           }
 
           final subIndex = index - 1;
-          final subscription = subscriptions[subIndex];
-          return _buildSubscriptionItem(subscription, isIOS, l10n, ref);
-        }, childCount: subscriptions.length + 1),
+          final user = users[subIndex];
+          return _buildUserItem(user, isIOS, l10n, ref);
+        }, childCount: users.length + 1),
       ),
       child: Container(),
     );
   }
 
-  Widget _buildSubscriptionItem(
-    Subscription subscription,
+  Widget _buildUserItem(
+    User user,
     bool isIOS,
     AppLocalizations l10n,
     WidgetRef ref,
   ) {
-    User? user = subscription.subscribed;
-
-    user ??= User(
-      id: subscription.subscribedToId,
-      fullName: null,
-      instagramName: 'user_${subscription.subscribedToId}',
-      phoneNumber: null,
-      isPublic: false,
-      profilePicture: null,
-    );
-
-    final uniqueEventId = subscription.id > 0 ? -subscription.id : -1000000;
     final displayTitle = user.displayName.isNotEmpty
         ? user.displayName
         : user.fullName ?? user.instagramName ?? l10n.unknownUser;
 
-    final subscriptionListItem = _composite?.subscriptions.firstWhere(
-      (item) => item.id == subscription.id,
-      orElse: () => SubscriptionListItem(
-        id: subscription.id,
-        userId: subscription.userId,
-        subscribedToId: subscription.subscribedToId,
-        subscribedTo: null,
-        futureEventCount: 0,
-      ),
-    );
-    final userEventCount = subscriptionListItem?.futureEventCount ?? 0;
+    final displaySubtitle = l10n.publicUser;
 
-    final displaySubtitle = userEventCount == 1
-        ? '1 ${l10n.event}'
-        : '$userEventCount ${l10n.events}';
+    final uniqueEventId = -user.id;
 
     final fakeEvent = Event(
       id: uniqueEventId,
@@ -277,12 +231,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       child: EventCard(
         event: fakeEvent,
         onTap: () {
-          _showSubscriptionDetails(subscription);
+          _showUserDetails(user);
         },
         config: EventCardConfig(
           showChevron: true,
           onDelete: (_, {bool shouldNavigate = false}) {
-            _removeSubscription(subscription, ref);
+            _removeUser(user, ref);
           },
           customAvatar: customAvatar,
           customTitle: displayTitle,
@@ -341,7 +295,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
                   : () async {
                       if (!_isRefreshing) {
                         _isRefreshing = true;
-                        await CompositeSyncService.instance.clearCache();
                         await _loadData();
                         if (mounted) _isRefreshing = false;
                       }
@@ -388,19 +341,19 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             );
           }
 
-          final subscriptions =
-              _composite?.subscriptions
-                  .map((item) => item.toSubscription())
-                  .toList() ??
-              [];
+          final users = _subscriptions.map((data) {
+            return User.fromJson(data);
+          }).toList();
 
-          final filteredSubscriptions = _applySearchFilter(
-            subscriptions,
-            _searchQuery,
-          );
+          final filteredUsers = users.where((user) {
+            if (_searchQuery.isEmpty) return true;
+            final query = _searchQuery.toLowerCase();
+            return (user.fullName?.toLowerCase().contains(query) ?? false) ||
+                   (user.instagramName?.toLowerCase().contains(query) ?? false);
+          }).toList();
 
           return _buildScrollableContent(
-            filteredSubscriptions,
+            filteredUsers,
             isIOS,
             l10n,
             ref,
@@ -410,23 +363,35 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     );
   }
 
-  void _showSubscriptionDetails(Subscription subscription) {
+  void _showUserDetails(User user) {
     Navigator.of(context).push(
-      PlatformNavigation.platformPageRoute(
-        builder: (_) => SubscriptionDetailScreen(subscription: subscription),
+      CupertinoPageRoute(
+        builder: (_) => PublicUserEventsScreen(publicUser: user),
       ),
     );
   }
 
-  Future<void> _removeSubscription(
-    Subscription subscription,
+  Future<void> _removeUser(
+    User user,
     WidgetRef ref,
   ) async {
     final l10n = context.l10n;
     try {
-      await SubscriptionService().deleteSubscription(
-        subscriptionId: subscription.id,
+      final subscriptionsAsync = ref.read(subscriptionsProvider);
+      final subscriptions = subscriptionsAsync.maybeWhen(
+        data: (data) => data,
+        orElse: () => <Subscription>[],
       );
+
+      final currentUserId = ConfigService.instance.currentUserId;
+      final subscription = subscriptions.firstWhere(
+        (sub) =>
+            sub.userId == currentUserId &&
+            sub.subscribedToId == user.id,
+        orElse: () => throw Exception('Subscription not found'),
+      );
+
+      await SubscriptionService().deleteSubscription(subscriptionId: subscription.id);
 
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
 

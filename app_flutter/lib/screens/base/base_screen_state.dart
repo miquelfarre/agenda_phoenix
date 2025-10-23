@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/navigation_service.dart';
-import '../../core/monitoring/performance_monitor.dart';
 import '../../ui/helpers/l10n/l10n_helpers.dart';
 
 mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
@@ -15,41 +14,15 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
 
   String get screenName => runtimeType.toString();
 
-  late final DateTime _screenInitTime;
-
-  final PerformanceMonitor _performanceMonitor = PerformanceMonitor();
-
-  PerformanceMonitor get performanceMonitor => _performanceMonitor;
-
   @override
   void initState() {
     super.initState();
-    _screenInitTime = DateTime.now();
-    _performanceMonitor.startTimer('screen_init_$screenName');
-    _logScreenInit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       onScreenReady();
     });
   }
 
-  @override
-  void dispose() {
-    _logScreenDispose();
-    super.dispose();
-  }
-
-  void onScreenReady() {
-    _performanceMonitor.endTimer(
-      'screen_init_$screenName',
-      metadata: {
-        'screen_name': screenName,
-        'init_duration_ms': DateTime.now()
-            .difference(_screenInitTime)
-            .inMilliseconds,
-      },
-    );
-    _logScreenReady();
-  }
+  void onScreenReady() {}
 
   void setLoading(bool loading) {
     if (mounted && _isLoading != loading) {
@@ -113,29 +86,17 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     Object? arguments,
     bool replace = false,
   }) async {
-    return await _performanceMonitor.trackPerformance(
-      'navigation',
-      () async {
-        _logNavigation(routeName, replace);
-
-        if (replace) {
-          return navigationService.pushReplacementNamed<R, void>(
-            routeName,
-            arguments: arguments,
-          );
-        } else {
-          return navigationService.pushNamed<R>(
-            routeName,
-            arguments: arguments,
-          );
-        }
-      },
-      metadata: {
-        'from_screen': screenName,
-        'to_screen': routeName,
-        'replace': replace,
-      },
-    );
+    if (replace) {
+      return navigationService.pushReplacementNamed<R, void>(
+        routeName,
+        arguments: arguments,
+      );
+    } else {
+      return navigationService.pushNamed<R>(
+        routeName,
+        arguments: arguments,
+      );
+    }
   }
 
   void goBack<R extends Object?>([R? result]) {
@@ -259,52 +220,5 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
         ),
       ),
     );
-  }
-
-  void _logScreenInit() {}
-
-  void _logScreenReady() {}
-
-  void _logScreenDispose() {}
-
-  void _logNavigation(String routeName, bool replace) {}
-
-  void logCustomMetric(String metricName, dynamic value) {
-    _performanceMonitor.recordMetric(
-      PerformanceMetric(
-        operationName: '${screenName}_$metricName',
-        duration: Duration.zero,
-        timestamp: DateTime.now(),
-        metadata: {
-          'screen_name': screenName,
-          'metric_name': metricName,
-          'value': value,
-        },
-      ),
-    );
-  }
-
-  String getPerformanceReport() {
-    return _performanceMonitor.generateReport();
-  }
-
-  Widget trackWidgetBuild(Widget Function() builder) {
-    final stopwatch = Stopwatch()..start();
-    final widget = builder();
-    stopwatch.stop();
-
-    _performanceMonitor.recordMetric(
-      PerformanceMetric(
-        operationName: 'widget_build',
-        duration: stopwatch.elapsed,
-        timestamp: DateTime.now(),
-        metadata: {
-          'screen_name': screenName,
-          'widget_type': widget.runtimeType.toString(),
-        },
-      ),
-    );
-
-    return widget;
   }
 }

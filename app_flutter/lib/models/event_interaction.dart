@@ -6,6 +6,7 @@ import 'user.dart';
 class EventInteraction {
   final int userId;
   final int eventId;
+  final User? user;
 
   final int? inviterId;
   final User? inviter;
@@ -39,6 +40,7 @@ class EventInteraction {
   const EventInteraction({
     required this.userId,
     required this.eventId,
+    this.user,
     this.inviterId,
     this.inviter,
     this.invitationMessage,
@@ -83,6 +85,7 @@ class EventInteraction {
     return EventInteraction(
       userId: json['user_id'],
       eventId: json['event_id'],
+      user: json['user'] != null ? User.fromJson(json['user']) : null,
       inviterId: json['inviter_id'],
       inviter: json['inviter'] != null ? User.fromJson(json['inviter']) : null,
       invitationMessage: json['invitation_message'],
@@ -127,6 +130,7 @@ class EventInteraction {
     return {
       'user_id': userId,
       'event_id': eventId,
+      'user': user?.toJson(),
       'inviter_id': inviterId,
       'inviter': inviter?.toJson(),
       'invitation_message': invitationMessage,
@@ -154,6 +158,7 @@ class EventInteraction {
   EventInteraction copyWith({
     int? userId,
     int? eventId,
+    User? user,
     int? inviterId,
     User? inviter,
     String? invitationMessage,
@@ -179,6 +184,7 @@ class EventInteraction {
     return EventInteraction(
       userId: userId ?? this.userId,
       eventId: eventId ?? this.eventId,
+      user: user ?? this.user,
       inviterId: inviterId ?? this.inviterId,
       inviter: inviter ?? this.inviter,
       invitationMessage: invitationMessage ?? this.invitationMessage,
@@ -218,6 +224,7 @@ class EventInteraction {
     return other is EventInteraction &&
         other.userId == userId &&
         other.eventId == eventId &&
+        other.user == user &&
         other.inviterId == inviterId &&
         other.inviter == inviter &&
         other.invitationMessage == invitationMessage &&
@@ -246,6 +253,7 @@ class EventInteraction {
     return Object.hash(
           userId,
           eventId,
+          user,
           inviterId,
           inviter,
           invitationMessage,
@@ -263,8 +271,7 @@ class EventInteraction {
           noteUpdatedAt,
           favorited,
           favoritedAt,
-          hidden,
         ) ^
-        Object.hash(hiddenAt, createdAt, updatedAt);
+        Object.hash(hidden, hiddenAt, createdAt, updatedAt);
   }
 }

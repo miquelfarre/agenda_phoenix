@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../models/event.dart';
-import '../models/event_list_composite.dart' as composite;
 import '../core/state/app_state.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/empty_state.dart';
@@ -20,14 +19,30 @@ import '../services/supabase_service.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
-import '../core/monitoring/performance_monitor.dart';
-
-// Helper class to store event item with interaction type
-class EventItemWithType {
-  final composite.EventListItem item;
+// Helper class to store event with interaction type
+class EventWithInteraction {
+  final Event event;
   final String? interactionType;
+  final String? invitationStatus;
 
-  EventItemWithType(this.item, this.interactionType);
+  EventWithInteraction(this.event, this.interactionType, this.invitationStatus);
+}
+
+// Helper class to store event data with filter counts
+class EventsData {
+  final List<EventWithInteraction> events;
+  final int myEventsCount;
+  final int invitationsCount;
+  final int subscribedCount;
+  final int allCount;
+
+  EventsData({
+    required this.events,
+    required this.myEventsCount,
+    required this.invitationsCount,
+    required this.subscribedCount,
+    required this.allCount,
+  });
 }
 
 class EventsScreen extends ConsumerStatefulWidget {
@@ -41,7 +56,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _currentFilter = 'all';
   String _searchQuery = '';
-  composite.EventListComposite? _composite;
+  EventsData? _eventsData;
   bool _isLoading = true;
 
   @override
@@ -66,7 +81,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       final eventsData = await SupabaseService.instance.fetchEventsForUser(userId);
 
       // Convert Supabase data to EventListItem
-      final eventItems = <EventItemWithType>[];
+      final eventItems = <EventWithInteraction>[];
       for (final data in eventsData) {
         final interactions = (data['interactions'] as List?) ?? [];
         final myInteraction = interactions.firstWhere(
@@ -74,63 +89,41 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           orElse: () => null,
         );
 
-        final interactionType = myInteraction?['interaction_type'] as String?;
-        final invitationStatus = myInteraction?['status'] as String?;
+        final eventOwnerId = data['owner_id'] as int?;
+        final isOwner = eventOwnerId == userId;
+        final interactionType = isOwner ? null : (myInteraction?['interaction_type'] as String?);
+        final invitationStatus = myInteraction?['participation_status'] as String?;
 
-        final item = composite.EventListItem(
-          id: data['id'],
-          title: data['name'] ?? 'Untitled',
-          description: data['description'],
-          date: DateTime.parse(data['start_date']),
-          isPublished: data['event_type'] != 'draft',
-          isBirthday: data['event_type'] == 'birthday',
-          isRecurring: data['event_type'] == 'recurring',
-          ownerId: data['owner_id'],
-          owner: data['owner'],
-          invitationStatus: invitationStatus,
-          inviterId: myInteraction?['invited_by_user_id'],
-          inviter: null,
-          attendeeCount: interactions.where((i) => i['status'] == 'accepted').length,
-          attendees: interactions.where((i) => i['status'] == 'accepted').toList(),
-          calendarId: data['calendar_id'],
-          calendarName: data['calendar']?['name'],
-          calendarColor: null,
-        );
+        final event = Event.fromJson(data);
 
-        eventItems.add(EventItemWithType(item, interactionType));
+        eventItems.add(EventWithInteraction(event, interactionType, invitationStatus));
       }
 
       // Calculate filters
-      final myEvents = eventItems.where((e) => e.item.ownerId == userId && e.interactionType == null).length;
+      final myEvents = eventItems.where((e) => e.event.ownerId == userId).length;
       final invitations = eventItems.where((e) =>
-        e.interactionType == 'invited' && e.item.invitationStatus == 'pending'
+        e.event.ownerId != userId && e.interactionType == 'invited' && e.invitationStatus == 'pending'
       ).length;
       final subscribed = eventItems.where((e) =>
-        e.interactionType == 'subscribed' ||
-        (e.interactionType == 'joined' && e.item.invitationStatus == 'accepted')
+        e.event.ownerId != userId && (
+          e.interactionType == 'subscribed' ||
+          (e.interactionType == 'joined' && e.invitationStatus == 'accepted')
+        )
       ).length;
 
-      final filters = composite.FilterCounts(
-        all: eventItems.length,
-        my: myEvents,
-        subscribed: subscribed,
-        invitations: invitations,
+      final data = EventsData(
+        events: eventItems,
+        myEventsCount: myEvents,
+        invitationsCount: invitations,
+        subscribedCount: subscribed,
+        allCount: eventItems.length,
       );
 
-      // Extract just the items for the composite
-      final justItems = eventItems.map((e) => e.item).toList();
-
-      final compositeData = composite.EventListComposite(
-        events: justItems,
-        filters: filters,
-        checksum: DateTime.now().millisecondsSinceEpoch.toString(), // No longer used
-      );
-
-      print('🔵 [EventsScreen] Loaded ${justItems.length} events from Supabase');
+      print('🔵 [EventsScreen] Loaded ${eventItems.length} events from Supabase');
 
       if (mounted) {
         setState(() {
-          _composite = compositeData;
+          _eventsData = data;
           _isLoading = false;
         });
         print('🔵 [EventsScreen] setState completed, _isLoading=false');
@@ -208,13 +201,13 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   Widget _buildContent(bool isIOS) {
-    if (_isLoading || _composite == null) {
+    if (_isLoading || _eventsData == null) {
       return Center(child: PlatformWidgets.platformLoadingIndicator());
     }
 
     final bool isFiltered = _currentFilter != 'all' || _searchQuery.isNotEmpty;
 
-    final allEvents = _composite!.events.map((item) => item.toEvent()).toList();
+    final allEvents = _eventsData!.events.map((item) => item.event).toList();
 
     List<Event> events = _applyEventTypeFilter(allEvents, _currentFilter);
     if (_searchQuery.isNotEmpty) {
@@ -437,8 +430,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     final l10n = context.l10n;
     final currentFilter = _currentFilter;
 
-    final filters = _composite?.filters;
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
       child: Row(
@@ -446,28 +437,28 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           _buildFilterChip(
             'all',
             l10n.allEvents,
-            filters?.all ?? allEvents.length,
+            _eventsData?.allCount ?? allEvents.length,
             currentFilter == 'all',
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
             'my',
             l10n.myEventsFilter,
-            filters?.my ?? 0,
+            _eventsData?.myEventsCount ?? 0,
             currentFilter == 'my',
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
             'subscribed',
             l10n.subscribedEvents,
-            filters?.subscribed ?? 0,
+            _eventsData?.subscribedCount ?? 0,
             currentFilter == 'subscribed',
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
             'invitations',
             l10n.invitationEvents,
-            filters?.invitations ?? 0,
+            _eventsData?.invitationsCount ?? 0,
             currentFilter == 'invitations',
           ),
         ],
@@ -599,43 +590,27 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   void _navigateToEventDetail(Event event) async {
-    await PerformanceMonitor.instance.trackPerformance(
-      'navigation_event_detail',
-      () async {
-        await Navigator.of(context).push(
-          PlatformNavigation.platformPageRoute(
-            builder: (context) => EventDetailScreen(event: event),
-          ),
-        );
-      },
-      metadata: {'event_id': event.id, 'screen_name': 'EventsScreen'},
+    await Navigator.of(context).push(
+      PlatformNavigation.platformPageRoute(
+        builder: (context) => EventDetailScreen(event: event),
+      ),
     );
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-    await PerformanceMonitor.instance.trackPerformance(
-      'events_screen_delete',
-      () async {
-        try {
-          final currentUserId = ConfigService.instance.currentUserId;
-          final isOwner = event.ownerId == currentUserId;
+    try {
+      final currentUserId = ConfigService.instance.currentUserId;
+      final isOwner = event.ownerId == currentUserId;
 
-          if (isOwner) {
-            await EventService().deleteEvent(event.id!);
-          } else {}
+      if (isOwner) {
+        await EventService().deleteEvent(event.id!);
+      } else {}
 
-          // Supabase handles caching automatically via realtime
-          await _loadData();
-        } catch (e) {
-          rethrow;
-        }
-      },
-      metadata: {
-        'event_id': event.id,
-        'screen_name': 'EventsScreen',
-        'should_navigate': shouldNavigate,
-      },
-    );
+      // Supabase handles caching automatically via realtime
+      await _loadData();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   void _navigateToCreateEvent() async {
