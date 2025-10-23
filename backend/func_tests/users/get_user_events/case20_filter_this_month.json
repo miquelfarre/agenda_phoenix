@@ -53,7 +53,6 @@
         "name": "Oct End",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
-        "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",

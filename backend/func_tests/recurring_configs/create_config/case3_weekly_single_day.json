@@ -15,7 +15,6 @@
         "name": "Sincro semanal",
         "description": "Reuni\u00f3n de equipo",
         "start_date": "2025-11-03T10:00:00",
-        "end_date": "2025-11-03T11:00:00",
         "event_type": "recurring",
         "owner_id": 1
       }

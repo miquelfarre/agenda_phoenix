@@ -40,7 +40,6 @@
       "name": "Cena actualizada",
       "description": "Nueva descripci\u00f3n",
       "start_date": "{{TIMESTAMP}}",
-      "end_date": null,
       "event_type": "regular",
       "id": "{{ID}}",
       "owner_id": "{{ID}}",

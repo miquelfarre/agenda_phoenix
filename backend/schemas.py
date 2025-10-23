@@ -101,7 +101,6 @@ class EventBase(BaseModel):
     name: str
     description: Optional[str] = None
     start_date: datetime
-    end_date: Optional[datetime] = None
     event_type: str = "regular"  # 'regular' or 'recurring'
 
 
@@ -117,7 +116,6 @@ class UpcomingEventSummary(BaseModel):
     id: int
     name: str
     start_date: datetime
-    end_date: Optional[datetime]
     event_type: str
 
     model_config = ConfigDict(from_attributes=True)
@@ -236,10 +234,8 @@ class EventInteractionWithEventResponse(EventInteractionBase):
     # Event information
     event_name: str
     event_start_date: datetime
-    event_end_date: Optional[datetime]
     event_type: str
     event_start_date_formatted: Optional[str] = None
-    event_end_date_formatted: Optional[str] = None
 
 
 # ============================================================================

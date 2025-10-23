@@ -45,7 +45,6 @@
       {
         "name": "Calendario Personal",
         "start_date": null,
-        "end_date": null,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
         "created_at": "{{TIMESTAMP}}",
@@ -54,7 +53,6 @@
       {
         "name": "Calendario de Trabajo",
         "start_date": null,
-        "end_date": null,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
         "created_at": "{{TIMESTAMP}}",
@@ -63,7 +61,6 @@
       {
         "name": "Calendario Familiar",
         "start_date": null,
-        "end_date": null,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
         "created_at": "{{TIMESTAMP}}",

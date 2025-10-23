@@ -85,7 +85,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = None, db: Se
         "name": db_event.name,
         "description": db_event.description,
         "start_date": db_event.start_date,
-        "end_date": db_event.end_date,
         "event_type": db_event.event_type,
         "owner_id": db_event.owner_id,
         "calendar_id": db_event.calendar_id,
@@ -124,7 +123,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = None, db: Se
                 "id": e.id,
                 "name": e.name,
                 "start_date": e.start_date,
-                "end_date": e.end_date,
                 "event_type": e.event_type,
             }
             for e in upcoming_events

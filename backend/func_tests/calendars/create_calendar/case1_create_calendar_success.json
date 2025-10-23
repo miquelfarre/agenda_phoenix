@@ -17,7 +17,6 @@
       "name": "Calendario de trabajo",
       "owner_id": 1,
       "start_date": null,
-      "end_date": null
     }
   },
   "expected_response": {
@@ -28,7 +27,6 @@
     "body": {
       "name": "Calendario de trabajo",
       "start_date": null,
-      "end_date": null,
       "id": "{{ID}}",
       "owner_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

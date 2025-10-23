@@ -165,7 +165,6 @@ class EventStateNotifier extends Notifier<List<Event>> {
       name: event.name,
       description: event.description,
       startDate: event.startDate,
-      endDate: event.endDate,
       eventType: event.eventType,
       calendarId: event.calendarId,
     );
@@ -178,7 +177,6 @@ class EventStateNotifier extends Notifier<List<Event>> {
       name: event.name,
       description: event.description,
       startDate: event.startDate,
-      endDate: event.endDate,
       eventType: event.eventType,
       calendarId: event.calendarId,
     );

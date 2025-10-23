@@ -17,9 +17,6 @@ class EventHive extends HiveObject {
   @HiveField(3)
   DateTime startDate;
 
-  @HiveField(4)
-  DateTime? endDate;
-
   @HiveField(5)
   String eventType;
 
@@ -52,7 +49,6 @@ class EventHive extends HiveObject {
     required this.name,
     this.description,
     required this.startDate,
-    this.endDate,
     this.eventType = 'regular',
     required this.ownerId,
     this.calendarId,
@@ -70,7 +66,6 @@ class EventHive extends HiveObject {
       name: event.name,
       description: event.description,
       startDate: event.startDate,
-      endDate: event.endDate,
       eventType: event.eventType,
       ownerId: event.ownerId,
       calendarId: event.calendarId,
@@ -89,7 +84,6 @@ class EventHive extends HiveObject {
       name: name,
       description: description,
       startDate: startDate,
-      endDate: endDate,
       eventType: eventType,
       ownerId: ownerId,
       calendarId: calendarId,

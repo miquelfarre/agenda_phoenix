@@ -467,28 +467,28 @@ def insert_sample_data():
         db.flush()
         logger.info(f"  ✓ Inserted 2 regular events")
 
-        # 10. Create FC Barcelona match events
+        # 10. Create FC Barcelona match events with descriptions
         fcb_matches = [
-            Event(name="FC Barcelona vs Girona", start_date=datetime(2025, 10, 18, 16, 15), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Olympiakos", start_date=datetime(2025, 10, 21, 18, 45), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Real Madrid vs FC Barcelona", start_date=datetime(2025, 10, 26, 16, 15), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Elche", start_date=datetime(2025, 11, 2, 18, 30), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Club Brugge vs FC Barcelona", start_date=datetime(2025, 11, 5, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Celta de Vigo vs FC Barcelona", start_date=datetime(2025, 11, 9, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Athletic Club", start_date=datetime(2025, 11, 23, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Chelsea vs FC Barcelona", start_date=datetime(2025, 11, 25, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Alavés", start_date=datetime(2025, 11, 30, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Real Betis vs FC Barcelona", start_date=datetime(2025, 12, 7, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Eintracht Frankfurt", start_date=datetime(2025, 12, 9, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Osasuna", start_date=datetime(2025, 12, 14, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Villarreal vs FC Barcelona", start_date=datetime(2025, 12, 21, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Espanyol vs FC Barcelona", start_date=datetime(2026, 1, 4, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Athletic Club", start_date=datetime(2026, 1, 7, 20, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Atlético Madrid", start_date=datetime(2026, 1, 11, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Real Sociedad vs FC Barcelona", start_date=datetime(2026, 1, 18, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Real Oviedo", start_date=datetime(2026, 1, 25, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Slavia Prague vs FC Barcelona", start_date=datetime(2026, 1, 21, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs FC København", start_date=datetime(2026, 1, 28, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Girona", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2025, 10, 18, 16, 15), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Olympiakos", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=datetime(2025, 10, 21, 18, 45), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Real Madrid vs FC Barcelona", description="🏟️ Santiago Bernabéu • LaLiga EA Sports • El Clásico", start_date=datetime(2025, 10, 26, 16, 15), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Elche", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=datetime(2025, 11, 2, 18, 30), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Club Brugge vs FC Barcelona", description="🏟️ Jan Breydel Stadium • UEFA Champions League", start_date=datetime(2025, 11, 5, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Celta de Vigo vs FC Barcelona", description="🏟️ Estadio de Balaídos • LaLiga EA Sports", start_date=datetime(2025, 11, 9, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2025, 11, 23, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Chelsea vs FC Barcelona", description="🏟️ Stamford Bridge • UEFA Champions League", start_date=datetime(2025, 11, 25, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Alavés", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2025, 11, 30, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Real Betis vs FC Barcelona", description="🏟️ Benito Villamarín • LaLiga EA Sports", start_date=datetime(2025, 12, 7, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Eintracht Frankfurt", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=datetime(2025, 12, 9, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Osasuna", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2025, 12, 14, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Villarreal vs FC Barcelona", description="🏟️ Estadio de la Cerámica • LaLiga EA Sports", start_date=datetime(2025, 12, 21, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Espanyol vs FC Barcelona", description="🏟️ RCDE Stadium • LaLiga EA Sports • Derby Barceloní", start_date=datetime(2026, 1, 4, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=datetime(2026, 1, 7, 20, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Atlético Madrid", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2026, 1, 11, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Real Sociedad vs FC Barcelona", description="🏟️ Reale Arena • LaLiga EA Sports", start_date=datetime(2026, 1, 18, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Real Oviedo", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=datetime(2026, 1, 25, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Slavia Prague vs FC Barcelona", description="🏟️ Fortuna Arena • UEFA Champions League", start_date=datetime(2026, 1, 21, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs FC København", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=datetime(2026, 1, 28, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
         ]
         db.add_all(fcb_matches)
         db.flush()
@@ -621,14 +621,24 @@ def insert_sample_data():
                 )
             )
 
-        # Miquel subscribed to all FC Barcelona matches
+        # Miquel subscribed to all FC Barcelona matches (with notes on some)
+        miquel_notes = {
+            "FC Barcelona vs Girona": "Comprar entradas para Sector Gol Sud",
+            "FC Barcelona vs Olympiakos": "Ir con Ada - Champions League 🏆",
+            "Real Madrid vs FC Barcelona": "¡EL CLÁSICO! Reservar bar para verlo con amigos",
+            "FC Barcelona vs Elche": None,
+            "FC Barcelona vs Athletic Club": "Llevar bufanda del Barça",
+        }
+
         for event in fcb_matches:
+            note = miquel_notes.get(event.name)
             interactions.append(
                 EventInteraction(
                     event_id=event.id,
                     user_id=miquel.id,
                     interaction_type="subscribed",
                     status="accepted",
+                    note=note,
                 )
             )
 

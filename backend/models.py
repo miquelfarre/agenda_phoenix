@@ -246,7 +246,6 @@ class Event(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     start_date = Column(TIMESTAMP(timezone=True), nullable=False)
-    end_date = Column(TIMESTAMP(timezone=True), nullable=True)
     event_type = Column(String(50), nullable=False, default="regular")  # 'regular' or 'recurring'
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=True, index=True)
@@ -271,7 +270,6 @@ class Event(Base):
             "name": self.name,
             "description": self.description,
             "start_date": self.start_date.isoformat() if self.start_date else None,
-            "end_date": self.end_date.isoformat() if self.end_date else None,
             "event_type": self.event_type,
             "owner_id": self.owner_id,
             "calendar_id": self.calendar_id,

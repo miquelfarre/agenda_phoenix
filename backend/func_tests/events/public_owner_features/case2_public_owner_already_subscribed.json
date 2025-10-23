@@ -54,7 +54,6 @@
       "name": "Barcelona vs Real Madrid",
       "description": null,
       "start_date": "{{TIMESTAMP}}",
-      "end_date": null,
       "event_type": "regular",
       "owner_id": "{{ID}}",
       "calendar_id": null,
@@ -70,14 +69,12 @@
           "id": "{{ID}}",
           "name": "Barcelona vs Real Madrid",
           "start_date": "{{TIMESTAMP}}",
-          "end_date": null,
           "event_type": "regular"
         },
         {
           "id": "{{ID}}",
           "name": "Barcelona vs Atletico",
           "start_date": "{{TIMESTAMP}}",
-          "end_date": null,
           "event_type": "regular"
         }
       ],

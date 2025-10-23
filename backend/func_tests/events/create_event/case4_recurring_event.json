@@ -17,7 +17,6 @@
       "name": "Sincro semanal",
       "description": "Reuni\u00f3n de sincronizaci\u00f3n todos los lunes",
       "start_date": "2025-11-17T10:00:00",
-      "end_date": "2025-11-17T11:00:00",
       "event_type": "recurring",
       "owner_id": 1
     }
@@ -31,7 +30,6 @@
       "name": "Sincro semanal",
       "description": "Reuni\u00f3n de sincronizaci\u00f3n todos los lunes",
       "start_date": "{{TIMESTAMP}}",
-      "end_date": "{{TIMESTAMP}}",
       "event_type": "recurring",
       "id": "{{ID}}",
       "owner_id": "{{ID}}",

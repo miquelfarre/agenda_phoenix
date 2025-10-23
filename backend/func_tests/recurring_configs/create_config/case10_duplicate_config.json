@@ -14,7 +14,6 @@
         "id": 100,
         "name": "Evento con config existente",
         "start_date": "2025-11-01T10:00:00",
-        "end_date": "2025-11-01T11:00:00",
         "event_type": "recurring",
         "owner_id": 1
       }

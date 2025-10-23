@@ -87,7 +87,6 @@
         "name": "Weekly Meeting",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
-        "end_date": null,
         "event_type": "recurring",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
@@ -100,7 +99,8 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}",
-          "note": null
+          "note": null,
+          "is_new": false
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,
@@ -112,7 +112,6 @@
         "name": "Weekly Meeting",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
-        "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
@@ -125,7 +124,8 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}",
-          "note": null
+          "note": null,
+          "is_new": false
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,
@@ -137,7 +137,6 @@
         "name": "Weekly Meeting",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
-        "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
@@ -150,7 +149,8 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}",
-          "note": null
+          "note": null,
+          "is_new": false
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,

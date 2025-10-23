@@ -15,7 +15,6 @@
         "name": "Cumpleaños de Sonia",
         "description": "Celebración anual",
         "start_date": "2025-06-14T00:00:00",
-        "end_date": "2025-06-14T23:59:00",
         "event_type": "recurring",
         "owner_id": 1
       }

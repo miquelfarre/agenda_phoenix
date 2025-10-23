@@ -41,7 +41,6 @@ class CreateEditEventScreenState
   final _descriptionController = TextEditingController();
 
   final _startDateKey = GlobalKey();
-  final _endDateKey = GlobalKey();
 
   Country? _selectedCountry;
   String _selectedTimezone = 'Europe/Madrid';
@@ -54,7 +53,6 @@ class CreateEditEventScreenState
   DateTime get _selectedDate =>
       getFieldValue<DateTime>('startDate') ??
       _normalizeToFiveMinutes(DateTime.now());
-  DateTime? get _endDate => getFieldValue<DateTime?>('endDate');
   bool get _isRecurringEvent => getFieldValue<bool>('isRecurring') ?? false;
   List<RecurrencePattern> get _patterns =>
       getFieldValue<List<RecurrencePattern>>('patterns') ?? [];
@@ -101,7 +99,6 @@ class CreateEditEventScreenState
       _descriptionController.text = event.description ?? '';
       setFieldValue('startDate', _normalizeToFiveMinutes(event.startDate));
       setFieldValue('isRecurring', event.isRecurringEvent);
-      setFieldValue('endDate', event.endDate);
       setFieldValue('patterns', event.recurrencePatterns.toList());
       setFieldValue('isBirthday', event.isBirthday);
       setFieldValue('calendarId', event.calendarId);
@@ -112,9 +109,6 @@ class CreateEditEventScreenState
       setFieldValue('isBirthday', false);
       setFieldValue('calendarId', null);
 
-      if (widget.isRecurring) {
-        setFieldValue('endDate', _selectedDate.add(const Duration(days: 7)));
-      }
     }
   }
 
@@ -147,10 +141,6 @@ class CreateEditEventScreenState
     }
 
     if (_isRecurringEvent) {
-      if (_endDate == null) {
-        setFieldError('endDate', l10n.endDateRequired);
-        return false;
-      }
 
       if (_patterns.isEmpty) {
         setFieldError('patterns', l10n.addAtLeastOnePattern);
@@ -171,7 +161,6 @@ class CreateEditEventScreenState
         'start_date': _selectedDate.toIso8601String(),
         'owner_id': ConfigService.instance.currentUserId,
         'is_recurring': _isRecurringEvent,
-        'end_date': _endDate?.toIso8601String(),
         'event_type': _isRecurringEvent ? 'parent' : 'standalone',
         'location': 'Madrid',
         'recurrence_pattern': null,
@@ -195,11 +184,6 @@ class CreateEditEventScreenState
               : (eventData['start_date'] != null
                     ? DateTime.parse(eventData['start_date'].toString())
                     : null),
-          endDate: eventData['end_date'] != null
-              ? (eventData['end_date'] is DateTime
-                    ? eventData['end_date']
-                    : DateTime.parse(eventData['end_date'].toString()))
-              : null,
           eventType: eventData['is_recurring'] == true
               ? 'recurring'
               : 'regular',
@@ -213,11 +197,6 @@ class CreateEditEventScreenState
           startDate: eventData['start_date'] is DateTime
               ? eventData['start_date']
               : DateTime.parse(eventData['start_date'].toString()),
-          endDate: eventData['end_date'] != null
-              ? (eventData['end_date'] is DateTime
-                    ? eventData['end_date']
-                    : DateTime.parse(eventData['end_date'].toString()))
-              : null,
           ownerId: ConfigService.instance.currentUserId,
           eventType: eventData['is_recurring'] == true
               ? 'recurring'
@@ -264,7 +243,6 @@ class CreateEditEventScreenState
               setState(() {
                 if (_isRecurringEvent) {
                   setFieldValue('isRecurring', false);
-                  setFieldValue('endDate', null);
                   setFieldValue('patterns', <RecurrencePattern>[]);
                 }
                 if (_isBirthday) {
@@ -310,14 +288,7 @@ class CreateEditEventScreenState
                     setFieldValue('calendarId', null);
                   }
 
-                  if (_endDate == null) {
-                    setFieldValue(
-                      'endDate',
-                      _selectedDate.add(const Duration(days: 7)),
-                    );
-                  }
                 } else {
-                  setFieldValue('endDate', null);
                   setFieldValue('patterns', <RecurrencePattern>[]);
                 }
               });
@@ -352,7 +323,6 @@ class CreateEditEventScreenState
                 if (willBeBirthday) {
                   if (_isRecurringEvent) {
                     setFieldValue('isRecurring', false);
-                    setFieldValue('endDate', null);
                     setFieldValue('patterns', <RecurrencePattern>[]);
                   }
 
@@ -579,87 +549,12 @@ class CreateEditEventScreenState
                   setFieldValue('startDate', selection.selectedDate);
                 });
 
-                if (_endDate != null &&
-                    _endDate!.isBefore(selection.selectedDate)) {
-                  setFieldValue(
-                    'endDate',
-                    selection.selectedDate.add(const Duration(days: 7)),
-                  );
-                }
               },
             ),
           ],
         ),
       ),
 
-      if (_isRecurringEvent) ...[
-        const SizedBox(height: 24),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: CupertinoColors.systemGrey6,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: CupertinoColors.systemGrey5, width: 1),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(CupertinoIcons.calendar_badge_plus, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.endDate,
-                        style: AppStyles.bodyText.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  CupertinoButton(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    minimumSize: Size.zero,
-                    onPressed: () {
-                      final state = _endDateKey.currentState as dynamic;
-                      state?.scrollToToday();
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.today, size: 16),
-                        SizedBox(width: 4),
-                        Text(l10n.today, style: TextStyle(fontSize: 14)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              CustomDateTimeWidget(
-                key: _endDateKey,
-                initialDateTime:
-                    _endDate ?? _selectedDate.add(const Duration(days: 7)),
-                timezone: _selectedTimezone,
-                locale: 'es',
-                showTodayButton: false,
-                onDateTimeChanged: (selection) {
-                  setState(() {
-                    setFieldValue('endDate', selection.selectedDate);
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
 
       if (_isRecurringEvent) ...[
         const SizedBox(height: 24),
@@ -673,8 +568,6 @@ class CreateEditEventScreenState
 
       if (getFieldError('title') != null)
         _buildErrorText(getFieldError('title')!),
-      if (getFieldError('endDate') != null)
-        _buildErrorText(getFieldError('endDate')!),
       if (getFieldError('patterns') != null)
         _buildErrorText(getFieldError('patterns')!),
     ];

@@ -15,7 +15,6 @@
         "name": "Pago de n\u00f3mina",
         "description": "Procesar pagos quincenales",
         "start_date": "2025-11-01T09:00:00",
-        "end_date": "2025-11-01T10:00:00",
         "event_type": "recurring",
         "owner_id": 1
       }

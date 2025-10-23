@@ -357,10 +357,8 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
                             "updated_at": interaction.updated_at,
                             "event_name": event.name,
                             "event_start_date": event.start_date,
-                            "event_end_date": event.end_date,
                             "event_type": event.event_type,
                             "event_start_date_formatted": event.start_date.strftime("%Y-%m-%d %H:%M"),
-                            "event_end_date_formatted": event.end_date.strftime("%Y-%m-%d %H:%M") if event.end_date else None,
                         }
                     )
                 return enriched_interactions

@@ -41,7 +41,6 @@
       "name": "Party",
       "description": null,
       "start_date": "{{TIMESTAMP}}",
-      "end_date": null,
       "event_type": "regular",
       "owner_id": "{{ID}}",
       "calendar_id": null,

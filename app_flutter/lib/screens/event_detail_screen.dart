@@ -971,10 +971,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           l10n.recurrencePatterns,
           _formatRecurrencePatterns([], locale),
         ),
-        if (event.endDate != null) ...[
-          const SizedBox(height: 8),
-          _buildInfoRow(l10n.endDate, _formatDateTime(event.endDate!)),
-        ],
       ],
     );
   }

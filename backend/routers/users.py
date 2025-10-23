@@ -405,7 +405,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     if visible_event_ids:
         interactions = event_interaction.get_by_event_ids_and_user(db, event_ids=visible_event_ids, user_id=user_id)
         for interaction in interactions:
-            user_interactions[interaction.event_id] = {"interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note}
+            user_interactions[interaction.event_id] = {"interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note, "is_new": interaction.is_new}
 
     # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)
@@ -420,14 +420,12 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     result = []
     for ev in visible_events:
         rounded_start = round_to_5min(ev.start_date)
-        rounded_end = round_to_5min(ev.end_date) if ev.end_date else None
 
         event_dict = {
             "id": ev.id,
             "name": ev.name,
             "description": ev.description,
             "start_date": rounded_start.isoformat(),
-            "end_date": rounded_end.isoformat() if rounded_end else None,
             "event_type": ev.event_type,
             "owner_id": ev.owner_id,
             "calendar_id": ev.calendar_id,

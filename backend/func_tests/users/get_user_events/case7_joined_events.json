@@ -49,7 +49,6 @@
         "name": "Alice Event",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
-        "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
@@ -68,7 +67,6 @@
         "name": "Bob Event",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
-        "end_date": null,
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
@@ -81,7 +79,8 @@
           "status": "accepted",
           "role": "member",
           "invited_by_user_id": null,
-          "note": null
+          "note": null,
+          "is_new": false
         },
         "is_owner_public": null,
         "can_subscribe_to_owner": null,

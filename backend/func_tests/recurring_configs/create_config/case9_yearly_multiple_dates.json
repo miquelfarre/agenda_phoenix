@@ -15,7 +15,6 @@
         "name": "Fiestas de fin de a\u00f1o",
         "description": "Celebraciones anuales",
         "start_date": "2025-12-25T00:00:00",
-        "end_date": "2025-12-25T23:59:00",
         "event_type": "recurring",
         "owner_id": 1
       }

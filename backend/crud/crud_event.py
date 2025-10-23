@@ -191,12 +191,6 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         # Ensure dates are timezone-aware
         if event_data["start_date"].tzinfo is None:
             event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
-        if event_data.get("end_date") and event_data["end_date"].tzinfo is None:
-            event_data["end_date"] = event_data["end_date"].replace(tzinfo=timezone.utc)
-
-        # VALIDATION: Only recurring events can have end_date
-        if event_data.get("event_type") == "regular":
-            event_data["end_date"] = None
 
         # Create event directly from dict
         db_event = Event(**event_data)
@@ -236,12 +230,6 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         # Ensure dates are timezone-aware
         if event_data["start_date"].tzinfo is None:
             event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
-        if event_data.get("end_date") and event_data["end_date"].tzinfo is None:
-            event_data["end_date"] = event_data["end_date"].replace(tzinfo=timezone.utc)
-
-        # VALIDATION: Only recurring events can have end_date
-        if event_data.get("event_type") == "regular":
-            event_data["end_date"] = None
 
         # Update event
         for key, value in event_data.items():

@@ -57,7 +57,6 @@ class EventService {
     required String name,
     String? description,
     required DateTime startDate,
-    DateTime? endDate,
     String eventType = 'regular',
     int? calendarId,
   }) async {
@@ -66,7 +65,6 @@ class EventService {
         'name': name,
         if (description != null) 'description': description,
         'start_date': startDate.toIso8601String(),
-        if (endDate != null) 'end_date': endDate.toIso8601String(),
         'event_type': eventType,
         'owner_id': currentUserId,
         if (calendarId != null) 'calendar_id': calendarId,
@@ -89,7 +87,6 @@ class EventService {
     String? name,
     String? description,
     DateTime? startDate,
-    DateTime? endDate,
     String? eventType,
     int? calendarId,
   }) async {
@@ -103,9 +100,6 @@ class EventService {
       }
       if (startDate != null) {
         updateData['start_date'] = startDate.toIso8601String();
-      }
-      if (endDate != null) {
-        updateData['end_date'] = endDate.toIso8601String();
       }
       if (eventType != null) {
         updateData['event_type'] = eventType;
