@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/contacts/9999?current_user_id=1",
+    "endpoint": "/api/v1/contacts/9999?current_user_id=1",
     "body": {
       "owner_id": 1,
       "name": "Contacto Fantasma",

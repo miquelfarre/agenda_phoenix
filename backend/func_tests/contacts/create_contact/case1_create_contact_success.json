@@ -6,7 +6,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/contacts",
+    "endpoint": "/api/v1/contacts",
     "body": {
       "name": "Miquel Farré",
       "phone": "+34606014681"

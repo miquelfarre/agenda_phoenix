@@ -11,7 +11,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/groups",
+    "endpoint": "/api/v1/groups",
     "body": {
       "name": "New Team",
       "description": "A brand new team",

@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/contacts/1"
+    "endpoint": "/api/v1/contacts/1"
   },
   "expected_response": {
     "status_code": 200

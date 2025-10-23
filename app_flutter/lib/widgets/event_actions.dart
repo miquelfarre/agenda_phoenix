@@ -333,6 +333,7 @@ class EventActions extends StatelessWidget {
             if (appContext is Element && !appContext.mounted) return;
 
             if (choice == AppConstants.actionChoiceThis) {
+              if (!appContext.mounted) return;
               PlatformDialogHelpers.showPlatformConfirmDialog(
                 appContext,
                 title: safeL10n.confirmDelete,
@@ -349,22 +350,28 @@ class EventActions extends StatelessWidget {
                     );
                     if (res is Future) {
                       res.catchError((e) {
-                        PlatformDialogHelpers.showSnackBar(
-                          context: context,
-                          message: '$safeUnexpectedError $e',
-                          isError: true,
-                        );
+                        if (appContext.mounted) {
+                          PlatformDialogHelpers.showSnackBar(
+                            context: appContext,
+                            message: '$safeUnexpectedError $e',
+                            isError: true,
+                          );
+                        }
                       });
                     }
                   } catch (e) {
-                    PlatformDialogHelpers.showSnackBar(
-                      message: '$safeUnexpectedError $e',
-                      isError: true,
-                    );
+                    if (appContext.mounted) {
+                      PlatformDialogHelpers.showSnackBar(
+                        context: appContext,
+                        message: '$safeUnexpectedError $e',
+                        isError: true,
+                      );
+                    }
                   }
                 }
               });
             } else if (choice == AppConstants.actionChoiceSeries) {
+              if (!appContext.mounted) return;
               PlatformDialogHelpers.showPlatformConfirmDialog(
                 appContext,
                 title: safeL10n.confirmDeleteSeries,
@@ -381,19 +388,23 @@ class EventActions extends StatelessWidget {
                     );
                     if (res is Future) {
                       res.catchError((e) {
-                        PlatformDialogHelpers.showSnackBar(
-                          context: context,
-                          message: '$safeUnexpectedError $e',
-                          isError: true,
-                        );
+                        if (appContext.mounted) {
+                          PlatformDialogHelpers.showSnackBar(
+                            context: appContext,
+                            message: '$safeUnexpectedError $e',
+                            isError: true,
+                          );
+                        }
                       });
                     }
                   } catch (e) {
-                    PlatformDialogHelpers.showSnackBar(
-                      context: context,
-                      message: '$safeUnexpectedError $e',
-                      isError: true,
-                    );
+                    if (appContext.mounted) {
+                      PlatformDialogHelpers.showSnackBar(
+                        context: appContext,
+                        message: '$safeUnexpectedError $e',
+                        isError: true,
+                      );
+                    }
                   }
                 }
               });
@@ -406,11 +417,13 @@ class EventActions extends StatelessWidget {
           }
         })
         .catchError((e) {
-          PlatformDialogHelpers.showSnackBar(
-            context: context,
-            message: '$safeUnexpectedError $e',
-            isError: true,
-          );
+          if (context.mounted) {
+            PlatformDialogHelpers.showSnackBar(
+              context: context,
+              message: '$safeUnexpectedError $e',
+              isError: true,
+            );
+          }
         });
   }
 
@@ -565,11 +578,13 @@ class EventActions extends StatelessWidget {
           }
         })
         .catchError((e) {
-          PlatformDialogHelpers.showSnackBar(
-            context: context,
-            message: '${l10n.unexpectedError} $e',
-            isError: true,
-          );
+          if (context.mounted) {
+            PlatformDialogHelpers.showSnackBar(
+              context: context,
+              message: '${l10n.unexpectedError} $e',
+              isError: true,
+            );
+          }
         });
   }
 }

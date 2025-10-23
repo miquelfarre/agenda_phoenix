@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/contacts",
+    "endpoint": "/api/v1/contacts",
     "body": {
       "name": "Otro Usuario",
       "phone": "+34606014680"

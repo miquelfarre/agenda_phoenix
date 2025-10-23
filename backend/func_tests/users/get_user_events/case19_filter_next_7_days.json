@@ -43,7 +43,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/users/1/events?filter=next_7_days"
+    "endpoint": "/api/v1/users/1/events?filter=next_7_days"
   },
   "expected": {
     "status_code": 200,

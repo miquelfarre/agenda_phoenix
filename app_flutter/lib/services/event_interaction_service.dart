@@ -293,7 +293,9 @@ class EventInteractionService {
         if (inviterHive != null) {
           inviter = inviterHive.toUser();
         }
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
     }
 
     return EventInteraction(

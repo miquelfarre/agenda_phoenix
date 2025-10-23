@@ -33,7 +33,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/event_bans/1"
+    "endpoint": "/api/v1/event_bans/1"
   },
   "expected": {
     "status_code": 200,

@@ -6,7 +6,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/calendars",
+    "endpoint": "/api/v1/calendars",
     "body": {
       "name": "Calendario sin dueño",
       "owner_id": 9999

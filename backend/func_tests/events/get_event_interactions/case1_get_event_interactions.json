@@ -45,7 +45,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/events/100/interactions"
+    "endpoint": "/api/v1/events/100/interactions"
   },
   "expected_response": {
     "status_code": 200

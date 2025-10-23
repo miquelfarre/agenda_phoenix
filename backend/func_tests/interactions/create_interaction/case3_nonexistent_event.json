@@ -11,7 +11,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/interactions",
+    "endpoint": "/api/v1/interactions",
     "body": {
       "event_id": 999,
       "user_id": 2,

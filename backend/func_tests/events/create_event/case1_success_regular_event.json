@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/events",
+    "endpoint": "/api/v1/events",
     "body": {
       "name": "Cena con amigos",
       "description": "Cena en casa de Sonia",

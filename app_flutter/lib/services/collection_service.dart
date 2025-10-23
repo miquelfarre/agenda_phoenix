@@ -94,7 +94,9 @@ class CollectionService {
 
         try {
           await SyncService.syncCollections();
-        } catch (e) {}
+        } catch (e) {
+          // Ignore sync errors
+        }
       }
 
       return collections;
@@ -128,7 +130,9 @@ class CollectionService {
 
       try {
         await SyncService.syncCollections();
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
 
       return collection;
     } catch (e) {
@@ -161,7 +165,9 @@ class CollectionService {
 
       try {
         await SyncService.syncCollections();
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
 
       return collection;
     } catch (e) {
@@ -176,7 +182,9 @@ class CollectionService {
 
       try {
         await SyncService.syncCollections();
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to delete collection: ${e.toString()}');
@@ -197,7 +205,9 @@ class CollectionService {
 
       try {
         await SyncService.syncCollections();
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
 
       return collection;
     } catch (e) {
@@ -263,7 +273,9 @@ class CollectionService {
 
       try {
         await SyncService.syncCollections();
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
       final updated = getLocalCollection(collectionId);
       if (updated != null) return updated;
 
@@ -295,12 +307,16 @@ class CollectionService {
   Future<void> _storeCollectionLocally(EventCollection collection) async {
     try {
       await SyncService.syncCollections();
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 
   Future<void> clearLocalData() async {
     try {
       await _box?.clear();
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 }

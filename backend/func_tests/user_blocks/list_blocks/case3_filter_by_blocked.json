@@ -33,7 +33,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/user_blocks?blocked_user_id=2"
+    "endpoint": "/api/v1/user_blocks?blocked_user_id=2"
   },
   "expected": {
     "status_code": 200,

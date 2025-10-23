@@ -16,11 +16,19 @@ import 'create_edit_event_screen.dart';
 
 import '../services/config_service.dart';
 import '../services/event_service.dart';
-import '../services/composite_sync_service.dart';
+import '../services/supabase_service.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
 import '../core/monitoring/performance_monitor.dart';
+
+// Helper class to store event item with interaction type
+class EventItemWithType {
+  final composite.EventListItem item;
+  final String? interactionType;
+
+  EventItemWithType(this.item, this.interactionType);
+}
 
 class EventsScreen extends ConsumerStatefulWidget {
   const EventsScreen({super.key});
@@ -53,16 +61,76 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     print('🔵 [EventsScreen] _loadData START');
     setState(() => _isLoading = true);
     try {
-      print('🔵 [EventsScreen] Calling smartSyncList...');
-      final composite = await CompositeSyncService.instance.smartSyncList(
-        futureOnly: true,
+      print('🔵 [EventsScreen] Loading events from Supabase...');
+      final userId = ConfigService.instance.currentUserId;
+      final eventsData = await SupabaseService.instance.fetchEventsForUser(userId);
+
+      // Convert Supabase data to EventListItem
+      final eventItems = <EventItemWithType>[];
+      for (final data in eventsData) {
+        final interactions = (data['interactions'] as List?) ?? [];
+        final myInteraction = interactions.firstWhere(
+          (i) => i['user_id'] == userId,
+          orElse: () => null,
+        );
+
+        final interactionType = myInteraction?['interaction_type'] as String?;
+        final invitationStatus = myInteraction?['status'] as String?;
+
+        final item = composite.EventListItem(
+          id: data['id'],
+          title: data['name'] ?? 'Untitled',
+          description: data['description'],
+          date: DateTime.parse(data['start_date']),
+          isPublished: data['event_type'] != 'draft',
+          isBirthday: data['event_type'] == 'birthday',
+          isRecurring: data['event_type'] == 'recurring',
+          ownerId: data['owner_id'],
+          owner: data['owner'],
+          invitationStatus: invitationStatus,
+          inviterId: myInteraction?['invited_by_user_id'],
+          inviter: null,
+          attendeeCount: interactions.where((i) => i['status'] == 'accepted').length,
+          attendees: interactions.where((i) => i['status'] == 'accepted').toList(),
+          calendarId: data['calendar_id'],
+          calendarName: data['calendar']?['name'],
+          calendarColor: null,
+        );
+
+        eventItems.add(EventItemWithType(item, interactionType));
+      }
+
+      // Calculate filters
+      final myEvents = eventItems.where((e) => e.item.ownerId == userId && e.interactionType == null).length;
+      final invitations = eventItems.where((e) =>
+        e.interactionType == 'invited' && e.item.invitationStatus == 'pending'
+      ).length;
+      final subscribed = eventItems.where((e) =>
+        e.interactionType == 'subscribed' ||
+        (e.interactionType == 'joined' && e.item.invitationStatus == 'accepted')
+      ).length;
+
+      final filters = composite.FilterCounts(
+        all: eventItems.length,
+        my: myEvents,
+        subscribed: subscribed,
+        invitations: invitations,
       );
-      print(
-        '🔵 [EventsScreen] smartSyncList completed, events count: ${composite.events.length}',
+
+      // Extract just the items for the composite
+      final justItems = eventItems.map((e) => e.item).toList();
+
+      final compositeData = composite.EventListComposite(
+        events: justItems,
+        filters: filters,
+        checksum: DateTime.now().millisecondsSinceEpoch.toString(), // No longer used
       );
+
+      print('🔵 [EventsScreen] Loaded ${justItems.length} events from Supabase');
+
       if (mounted) {
         setState(() {
-          _composite = composite;
+          _composite = compositeData;
           _isLoading = false;
         });
         print('🔵 [EventsScreen] setState completed, _isLoading=false');
@@ -556,8 +624,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             await EventService().deleteEvent(event.id!);
           } else {}
 
-          await CompositeSyncService.instance.clearListCache();
-
+          // Supabase handles caching automatically via realtime
           await _loadData();
         } catch (e) {
           rethrow;

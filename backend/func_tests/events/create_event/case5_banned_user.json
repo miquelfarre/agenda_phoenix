@@ -24,7 +24,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/events",
+    "endpoint": "/api/v1/events",
     "body": {
       "name": "Evento de usuario baneado",
       "description": "Este evento no debería crearse",

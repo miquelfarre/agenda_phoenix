@@ -359,7 +359,7 @@ class ApiClient implements IApiClient {
     int? currentUserId,
   }) async {
     final result = await get(
-      '/events/$eventId/interactions',
+      '/api/v1/events/$eventId/interactions',
       queryParams: {
         if (currentUserId != null) 'current_user_id': currentUserId,
       },
@@ -373,7 +373,7 @@ class ApiClient implements IApiClient {
     int? currentUserId,
   }) async {
     final result = await get(
-      '/events/$eventId/interactions-enriched',
+      '/api/v1/events/$eventId/interactions-enriched',
       queryParams: {
         if (currentUserId != null) 'current_user_id': currentUserId,
       },

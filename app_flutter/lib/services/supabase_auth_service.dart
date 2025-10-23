@@ -168,10 +168,8 @@ class _MockSupabaseUser implements User {
   @override
   String? get newEmail => null;
 
-  @override
   String? get newPhone => null;
 
-  @override
   String? get phoneSentAt => null;
 
   @override

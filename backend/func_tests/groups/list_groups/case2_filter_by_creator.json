@@ -36,7 +36,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/groups?created_by=1"
+    "endpoint": "/api/v1/groups?created_by=1"
   },
   "expected": {
     "status_code": 200,

@@ -32,7 +32,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/interactions/1/mark-read"
+    "endpoint": "/api/v1/interactions/1/mark-read"
   },
   "expected": {
     "status_code": 200,

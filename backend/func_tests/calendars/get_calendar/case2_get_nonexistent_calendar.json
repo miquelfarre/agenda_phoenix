@@ -6,7 +6,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/calendars/9999"
+    "endpoint": "/api/v1/calendars/9999"
   },
   "expected_response": {
     "status_code": 404

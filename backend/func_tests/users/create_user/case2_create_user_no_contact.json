@@ -6,7 +6,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/users",
+    "endpoint": "/api/v1/users",
     "body": {
       "username": "instagram_user",
       "auth_provider": "instagram",

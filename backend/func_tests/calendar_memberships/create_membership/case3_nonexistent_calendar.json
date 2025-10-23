@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/calendar_memberships",
+    "endpoint": "/api/v1/calendar_memberships",
     "body": {
       "calendar_id": 9999,
       "user_id": 1,

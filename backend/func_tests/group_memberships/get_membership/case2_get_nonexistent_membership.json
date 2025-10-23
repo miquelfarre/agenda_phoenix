@@ -3,7 +3,7 @@
   "setup": {},
   "request": {
     "method": "GET",
-    "endpoint": "/group_memberships/999"
+    "endpoint": "/api/v1/group_memberships/999"
   },
   "expected": {
     "status_code": 404,

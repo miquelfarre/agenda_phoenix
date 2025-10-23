@@ -6,7 +6,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/events",
+    "endpoint": "/api/v1/events",
     "body": {
       "name": "Evento huerfano",
       "description": "Este evento no tiene owner válido",

@@ -39,7 +39,7 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/events/1?current_user_id=1"
+    "endpoint": "/api/v1/events/1?current_user_id=1"
   },
   "expected": {
     "status_code": 200,

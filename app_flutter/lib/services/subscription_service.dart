@@ -30,7 +30,9 @@ class SubscriptionService {
               _subscriptionHiveToSubscription(subscriptionHive),
             );
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore sync errors
+        }
       }
 
       return subscriptions;

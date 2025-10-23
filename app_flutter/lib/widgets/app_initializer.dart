@@ -61,7 +61,9 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
           isShareable: false,
         );
       } else {}
-    } catch (e) {}
+    } catch (e) {
+      // Ignore errors
+    }
   }
 
   @override

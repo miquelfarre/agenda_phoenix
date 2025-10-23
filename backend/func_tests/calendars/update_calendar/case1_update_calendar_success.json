@@ -19,7 +19,7 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/calendars/1?current_user_id=1",
+    "endpoint": "/api/v1/calendars/1?current_user_id=1",
     "body": {
       "name": "Calendario Actualizado",
       "start_date": "2025-01-01T00:00:00",

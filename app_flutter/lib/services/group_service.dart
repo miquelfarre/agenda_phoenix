@@ -85,7 +85,9 @@ class GroupService {
 
       try {
         await SyncService.syncGroups(creatorId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors - not critical for group creation
+      }
 
       return createdGroup;
     } on SocketException {
@@ -131,7 +133,9 @@ class GroupService {
 
       try {
         await SyncService.syncGroups(userId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
 
       return updatedGroup;
     } on SocketException {
@@ -141,7 +145,9 @@ class GroupService {
     } on exceptions.NotFoundException {
       try {
         await SyncService.syncGroups(userId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
       rethrow;
     } on exceptions.PermissionDeniedException {
       rethrow;
@@ -178,7 +184,9 @@ class GroupService {
     } on exceptions.NotFoundException {
       try {
         await SyncService.clearGroupCache(groupId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
       rethrow;
     } on exceptions.PermissionDeniedException {
       rethrow;
@@ -217,7 +225,9 @@ class GroupService {
 
       try {
         await SyncService.syncGroups(adminUserId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
     } on SocketException {
       throw exceptions.ApiException('Internet connection required');
     } on TimeoutException {
@@ -260,7 +270,9 @@ class GroupService {
 
       try {
         await SyncService.syncGroups(adminUserId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
     } on SocketException {
       throw exceptions.ApiException('Internet connection required');
     } on TimeoutException {
@@ -305,7 +317,9 @@ class GroupService {
     } on exceptions.NotFoundException {
       try {
         await SyncService.clearGroupCache(groupId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
       rethrow;
     } on exceptions.PermissionDeniedException {
       rethrow;
@@ -328,7 +342,9 @@ class GroupService {
 
       try {
         await SyncService.syncGroups(userId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
     } on SocketException {
       throw exceptions.ApiException('Internet connection required');
     } on TimeoutException {
@@ -356,7 +372,9 @@ class GroupService {
 
       try {
         await SyncService.syncGroups(userId);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
     } on SocketException {
       throw exceptions.ApiException('Internet connection required');
     } on TimeoutException {
@@ -430,7 +448,9 @@ class GroupService {
       try {
         final group = _groupHiveToGroup(groupHive);
         allGroups.add(group);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
     }
     return allGroups;
   }

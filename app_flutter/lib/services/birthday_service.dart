@@ -92,7 +92,9 @@ class BirthdayService {
 
         try {
           await SyncService.syncEvents();
-        } catch (e) {}
+        } catch (e) {
+          // Ignore sync errors
+        }
       }
 
       return birthdayEvents;
@@ -124,7 +126,9 @@ class BirthdayService {
 
       try {
         await SyncService.syncEvents();
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
 
       return birthdayEvent;
     } catch (e) {
@@ -155,7 +159,9 @@ class BirthdayService {
 
       try {
         await SyncService.syncEvents();
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
 
       return birthdayEvent;
     } catch (e) {
@@ -170,7 +176,9 @@ class BirthdayService {
 
       try {
         await SyncService.syncEvents();
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Failed to delete birthday event: ${e.toString()}');
@@ -202,6 +210,8 @@ class BirthdayService {
   Future<void> clearLocalData() async {
     try {
       await _box?.clear();
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 }

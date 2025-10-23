@@ -593,7 +593,9 @@ class AggregatedEventsNotifier extends Notifier<AsyncValue<List<Event>>> {
             (e) => e.ownerId == subscribedUserId && e.ownerId != currentUserId,
           );
           allEvents.addAll(newEvents);
-        } catch (e) {}
+        } catch (e) {
+          // Ignore errors
+        }
       }
 
       final sortedEvents = allEvents.toList()

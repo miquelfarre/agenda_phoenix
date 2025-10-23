@@ -14,7 +14,7 @@ from crud import app_ban
 from dependencies import check_is_admin, get_db
 from schemas import AppBanCreate, AppBanResponse
 
-router = APIRouter(prefix="/app_bans", tags=["app_bans"])
+router = APIRouter(prefix="/api/v1/app_bans", tags=["app_bans"])
 
 
 @router.get("", response_model=List[AppBanResponse])

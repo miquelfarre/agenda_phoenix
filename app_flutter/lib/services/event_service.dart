@@ -96,13 +96,24 @@ class EventService {
   }) async {
     try {
       final updateData = <String, dynamic>{};
-      if (name != null) updateData['name'] = name;
-      if (description != null) updateData['description'] = description;
-      if (startDate != null)
+      if (name != null) {
+        updateData['name'] = name;
+      }
+      if (description != null) {
+        updateData['description'] = description;
+      }
+      if (startDate != null) {
         updateData['start_date'] = startDate.toIso8601String();
-      if (endDate != null) updateData['end_date'] = endDate.toIso8601String();
-      if (eventType != null) updateData['event_type'] = eventType;
-      if (calendarId != null) updateData['calendar_id'] = calendarId;
+      }
+      if (endDate != null) {
+        updateData['end_date'] = endDate.toIso8601String();
+      }
+      if (eventType != null) {
+        updateData['event_type'] = eventType;
+      }
+      if (calendarId != null) {
+        updateData['calendar_id'] = calendarId;
+      }
 
       final response = await _client.updateEvent(eventId, updateData);
 
@@ -126,6 +137,7 @@ class EventService {
     } on SocketException {
       throw app_exceptions.ApiException('Internet connection required');
     } on app_exceptions.NotFoundException {
+      // Event already deleted - ignore
     } catch (e) {
       throw app_exceptions.ApiException('Failed to delete event: $e');
     }

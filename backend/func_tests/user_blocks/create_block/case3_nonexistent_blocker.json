@@ -11,7 +11,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/user_blocks",
+    "endpoint": "/api/v1/user_blocks",
     "body": {
       "blocker_user_id": 999,
       "blocked_user_id": 2

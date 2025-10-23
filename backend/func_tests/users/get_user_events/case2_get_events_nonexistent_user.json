@@ -6,7 +6,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/users/9999/events"
+    "endpoint": "/api/v1/users/9999/events"
   },
   "expected_response": {
     "status_code": 404

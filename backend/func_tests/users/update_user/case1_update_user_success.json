@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/users/1?current_user_id=1",
+    "endpoint": "/api/v1/users/1?current_user_id=1",
     "body": {
       "contact_id": 1,
       "username": "sonia_updated",

@@ -32,7 +32,7 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/interactions/1?current_user_id=2",
+    "endpoint": "/api/v1/interactions/1?current_user_id=2",
     "body": {
       "interaction_type": "invited",
       "status": "accepted",

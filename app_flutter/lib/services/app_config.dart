@@ -21,16 +21,20 @@ class AppConfig {
   }
 
   static String get supabaseUrl {
-    return const String.fromEnvironment(
-      'SUPABASE_URL',
-      defaultValue: 'https://your-project.supabase.co',
-    );
+    final defined = const String.fromEnvironment('SUPABASE_URL');
+    if (defined.isNotEmpty) return defined;
+
+    // Local Supabase instance through Kong gateway
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000';
+    }
+    return 'http://localhost:8000';
   }
 
   static String get supabaseAnonKey {
     return const String.fromEnvironment(
       'SUPABASE_ANON_KEY',
-      defaultValue: 'your-anon-key-here',
+      defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
     );
   }
 }

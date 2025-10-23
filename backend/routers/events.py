@@ -15,7 +15,7 @@ from dependencies import check_event_permission, check_user_not_banned, get_db
 from models import Contact, EventInteraction, User, UserBlock
 from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventResponse, UpcomingEventSummary
 
-router = APIRouter(prefix="/events", tags=["events"])
+router = APIRouter(prefix="/api/v1/events", tags=["events"])
 
 
 @router.get("", response_model=List[EventResponse])

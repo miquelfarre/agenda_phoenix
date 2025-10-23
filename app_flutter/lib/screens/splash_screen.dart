@@ -136,7 +136,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             await PermissionService.markContactsPermissionAsked();
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        // Ignore error
+      }
 
       _updateStatus(l10n.dataUpdated);
       await Future.delayed(const Duration(milliseconds: 500));

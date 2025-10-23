@@ -65,12 +65,18 @@ class SyncService {
 
     try {
       final queryParams = <String, dynamic>{};
-      if (fromDate != null)
+      if (fromDate != null) {
         queryParams['from_date'] = fromDate.toIso8601String();
-      if (toDate != null) queryParams['to_date'] = toDate.toIso8601String();
-      if (search != null && search.isNotEmpty) queryParams['q'] = search;
-      if (filterType != null && filterType.isNotEmpty)
+      }
+      if (toDate != null) {
+        queryParams['to_date'] = toDate.toIso8601String();
+      }
+      if (search != null && search.isNotEmpty) {
+        queryParams['q'] = search;
+      }
+      if (filterType != null && filterType.isNotEmpty) {
         queryParams['filter'] = filterType;
+      }
 
       if (!futureOnly) queryParams['future_only'] = 'false';
 

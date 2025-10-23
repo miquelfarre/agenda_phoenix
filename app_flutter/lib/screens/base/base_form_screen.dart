@@ -100,6 +100,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
 
     final isValid = await validateForm();
     if (!isValid) {
+      if (!mounted) return;
       showErrorDialog(context.l10n.pleaseCorrectErrors);
       return;
     }
@@ -114,6 +115,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
         onFormSubmitSuccess();
       }
     } catch (e) {
+      if (!mounted) return;
       setError('${context.l10n.failedToSubmitForm}: $e');
     } finally {
       _isSubmitting = false;

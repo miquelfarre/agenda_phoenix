@@ -3,7 +3,7 @@
   "setup": {},
   "request": {
     "method": "DELETE",
-    "endpoint": "/group_memberships/999?current_user_id=1"
+    "endpoint": "/api/v1/group_memberships/999?current_user_id=1"
   },
   "expected": {
     "status_code": 404,

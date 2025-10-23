@@ -14,7 +14,7 @@ from dependencies import check_user_not_banned, check_user_not_public, check_use
 from models import EventInteraction
 from schemas import EventInteractionBase, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventInteractionWithEventResponse
 
-router = APIRouter(prefix="/interactions", tags=["interactions"])
+router = APIRouter(prefix="/api/v1/interactions", tags=["interactions"])
 
 
 @router.get("", response_model=List[Union[EventInteractionWithEventResponse, EventInteractionResponse]])

@@ -13,7 +13,7 @@ from crud import calendar, calendar_membership
 from dependencies import check_calendar_permission, get_db
 from schemas import CalendarBase, CalendarCreate, CalendarMembershipCreate, CalendarMembershipResponse, CalendarResponse
 
-router = APIRouter(prefix="/calendars", tags=["calendars"])
+router = APIRouter(prefix="/api/v1/calendars", tags=["calendars"])
 
 
 @router.get("", response_model=List[CalendarResponse])

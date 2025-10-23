@@ -3,7 +3,7 @@
   "setup": {},
   "request": {
     "method": "GET",
-    "endpoint": "/user_blocks/999"
+    "endpoint": "/api/v1/user_blocks/999"
   },
   "expected": {
     "status_code": 404,

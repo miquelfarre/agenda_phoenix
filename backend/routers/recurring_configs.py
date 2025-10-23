@@ -13,7 +13,7 @@ from crud import recurring_config
 from dependencies import check_event_permission, get_db
 from schemas import RecurringEventConfigBase, RecurringEventConfigCreate, RecurringEventConfigResponse
 
-router = APIRouter(prefix="/recurring_configs", tags=["recurring_configs"])
+router = APIRouter(prefix="/api/v1/recurring_configs", tags=["recurring_configs"])
 
 
 @router.get("", response_model=List[RecurringEventConfigResponse])

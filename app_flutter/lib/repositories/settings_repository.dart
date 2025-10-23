@@ -52,7 +52,9 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
 
         return settings;
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore errors
+    }
 
     return AppSettings.withDefaults();
   }
@@ -117,7 +119,9 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
     try {
       final settingsService = SettingsService();
       await settingsService.saveTimezoneToBackend(settings);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore errors
+    }
   }
 
   void _syncWithBackgroundInBackground(AppSettings localSettings) {
@@ -133,7 +137,9 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
             await _saveLocalSettings(remoteSettings);
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        // Ignore errors
+      }
     }();
   }
 

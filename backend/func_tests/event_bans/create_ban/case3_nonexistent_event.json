@@ -16,7 +16,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/event_bans",
+    "endpoint": "/api/v1/event_bans",
     "body": {
       "event_id": 999,
       "user_id": 2,

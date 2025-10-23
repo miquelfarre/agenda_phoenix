@@ -23,7 +23,7 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/user_blocks/1?current_user_id=1"
+    "endpoint": "/api/v1/user_blocks/1?current_user_id=1"
   },
   "expected": {
     "status_code": 200,

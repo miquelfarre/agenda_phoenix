@@ -48,21 +48,27 @@ class PermissionService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_contactsPermissionAskedKey, true);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 
   static Future<void> markContactsPermissionDenied() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_contactsPermissionDeniedKey, true);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 
   static Future<void> markContactsPermissionGranted() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_contactsPermissionDeniedKey, false);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 
   static Future<void> resetContactsPermissionPreferences() async {
@@ -70,6 +76,8 @@ class PermissionService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_contactsPermissionAskedKey);
       await prefs.remove(_contactsPermissionDeniedKey);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 }

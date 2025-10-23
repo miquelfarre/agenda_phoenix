@@ -13,7 +13,7 @@ from crud import event_ban
 from dependencies import check_event_permission, get_db
 from schemas import EventBanCreate, EventBanResponse
 
-router = APIRouter(prefix="/event_bans", tags=["event_bans"])
+router = APIRouter(prefix="/api/v1/event_bans", tags=["event_bans"])
 
 
 @router.get("", response_model=List[EventBanResponse])

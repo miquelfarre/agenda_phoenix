@@ -13,7 +13,7 @@ from crud import user_block
 from dependencies import get_db
 from schemas import UserBlockCreate, UserBlockResponse
 
-router = APIRouter(prefix="/user_blocks", tags=["user_blocks"])
+router = APIRouter(prefix="/api/v1/user_blocks", tags=["user_blocks"])
 
 
 @router.get("", response_model=List[UserBlockResponse])

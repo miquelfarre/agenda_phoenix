@@ -14,7 +14,7 @@ from dependencies import check_user_not_public, get_db
 from models import Group
 from schemas import GroupMembershipCreate, GroupMembershipResponse
 
-router = APIRouter(prefix="/group_memberships", tags=["group_memberships"])
+router = APIRouter(prefix="/api/v1/group_memberships", tags=["group_memberships"])
 
 
 @router.get("", response_model=List[GroupMembershipResponse])

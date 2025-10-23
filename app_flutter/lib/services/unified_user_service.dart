@@ -225,7 +225,9 @@ class UnifiedUserService {
   static Future<void> syncContactUsers() async {
     try {
       await getContactUsers();
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 
   static Future<List<User>> searchPublicUsers(String query) async {

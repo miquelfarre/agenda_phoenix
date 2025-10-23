@@ -77,23 +77,24 @@ class _ContactsPermissionDialogState extends State<ContactsPermissionDialog> {
           if (confirmed == true) {
             try {
               await openAppSettings();
-            } catch (e) {}
+            } catch (e) {
+              // Ignore errors
+            }
 
-            if (safeContext is Element && !safeContext.mounted) return;
+            if (!mounted || !safeContext.mounted) return;
             Navigator.of(safeContext).pop(false);
             widget.onPermissionDenied?.call();
           } else {
-            if (safeContext is Element && !safeContext.mounted) return;
+            if (!mounted || !safeContext.mounted) return;
             Navigator.of(safeContext).pop();
             Navigator.of(safeContext).pop(false);
             widget.onPermissionDenied?.call();
           }
         })
         .catchError((e) {
-          if (safeContext is Element && safeContext.mounted) {
-            Navigator.of(safeContext).pop();
-            Navigator.of(safeContext).pop(false);
-          }
+          if (!mounted || !safeContext.mounted) return;
+          Navigator.of(safeContext).pop();
+          Navigator.of(safeContext).pop(false);
           widget.onPermissionDenied?.call();
         });
   }

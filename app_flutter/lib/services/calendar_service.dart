@@ -223,7 +223,9 @@ class CalendarService {
     try {
       final hive = CalendarHive.fromCalendar(calendar);
       await _calendarsBox!.put(calendar.id, hive);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 
   Future<void> _storeShareLocally(CalendarShare share) async {
@@ -232,7 +234,9 @@ class CalendarService {
     try {
       final hive = CalendarShareHive.fromCalendarShare(share);
       await _sharesBox!.put(share.id, hive);
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 
   Future<List<Calendar>> fetchPublicCalendars({String? search}) async {
@@ -310,6 +314,8 @@ class CalendarService {
     try {
       await _calendarsBox?.clear();
       await _sharesBox?.clear();
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 }

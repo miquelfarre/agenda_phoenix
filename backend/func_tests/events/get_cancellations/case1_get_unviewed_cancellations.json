@@ -25,7 +25,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/events/cancellations?user_id=2"
+    "endpoint": "/api/v1/events/cancellations?user_id=2"
   },
   "expected": {
     "status_code": 422,

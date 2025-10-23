@@ -3,7 +3,7 @@
   "setup": {},
   "request": {
     "method": "POST",
-    "endpoint": "/groups",
+    "endpoint": "/api/v1/groups",
     "body": {
       "name": "Invalid Team",
       "description": "Team with invalid creator",

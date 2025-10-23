@@ -39,7 +39,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/events/100/available-invitees"
+    "endpoint": "/api/v1/events/100/available-invitees"
   },
   "expected": {
     "status_code": 200,

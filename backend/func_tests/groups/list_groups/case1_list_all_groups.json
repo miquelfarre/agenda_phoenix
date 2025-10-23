@@ -30,7 +30,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/groups"
+    "endpoint": "/api/v1/groups"
   },
   "expected": {
     "status_code": 200,

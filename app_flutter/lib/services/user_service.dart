@@ -99,7 +99,9 @@ class UserService implements ISyncable, ICacheManager {
 
       try {
         await SyncService.syncUserProfile(updatedUser.id);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore sync errors
+      }
 
       return updatedUser;
     } catch (e) {
@@ -190,7 +192,9 @@ class UserService implements ISyncable, ICacheManager {
   static Future<void> syncContactUsers() async {
     try {
       await getContactUsers();
-    } catch (e) {}
+    } catch (e) {
+      // Ignore sync errors
+    }
   }
 
   static Future<void> syncDeviceUsers() async {
@@ -702,7 +706,9 @@ class UserService implements ISyncable, ICacheManager {
           for (final user in foundUsers) {
             await SyncService.syncUserProfile(user.id);
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore sync errors
+        }
       }
     } catch (e) {
       rethrow;

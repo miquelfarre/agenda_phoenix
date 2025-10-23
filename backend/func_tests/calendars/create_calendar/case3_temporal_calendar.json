@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/calendars",
+    "endpoint": "/api/v1/calendars",
     "body": {
       "name": "Vacaciones Verano 2025",
       "owner_id": 1,

@@ -3,7 +3,7 @@
   "setup": {},
   "request": {
     "method": "GET",
-    "endpoint": "/interactions/999"
+    "endpoint": "/api/v1/interactions/999"
   },
   "expected": {
     "status_code": 404,

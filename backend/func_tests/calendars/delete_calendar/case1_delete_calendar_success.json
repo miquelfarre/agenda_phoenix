@@ -19,7 +19,7 @@
   },
   "request": {
     "method": "DELETE",
-    "endpoint": "/calendars/1?current_user_id=1"
+    "endpoint": "/api/v1/calendars/1?current_user_id=1"
   },
   "expected_response": {
     "status_code": 200

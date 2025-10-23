@@ -40,7 +40,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/group_memberships?group_id=1"
+    "endpoint": "/api/v1/group_memberships?group_id=1"
   },
   "expected": {
     "status_code": 200,

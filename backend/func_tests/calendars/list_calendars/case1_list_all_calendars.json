@@ -34,7 +34,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/calendars"
+    "endpoint": "/api/v1/calendars"
   },
   "expected_response": {
     "status_code": 200

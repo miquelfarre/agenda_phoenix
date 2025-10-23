@@ -39,7 +39,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/interactions?status=pending"
+    "endpoint": "/api/v1/interactions?status=pending"
   },
   "expected": {
     "status_code": 200,

@@ -19,7 +19,7 @@ from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserPublicS
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 @router.get("", response_model=List[Union[UserResponse, UserEnrichedResponse]])
@@ -34,6 +34,49 @@ async def get_users(public: Optional[bool] = None, enriched: bool = False, limit
         order_by=order_by or "id",
         order_dir=order_dir
     )
+
+
+@router.get("/me", response_model=Union[UserResponse, UserEnrichedResponse])
+async def get_current_user(current_user_id: int, enriched: bool = False, db: Session = Depends(get_db)):
+    """Get the current user's information"""
+    db_user = user.get(db, id=current_user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if enriched:
+        # Get contact info if exists
+        db_contact = None
+        if db_user.contact_id:
+            db_contact = contact.get(db, id=db_user.contact_id)
+
+        # Build display name
+        contact_name = db_contact.name if db_contact else None
+        username = db_user.username
+        if username and contact_name:
+            display_name = f"{username} ({contact_name})"
+        elif username:
+            display_name = username
+        elif contact_name:
+            display_name = contact_name
+        else:
+            display_name = f"Usuario #{db_user.id}"
+
+        return UserEnrichedResponse(
+            id=db_user.id,
+            username=db_user.username,
+            auth_provider=db_user.auth_provider,
+            auth_id=db_user.auth_id,
+            profile_picture_url=db_user.profile_picture_url,
+            contact_id=db_user.contact_id,
+            contact_name=db_contact.name if db_contact else None,
+            contact_phone=db_contact.phone if db_contact else None,
+            display_name=display_name,
+            last_login=db_user.last_login,
+            created_at=db_user.created_at,
+            updated_at=db_user.updated_at,
+        )
+
+    return db_user
 
 
 @router.get("/{user_id}", response_model=Union[UserResponse, UserEnrichedResponse])

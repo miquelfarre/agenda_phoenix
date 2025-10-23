@@ -54,7 +54,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/calendar_memberships"
+    "endpoint": "/api/v1/calendar_memberships"
   },
   "expected_response": {
     "status_code": 200

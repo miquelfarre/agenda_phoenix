@@ -104,7 +104,9 @@ class HiveMigration {
       try {
         if (Hive.isBoxOpen(boxName)) {
         } else {}
-      } catch (e) {}
+      } catch (e) {
+        // Ignore errors
+      }
     }
   }
 
@@ -123,7 +125,9 @@ class HiveMigration {
       return;
     }
 
-    try {} catch (e) {}
+    try {} catch (e) {
+      // Ignore errors
+    }
   }
 
   static Future<void> _validateRelationshipIntegrity() async {}

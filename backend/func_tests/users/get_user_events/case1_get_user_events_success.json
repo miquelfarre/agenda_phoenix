@@ -41,7 +41,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/users/1/events"
+    "endpoint": "/api/v1/users/1/events"
   },
   "expected_response": {
     "status_code": 200

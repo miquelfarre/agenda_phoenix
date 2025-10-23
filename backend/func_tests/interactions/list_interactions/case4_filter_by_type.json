@@ -39,7 +39,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/interactions?interaction_type=invited"
+    "endpoint": "/api/v1/interactions?interaction_type=invited"
   },
   "expected": {
     "status_code": 200,

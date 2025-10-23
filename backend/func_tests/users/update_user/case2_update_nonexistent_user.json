@@ -12,7 +12,7 @@
   },
   "request": {
     "method": "PUT",
-    "endpoint": "/users/9999?current_user_id=1",
+    "endpoint": "/api/v1/users/9999?current_user_id=1",
     "body": {
       "username": "fantasma",
       "auth_provider": "phone",

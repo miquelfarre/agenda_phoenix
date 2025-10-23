@@ -34,7 +34,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/recurring_configs",
+    "endpoint": "/api/v1/recurring_configs",
     "body": {
       "event_id": 100,
       "recurrence_type": "daily",

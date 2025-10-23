@@ -13,7 +13,7 @@ from crud import group
 from dependencies import check_group_permission, get_db
 from schemas import GroupBase, GroupCreate, GroupResponse
 
-router = APIRouter(prefix="/groups", tags=["groups"])
+router = APIRouter(prefix="/api/v1/groups", tags=["groups"])
 
 
 @router.get("", response_model=List[GroupResponse])

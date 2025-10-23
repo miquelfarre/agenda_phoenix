@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'user.dart';
 
-class _OwnerStub {
+class OwnerStub {
   final int id;
   final String? fullName;
   final bool isPublic;
   final String? profilePicture;
 
-  _OwnerStub({
+  OwnerStub({
     required this.id,
     this.fullName,
     this.isPublic = false,
@@ -69,7 +69,7 @@ class Event {
   bool get isBirthday => false;
   bool get isRecurringEvent => isRecurring;
 
-  _OwnerStub? get owner => _OwnerStub(
+  OwnerStub? get owner => OwnerStub(
     id: ownerId,
     fullName: ownerName,
     isPublic: false,

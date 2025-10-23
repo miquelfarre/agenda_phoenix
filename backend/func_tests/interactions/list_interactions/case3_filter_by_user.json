@@ -39,7 +39,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/interactions?user_id=2"
+    "endpoint": "/api/v1/interactions?user_id=2"
   },
   "expected": {
     "status_code": 200,

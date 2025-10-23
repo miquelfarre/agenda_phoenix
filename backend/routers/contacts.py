@@ -13,7 +13,7 @@ from crud import contact
 from dependencies import check_contact_permission, get_db
 from schemas import ContactCreate, ContactResponse
 
-router = APIRouter(prefix="/contacts", tags=["contacts"])
+router = APIRouter(prefix="/api/v1/contacts", tags=["contacts"])
 
 
 @router.get("", response_model=List[ContactResponse])

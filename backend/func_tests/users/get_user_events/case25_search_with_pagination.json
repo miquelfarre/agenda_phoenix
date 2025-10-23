@@ -43,7 +43,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/users/1/events?search=meeting&limit=2&offset=1"
+    "endpoint": "/api/v1/users/1/events?search=meeting&limit=2&offset=1"
   },
   "expected": {
     "status_code": 200,

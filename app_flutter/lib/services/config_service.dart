@@ -20,7 +20,8 @@ class ConfigService with SingletonMixin, ErrorHandlingMixin {
   String? _testToken;
   Map<String, dynamic>? _testUserInfo;
 
-  bool _useRecurringInstances = false;
+  // Recurring instances always enabled (feature flag removed)
+  bool _useRecurringInstances = true;
 
   Future<void> initialize() async {
     await withErrorHandling('initialize', () async {
@@ -35,8 +36,6 @@ class ConfigService with SingletonMixin, ErrorHandlingMixin {
       } else {
         _userId = savedUserId ?? scriptUserId;
       }
-
-      await _fetchRecurringInstancesFlag();
     });
   }
 
@@ -120,34 +119,6 @@ class ConfigService with SingletonMixin, ErrorHandlingMixin {
   bool get canEnableTestMode => TestModeValidator.canEnableTestMode();
 
   bool get useRecurringInstances => _useRecurringInstances;
-
-  Future<void> _fetchRecurringInstancesFlag() async {
-    await withErrorHandling(
-      '_fetchRecurringInstancesFlag',
-      () async {
-        final api = ApiClientFactory.instance;
-        final response = await api.get(
-          '/api/v1/config/feature-flags/recurring-instances',
-        );
-
-        _useRecurringInstances = response['use_recurring_instances'] ?? false;
-      },
-      shouldRethrow: false,
-      customMessage: 'ConfigService._fetchRecurringInstancesFlag failed',
-    );
-  }
-
-  void enableRecurringInstances() {
-    _useRecurringInstances = true;
-  }
-
-  void disableRecurringInstances() {
-    _useRecurringInstances = false;
-  }
-
-  void toggleRecurringInstances() {
-    _useRecurringInstances = !_useRecurringInstances;
-  }
 
   int _getUserIdFromEnvironment() {
     const String userIdString = String.fromEnvironment(

@@ -13,7 +13,7 @@ from crud import calendar_membership
 from dependencies import check_user_not_public, get_db, is_calendar_owner_or_admin
 from schemas import CalendarMembershipBase, CalendarMembershipCreate, CalendarMembershipEnrichedResponse, CalendarMembershipResponse
 
-router = APIRouter(prefix="/calendar_memberships", tags=["calendar_memberships"])
+router = APIRouter(prefix="/api/v1/calendar_memberships", tags=["calendar_memberships"])
 
 
 @router.get("", response_model=List[Union[CalendarMembershipResponse, CalendarMembershipEnrichedResponse]])

@@ -11,7 +11,7 @@
   },
   "request": {
     "method": "POST",
-    "endpoint": "/interactions/999/mark-read"
+    "endpoint": "/api/v1/interactions/999/mark-read"
   },
   "expected": {
     "status_code": 404,

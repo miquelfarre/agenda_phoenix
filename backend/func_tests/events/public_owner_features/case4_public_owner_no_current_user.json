@@ -20,7 +20,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/events/1"
+    "endpoint": "/api/v1/events/1"
   },
   "expected": {
     "status_code": 200,

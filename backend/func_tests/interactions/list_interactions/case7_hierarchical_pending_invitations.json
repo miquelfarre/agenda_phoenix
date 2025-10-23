@@ -75,7 +75,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/interactions?user_id=2&interaction_type=invited&status=pending"
+    "endpoint": "/api/v1/interactions?user_id=2&interaction_type=invited&status=pending"
   },
   "expected": {
     "status_code": 200,

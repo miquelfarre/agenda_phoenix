@@ -32,7 +32,7 @@
   },
   "request": {
     "method": "GET",
-    "endpoint": "/interactions?enriched=true"
+    "endpoint": "/api/v1/interactions?enriched=true"
   },
   "expected": {
     "status_code": 200,

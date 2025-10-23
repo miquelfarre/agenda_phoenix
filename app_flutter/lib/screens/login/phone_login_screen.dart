@@ -27,7 +27,6 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
 
-  String _verificationId = '';
   bool _codeSent = false;
   bool _isLoading = false;
 
@@ -48,7 +47,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       } else if (localeString.length == 2) {
         countryCode = localeString.toUpperCase();
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore error
+    }
 
     setState(() {
       _selectedCountry =
@@ -206,7 +207,6 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                 onPressed: () {
                   setState(() {
                     _codeSent = false;
-                    _verificationId = '';
                   });
                 },
               ),
@@ -257,7 +257,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       final result = await PlatformDialogHelpers.showPlatformConfirmDialog(
         context,
         title: l10n.iosSimulatorDetected,
-        message: l10n.firebasePhoneAuthSimulatorError,
+        message: l10n.phoneAuthLimitationMessage,
         confirmText: l10n.continueAction,
         cancelText: l10n.cancel,
       );
@@ -365,7 +365,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       if (idToken == null) {
         if (mounted && context.mounted) {
           final l10n = context.l10n;
-          throw Exception(l10n.couldNotGetFirebaseToken);
+          throw Exception(l10n.couldNotGetAuthToken);
         } else {
           throw Exception('Could not get authentication token');
         }
@@ -378,7 +378,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
       try {
         await auth.updateUserOnlineStatus(user.id, true);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore error
+      }
 
       if (mounted && context.mounted) {
         try {
@@ -386,7 +388,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         } catch (navError) {
           try {
             context.go('/splash');
-          } catch (e) {}
+          } catch (e) {
+            // Ignore error
+          }
         }
       }
     } catch (e) {
@@ -418,7 +422,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         } catch (navError) {
           try {
             context.go('/splash');
-          } catch (e) {}
+          } catch (e) {
+            // Ignore error
+          }
         }
       }
     } catch (e) {
@@ -430,25 +436,6 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         );
       }
     }
-  }
-
-  void _showSimulatorDialog() {
-    final l10n = context.l10n;
-
-    final message = [
-      l10n.firebasePhoneAuthLimitationMessage,
-      l10n.testPhoneAuthInstructions,
-      l10n.usePhysicalIosDevice,
-      l10n.useAndroidEmulator,
-      l10n.useWebVersion,
-    ].join('\n\n');
-
-    PlatformDialogHelpers.showPlatformConfirmDialog(
-      context,
-      title: l10n.iosSimulatorDetected,
-      message: message,
-      confirmText: l10n.understood,
-    );
   }
 
   @override

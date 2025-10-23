@@ -325,6 +325,7 @@ class EventCard extends ConsumerWidget {
                       );
                   ref.read(eventStateProvider.notifier).refresh();
                 } catch (e) {
+                  if (!context.mounted) return;
                   PlatformWidgets.showSnackBar(
                     message: context.l10n.errorAcceptingInvitation,
                     isError: true,
@@ -353,6 +354,7 @@ class EventCard extends ConsumerWidget {
                     );
                 ref.read(eventStateProvider.notifier).refresh();
               } catch (e) {
+                if (!context.mounted) return;
                 PlatformWidgets.showSnackBar(
                   message: context.l10n.errorRejectingInvitation,
                   isError: true,
