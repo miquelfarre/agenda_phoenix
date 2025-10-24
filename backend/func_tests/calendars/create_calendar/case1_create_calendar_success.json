@@ -27,6 +27,7 @@
     "body": {
       "name": "Calendario de trabajo",
       "start_date": null,
+      "end_date": null,
       "id": "{{ID}}",
       "owner_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

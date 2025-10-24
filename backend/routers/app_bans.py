@@ -10,6 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import app_ban
 from dependencies import check_is_admin, get_db
 from schemas import AppBanCreate, AppBanResponse
@@ -53,7 +54,7 @@ async def get_app_ban(ban_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=AppBanResponse, status_code=201)
-async def create_app_ban(ban_data: AppBanCreate, current_user_id: int, db: Session = Depends(get_db)):
+async def create_app_ban(ban_data: AppBanCreate, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Ban a user from the entire application (admin only).
 
@@ -77,7 +78,7 @@ async def create_app_ban(ban_data: AppBanCreate, current_user_id: int, db: Sessi
 
 
 @router.delete("/{ban_id}")
-async def delete_app_ban(ban_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_app_ban(ban_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Unban a user from the application (admin only).
 

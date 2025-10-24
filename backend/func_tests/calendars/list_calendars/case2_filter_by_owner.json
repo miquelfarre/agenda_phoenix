@@ -45,6 +45,7 @@
       {
         "name": "Calendario Personal Laura",
         "start_date": null,
+        "end_date": null,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
         "created_at": "{{TIMESTAMP}}",
@@ -53,6 +54,7 @@
       {
         "name": "Calendario Deportes",
         "start_date": null,
+        "end_date": null,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
         "created_at": "{{TIMESTAMP}}",

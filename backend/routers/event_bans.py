@@ -9,6 +9,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import event_ban
 from dependencies import check_event_permission, get_db
 from schemas import EventBanCreate, EventBanResponse
@@ -68,7 +69,7 @@ async def create_event_ban(ban_data: EventBanCreate, db: Session = Depends(get_d
 
 
 @router.delete("/{ban_id}")
-async def delete_event_ban(ban_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_event_ban(ban_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Unban a user from an event.
 

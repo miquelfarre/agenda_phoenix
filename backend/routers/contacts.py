@@ -9,6 +9,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from auth import get_current_user_id
 from crud import contact
 from dependencies import check_contact_permission, get_db
 from schemas import ContactCreate, ContactResponse
@@ -58,7 +59,7 @@ async def create_contact(contact_in: ContactCreate, db: Session = Depends(get_db
 
 
 @router.put("/{contact_id}", response_model=ContactResponse)
-async def update_contact(contact_id: int, contact_in: ContactCreate, current_user_id: int, db: Session = Depends(get_db)):
+async def update_contact(contact_id: int, contact_in: ContactCreate, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update an existing contact.
 
@@ -82,7 +83,7 @@ async def update_contact(contact_id: int, contact_in: ContactCreate, current_use
 
 
 @router.delete("/{contact_id}")
-async def delete_contact(contact_id: int, current_user_id: int, db: Session = Depends(get_db)):
+async def delete_contact(contact_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Delete a contact.
 

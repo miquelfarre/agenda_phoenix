@@ -325,3 +325,43 @@ def check_user_not_public(user_id: int, db: Session, action_description: str = "
             status_code=403,
             detail=f"Public users cannot {action_description}. Only private users can perform this action."
         )
+
+
+def handle_recurring_event_rejection_cascade(db: Session, interaction: EventInteraction, db_event: Event) -> None:
+    """
+    Handle cascade rejection logic for recurring events.
+
+    When a user rejects an invitation to a base recurring event, automatically reject
+    all pending invitations to instance events of that recurring event.
+
+    Args:
+        db: Database session
+        interaction: The event interaction being updated
+        db_event: The event associated with the interaction
+    """
+    # Only cascade if it's a recurring event invitation being rejected
+    if not (db_event.event_type == "recurring" and
+            interaction.interaction_type == "invited" and
+            interaction.status == "rejected"):
+        return
+
+    # Import here to avoid circular imports
+    from crud import event_interaction, recurring_config, event
+
+    # Find the recurring config for this event
+    config = recurring_config.get_by_event(db, event_id=db_event.id)
+
+    if not config:
+        return
+
+    # Find all instance events of this recurring event
+    instance_events = event.get_instances_by_parent_config(db, parent_config_id=config.id)
+    instance_event_ids = [e.id for e in instance_events]
+
+    if instance_event_ids:
+        # Update all pending invitations to these instances to 'rejected'
+        event_interaction.bulk_reject_pending_instances(
+            db,
+            instance_event_ids=instance_event_ids,
+            user_id=interaction.user_id
+        )

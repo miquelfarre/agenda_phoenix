@@ -10,8 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from auth import get_current_user_id
-from crud import event, event_interaction, recurring_config, user
-from dependencies import check_user_not_banned, check_user_not_public, check_users_not_blocked, get_db, is_event_owner_or_admin
+from crud import event, event_interaction, user
+from dependencies import check_user_not_banned, check_user_not_public, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade, is_event_owner_or_admin
 from models import EventInteraction
 from schemas import EventInteractionBase, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventInteractionWithEventResponse
 
@@ -244,21 +244,9 @@ async def patch_interaction(
     db.commit()
     db.refresh(db_interaction)
 
-    # Cascade rejection logic: if rejecting a base recurring event invitation
-    if db_event and db_event.event_type == "recurring" and db_interaction.interaction_type == "invited" and db_interaction.status == "rejected":
-
-        # Find the recurring config for this event
-        config = recurring_config.get_by_event(db, event_id=db_event.id)
-
-        if config:
-            # Find all instance events of this recurring event
-            instance_events = event.get_instances_by_parent_config(db, parent_config_id=config.id)
-
-            instance_event_ids = [e.id for e in instance_events]
-
-            if instance_event_ids:
-                # Update all pending invitations to these instances to 'rejected'
-                event_interaction.bulk_reject_pending_instances(db, instance_event_ids=instance_event_ids, user_id=db_interaction.user_id)
+    # Handle cascade rejection logic for recurring events
+    if db_event:
+        handle_recurring_event_rejection_cascade(db, db_interaction, db_event)
 
     return db_interaction
 

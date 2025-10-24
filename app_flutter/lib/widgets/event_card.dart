@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/event.dart';
-import '../models/event_interaction.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
@@ -30,19 +29,8 @@ class EventCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
 
-    final interactionsAsync = ref.watch(eventInteractionsProvider);
-    EventInteraction? interaction;
-    if (event.id != null && interactionsAsync.value != null) {
-      try {
-        interaction = interactionsAsync.value!.firstWhere(
-          (i) => i.eventId == event.id,
-        );
-      } catch (e) {
-        interaction = null;
-      }
-    }
-
-    final participationStatus = interaction?.participationStatus;
+    // Use interaction data from event (from backend) instead of Hive
+    final participationStatus = event.interactionStatus;
 
     final effectiveConfig = participationStatus != null
         ? config.copyWith(
@@ -69,7 +57,7 @@ class EventCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(context, l10n, effectiveConfig, ref, interaction),
+            _buildHeader(context, l10n, effectiveConfig, ref),
 
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -89,7 +77,6 @@ class EventCard extends ConsumerWidget {
                   context,
                   ref,
                   effectiveConfig,
-                  interaction,
                 ),
               ],
             ),
@@ -106,16 +93,25 @@ class EventCard extends ConsumerWidget {
     AppLocalizations l10n,
     EventCardConfig config,
     WidgetRef ref,
-    EventInteraction? interaction,
   ) {
     final List<Widget> widgets = [];
 
     if (config.showInvitationStatus &&
         config.invitationStatus != null &&
         config.invitationStatus!.toLowerCase() == AppConstants.statusPending) {
+      // Get inviter name from backend data if available
       String inviterText = '';
-      if (interaction?.inviter != null) {
-        inviterText = ' • ${interaction!.inviter!.displayName}';
+      if (event.invitedByUserId != null) {
+        // Find inviter name in attendees list
+        final inviterName = event.attendees
+            .firstWhere(
+              (a) => a is Map && a['id'] == event.invitedByUserId,
+              orElse: () => null,
+            )
+            ?['name'];
+        if (inviterName != null) {
+          inviterText = ' • $inviterName';
+        }
       }
 
       widgets.add(
@@ -188,19 +184,23 @@ class EventCard extends ConsumerWidget {
   Widget buildAttendeesRow(BuildContext context, WidgetRef ref) {
     final currentUserId = ConfigService.instance.currentUserId;
 
-    final List<User> attendeeUsers = [];
+    // Parse attendees from both User objects and Maps
+    final List<Map<String, dynamic>> attendeeData = [];
     for (final a in event.attendees) {
       if (a is User) {
-        attendeeUsers.add(a);
+        attendeeData.add({
+          'id': a.id,
+          'name': a.fullName,
+          'profile_picture': a.profilePicture,
+        });
       } else if (a is Map<String, dynamic>) {
-        try {
-          attendeeUsers.add(User.fromJson(a));
-        } catch (_) {}
+        attendeeData.add(a);
       }
     }
 
-    final otherAttendees = attendeeUsers
-        .where((u) => u.id != currentUserId)
+    // Filter out current user
+    final otherAttendees = attendeeData
+        .where((a) => a['id'] != currentUserId)
         .toList();
 
     if (otherAttendees.isEmpty) return const SizedBox.shrink();
@@ -223,9 +223,10 @@ class EventCard extends ConsumerWidget {
             child: Wrap(
               spacing: 6,
               runSpacing: 4,
-              children: otherAttendees.take(6).map((u) {
-                final initials = (u.fullName ?? '').trim().isNotEmpty
-                    ? u.fullName!
+              children: otherAttendees.take(6).map((a) {
+                final name = (a['name'] as String?) ?? '';
+                final initials = name.trim().isNotEmpty
+                    ? name
                           .trim()
                           .split(RegExp(r"\s+"))
                           .first[0]
@@ -261,7 +262,6 @@ class EventCard extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     EventCardConfig config,
-    dynamic interaction,
   ) {
     final currentUserId = ConfigService.instance.currentUserId;
     final isOwner = event.ownerId == currentUserId;
@@ -295,11 +295,11 @@ class EventCard extends ConsumerWidget {
       );
     }
 
-    if (interaction != null && interaction.wasInvited) {
-      final isCurrentlyAccepted = interaction.isAccepted;
-      final isCurrentlyDeclined = interaction.participationStatus == 'declined';
-      final isDeclinedNotAttending =
-          isCurrentlyDeclined && (interaction.isAttending == false);
+    // Show accept/reject buttons for pending invitations
+    if (event.wasInvited && event.interactionStatus == 'pending') {
+      final isCurrentlyAccepted = event.interactionStatus == 'accepted';
+      final isCurrentlyDeclined = event.interactionStatus == 'rejected';
+      final isDeclinedNotAttending = isCurrentlyDeclined;
 
       return Row(
         mainAxisSize: MainAxisSize.min,

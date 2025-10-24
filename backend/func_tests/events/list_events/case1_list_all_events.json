@@ -25,8 +25,8 @@
       },
       {
         "id": 2,
-        "name": "Reuni\u00f3n de trabajo",
-        "description": "Reuni\u00f3n semanal",
+        "name": "Reunión de trabajo",
+        "description": "Reunión semanal",
         "start_date": "2025-11-16T10:00:00",
         "event_type": "regular",
         "owner_id": 2
@@ -55,15 +55,21 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": null,
+        "owner_name": null,
+        "owner_profile_picture": null,
         "is_owner_public": null,
         "can_subscribe_to_owner": null,
         "is_subscribed_to_owner": null,
         "owner_upcoming_events": null,
+        "calendar_name": null,
+        "calendar_color": null,
+        "is_birthday": null,
+        "attendees": null,
         "invitation_stats": null
       },
       {
-        "name": "Reuni\u00f3n de trabajo",
-        "description": "Reuni\u00f3n semanal",
+        "name": "Reunión de trabajo",
+        "description": "Reunión semanal",
         "start_date": "{{TIMESTAMP}}",
         "event_type": "regular",
         "id": "{{ID}}",
@@ -73,10 +79,16 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": null,
+        "owner_name": null,
+        "owner_profile_picture": null,
         "is_owner_public": null,
         "can_subscribe_to_owner": null,
         "is_subscribed_to_owner": null,
         "owner_upcoming_events": null,
+        "calendar_name": null,
+        "calendar_color": null,
+        "is_birthday": null,
+        "attendees": null,
         "invitation_stats": null
       }
     ]

@@ -50,6 +50,10 @@ def test_db(test_engine):
         db.close()
 
 
+# Shared context for auth_user_id across requests
+_test_auth_context = {"user_id": None}
+
+
 @pytest.fixture
 def client(test_db, monkeypatch, request):
     """Cliente HTTP de test con TestClient de FastAPI"""
@@ -64,16 +68,16 @@ def client(test_db, monkeypatch, request):
     # Mock JWT authentication - returns user_id from test request context
     # Tests can specify auth_user_id in the request to set the authenticated user
     def mock_get_current_user_id():
-        # Get auth_user_id from test context if available
-        if hasattr(request, '_auth_user_id'):
-            return request._auth_user_id
+        # Get auth_user_id from shared context if available
+        if _test_auth_context["user_id"] is not None:
+            return _test_auth_context["user_id"]
         # Default to user 1 if not specified
         return 1
 
     # Mock optional JWT authentication - same as above
     def mock_get_current_user_id_optional():
-        if hasattr(request, '_auth_user_id'):
-            return request._auth_user_id
+        if _test_auth_context["user_id"] is not None:
+            return _test_auth_context["user_id"]
         return None
 
     # Mock the init_database function to do nothing during tests
@@ -91,6 +95,10 @@ def client(test_db, monkeypatch, request):
     app.dependency_overrides[get_current_user_id_optional] = mock_get_current_user_id_optional
 
     with TestClient(app, raise_server_exceptions=True) as test_client:
+        # Store reference to shared context in client for test access
+        test_client._auth_context = _test_auth_context
         yield test_client
 
+    # Clear context after test
+    _test_auth_context["user_id"] = None
     app.dependency_overrides.clear()

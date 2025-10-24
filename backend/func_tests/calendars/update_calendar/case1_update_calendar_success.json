@@ -1,11 +1,11 @@
 {
   "name": "Update calendar successfully",
-  "description": "Actualizar un calendario existente con \u00e9xito",
+  "description": "Actualizar un calendario existente con éxito",
   "setup": {
     "users": [
       {
         "id": 1,
-        "name": "Roberto D\u00edaz",
+        "name": "Roberto Díaz",
         "phone": "+34600888999"
       }
     ],
@@ -34,6 +34,7 @@
     "body": {
       "name": "Calendario Actualizado",
       "start_date": "{{TIMESTAMP}}",
+      "end_date": null,
       "id": "{{ID}}",
       "owner_id": "{{ID}}",
       "created_at": "{{TIMESTAMP}}",

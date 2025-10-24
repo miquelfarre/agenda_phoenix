@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from auth import get_current_user_id, get_current_user_id_optional
 from crud import calendar_membership, contact, event, event_interaction, recurring_config, user, user_block
 from dependencies import check_user_not_banned, get_db
+import models
 from models import EventInteraction
 from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserPublicStats, UserResponse
 
@@ -349,6 +350,66 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         return []
 
     # ============================================================
+    # 3.6. FETCH ENRICHMENT DATA (owners, calendars, attendees)
+    # ============================================================
+    # Get unique owner IDs and calendar IDs
+    owner_ids = list(set(e.owner_id for e in events))
+    calendar_ids = list(set(e.calendar_id for e in events if e.calendar_id))
+
+    # Fetch owner info (name, is_public, profile_picture)
+    owner_info = {}  # owner_id -> {name, is_public, profile_picture}
+    if owner_ids:
+        owners_query = db.query(models.User, models.Contact).join(
+            models.Contact, models.User.contact_id == models.Contact.id, isouter=True
+        ).filter(models.User.id.in_(owner_ids)).all()
+
+        for user_obj, contact_obj in owners_query:
+            owner_info[user_obj.id] = {
+                "name": contact_obj.name if contact_obj else None,
+                "is_public": user_obj.is_public,
+                "profile_picture": user_obj.profile_picture_url
+            }
+
+    # Fetch calendar info (name, color) - assuming calendars table has these fields
+    calendar_info = {}  # calendar_id -> {name, color}
+    if calendar_ids:
+        calendars_query = db.query(models.Calendar).filter(
+            models.Calendar.id.in_(calendar_ids)
+        ).all()
+
+        for cal in calendars_query:
+            calendar_info[cal.id] = {
+                "name": cal.name,
+                "color": getattr(cal, 'color', None) if hasattr(cal, 'color') else None
+            }
+
+    # Fetch attendees for all events (users with accepted interactions)
+    event_ids = [e.id for e in events]
+    attendees_map = {}  # event_id -> [user_dict]
+    if event_ids:
+        attendees_query = db.query(
+            models.EventInteraction.event_id,
+            models.User,
+            models.Contact
+        ).join(
+            models.User, models.EventInteraction.user_id == models.User.id
+        ).join(
+            models.Contact, models.User.contact_id == models.Contact.id, isouter=True
+        ).filter(
+            models.EventInteraction.event_id.in_(event_ids),
+            models.EventInteraction.status == "accepted"
+        ).all()
+
+        for event_id, user_obj, contact_obj in attendees_query:
+            if event_id not in attendees_map:
+                attendees_map[event_id] = []
+            attendees_map[event_id].append({
+                "id": user_obj.id,
+                "name": contact_obj.name if contact_obj else None,
+                "profile_picture": user_obj.profile_picture_url
+            })
+
+    # ============================================================
     # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
     # ============================================================
     # Get all recurring event IDs in one go
@@ -437,6 +498,19 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     for ev in visible_events:
         rounded_start = round_to_5min(ev.start_date)
 
+        # Get owner info
+        owner = owner_info.get(ev.owner_id, {})
+
+        # Get calendar info
+        calendar = calendar_info.get(ev.calendar_id, {}) if ev.calendar_id else {}
+
+        # Determine if birthday (check calendar name or event name)
+        is_birthday = False
+        if calendar.get("name"):
+            is_birthday = "cumpleaños" in calendar["name"].lower() or "birthday" in calendar["name"].lower()
+        if not is_birthday and ev.name:
+            is_birthday = "cumpleaños" in ev.name.lower() or "birthday" in ev.name.lower()
+
         event_dict = {
             "id": ev.id,
             "name": ev.name,
@@ -449,6 +523,17 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
             "created_at": ev.created_at.isoformat(),
             "updated_at": ev.updated_at.isoformat(),
             "interaction": user_interactions.get(ev.id),
+            # Owner info
+            "owner_name": owner.get("name"),
+            "owner_profile_picture": owner.get("profile_picture"),
+            "is_owner_public": owner.get("is_public"),
+            # Calendar info
+            "calendar_name": calendar.get("name"),
+            "calendar_color": calendar.get("color"),
+            # Event characteristics
+            "is_birthday": is_birthday,
+            # Attendees
+            "attendees": attendees_map.get(ev.id, []),
         }
         result.append(event_dict)
 

@@ -424,7 +424,9 @@ def test_snapshot_match(test_id, test_path, test_data, client, test_db, request)
 
     # Set auth_user_id if specified in test JSON
     if "auth_user_id" in req:
-        request._auth_user_id = req["auth_user_id"]
+        client._auth_context["user_id"] = req["auth_user_id"]
+    else:
+        client._auth_context["user_id"] = None
 
     if method == "post":
         response = client.post(endpoint, json=body)

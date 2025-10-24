@@ -138,11 +138,20 @@ class EventResponse(EventBase):
     created_at: datetime
     updated_at: datetime
     interaction: Optional[dict] = None  # User's interaction with this event (type, status, role) - only for /users/{id}/events
-    # Public owner fields (only when owner is public user)
+    # Owner info
+    owner_name: Optional[str] = None  # Full name of event owner
+    owner_profile_picture: Optional[str] = None  # Profile picture URL of owner
     is_owner_public: Optional[bool] = None  # True if event owner is a public user
     can_subscribe_to_owner: Optional[bool] = None  # True if current user can subscribe to owner
     is_subscribed_to_owner: Optional[bool] = None  # True if current user is already subscribed to owner
     owner_upcoming_events: Optional[List[UpcomingEventSummary]] = None  # Next 10 events from public owner
+    # Calendar info
+    calendar_name: Optional[str] = None  # Name of calendar this event belongs to
+    calendar_color: Optional[str] = None  # Color hex code for calendar
+    # Event characteristics
+    is_birthday: Optional[bool] = None  # True if this is a birthday event
+    # Attendees (users who accepted invitation or are members/admins)
+    attendees: Optional[List[dict]] = None  # List of attendee user objects
     # Invitation stats (only when current user is owner/admin)
     invitation_stats: Optional[InvitationStats] = None  # Statistics about invitations to this event
 

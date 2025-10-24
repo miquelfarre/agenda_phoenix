@@ -67,10 +67,16 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": null,
-        "is_owner_public": null,
+        "owner_name": "Alice",
+        "owner_profile_picture": null,
+        "is_owner_public": false,
         "can_subscribe_to_owner": null,
         "is_subscribed_to_owner": null,
         "owner_upcoming_events": null,
+        "calendar_name": null,
+        "calendar_color": null,
+        "is_birthday": false,
+        "attendees": [],
         "invitation_stats": null
       },
       {
@@ -85,10 +91,16 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": null,
-        "is_owner_public": null,
+        "owner_name": "Alice",
+        "owner_profile_picture": null,
+        "is_owner_public": false,
         "can_subscribe_to_owner": null,
         "is_subscribed_to_owner": null,
         "owner_upcoming_events": null,
+        "calendar_name": null,
+        "calendar_color": null,
+        "is_birthday": false,
+        "attendees": [],
         "invitation_stats": null
       }
     ]

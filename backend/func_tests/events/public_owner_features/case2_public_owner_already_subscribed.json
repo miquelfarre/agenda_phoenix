@@ -51,17 +51,19 @@
   "expected": {
     "status_code": 200,
     "body": {
-      "id": "{{ID}}",
       "name": "Barcelona vs Real Madrid",
       "description": null,
       "start_date": "{{TIMESTAMP}}",
       "event_type": "regular",
+      "id": "{{ID}}",
       "owner_id": "{{ID}}",
       "calendar_id": null,
       "parent_recurring_event_id": null,
       "created_at": "{{TIMESTAMP}}",
       "updated_at": "{{TIMESTAMP}}",
       "interaction": null,
+      "owner_name": null,
+      "owner_profile_picture": null,
       "is_owner_public": true,
       "can_subscribe_to_owner": false,
       "is_subscribed_to_owner": true,
@@ -79,6 +81,10 @@
           "event_type": "regular"
         }
       ],
+      "calendar_name": null,
+      "calendar_color": null,
+      "is_birthday": null,
+      "attendees": null,
       "invitation_stats": null
     }
   }
