@@ -35,8 +35,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get anonymousUser => 'Anonymous';
 
   @override
-  String get manageBlockedUsersDescription =>
-      'Manage users you have blocked from contacting you';
+  String get manageBlockedUsersDescription => 'Manage users you have blocked from contacting you';
 
   @override
   String get userNotLoggedIn => 'User not logged in';
@@ -306,15 +305,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectionError => 'Connection error';
 
   @override
-  String get connectionErrorCheckInternet =>
-      'Connection error. Check your internet.';
+  String get connectionErrorCheckInternet => 'Connection error. Check your internet.';
 
   @override
   String get unexpectedError => 'Unexpected error occurred';
 
   @override
-  String get operationTookTooLong =>
-      'Operation took too long. Please try again.';
+  String get operationTookTooLong => 'Operation took too long. Please try again.';
 
   @override
   String get dataFormatError => 'Data format error. Please try again.';
@@ -421,8 +418,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unsavedChanges => 'You have unsaved changes';
 
   @override
-  String get unsavedChangesMessage =>
-      'Are you sure you want to leave without saving?';
+  String get unsavedChangesMessage => 'Are you sure you want to leave without saving?';
 
   @override
   String get confirmLeave => 'Confirm Leave';
@@ -458,8 +454,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customMessageOptional => 'Custom message (optional)';
 
   @override
-  String get writeAdditionalMessage =>
-      'Write an additional message for users...';
+  String get writeAdditionalMessage => 'Write an additional message for users...';
 
   @override
   String get unknownUser => 'Unknown User';
@@ -531,12 +526,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinEvent => 'Join Event';
 
   @override
-  String get acceptEventButRejectInvitation =>
-      'Accept event but reject invitation';
+  String get acceptEventButRejectInvitation => 'Accept event but reject invitation';
 
   @override
-  String get acceptEventButRejectInvitationAck =>
-      'You accepted the event but rejected the invitation';
+  String get acceptEventButRejectInvitationAck => 'You accepted the event but rejected the invitation';
 
   @override
   String get leaveEvent => 'Leave Event';
@@ -569,22 +562,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createRecurringEventQuestion => 'Create recurring event?';
 
   @override
-  String get offlineSaveMessage =>
-      'Your changes will be saved offline and synced when you are online.';
+  String get offlineSaveMessage => 'Your changes will be saved offline and synced when you are online.';
 
   @override
   String get onlineSaveMessage => 'Your changes have been saved.';
 
   @override
-  String get offlineEventCreationMessage =>
-      'The event will be saved locally and created on the server automatically when you have connection.';
+  String get offlineEventCreationMessage => 'The event will be saved locally and created on the server automatically when you have connection.';
 
   @override
   String get notifyChanges => 'Notify Changes';
 
   @override
-  String get sendChangesNotificationMessage =>
-      'Send a notification to all users who have this event informing them about its changes.';
+  String get sendChangesNotificationMessage => 'Send a notification to all users who have this event informing them about its changes.';
 
   @override
   String get utc => 'UTC';
@@ -676,8 +666,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteFromGroup => 'Remove from group';
 
   @override
-  String get noPermissionsToManageMember =>
-      'You don\'t have permissions to manage this member';
+  String get noPermissionsToManageMember => 'You don\'t have permissions to manage this member';
 
   @override
   String confirmRemoveFromGroup(String displayName) {
@@ -1038,8 +1027,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncWhenOnline => 'Will sync when online';
 
   @override
-  String get dataWillSyncSoon =>
-      'Your data will sync when connection is restored';
+  String get dataWillSyncSoon => 'Your data will sync when connection is restored';
 
   @override
   String get today => 'Today';
@@ -1152,8 +1140,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noContactsMessage => 'No contacts found';
 
   @override
-  String get noNotificationsMessage =>
-      'You\'re all caught up! No notifications.';
+  String get noNotificationsMessage => 'You\'re all caught up! No notifications.';
 
   @override
   String get noInvitationsMessage => 'No invitations at this time';
@@ -1282,8 +1269,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permissionsNeeded => 'Permissions needed';
 
   @override
-  String get contactsPermissionMessage =>
-      'EventyPop can find friends who already use the app by accessing your contacts.';
+  String get contactsPermissionMessage => 'EventyPop can find friends who already use the app by accessing your contacts.';
 
   @override
   String get yourContactsStayPrivate => 'Your contacts stay private';
@@ -1295,8 +1281,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goToSettings => 'Go to Settings';
 
   @override
-  String get contactsPermissionSettingsMessage =>
-      'To find friends who use EventyPop, we need access to your contacts.\n\nGo to Settings > EventyPop > Contacts and enable it.';
+  String get contactsPermissionSettingsMessage => 'To find friends who use EventyPop, we need access to your contacts.\n\nGo to Settings > EventyPop > Contacts and enable it.';
 
   @override
   String get notNow => 'Not now';
@@ -1327,8 +1312,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteOnlyThisInstance => 'Only this instance';
 
   @override
-  String get deleteOnlyThisInstanceSubtitle =>
-      'Delete only this specific event';
+  String get deleteOnlyThisInstanceSubtitle => 'Delete only this specific event';
 
   @override
   String get deleteEntireSeries => 'Entire recurring series';
@@ -1477,20 +1461,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessDeniedTitle => 'Access Denied';
 
   @override
-  String get accessDeniedMessagePrimary =>
-      'This application is available for private users only.';
+  String get accessDeniedMessagePrimary => 'This application is available for private users only.';
 
   @override
-  String get accessDeniedMessageSecondary =>
-      'Public users do not have access to this mobile application.';
+  String get accessDeniedMessageSecondary => 'Public users do not have access to this mobile application.';
 
   @override
-  String get contactAdminIfError =>
-      'Contact the administrator if you believe this is an error.';
+  String get contactAdminIfError => 'Contact the administrator if you believe this is an error.';
 
   @override
-  String get invitationCancelledSuccessfully =>
-      'Invitation cancelled successfully.';
+  String get invitationCancelledSuccessfully => 'Invitation cancelled successfully.';
 
   @override
   String errorCancellingInvitation(String errorMessage) {
@@ -1522,8 +1502,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noFriendsFoundWithName => 'No friends found with that name';
 
   @override
-  String get addAtLeastOnePattern =>
-      'Please add at least one repetition pattern.';
+  String get addAtLeastOnePattern => 'Please add at least one repetition pattern.';
 
   @override
   String get startDateBeforeEndDate => 'Start date must be before end date.';
@@ -1597,8 +1576,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorInviting => 'Error inviting.';
 
   @override
-  String get allGroupMembersAlreadyInvited =>
-      'All group members already invited.';
+  String get allGroupMembersAlreadyInvited => 'All group members already invited.';
 
   @override
   String get alreadyInvited => 'Already Invited';
@@ -1641,22 +1619,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changeNumber => 'Change Number';
 
   @override
-  String get automaticVerificationError =>
-      'Automatic verification failed. Please enter the code manually.';
+  String get automaticVerificationError => 'Automatic verification failed. Please enter the code manually.';
 
   @override
   String get verificationError => 'Verification Error';
 
   @override
-  String get phoneAuthSimulatorError =>
-      'Phone authentication is not supported on iOS simulator. Please use a physical device or Android emulator.';
+  String get phoneAuthSimulatorError => 'Phone authentication is not supported on iOS simulator. Please use a physical device or Android emulator.';
 
   @override
   String get tooManyRequests => 'Too many requests. Please try again later.';
 
   @override
-  String get operationNotAllowed =>
-      'Phone number sign-in is not enabled. Please enable it in the authentication console.';
+  String get operationNotAllowed => 'Phone number sign-in is not enabled. Please enable it in the authentication console.';
 
   @override
   String smsCodeSentTo(String phoneNumber) {
@@ -1685,12 +1660,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iosSimulatorDetected => 'iOS Simulator Detected';
 
   @override
-  String get phoneAuthLimitationMessage =>
-      'Phone authentication is not fully supported on iOS simulators. For full functionality, please use a physical iOS device, an Android emulator, or the web version.';
+  String get phoneAuthLimitationMessage => 'Phone authentication is not fully supported on iOS simulators. For full functionality, please use a physical iOS device, an Android emulator, or the web version.';
 
   @override
-  String get testPhoneAuthInstructions =>
-      'For testing purposes on iOS simulator, you can use a test phone number and verification code configured in the authentication console.';
+  String get testPhoneAuthInstructions => 'For testing purposes on iOS simulator, you can use a test phone number and verification code configured in the authentication console.';
 
   @override
   String get understood => 'Understood';
@@ -1719,8 +1692,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get contactsPermissionInstructions =>
-      'To find friends who use EventyPop, we need access to your contacts. Please grant permission in settings.';
+  String get contactsPermissionInstructions => 'To find friends who use EventyPop, we need access to your contacts. Please grant permission in settings.';
 
   @override
   String get requestPermissions => 'Request Permissions';
@@ -1738,8 +1710,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openAppSettings => 'Open App Settings';
 
   @override
-  String get syncInfoMessage =>
-      'Events, subscriptions, notifications, and invitations are automatically synchronized when the application starts and in the background to keep the information updated.';
+  String get syncInfoMessage => 'Events, subscriptions, notifications, and invitations are automatically synchronized when the application starts and in the background to keep the information updated.';
 
   @override
   String get settingsUpdated => 'Settings updated';
@@ -1919,12 +1890,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteNote => 'Delete Note';
 
   @override
-  String get deleteNoteConfirmation =>
-      'Are you sure you want to delete this personal note?';
+  String get deleteNoteConfirmation => 'Are you sure you want to delete this personal note?';
 
   @override
-  String get privateNoteHint =>
-      'Add a private note for this event. Only you will be able to see it.';
+  String get privateNoteHint => 'Add a private note for this event. Only you will be able to see it.';
 
   @override
   String get noUsersFound => 'No users found.';
@@ -2123,19 +2092,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deletePattern => 'Delete Pattern';
 
   @override
-  String get confirmDeletePattern =>
-      'Are you sure you want to delete this pattern?';
+  String get confirmDeletePattern => 'Are you sure you want to delete this pattern?';
 
   @override
-  String get recurringEventHelperText =>
-      'Toggle to create an event that repeats';
+  String get recurringEventHelperText => 'Toggle to create an event that repeats';
 
   @override
   String get endDateRequired => 'End date is required for recurring events';
 
   @override
-  String get atLeastOnePatternRequired =>
-      'At least one recurrence pattern is required';
+  String get atLeastOnePatternRequired => 'At least one recurrence pattern is required';
 
   @override
   String get eventCreatedSuccessfully => 'Event created successfully';
@@ -2310,12 +2276,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cannotSyncWhileOffline => 'Cannot sync while offline';
 
   @override
-  String get timezoneServiceNotInitialized =>
-      'TimezoneService not initialized. Call initialize() first.';
+  String get timezoneServiceNotInitialized => 'TimezoneService not initialized. Call initialize() first.';
 
   @override
-  String get notificationServiceNotInitialized =>
-      'NotificationService not initialized';
+  String get notificationServiceNotInitialized => 'NotificationService not initialized';
 
   @override
   String get pendingInvitationBanner => 'Pending invitation';
@@ -2393,8 +2357,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelEvent => 'Cancel Event';
 
   @override
-  String get confirmCancelEvent =>
-      'Are you sure you want to cancel this event?';
+  String get confirmCancelEvent => 'Are you sure you want to cancel this event?';
 
   @override
   String get doNotCancel => 'Do Not Cancel';
@@ -2409,8 +2372,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeFromList => 'Remove from List';
 
   @override
-  String get confirmRemoveFromList =>
-      'Are you sure you want to remove this event from your list?';
+  String get confirmRemoveFromList => 'Are you sure you want to remove this event from your list?';
 
   @override
   String get eventRemovedFromList => 'Event removed from list';
@@ -2425,8 +2387,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invitationPending => 'Pending';
 
   @override
-  String get acceptedEventButDeclinedInvitation =>
-      'Accepted event / Declined invitation';
+  String get acceptedEventButDeclinedInvitation => 'Accepted event / Declined invitation';
 
   @override
   String confirmDeleteGroup(String groupName) {
@@ -2437,8 +2398,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToDeleteGroup => 'Failed to delete group';
 
   @override
-  String get resolveAmbiguousReconciliation =>
-      'Resolve ambiguous reconciliation';
+  String get resolveAmbiguousReconciliation => 'Resolve ambiguous reconciliation';
 
   @override
   String get confirmResolve => 'Confirm resolve';
@@ -2497,8 +2457,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get titleIsRequired => 'Title is required';
 
   @override
-  String get endDateMustBeAfterStartDate =>
-      'End date/time must be after start date/time';
+  String get endDateMustBeAfterStartDate => 'End date/time must be after start date/time';
 
   @override
   String get failedToSaveEvent => 'Failed to save event';
@@ -2519,8 +2478,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onlyEventOwnerCanDelete => 'Only event owner can delete';
 
   @override
-  String get onlyEventOwnerCanInviteUsers =>
-      'Only event owner can invite users';
+  String get onlyEventOwnerCanInviteUsers => 'Only event owner can invite users';
 
   @override
   String get failedToToggleSubscription => 'Failed to toggle subscription';
@@ -2550,8 +2508,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToGrantAdminPermission => 'Failed to grant admin permission';
 
   @override
-  String get failedToRemoveAdminPermission =>
-      'Failed to remove admin permission';
+  String get failedToRemoveAdminPermission => 'Failed to remove admin permission';
 
   @override
   String get failedToCreateContact => 'Failed to create contact';
@@ -2608,26 +2565,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToFetchInvitationsHash => 'Failed to fetch invitations hash';
 
   @override
-  String get failedToFetchSubscriptionsHash =>
-      'Failed to fetch subscriptions hash';
+  String get failedToFetchSubscriptionsHash => 'Failed to fetch subscriptions hash';
 
   @override
-  String get failedToFetchNotificationsHash =>
-      'Failed to fetch notifications hash';
+  String get failedToFetchNotificationsHash => 'Failed to fetch notifications hash';
 
   @override
   String get failedToLeaveEvent => 'Failed to leave event';
 
   @override
-  String get failedToDeleteRecurringSeries =>
-      'Failed to delete recurring series';
+  String get failedToDeleteRecurringSeries => 'Failed to delete recurring series';
 
   @override
   String get failedToAddMemberToGroup => 'Failed to add member to group';
 
   @override
-  String get failedToRemoveMemberFromGroup =>
-      'Failed to remove member from group';
+  String get failedToRemoveMemberFromGroup => 'Failed to remove member from group';
 
   @override
   String get failedToAcceptNotification => 'Failed to accept notification';
@@ -2636,8 +2589,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToRejectNotification => 'Failed to reject notification';
 
   @override
-  String get failedToMarkNotificationAsSeen =>
-      'Failed to mark notification as seen';
+  String get failedToMarkNotificationAsSeen => 'Failed to mark notification as seen';
 
   @override
   String get failedToCreateSubscription => 'Failed to create subscription';
@@ -2646,8 +2598,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToDeleteSubscription => 'Failed to delete subscription';
 
   @override
-  String get failedToFetchEventInvitations =>
-      'Failed to fetch event invitations';
+  String get failedToFetchEventInvitations => 'Failed to fetch event invitations';
 
   @override
   String get failedToFetchUserGroups => 'Failed to fetch user groups';
@@ -2680,8 +2631,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToUpdateFCMToken => 'Failed to update FCM token';
 
   @override
-  String get authUserHasNoPhoneNumber =>
-      'Authenticated user has no phone number';
+  String get authUserHasNoPhoneNumber => 'Authenticated user has no phone number';
 
   @override
   String eventsBy(String name) {
@@ -2746,8 +2696,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarColor => 'Calendar Color';
 
   @override
-  String get deleteAssociatedEvents =>
-      'Delete associated events when removing calendar';
+  String get deleteAssociatedEvents => 'Delete associated events when removing calendar';
 
   @override
   String get subscribeToCalendar => 'Subscribe';
@@ -2768,16 +2717,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarNameRequired => 'Calendar name is required';
 
   @override
-  String get calendarNameTooLong =>
-      'Calendar name must be 100 characters or less';
+  String get calendarNameTooLong => 'Calendar name must be 100 characters or less';
 
   @override
-  String get calendarDescriptionTooLong =>
-      'Description must be 500 characters or less';
+  String get calendarDescriptionTooLong => 'Description must be 500 characters or less';
 
   @override
-  String get noInternetCheckNetwork =>
-      'No internet connection. Please check your network and try again.';
+  String get noInternetCheckNetwork => 'No internet connection. Please check your network and try again.';
 
   @override
   String get requestTimedOut => 'Request timed out. Please try again.';
@@ -2789,12 +2735,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarNameExists => 'A calendar with this name already exists.';
 
   @override
-  String get noPermission =>
-      'You don\'t have permission to perform this action.';
+  String get noPermission => 'You don\'t have permission to perform this action.';
 
   @override
-  String get failedToCreateCalendar =>
-      'Failed to create calendar. Please try again.';
+  String get failedToCreateCalendar => 'Failed to create calendar. Please try again.';
 
   @override
   String get publicCalendar => 'Public Calendar';
@@ -2803,16 +2747,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get othersCanSearchAndSubscribe => 'Others can search and subscribe';
 
   @override
-  String get deleteEventsWithCalendar =>
-      'Delete events when this calendar is deleted';
+  String get deleteEventsWithCalendar => 'Delete events when this calendar is deleted';
 
   @override
-  String get confirmDeleteCalendarWithEvents =>
-      'This will delete the calendar and all associated events. This action cannot be undone.';
+  String get confirmDeleteCalendarWithEvents => 'This will delete the calendar and all associated events. This action cannot be undone.';
 
   @override
-  String get confirmDeleteCalendarKeepEvents =>
-      'This will delete the calendar but keep the events. This action cannot be undone.';
+  String get confirmDeleteCalendarKeepEvents => 'This will delete the calendar but keep the events. This action cannot be undone.';
 
   @override
   String get visibleToOthers => 'Visible to others';
