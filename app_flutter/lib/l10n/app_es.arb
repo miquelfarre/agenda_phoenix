@@ -199,6 +199,23 @@
   "formSubmittedSuccessfully": "Formulario enviado exitosamente",
   "failedToRefresh": "Error al actualizar",
 
+  "@_GREETINGS": {
+    "description": "Saludos y mensajes de bienvenida"
+  },
+  "hello": "Hola!",
+  "@hello": {
+    "description": "Saludo simple sin nombre"
+  },
+  "helloWithName": "Hola {name}!",
+  "@helloWithName": {
+    "description": "Saludo personalizado con nombre del usuario",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
   "@_SPLASH_SCREEN": {
     "description": "Mensajes de la pantalla de inicio"
   },

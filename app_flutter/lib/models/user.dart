@@ -41,16 +41,23 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Backend enriched response mapping:
+    // - 'username' (backend) -> 'instagramName' (Flutter)
+    // - 'contact_name' (backend) -> 'fullName' (Flutter)
+    // Also support legacy 'instagram_name' and 'full_name' if present
+    final instagramName = json['instagram_name'] as String? ?? json['username'] as String?;
+    final fullName = json['full_name'] as String? ?? json['contact_name'] as String?;
+
     return User(
       id: json['id'],
       firebaseUid: json['firebase_uid'],
-      phoneNumber: json['phone_number'],
-      instagramName: json['instagram_name'],
+      phoneNumber: json['phone_number'] ?? json['contact_phone'],
+      instagramName: instagramName,
       email: json['email'],
-      fullName: json['full_name'],
+      fullName: fullName,
       isPublic: json['is_public'] ?? false,
       isActive: json['is_active'] ?? true,
-      profilePicture: json['profile_picture'],
+      profilePicture: json['profile_picture'] ?? json['profile_picture_url'],
       isBanned: json['is_banned'] ?? false,
       lastSeen: json['last_seen'] != null
           ? (json['last_seen'] is String
@@ -93,7 +100,7 @@ class User {
   String get displayName {
     if (fullName?.isNotEmpty == true) return fullName!;
     if (instagramName?.isNotEmpty == true) return instagramName!;
-    return 'Usuario';
+    return '';
   }
 
   String? get displaySubtitle {

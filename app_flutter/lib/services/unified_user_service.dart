@@ -92,7 +92,7 @@ class UnifiedUserService {
         configService.currentUserId;
 
         final response = await ApiClientFactory.instance.get(
-          '/api/v1/users/me',
+          '/api/v1/users/me?enriched=true',
         );
         final user = User.fromJson(response);
 
@@ -115,9 +115,9 @@ class UnifiedUserService {
         );
       }
 
-      final response = await ApiClientFactory.instance.post(
-        '/api/v1/firebase-auth/verify-token',
-        body: {'id_token': idToken},
+      // Get user data with enriched contact information
+      final response = await ApiClientFactory.instance.get(
+        '/api/v1/users/me?enriched=true',
       );
 
       final user = User.fromJson(response);

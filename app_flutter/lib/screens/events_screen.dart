@@ -106,8 +106,13 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       }
 
       // Calculate filters
+      // My Events: events I own + events I'm participating in (invited/joined + accepted)
       final myEvents = eventItems
-          .where((e) => e.event.ownerId == userId)
+          .where((e) =>
+              e.event.ownerId == userId ||
+              (e.event.ownerId != userId &&
+                  (e.interactionType == 'invited' || e.interactionType == 'joined') &&
+                  e.invitationStatus == 'accepted'))
           .length;
       final invitations = eventItems
           .where(
@@ -258,20 +263,21 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     (state) => state.whenData((s) => s.currentUser),
                   ),
                 );
+                final l10n = context.l10n;
                 String greeting = authAsync.maybeWhen(
                   data: (user) {
                     final name = user?.displayName.trim();
                     return name != null && name.isNotEmpty
-                        ? 'Hello $name!'
-                        : 'Hello!';
+                        ? l10n.helloWithName(name)
+                        : l10n.hello;
                   },
                   loading: () {
-                    return 'Hello!';
+                    return l10n.hello;
                   },
                   error: (err, stack) {
-                    return 'Hello!';
+                    return l10n.hello;
                   },
-                  orElse: () => 'Hello!',
+                  orElse: () => l10n.hello,
                 );
                 return Align(
                   alignment: Alignment.centerLeft,
@@ -503,7 +509,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     switch (filter) {
       case 'my':
-        return items.where((item) => item.event.ownerId == userId).toList();
+        // My Events: events I own + events I'm participating in (invited/joined + accepted)
+        return items
+            .where((item) =>
+                item.event.ownerId == userId ||
+                (item.event.ownerId != userId &&
+                    (item.interactionType == 'invited' ||
+                        item.interactionType == 'joined') &&
+                    item.invitationStatus == 'accepted'))
+            .toList();
       case 'subscribed':
         return items
             .where((item) =>

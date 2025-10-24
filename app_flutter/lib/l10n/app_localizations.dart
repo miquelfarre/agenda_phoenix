@@ -95,6 +95,18 @@ abstract class AppLocalizations {
     Locale('es')
   ];
 
+  /// Simple greeting without name
+  ///
+  /// In en, this message translates to:
+  /// **'Hello!'**
+  String get hello;
+
+  /// Personalized greeting with user name
+  ///
+  /// In en, this message translates to:
+  /// **'Hello {name}!'**
+  String helloWithName(String name);
+
   /// The title of the application
   ///
   /// In en, this message translates to:

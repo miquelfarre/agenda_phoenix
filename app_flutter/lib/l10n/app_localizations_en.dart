@@ -9,6 +9,14 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get hello => 'Hello!';
+
+  @override
+  String helloWithName(String name) {
+    return 'Hello $name!';
+  }
+
+  @override
   String get appTitle => 'EventyPop';
 
   @override
