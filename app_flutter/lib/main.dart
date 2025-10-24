@@ -1,9 +1,7 @@
 import 'package:eventypop/app.dart';
 import 'package:eventypop/core/storage/hive_migration.dart';
-import 'package:eventypop/models/birthday_event_hive.dart';
 import 'package:eventypop/models/calendar_hive.dart';
 import 'package:eventypop/models/calendar_share_hive.dart';
-import 'package:eventypop/models/event_collection_hive.dart';
 import 'package:eventypop/models/event_hive.dart';
 import 'package:eventypop/models/event_interaction_hive.dart';
 import 'package:eventypop/models/event_note_hive.dart';
@@ -12,9 +10,7 @@ import 'package:eventypop/models/subscription_hive.dart';
 import 'package:eventypop/models/user_event_note_hive.dart';
 import 'package:eventypop/models/user_hive.dart';
 import 'package:eventypop/services/api_client.dart';
-import 'package:eventypop/services/birthday_service.dart';
 import 'package:eventypop/services/calendar_service.dart';
-import 'package:eventypop/services/collection_service.dart';
 import 'package:eventypop/services/config_service.dart';
 import 'package:eventypop/services/group_service.dart';
 import 'package:eventypop/services/sync_service.dart';
@@ -51,8 +47,6 @@ void main() async {
 
     Hive.registerAdapter(CalendarHiveAdapter());
     Hive.registerAdapter(CalendarShareHiveAdapter());
-    Hive.registerAdapter(BirthdayEventHiveAdapter());
-    Hive.registerAdapter(EventCollectionHiveAdapter());
     Hive.registerAdapter(EventInteractionHiveAdapter());
 
     try {
@@ -77,8 +71,6 @@ void main() async {
 
     await Hive.openBox<CalendarHive>('calendars');
     await Hive.openBox<CalendarShareHive>('calendar_shares');
-    await Hive.openBox<BirthdayEventHive>('birthday_events');
-    await Hive.openBox<EventCollectionHive>('event_collections');
     await Hive.openBox<EventInteractionHive>('event_interactions');
 
     await HiveMigration.initialize();
@@ -93,11 +85,7 @@ void main() async {
 
     await GroupService().initialize();
 
-    await BirthdayService().initialize();
-
     await CalendarService().initialize();
-
-    await CollectionService().initialize();
 
     const env = String.fromEnvironment(
       'FLUTTER_ENV',

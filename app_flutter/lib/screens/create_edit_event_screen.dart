@@ -108,7 +108,6 @@ class CreateEditEventScreenState
       setFieldValue('patterns', <RecurrencePattern>[]);
       setFieldValue('isBirthday', false);
       setFieldValue('calendarId', null);
-
     }
   }
 
@@ -141,7 +140,6 @@ class CreateEditEventScreenState
     }
 
     if (_isRecurringEvent) {
-
       if (_patterns.isEmpty) {
         setFieldError('patterns', l10n.addAtLeastOnePattern);
         return false;
@@ -287,7 +285,6 @@ class CreateEditEventScreenState
                     setFieldValue('isBirthday', false);
                     setFieldValue('calendarId', null);
                   }
-
                 } else {
                   setFieldValue('patterns', <RecurrencePattern>[]);
                 }
@@ -548,13 +545,11 @@ class CreateEditEventScreenState
                 setState(() {
                   setFieldValue('startDate', selection.selectedDate);
                 });
-
               },
             ),
           ],
         ),
       ),
-
 
       if (_isRecurringEvent) ...[
         const SizedBox(height: 24),

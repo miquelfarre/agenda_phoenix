@@ -45,8 +45,10 @@ class User {
     // - 'username' (backend) -> 'instagramName' (Flutter)
     // - 'contact_name' (backend) -> 'fullName' (Flutter)
     // Also support legacy 'instagram_name' and 'full_name' if present
-    final instagramName = json['instagram_name'] as String? ?? json['username'] as String?;
-    final fullName = json['full_name'] as String? ?? json['contact_name'] as String?;
+    final instagramName =
+        json['instagram_name'] as String? ?? json['username'] as String?;
+    final fullName =
+        json['full_name'] as String? ?? json['contact_name'] as String?;
 
     return User(
       id: json['id'],

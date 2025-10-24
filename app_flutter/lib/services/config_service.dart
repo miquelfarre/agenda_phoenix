@@ -2,7 +2,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/mixins/singleton_mixin.dart';
 import '../core/mixins/error_handling_mixin.dart';
 import '../utils/test_mode_validator.dart';
-import 'api_client.dart';
 
 class ConfigService with SingletonMixin, ErrorHandlingMixin {
   ConfigService._internal();

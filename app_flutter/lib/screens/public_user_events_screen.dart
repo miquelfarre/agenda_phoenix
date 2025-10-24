@@ -60,8 +60,9 @@ class _PublicUserEventsScreenState
     });
 
     try {
-      final userId = ConfigService.instance.currentUserId;
-      final eventsData = await ApiClient().fetchUserEvents(widget.publicUser.id);
+      final eventsData = await ApiClient().fetchUserEvents(
+        widget.publicUser.id,
+      );
       final events = eventsData.map((e) => Event.fromJson(e)).toList();
 
       // Check if user is subscribed by looking at interactions in events

@@ -219,8 +219,8 @@ class GroupService {
       );
 
       await ApiClientFactory.instance.post(
-        '/api/v1/groups/$groupId/members',
-        body: {'user_id': memberUserId},
+        '/api/v1/group_memberships',
+        body: {'group_id': groupId, 'user_id': memberUserId},
       );
 
       try {
@@ -264,8 +264,25 @@ class GroupService {
         'remove',
       );
 
+      // Get membership_id first
+      final memberships = await ApiClientFactory.instance.get(
+        '/api/v1/group_memberships',
+        queryParams: {
+          'group_id': groupId.toString(),
+          'user_id': memberUserId.toString(),
+        },
+      );
+
+      if (memberships is! List || memberships.isEmpty) {
+        throw exceptions.NotFoundException(
+          message:
+              'Membership not found for user $memberUserId in group $groupId',
+        );
+      }
+
+      final membershipId = memberships[0]['id'];
       await ApiClientFactory.instance.delete(
-        '/api/v1/groups/$groupId/members/$memberUserId',
+        '/api/v1/group_memberships/$membershipId',
       );
 
       try {
@@ -304,9 +321,24 @@ class GroupService {
         );
       }
 
-      await ApiClientFactory.instance.post(
-        '/api/v1/groups/$groupId/leave',
-        body: {'user_id': userId},
+      // Get membership_id first
+      final memberships = await ApiClientFactory.instance.get(
+        '/api/v1/group_memberships',
+        queryParams: {
+          'group_id': groupId.toString(),
+          'user_id': userId.toString(),
+        },
+      );
+
+      if (memberships is! List || memberships.isEmpty) {
+        throw exceptions.NotFoundException(
+          message: 'Membership not found for user $userId in group $groupId',
+        );
+      }
+
+      final membershipId = memberships[0]['id'];
+      await ApiClientFactory.instance.delete(
+        '/api/v1/group_memberships/$membershipId',
       );
 
       await SyncService.clearGroupCache(groupId);
@@ -336,8 +368,33 @@ class GroupService {
     required int grantedById,
   }) async {
     try {
+      // TODO: Backend needs PUT /group_memberships/{id} endpoint to update role
+      // For now, we need to delete and recreate the membership
+      final memberships = await ApiClientFactory.instance.get(
+        '/api/v1/group_memberships',
+        queryParams: {
+          'group_id': groupId.toString(),
+          'user_id': userId.toString(),
+        },
+      );
+
+      if (memberships is! List || memberships.isEmpty) {
+        throw exceptions.NotFoundException(
+          message: 'Membership not found for user $userId in group $groupId',
+        );
+      }
+
+      final membershipId = memberships[0]['id'];
+
+      // Delete current membership
+      await ApiClientFactory.instance.delete(
+        '/api/v1/group_memberships/$membershipId',
+      );
+
+      // Create new membership with admin role
       await ApiClientFactory.instance.post(
-        '/api/v1/groups/$groupId/admins/$userId',
+        '/api/v1/group_memberships',
+        body: {'group_id': groupId, 'user_id': userId, 'role': 'admin'},
       );
 
       try {
@@ -366,8 +423,33 @@ class GroupService {
     required int revokedById,
   }) async {
     try {
+      // TODO: Backend needs PUT /group_memberships/{id} endpoint to update role
+      // For now, we need to delete and recreate the membership
+      final memberships = await ApiClientFactory.instance.get(
+        '/api/v1/group_memberships',
+        queryParams: {
+          'group_id': groupId.toString(),
+          'user_id': userId.toString(),
+        },
+      );
+
+      if (memberships is! List || memberships.isEmpty) {
+        throw exceptions.NotFoundException(
+          message: 'Membership not found for user $userId in group $groupId',
+        );
+      }
+
+      final membershipId = memberships[0]['id'];
+
+      // Delete current membership
       await ApiClientFactory.instance.delete(
-        '/api/v1/groups/$groupId/admins/$userId',
+        '/api/v1/group_memberships/$membershipId',
+      );
+
+      // Create new membership with member role
+      await ApiClientFactory.instance.post(
+        '/api/v1/group_memberships',
+        body: {'group_id': groupId, 'user_id': userId, 'role': 'member'},
       );
 
       try {

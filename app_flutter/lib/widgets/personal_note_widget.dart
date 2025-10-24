@@ -81,9 +81,9 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
         return;
       }
 
-      await ApiClientFactory.instance.post(
-        '/api/v1/users/me/event-note',
-        body: {'event_id': _event.id!, 'note': note},
+      await ApiClientFactory.instance.patch(
+        '/api/v1/events/${_event.id}/interaction',
+        body: {'note': note},
       );
 
       if (mounted) {
@@ -124,8 +124,9 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
     _preventOverwrite = true;
 
     try {
-      await ApiClientFactory.instance.delete(
-        '/api/v1/users/me/event-note/${_event.id}',
+      await ApiClientFactory.instance.patch(
+        '/api/v1/events/${_event.id}/interaction',
+        body: {'note': null},
       );
 
       await ref.read(eventStateProvider.notifier).refresh();

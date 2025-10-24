@@ -44,8 +44,9 @@ class Event {
   final String? calendarColor;
   final bool? isBirthdayEvent;
   final List<dynamic>? attendeesList;
-  final Map<String, dynamic>? interactionData;  // Interaction data from backend
-  final String? personalNote;  // Personal note (local, different from interaction note)
+  final Map<String, dynamic>? interactionData; // Interaction data from backend
+  final String?
+  personalNote; // Personal note (local, different from interaction note)
   final String? clientTempId;
 
   const Event({
@@ -91,7 +92,8 @@ class Event {
   List<dynamic> get recurrencePatterns => [];
 
   // Interaction getters (from backend data)
-  String? get interactionType => interactionData?['interaction_type'] as String?;
+  String? get interactionType =>
+      interactionData?['interaction_type'] as String?;
   String? get interactionStatus => interactionData?['status'] as String?;
   String? get interactionRole => interactionData?['role'] as String?;
   int? get invitedByUserId => interactionData?['invited_by_user_id'] as int?;
@@ -101,8 +103,10 @@ class Event {
   // Convenience getters
   bool get wasInvited => interactionType == 'invited';
   bool get isInvitationPending => wasInvited && interactionStatus == 'pending';
-  bool get isInvitationAccepted => wasInvited && interactionStatus == 'accepted';
-  bool get isInvitationRejected => wasInvited && interactionStatus == 'rejected';
+  bool get isInvitationAccepted =>
+      wasInvited && interactionStatus == 'accepted';
+  bool get isInvitationRejected =>
+      wasInvited && interactionStatus == 'rejected';
   bool get isSubscribedEvent => interactionType == 'subscribed';
   bool get isJoinedEvent => interactionType == 'joined';
 

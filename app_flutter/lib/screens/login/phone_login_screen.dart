@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/supabase_auth_service.dart';
-import '../../services/auth_service.dart';
 import '../../services/config_service.dart';
+import '../../services/unified_user_service.dart';
+import '../../services/api_client.dart';
 import '../../services/country_service.dart';
 import '../../models/country.dart';
 import '../../widgets/pickers/country_picker.dart';
@@ -361,23 +362,29 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
   Future<void> _onAuthSuccess() async {
     try {
-      final idToken = await SupabaseAuthService.getCurrentUserToken();
-      if (idToken == null) {
+      // Get current user from Supabase authenticated session
+      final user = await UnifiedUserService.getCurrentUser();
+
+      if (user == null) {
         if (mounted && context.mounted) {
           final l10n = context.l10n;
           throw Exception(l10n.couldNotGetAuthToken);
         } else {
-          throw Exception('Could not get authentication token');
+          throw Exception('Could not get user after authentication');
         }
       }
 
-      final auth = AuthService();
-      final user = await auth.verifyTokenAndFetchUser(idToken);
-
       await ConfigService.instance.setCurrentUserId(user.id);
 
+      // Update user online status
       try {
-        await auth.updateUserOnlineStatus(user.id, true);
+        await ApiClientFactory.instance.put(
+          '/api/v1/users/${user.id}',
+          body: {
+            'is_online': true,
+            'last_seen': DateTime.now().toIso8601String(),
+          },
+        );
       } catch (e) {
         // Ignore error
       }

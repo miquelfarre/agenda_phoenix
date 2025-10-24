@@ -38,7 +38,6 @@ class ContactDetailScreen extends ConsumerStatefulWidget {
 
 class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     with WidgetsBindingObserver {
-  Map<String, dynamic>? _contactData;
   bool _isLoading = false;
   String? _error;
 
@@ -81,11 +80,14 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     });
 
     try {
-      final data = await ApiClient().fetchContact(widget.contact.id);
+      final currentUserId = ConfigService.instance.currentUserId;
+      await ApiClient().fetchContact(
+        widget.contact.id,
+        currentUserId: currentUserId,
+      );
 
       if (mounted) {
         setState(() {
-          _contactData = data;
           _isLoading = false;
         });
       }

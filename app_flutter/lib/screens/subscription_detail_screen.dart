@@ -7,7 +7,6 @@ import 'package:eventypop/ui/styles/app_styles.dart';
 import '../models/subscription.dart';
 import '../models/event.dart';
 import '../services/api_client.dart';
-import '../services/config_service.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/events_list.dart';
@@ -43,7 +42,9 @@ class _SubscriptionDetailScreenState
     });
 
     try {
-      print('🔵 [SubscriptionDetailScreen] Calling Backend API for user events...');
+      print(
+        '🔵 [SubscriptionDetailScreen] Calling Backend API for user events...',
+      );
       final publicUserId = widget.subscription.subscribedToId;
       final eventsData = await ApiClient().fetchUserEvents(publicUserId);
       final events = eventsData.map((e) => Event.fromJson(e)).toList();

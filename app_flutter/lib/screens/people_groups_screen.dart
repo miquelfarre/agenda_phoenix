@@ -79,7 +79,9 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
       _isRefreshing = true;
 
       // Fetch contacts and groups separately from backend API
-      final contactsData = await ApiClient().fetchContacts(currentUserId: userId);
+      final contactsData = await ApiClient().fetchContacts(
+        currentUserId: userId,
+      );
       final groupsData = await ApiClient().fetchGroups(currentUserId: userId);
 
       if (mounted) {

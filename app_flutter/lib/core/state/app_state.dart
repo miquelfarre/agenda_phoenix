@@ -11,7 +11,6 @@ import '../../services/event_service.dart';
 import '../../services/subscription_service.dart';
 import '../../services/event_interaction_service.dart';
 import '../../services/sync_service.dart';
-import '../../services/supabase_service.dart';
 import '../../services/config_service.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/logo_service.dart';

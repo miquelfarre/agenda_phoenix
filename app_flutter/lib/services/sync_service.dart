@@ -9,8 +9,6 @@ import '../models/user_hive.dart';
 import '../models/user.dart';
 import '../models/subscription_hive.dart';
 import '../models/group_hive.dart';
-import '../models/event_collection.dart';
-import '../models/event_collection_hive.dart';
 import '../models/event_interaction.dart';
 import '../models/event_interaction_hive.dart';
 import '../utils/temp_id_generator.dart';
@@ -36,8 +34,9 @@ class SyncService {
     }
 
     try {
+      final userId = ConfigService.instance.currentUserId;
       final compositeData = await ApiClientFactory.instance.get(
-        '/api/v1/events/list-composite',
+        '/api/v1/users/$userId/events',
       );
 
       await _storeCompositeData(compositeData);
@@ -64,6 +63,7 @@ class SyncService {
     }
 
     try {
+      final userId = ConfigService.instance.currentUserId;
       final queryParams = <String, dynamic>{};
       if (fromDate != null) {
         queryParams['from_date'] = fromDate.toIso8601String();
@@ -72,18 +72,21 @@ class SyncService {
         queryParams['to_date'] = toDate.toIso8601String();
       }
       if (search != null && search.isNotEmpty) {
-        queryParams['q'] = search;
+        queryParams['search'] = search; // Changed from 'q' to 'search'
       }
       if (filterType != null && filterType.isNotEmpty) {
         queryParams['filter'] = filterType;
       }
 
-      if (!futureOnly) queryParams['future_only'] = 'false';
+      if (!futureOnly) {
+        queryParams['include_past'] =
+            'true'; // Changed from 'future_only' to 'include_past'
+      }
 
       print('🔵 [SyncService] Fetching from API...');
 
       final compositeData = await ApiClientFactory.instance.get(
-        '/api/v1/events/list-composite',
+        '/api/v1/users/$userId/events',
         queryParams: queryParams.isNotEmpty ? queryParams : null,
       );
 
@@ -282,17 +285,33 @@ class SyncService {
 
     try {
       print('🔵 [SyncService] Fetching from API...');
+      final userId = ConfigService.instance.currentUserId;
 
-      final compositeData = await ApiClientFactory.instance.get(
-        '/api/v1/subscriptions/list-composite',
+      // Subscriptions are now EventInteractions with type='subscribed'
+      final interactions = await ApiClientFactory.instance.get(
+        '/api/v1/interactions',
+        queryParams: {
+          'user_id': userId.toString(),
+          'interaction_type': 'subscribed',
+          'enriched': 'true',
+        },
       );
 
       print(
-        '🔵 [SyncService] Got compositeData type: ${compositeData.runtimeType}',
+        '🔵 [SyncService] Got interactions type: ${interactions.runtimeType}',
       );
-      print(
-        '🔵 [SyncService] compositeData keys: ${compositeData is Map ? compositeData.keys : 'NOT A MAP'}',
-      );
+
+      // Transform interactions to subscription format
+      final subscriptionItems = (interactions as List).map((interaction) {
+        return {
+          'id': interaction['id'],
+          'user_id': interaction['user_id'],
+          'subscribed_to_id': interaction['event']['owner_id'],
+          'subscribed_to': interaction['event']['owner'],
+        };
+      }).toList();
+
+      final compositeData = {'subscriptions': subscriptionItems};
 
       print('🔵 [SyncService] Storing subscriptions composite data in Hive...');
 
@@ -422,51 +441,6 @@ class SyncService {
     }
   }
 
-  static Future<List<EventCollection>> syncCollections() async {
-    try {
-      final collectionsData = await ApiClientFactory.instance.get(
-        '/api/v1/event-collections',
-      );
-      final collections = (collectionsData as List)
-          .map((d) => EventCollection.fromJson(d))
-          .toList();
-
-      final box = Hive.box<EventCollectionHive>('event_collections');
-      await box.clear();
-
-      for (final collection in collections) {
-        final hive = EventCollectionHive.fromEventCollection(collection);
-        await box.put(collection.id, hive);
-      }
-
-      return collections;
-    } on SocketException {
-      return getLocalCollections();
-    } catch (e) {
-      return getLocalCollections();
-    }
-  }
-
-  static List<EventCollection> getLocalCollections() {
-    try {
-      if (!Hive.isBoxOpen('event_collections')) return [];
-      final box = Hive.box<EventCollectionHive>('event_collections');
-      return box.values.map((h) => h.toEventCollection()).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  static Future<void> clearCollectionCache(String collectionId) async {
-    try {
-      final box = Hive.box<EventCollectionHive>('event_collections');
-      if (box.containsKey(collectionId)) {
-        await box.delete(collectionId);
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
 
   static Future<void> clearGroupCache(int groupId) async {
     try {

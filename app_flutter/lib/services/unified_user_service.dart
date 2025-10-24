@@ -40,44 +40,6 @@ class UnifiedUserService {
 
   bool get isLoggedIn => currentUser != null && SupabaseAuthService.isLoggedIn;
 
-  Future<User> createOrUpdateUser({
-    required String firebaseUid,
-    required String phoneNumber,
-    String? email,
-    String? fullName,
-    String? instagramName,
-    String? profilePicture,
-    String? defaultTimezone,
-    String? defaultCountryCode,
-    String? defaultCity,
-  }) async {
-    try {
-      final idToken = await SupabaseAuthService.getCurrentUserToken();
-      if (idToken == null) {
-        throw AppException(
-          message: 'No authentication token available',
-          code: 1001,
-          tag: 'AUTH',
-        );
-      }
-
-      final response = await ApiClientFactory.instance.post(
-        '/api/v1/firebase-auth/verify-token',
-        body: {'id_token': idToken},
-      );
-
-      final user = User.fromJson(response);
-
-      await SyncService.syncUserProfile(user.id);
-
-      return user;
-    } on ApiException {
-      rethrow;
-    } catch (_) {
-      rethrow;
-    }
-  }
-
   Future<User?> loadCurrentUser({bool forceRefresh = false}) async {
     if (!forceRefresh) {
       final cachedUser = currentUser;
@@ -178,18 +140,6 @@ class UnifiedUserService {
 
   static Future<List<User>> getContactUsers() async {
     try {
-      final configService = ConfigService.instance;
-      if (configService.isTestMode) {
-        final response = await ApiClientFactory.instance.get(
-          '/api/v1/users/contacts/registered',
-        );
-
-        final List<dynamic> usersJson = response is List ? response : [];
-        final users = usersJson.map((json) => User.fromJson(json)).toList();
-
-        return users;
-      }
-
       final contacts = await getContacts();
       if (contacts.isEmpty) {
         return [];
@@ -232,15 +182,25 @@ class UnifiedUserService {
 
   static Future<List<User>> searchPublicUsers(String query) async {
     try {
+      // Get all public users and filter client-side
+      // TODO: Backend should implement search parameter in GET /users
       final response = await ApiClientFactory.instance.get(
-        '/api/v1/users/public/search',
-        queryParams: {'q': query},
+        '/api/v1/users',
+        queryParams: {'public': 'true', 'limit': '100'},
       );
 
-      final List<dynamic> usersJson = response['users'] ?? [];
-      final users = usersJson.map((json) => User.fromJson(json)).toList();
+      final List<dynamic> usersJson = response is List ? response : [];
+      final allUsers = usersJson.map((json) => User.fromJson(json)).toList();
 
-      return users;
+      // Filter by query (username or full name)
+      if (query.isEmpty) return allUsers;
+
+      final lowerQuery = query.toLowerCase();
+      return allUsers.where((user) {
+        final username = user.instagramName?.toLowerCase() ?? '';
+        final fullName = user.fullName?.toLowerCase() ?? '';
+        return username.contains(lowerQuery) || fullName.contains(lowerQuery);
+      }).toList();
     } catch (e) {
       return [];
     }
@@ -248,15 +208,25 @@ class UnifiedUserService {
 
   Future<List<User>> searchUsers(String query, {int limit = 20}) async {
     try {
+      // Get all users and filter client-side
+      // TODO: Backend should implement search parameter in GET /users
       final response = await ApiClientFactory.instance.get(
-        '/api/v1/users/search',
-        queryParams: {'q': query, 'limit': limit},
+        '/api/v1/users',
+        queryParams: {'limit': limit.toString()},
       );
 
-      final List<dynamic> usersJson = response['users'] ?? [];
-      final users = usersJson.map((json) => User.fromJson(json)).toList();
+      final List<dynamic> usersJson = response is List ? response : [];
+      final allUsers = usersJson.map((json) => User.fromJson(json)).toList();
 
-      return users;
+      // Filter by query (username or full name)
+      if (query.isEmpty) return allUsers;
+
+      final lowerQuery = query.toLowerCase();
+      return allUsers.where((user) {
+        final username = user.instagramName?.toLowerCase() ?? '';
+        final fullName = user.fullName?.toLowerCase() ?? '';
+        return username.contains(lowerQuery) || fullName.contains(lowerQuery);
+      }).toList();
     } catch (e) {
       return [];
     }
@@ -298,28 +268,6 @@ class UserManagementService {
 
   User? get currentUser => _unified.currentUser;
   bool get isLoggedIn => _unified.isLoggedIn;
-
-  Future<User> createOrUpdateUser({
-    required String firebaseUid,
-    required String phoneNumber,
-    String? email,
-    String? fullName,
-    String? instagramName,
-    String? profilePicture,
-    String? defaultTimezone,
-    String? defaultCountryCode,
-    String? defaultCity,
-  }) => _unified.createOrUpdateUser(
-    firebaseUid: firebaseUid,
-    phoneNumber: phoneNumber,
-    email: email,
-    fullName: fullName,
-    instagramName: instagramName,
-    profilePicture: profilePicture,
-    defaultTimezone: defaultTimezone,
-    defaultCountryCode: defaultCountryCode,
-    defaultCity: defaultCity,
-  );
 
   Future<User?> loadCurrentUser({bool forceRefresh = false}) =>
       _unified.loadCurrentUser(forceRefresh: forceRefresh);

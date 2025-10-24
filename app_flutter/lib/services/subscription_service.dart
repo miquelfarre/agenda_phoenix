@@ -46,14 +46,20 @@ class SubscriptionService {
     User? targetUser,
   }) async {
     try {
-      final response = await ApiClientFactory.instance.post(
-        '/api/v1/subscriptions',
-        body: {'user_id': currentUserId, 'target_user_id': targetUserId},
+      await ApiClientFactory.instance.post(
+        '/api/v1/users/$targetUserId/subscribe',
       );
 
-      final subscription = Subscription.fromJson(response);
-
+      // Response is a bulk operation result, need to sync to get actual subscription data
       await SyncService.syncSubscriptions(currentUserId);
+
+      // Return a temporary subscription object (will be updated by sync)
+      final subscription = Subscription(
+        id: 0, // Temporary ID
+        userId: currentUserId,
+        subscribedToId: targetUserId,
+        subscribed: targetUser,
+      );
 
       return subscription;
     } on SocketException {
@@ -65,8 +71,9 @@ class SubscriptionService {
 
   Future<void> deleteSubscription({required int subscriptionId}) async {
     try {
+      // subscriptionId is now an interaction_id
       await ApiClientFactory.instance.delete(
-        '/api/v1/subscriptions/$subscriptionId',
+        '/api/v1/interactions/$subscriptionId',
       );
 
       await SyncService.syncSubscriptions(currentUserId);

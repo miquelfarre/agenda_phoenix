@@ -73,11 +73,7 @@ class EventCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _buildTrailingActions(
-                  context,
-                  ref,
-                  effectiveConfig,
-                ),
+                _buildTrailingActions(context, ref, effectiveConfig),
               ],
             ),
 
@@ -103,12 +99,10 @@ class EventCard extends ConsumerWidget {
       String inviterText = '';
       if (event.invitedByUserId != null) {
         // Find inviter name in attendees list
-        final inviterName = event.attendees
-            .firstWhere(
-              (a) => a is Map && a['id'] == event.invitedByUserId,
-              orElse: () => null,
-            )
-            ?['name'];
+        final inviterName = event.attendees.firstWhere(
+          (a) => a is Map && a['id'] == event.invitedByUserId,
+          orElse: () => null,
+        )?['name'];
         if (inviterName != null) {
           inviterText = ' • $inviterName';
         }
@@ -226,11 +220,7 @@ class EventCard extends ConsumerWidget {
               children: otherAttendees.take(6).map((a) {
                 final name = (a['name'] as String?) ?? '';
                 final initials = name.trim().isNotEmpty
-                    ? name
-                          .trim()
-                          .split(RegExp(r"\s+"))
-                          .first[0]
-                          .toUpperCase()
+                    ? name.trim().split(RegExp(r"\s+")).first[0].toUpperCase()
                     : '?';
                 return Container(
                   width: 26,

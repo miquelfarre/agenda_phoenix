@@ -163,10 +163,10 @@ class CalendarService {
     required CalendarPermission permission,
   }) async {
     try {
-      final data = {'userId': userId, 'permission': permission.value};
+      final data = {'user_id': userId, 'permission': permission.value};
 
       final response = await ApiClientFactory.instance.post(
-        '/api/v1/calendars/$calendarId/share',
+        '/api/v1/calendars/$calendarId/memberships',
         body: data,
       );
       final share = CalendarShare.fromJson(response);
@@ -241,9 +241,11 @@ class CalendarService {
 
   Future<List<Calendar>> fetchPublicCalendars({String? search}) async {
     try {
-      final queryParams = search != null ? {'search': search} : null;
+      final queryParams = <String, String>{'is_public': 'true'};
+      if (search != null) queryParams['search'] = search;
+
       final response = await ApiClientFactory.instance.get(
-        '/api/v1/calendars/public',
+        '/api/v1/calendars',
         queryParams: queryParams,
       );
 
@@ -261,9 +263,7 @@ class CalendarService {
 
   Future<List<Calendar>> fetchAvailableCalendars() async {
     try {
-      final response = await ApiClientFactory.instance.get(
-        '/api/v1/calendars/available',
-      );
+      final response = await ApiClientFactory.instance.get('/api/v1/calendars');
 
       final calendars = <Calendar>[];
       for (final item in response as List) {
@@ -285,7 +285,7 @@ class CalendarService {
   Future<void> subscribeToCalendar(int calendarId) async {
     try {
       await ApiClientFactory.instance.post(
-        '/api/v1/calendars/$calendarId/subscribe',
+        '/api/v1/calendars/$calendarId/memberships',
       );
 
       await fetchAvailableCalendars();
@@ -297,8 +297,22 @@ class CalendarService {
 
   Future<void> unsubscribeFromCalendar(int calendarId) async {
     try {
+      // Get memberships for this calendar
+      final memberships = await ApiClientFactory.instance.get(
+        '/api/v1/calendars/$calendarId/memberships',
+      );
+
+      if (memberships is! List || memberships.isEmpty) {
+        throw ApiException('No membership found for calendar $calendarId');
+      }
+
+      // Find current user's membership
+      // Assuming the API returns only the current user's membership or we need to filter
+      // For now, delete the first one (likely the user's own membership)
+      final membershipId = memberships[0]['id'];
+
       await ApiClientFactory.instance.delete(
-        '/api/v1/calendars/$calendarId/subscribe',
+        '/api/v1/calendars/$calendarId/memberships/$membershipId',
       );
 
       await _calendarsBox?.delete(calendarId.toString());

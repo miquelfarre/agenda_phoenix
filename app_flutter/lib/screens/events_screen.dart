@@ -108,11 +108,14 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       // Calculate filters
       // My Events: events I own + events I'm participating in (invited/joined + accepted)
       final myEvents = eventItems
-          .where((e) =>
-              e.event.ownerId == userId ||
-              (e.event.ownerId != userId &&
-                  (e.interactionType == 'invited' || e.interactionType == 'joined') &&
-                  e.invitationStatus == 'accepted'))
+          .where(
+            (e) =>
+                e.event.ownerId == userId ||
+                (e.event.ownerId != userId &&
+                    (e.interactionType == 'invited' ||
+                        e.interactionType == 'joined') &&
+                    e.invitationStatus == 'accepted'),
+          )
           .length;
       final invitations = eventItems
           .where(
@@ -125,8 +128,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       final subscribed = eventItems
           .where(
             (e) =>
-                e.event.ownerId != userId &&
-                e.interactionType == 'subscribed',
+                e.event.ownerId != userId && e.interactionType == 'subscribed',
           )
           .length;
 
@@ -242,7 +244,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     final allEvents = _eventsData!.events.map((item) => item.event).toList();
 
     // Filter with interaction data first
-    List<EventWithInteraction> filteredItems = _applyEventTypeFilterWithInteraction(_eventsData!.events, _currentFilter);
+    List<EventWithInteraction> filteredItems =
+        _applyEventTypeFilterWithInteraction(
+          _eventsData!.events,
+          _currentFilter,
+        );
 
     // Then extract events and apply search
     List<Event> events = filteredItems.map((item) => item.event).toList();
@@ -504,32 +510,40 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   List<EventWithInteraction> _applyEventTypeFilterWithInteraction(
-      List<EventWithInteraction> items, String filter) {
+    List<EventWithInteraction> items,
+    String filter,
+  ) {
     final userId = ConfigService.instance.currentUserId;
 
     switch (filter) {
       case 'my':
         // My Events: events I own + events I'm participating in (invited/joined + accepted)
         return items
-            .where((item) =>
-                item.event.ownerId == userId ||
-                (item.event.ownerId != userId &&
-                    (item.interactionType == 'invited' ||
-                        item.interactionType == 'joined') &&
-                    item.invitationStatus == 'accepted'))
+            .where(
+              (item) =>
+                  item.event.ownerId == userId ||
+                  (item.event.ownerId != userId &&
+                      (item.interactionType == 'invited' ||
+                          item.interactionType == 'joined') &&
+                      item.invitationStatus == 'accepted'),
+            )
             .toList();
       case 'subscribed':
         return items
-            .where((item) =>
-                item.event.ownerId != userId &&
-                item.interactionType == 'subscribed')
+            .where(
+              (item) =>
+                  item.event.ownerId != userId &&
+                  item.interactionType == 'subscribed',
+            )
             .toList();
       case 'invitations':
         return items
-            .where((item) =>
-                item.event.ownerId != userId &&
-                item.interactionType == 'invited' &&
-                item.invitationStatus == 'pending')
+            .where(
+              (item) =>
+                  item.event.ownerId != userId &&
+                  item.interactionType == 'invited' &&
+                  item.invitationStatus == 'pending',
+            )
             .toList();
       case 'all':
       default:

@@ -20,7 +20,10 @@ class ApiClient implements IApiClient {
         headers['Authorization'] = 'Bearer ${session.accessToken}';
         DebugConfig.info('Added JWT token to request headers', tag: 'API');
       } else {
-        DebugConfig.info('No Supabase session found - request will be unauthenticated', tag: 'API');
+        DebugConfig.info(
+          'No Supabase session found - request will be unauthenticated',
+          tag: 'API',
+        );
       }
     } catch (e) {
       DebugConfig.error('Failed to get Supabase session: $e', tag: 'API');
@@ -253,11 +256,7 @@ class ApiClient implements IApiClient {
     int userId, {
     int? currentUserId,
   }) async {
-    final result = await get(
-      '/users/$userId/events',
-      queryParams: {
-      },
-    );
+    final result = await get('/users/$userId/events', queryParams: {});
     return List<Map<String, dynamic>>.from(result);
   }
 
@@ -356,11 +355,7 @@ class ApiClient implements IApiClient {
     int eventId, {
     int? currentUserId,
   }) async {
-    final result = await get(
-      '/events/$eventId',
-      queryParams: {
-      },
-    );
+    final result = await get('/events/$eventId', queryParams: {});
     return result as Map<String, dynamic>;
   }
 
@@ -371,8 +366,7 @@ class ApiClient implements IApiClient {
   }) async {
     final result = await get(
       '/api/v1/events/$eventId/interactions',
-      queryParams: {
-      },
+      queryParams: {},
     );
     return List<Map<String, dynamic>>.from(result);
   }
@@ -384,8 +378,7 @@ class ApiClient implements IApiClient {
   }) async {
     final result = await get(
       '/api/v1/events/$eventId/interactions-enriched',
-      queryParams: {
-      },
+      queryParams: {},
     );
     return List<Map<String, dynamic>>.from(result);
   }
@@ -397,8 +390,7 @@ class ApiClient implements IApiClient {
   }) async {
     final result = await get(
       '/events/$eventId/available-invitees',
-      queryParams: {
-      },
+      queryParams: {},
     );
     return List<Map<String, dynamic>>.from(result);
   }
@@ -407,11 +399,7 @@ class ApiClient implements IApiClient {
   Future<List<Map<String, dynamic>>> fetchEventCancellations({
     int? currentUserId,
   }) async {
-    final result = await get(
-      '/events/cancellations',
-      queryParams: {
-      },
-    );
+    final result = await get('/events/cancellations', queryParams: {});
     return List<Map<String, dynamic>>.from(result);
   }
 
@@ -475,11 +463,7 @@ class ApiClient implements IApiClient {
     int interactionId, {
     int? currentUserId,
   }) async {
-    final result = await get(
-      '/interactions/$interactionId',
-      queryParams: {
-      },
-    );
+    final result = await get('/interactions/$interactionId', queryParams: {});
     return result as Map<String, dynamic>;
   }
 
@@ -535,9 +519,7 @@ class ApiClient implements IApiClient {
   }) async {
     final result = await get(
       '/calendars',
-      queryParams: {
-        if (ownerId != null) 'owner_id': ownerId,
-      },
+      queryParams: {if (ownerId != null) 'owner_id': ownerId},
     );
     return List<Map<String, dynamic>>.from(result);
   }
@@ -547,11 +529,7 @@ class ApiClient implements IApiClient {
     int calendarId, {
     int? currentUserId,
   }) async {
-    final result = await get(
-      '/calendars/$calendarId',
-      queryParams: {
-      },
-    );
+    final result = await get('/calendars/$calendarId', queryParams: {});
     return result as Map<String, dynamic>;
   }
 
@@ -562,8 +540,7 @@ class ApiClient implements IApiClient {
   }) async {
     final result = await get(
       '/calendars/$calendarId/memberships',
-      queryParams: {
-      },
+      queryParams: {},
     );
     return List<Map<String, dynamic>>.from(result);
   }
@@ -625,8 +602,7 @@ class ApiClient implements IApiClient {
   }) async {
     final result = await get(
       '/calendar_memberships/$membershipId',
-      queryParams: {
-      },
+      queryParams: {},
     );
     return result as Map<String, dynamic>;
   }
@@ -665,9 +641,7 @@ class ApiClient implements IApiClient {
   }) async {
     final result = await get(
       '/groups',
-      queryParams: {
-        if (createdBy != null) 'created_by': createdBy,
-      },
+      queryParams: {if (createdBy != null) 'created_by': createdBy},
     );
     return List<Map<String, dynamic>>.from(result);
   }
@@ -677,11 +651,7 @@ class ApiClient implements IApiClient {
     int groupId, {
     int? currentUserId,
   }) async {
-    final result = await get(
-      '/groups/$groupId',
-      queryParams: {
-      },
-    );
+    final result = await get('/groups/$groupId', queryParams: {});
     return result as Map<String, dynamic>;
   }
 
@@ -750,9 +720,7 @@ class ApiClient implements IApiClient {
   }) async {
     final result = await get(
       '/recurring_configs',
-      queryParams: {
-        if (eventId != null) 'event_id': eventId,
-      },
+      queryParams: {if (eventId != null) 'event_id': eventId},
     );
     return List<Map<String, dynamic>>.from(result);
   }
@@ -762,11 +730,7 @@ class ApiClient implements IApiClient {
     int configId, {
     int? currentUserId,
   }) async {
-    final result = await get(
-      '/recurring_configs/$configId',
-      queryParams: {
-      },
-    );
+    final result = await get('/recurring_configs/$configId', queryParams: {});
     return result as Map<String, dynamic>;
   }
 
@@ -828,9 +792,7 @@ class ApiClient implements IApiClient {
     int blockId, {
     required int currentUserId,
   }) async {
-    await delete(
-      '/user_blocks/$blockId',
-    );
+    await delete('/user_blocks/$blockId');
   }
 
   @override
