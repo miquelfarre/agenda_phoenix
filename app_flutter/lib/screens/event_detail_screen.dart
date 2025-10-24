@@ -9,7 +9,7 @@ import '../models/event_interaction.dart';
 import '../models/recurrence_pattern.dart';
 import '../models/user.dart';
 import '../services/event_service.dart';
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 import '../core/state/app_state.dart';
 import 'create_edit_event_screen.dart';
 import 'invite_users_screen.dart';
@@ -70,10 +70,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     });
 
     try {
-      final data = await SupabaseService.instance.fetchEventDetail(
-        eventId,
-        currentUserId,
-      );
+      final data = await ApiClient().fetchEvent(eventId);
 
       final Event detailedEvent = Event.fromJson(data);
 

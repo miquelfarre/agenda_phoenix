@@ -15,7 +15,7 @@ import 'create_edit_event_screen.dart';
 
 import '../services/config_service.dart';
 import '../services/event_service.dart';
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
@@ -77,30 +77,28 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     print('🔵 [EventsScreen] _loadData START');
     setState(() => _isLoading = true);
     try {
-      print('🔵 [EventsScreen] Loading events from Supabase...');
+      print('🔵 [EventsScreen] Loading events from Backend API...');
       final userId = ConfigService.instance.currentUserId;
-      final eventsData = await SupabaseService.instance.fetchEventsForUser(
-        userId,
-      );
 
-      // Convert Supabase data to EventListItem
+      // Get raw JSON from backend API (includes interaction field)
+      final apiData = await ApiClient().fetchUserEvents(userId);
+
+      // Convert backend data to EventWithInteraction
       final eventItems = <EventWithInteraction>[];
-      for (final data in eventsData) {
-        final interactions = (data['interactions'] as List?) ?? [];
-        final myInteraction = interactions.firstWhere(
-          (i) => i['user_id'] == userId,
-          orElse: () => null,
-        );
-
-        final eventOwnerId = data['owner_id'] as int?;
-        final isOwner = eventOwnerId == userId;
-        final interactionType = isOwner
-            ? null
-            : (myInteraction?['interaction_type'] as String?);
-        final invitationStatus =
-            myInteraction?['participation_status'] as String?;
-
+      for (final data in apiData) {
         final event = Event.fromJson(data);
+        final eventOwnerId = event.ownerId;
+        final isOwner = eventOwnerId == userId;
+
+        // Get interaction from backend response
+        String? interactionType;
+        String? invitationStatus;
+
+        if (!isOwner && data['interaction'] != null) {
+          final interaction = data['interaction'] as Map<String, dynamic>;
+          interactionType = interaction['interaction_type'] as String?;
+          invitationStatus = interaction['status'] as String?;
+        }
 
         eventItems.add(
           EventWithInteraction(event, interactionType, invitationStatus),
@@ -123,11 +121,19 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           .where(
             (e) =>
                 e.event.ownerId != userId &&
-                (e.interactionType == 'subscribed' ||
-                    (e.interactionType == 'joined' &&
-                        e.invitationStatus == 'accepted')),
+                e.interactionType == 'subscribed',
           )
           .length;
+
+      print('🔍 [EventsScreen] Filter counts:');
+      print('   userId: $userId');
+      print('   myEvents: $myEvents');
+      print('   invitations: $invitations');
+      print('   subscribed: $subscribed');
+      print('   total: ${eventItems.length}');
+      if (eventItems.isNotEmpty) {
+        print('   First event ownerId: ${eventItems.first.event.ownerId}');
+      }
 
       final data = EventsData(
         events: eventItems,
@@ -138,7 +144,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       );
 
       print(
-        '🔵 [EventsScreen] Loaded ${eventItems.length} events from Supabase',
+        '🔵 [EventsScreen] Loaded ${eventItems.length} events from Backend API',
       );
 
       if (mounted) {
@@ -227,9 +233,14 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     final bool isFiltered = _currentFilter != 'all' || _searchQuery.isNotEmpty;
 
+    // Get all events for filter chips
     final allEvents = _eventsData!.events.map((item) => item.event).toList();
 
-    List<Event> events = _applyEventTypeFilter(allEvents, _currentFilter);
+    // Filter with interaction data first
+    List<EventWithInteraction> filteredItems = _applyEventTypeFilterWithInteraction(_eventsData!.events, _currentFilter);
+
+    // Then extract events and apply search
+    List<Event> events = filteredItems.map((item) => item.event).toList();
     if (_searchQuery.isNotEmpty) {
       events = _applySearchFilter(events, _searchQuery);
     }
@@ -486,23 +497,29 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     );
   }
 
-  List<Event> _applyEventTypeFilter(List<Event> events, String filter) {
+  List<EventWithInteraction> _applyEventTypeFilterWithInteraction(
+      List<EventWithInteraction> items, String filter) {
     final userId = ConfigService.instance.currentUserId;
 
     switch (filter) {
       case 'my':
-        return events.where((e) => e.ownerId == userId).toList();
+        return items.where((item) => item.event.ownerId == userId).toList();
       case 'subscribed':
-        return events
-            .where((e) => e.ownerId != userId && e.owner?.isPublic == true)
+        return items
+            .where((item) =>
+                item.event.ownerId != userId &&
+                item.interactionType == 'subscribed')
             .toList();
       case 'invitations':
-        return events
-            .where((e) => e.ownerId != userId && e.owner?.isPublic != true)
+        return items
+            .where((item) =>
+                item.event.ownerId != userId &&
+                item.interactionType == 'invited' &&
+                item.invitationStatus == 'pending')
             .toList();
       case 'all':
       default:
-        return events;
+        return items;
     }
   }
 

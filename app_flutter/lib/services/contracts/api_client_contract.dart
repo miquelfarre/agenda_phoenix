@@ -103,6 +103,7 @@ abstract class IApiClient {
     int? userId,
     String? interactionType,
     String? status,
+    bool? enriched,
     int? currentUserId,
   });
 

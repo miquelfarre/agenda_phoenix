@@ -6,7 +6,7 @@ import 'package:eventypop/ui/helpers/platform/platform_navigation.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../models/subscription.dart';
 import '../models/event.dart';
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 import '../services/config_service.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
@@ -43,14 +43,12 @@ class _SubscriptionDetailScreenState
     });
 
     try {
-      print('🔵 [SubscriptionDetailScreen] Calling fetchPublicUserEvents...');
+      print('🔵 [SubscriptionDetailScreen] Calling Backend API for user events...');
       final publicUserId = widget.subscription.subscribedToId;
-      final eventsData = await SupabaseService.instance.fetchPublicUserEvents(
-        publicUserId,
-      );
+      final eventsData = await ApiClient().fetchUserEvents(publicUserId);
       final events = eventsData.map((e) => Event.fromJson(e)).toList();
       print(
-        '🔵 [SubscriptionDetailScreen] fetchPublicUserEvents completed, events count: ${events.length}',
+        '🔵 [SubscriptionDetailScreen] Backend API completed, events count: ${events.length}',
       );
 
       if (mounted) {

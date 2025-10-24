@@ -5,7 +5,7 @@ import '../models/event.dart';
 import '../models/user.dart';
 import '../models/subscription.dart';
 import '../services/config_service.dart';
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 import '../core/state/app_state.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 import '../widgets/event_card.dart';
@@ -61,17 +61,24 @@ class _PublicUserEventsScreenState
 
     try {
       final userId = ConfigService.instance.currentUserId;
-      final events = await SupabaseService.instance.fetchPublicUserEvents(
-        widget.publicUser.id,
-      );
-      final isSubscribed = await SupabaseService.instance.isSubscribedToUser(
-        userId,
-        widget.publicUser.id,
-      );
+      final eventsData = await ApiClient().fetchUserEvents(widget.publicUser.id);
+      final events = eventsData.map((e) => Event.fromJson(e)).toList();
+
+      // Check if user is subscribed by looking at interactions in events
+      bool isSubscribed = false;
+      for (final eventData in eventsData) {
+        if (eventData['interaction'] != null) {
+          final interaction = eventData['interaction'] as Map<String, dynamic>;
+          if (interaction['interaction_type'] == 'subscribed') {
+            isSubscribed = true;
+            break;
+          }
+        }
+      }
 
       if (mounted) {
         setState(() {
-          _events = events.map((e) => Event.fromJson(e)).toList();
+          _events = events;
           _isSubscribed = isSubscribed;
           _isLoading = false;
         });

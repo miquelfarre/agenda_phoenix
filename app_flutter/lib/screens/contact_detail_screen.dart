@@ -8,7 +8,7 @@ import '../models/user.dart';
 import '../models/event.dart';
 import '../core/state/app_state.dart';
 import '../services/config_service.dart';
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/event_card.dart';
@@ -81,9 +81,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     });
 
     try {
-      final data = await SupabaseService.instance.fetchContactDetail(
-        widget.contact.id,
-      );
+      final data = await ApiClient().fetchContact(widget.contact.id);
 
       if (mounted) {
         setState(() {

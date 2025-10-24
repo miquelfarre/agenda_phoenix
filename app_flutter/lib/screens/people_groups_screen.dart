@@ -16,7 +16,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/widgets/adaptive/configs/button_config.dart';
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 
 class PeopleGroupsScreen extends ConsumerStatefulWidget {
   const PeopleGroupsScreen({super.key});
@@ -77,15 +77,15 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
 
     try {
       _isRefreshing = true;
-      final data = await SupabaseService.instance.fetchPeopleAndGroups(userId);
+
+      // Fetch contacts and groups separately from backend API
+      final contactsData = await ApiClient().fetchContacts(currentUserId: userId);
+      final groupsData = await ApiClient().fetchGroups(currentUserId: userId);
+
       if (mounted) {
         setState(() {
-          _contacts = (data['contacts'] as List)
-              .map((c) => User.fromJson(c))
-              .toList();
-          _groups = (data['groups'] as List)
-              .map((g) => Group.fromJson(g))
-              .toList();
+          _contacts = contactsData.map((c) => User.fromJson(c)).toList();
+          _groups = groupsData.map((g) => Group.fromJson(g)).toList();
           _isLoading = false;
         });
       }

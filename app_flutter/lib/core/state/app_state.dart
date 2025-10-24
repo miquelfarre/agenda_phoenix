@@ -212,12 +212,39 @@ class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
       state = const AsyncValue.loading();
 
       final userId = ConfigService.instance.currentUserId;
-      final usersData = await SupabaseService.instance.fetchSubscriptions(
-        userId,
+
+      // Get all "subscribed" interactions for this user
+      final interactionsData = await ApiClient().fetchInteractions(
+        userId: userId,
+        interactionType: 'subscribed',
       );
 
-      final subscriptions = usersData.map((userData) {
-        final user = User.fromJson(userData);
+      // Extract unique owner IDs from events
+      final Map<int, User> ownersMap = {};
+
+      for (final interactionData in interactionsData) {
+        final eventId = interactionData['event_id'] as int?;
+        if (eventId != null) {
+          try {
+            // Fetch event to get owner information
+            final eventData = await ApiClient().fetchEvent(eventId);
+            final ownerId = eventData['owner_id'] as int?;
+            final ownerData = eventData['owner'] as Map<String, dynamic>?;
+
+            if (ownerId != null && ownerData != null) {
+              final isPublic = ownerData['is_public'] == true;
+              if (isPublic && !ownersMap.containsKey(ownerId)) {
+                ownersMap[ownerId] = User.fromJson(ownerData);
+              }
+            }
+          } catch (e) {
+            // Skip events that can't be fetched
+            continue;
+          }
+        }
+      }
+
+      final subscriptions = ownersMap.values.map((user) {
         return Subscription(
           id: user.id,
           userId: userId,

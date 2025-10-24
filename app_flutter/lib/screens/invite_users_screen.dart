@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
 import '../models/user.dart';
 import '../models/group.dart';
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 import '../services/event_interaction_service.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
@@ -87,12 +87,8 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
         return;
       }
 
-      final currentUserId = ConfigService.instance.currentUserId;
       print('🔵 [InviteUsersScreen] Calling fetchAvailableInvitees...');
-      final users = await SupabaseService.instance.fetchAvailableInvitees(
-        eventId,
-        currentUserId,
-      );
+      final users = await ApiClient().fetchAvailableInvitees(eventId);
       print(
         '🔵 [InviteUsersScreen] fetchAvailableInvitees completed, available users: ${users.length}',
       );

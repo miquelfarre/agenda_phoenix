@@ -8,7 +8,7 @@ import '../models/subscription.dart';
 import '../models/event.dart';
 import '../models/user.dart';
 import '../core/state/app_state.dart';
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 import '../services/subscription_service.dart';
 import '../services/config_service.dart';
 import '../widgets/event_card.dart';
@@ -65,12 +65,41 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
     try {
       final userId = ConfigService.instance.currentUserId;
-      final subscriptions = await SupabaseService.instance.fetchSubscriptions(
-        userId,
+
+      // Get all "subscribed" interactions for this user
+      final interactionsData = await ApiClient().fetchInteractions(
+        userId: userId,
+        interactionType: 'subscribed',
       );
+
+      // Extract unique owner IDs from events
+      final Map<int, Map<String, dynamic>> ownersMap = {};
+
+      for (final interactionData in interactionsData) {
+        final eventId = interactionData['event_id'] as int?;
+        if (eventId != null) {
+          try {
+            // Fetch event to get owner information
+            final eventData = await ApiClient().fetchEvent(eventId);
+            final ownerId = eventData['owner_id'] as int?;
+            final ownerData = eventData['owner'] as Map<String, dynamic>?;
+
+            if (ownerId != null && ownerData != null) {
+              final isPublic = ownerData['is_public'] == true;
+              if (isPublic && !ownersMap.containsKey(ownerId)) {
+                ownersMap[ownerId] = ownerData;
+              }
+            }
+          } catch (e) {
+            // Skip events that can't be fetched
+            continue;
+          }
+        }
+      }
+
       if (mounted) {
         setState(() {
-          _subscriptions = subscriptions;
+          _subscriptions = ownersMap.values.toList();
           _isLoading = false;
         });
       }

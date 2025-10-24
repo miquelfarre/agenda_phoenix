@@ -4,14 +4,17 @@ This script will:
 1. Drop all tables
 2. Create all tables from SQLAlchemy models
 3. Insert sample data
+4. Create test users in Supabase Auth
 
 Pure SQLAlchemy - NO RAW SQL!
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 
 from sqlalchemy import inspect, text
+from supabase import create_client, Client
 
 from database import Base, SessionLocal, engine
 from models import Calendar, CalendarMembership, Contact, Event, EventBan, EventCancellation, EventCancellationView, EventInteraction, RecurringEventConfig, User, UserBlock
@@ -126,9 +129,54 @@ def insert_sample_data():
             last_login=now,
         )
 
-        db.add_all([sonia, miquel, ada, sara, tdb, polr, fcbarcelona])
+        # Create public users for subscriptions
+        contact_gym = Contact(
+            name="Gimnasio FitZone",
+            phone="+34900111222",
+        )
+        contact_restaurant = Contact(
+            name="Restaurante El Buen Sabor",
+            phone="+34900333444",
+        )
+        contact_cultural = Contact(
+            name="Centro Cultural La Llotja",
+            phone="+34900555666",
+        )
+
+        db.add_all([contact_gym, contact_restaurant, contact_cultural])
         db.flush()
-        logger.info(f"  ✓ Inserted 7 users")
+
+        gym_fitzone = User(
+            username="fitzone_bcn",
+            auth_provider="instagram",
+            auth_id="ig_fitzone",
+            is_public=True,
+            contact_id=contact_gym.id,
+            profile_picture_url="https://example.com/gym-logo.png",
+            last_login=now,
+        )
+        restaurant_sabor = User(
+            username="elbuen_sabor",
+            auth_provider="instagram",
+            auth_id="ig_restaurant",
+            is_public=True,
+            contact_id=contact_restaurant.id,
+            profile_picture_url="https://example.com/restaurant-logo.png",
+            last_login=now,
+        )
+        cultural_llotja = User(
+            username="llotja_cultural",
+            auth_provider="instagram",
+            auth_id="ig_cultural",
+            is_public=True,
+            contact_id=contact_cultural.id,
+            profile_picture_url="https://example.com/cultural-logo.png",
+            last_login=now,
+        )
+
+        db.add_all([sonia, miquel, ada, sara, tdb, polr, fcbarcelona, gym_fitzone, restaurant_sabor, cultural_llotja])
+        db.flush()
+        logger.info(f"  ✓ Inserted 10 users (3 public venues)")
 
         # 3. Create calendars
         cal_family = Calendar(owner_id=sonia.id, name="Family")
@@ -546,7 +594,249 @@ def insert_sample_data():
         db.flush()
         logger.info(f"  ✓ Inserted 2 additional Sonia events (1 regular + 1 recurring with {len(promociona_instances)} instances)")
 
-        # 12. Create event interactions
+        # 12. Create events for Miquel (user 2)
+        miquel_gym = Event(
+            name="Gimnasio",
+            description="Sesión de entrenamiento en el gimnasio",
+            start_date=datetime(2025, 10, 28, 7, 0),
+            event_type="regular",
+            owner_id=miquel.id,
+        )
+        miquel_dentist = Event(
+            name="Dentista",
+            description="Revisión dental anual",
+            start_date=datetime(2025, 11, 5, 10, 30),
+            event_type="regular",
+            owner_id=miquel.id,
+        )
+        miquel_dinner = Event(
+            name="Cena con amigos",
+            description="Cena en restaurante japonés",
+            start_date=datetime(2025, 11, 8, 21, 0),
+            event_type="regular",
+            owner_id=miquel.id,
+        )
+        miquel_meeting = Event(
+            name="Reunión de proyecto",
+            description="Revisión trimestral del proyecto",
+            start_date=datetime(2025, 11, 12, 16, 0),
+            event_type="regular",
+            owner_id=miquel.id,
+        )
+        miquel_weekend = Event(
+            name="Escapada fin de semana",
+            description="Viaje a la montaña",
+            start_date=datetime(2025, 11, 15, 9, 0),
+            event_type="regular",
+            owner_id=miquel.id,
+        )
+
+        db.add_all([miquel_gym, miquel_dentist, miquel_dinner, miquel_meeting, miquel_weekend])
+        db.flush()
+        logger.info(f"  ✓ Inserted 5 events for Miquel")
+
+        # 13. Create events for Ada (user 3)
+        ada_school = Event(
+            name="Presentación escolar",
+            description="Presentación de ciencias naturales",
+            start_date=datetime(2025, 10, 30, 10, 0),
+            event_type="regular",
+            owner_id=ada.id,
+        )
+        ada_ballet = Event(
+            name="Clase de ballet",
+            description="Clase de ballet clásico",
+            start_date=datetime(2025, 11, 2, 17, 0),
+            event_type="regular",
+            owner_id=ada.id,
+        )
+        ada_party = Event(
+            name="Fiesta de Halloween",
+            description="Fiesta de disfraces con amigos",
+            start_date=datetime(2025, 10, 31, 18, 0),
+            event_type="regular",
+            owner_id=ada.id,
+        )
+        ada_swimming = Event(
+            name="Natación",
+            description="Entrenamiento de natación",
+            start_date=datetime(2025, 11, 7, 16, 30),
+            event_type="regular",
+            owner_id=ada.id,
+        )
+        ada_movie = Event(
+            name="Cine con familia",
+            description="Ver nueva película de animación",
+            start_date=datetime(2025, 11, 10, 17, 30),
+            event_type="regular",
+            owner_id=ada.id,
+        )
+
+        db.add_all([ada_school, ada_ballet, ada_party, ada_swimming, ada_movie])
+        db.flush()
+        logger.info(f"  ✓ Inserted 5 events for Ada")
+
+        # 14. Create events for Sara (user 4)
+        sara_work = Event(
+            name="Reunión de equipo",
+            description="Planificación sprint Q4",
+            start_date=datetime(2025, 10, 29, 9, 30),
+            event_type="regular",
+            owner_id=sara.id,
+        )
+        sara_lunch = Event(
+            name="Almuerzo con cliente",
+            description="Presentación de propuesta",
+            start_date=datetime(2025, 11, 4, 13, 0),
+            event_type="regular",
+            owner_id=sara.id,
+        )
+        sara_yoga = Event(
+            name="Yoga",
+            description="Clase de yoga y meditación",
+            start_date=datetime(2025, 11, 6, 19, 0),
+            event_type="regular",
+            owner_id=sara.id,
+        )
+        sara_conference = Event(
+            name="Conferencia tech",
+            description="Conferencia de desarrollo web",
+            start_date=datetime(2025, 11, 13, 9, 0),
+            event_type="regular",
+            owner_id=sara.id,
+        )
+        sara_brunch = Event(
+            name="Brunch dominical",
+            description="Brunch con amigas en el centro",
+            start_date=datetime(2025, 11, 17, 11, 0),
+            event_type="regular",
+            owner_id=sara.id,
+        )
+
+        db.add_all([sara_work, sara_lunch, sara_yoga, sara_conference, sara_brunch])
+        db.flush()
+        logger.info(f"  ✓ Inserted 5 events for Sara")
+
+        # 15. Create events for public users
+        # Gimnasio FitZone events
+        gym_spinning = Event(
+            name="Clase de Spinning",
+            description="Clase intensiva de spinning - Nivel intermedio",
+            start_date=datetime(2025, 10, 28, 18, 0),
+            event_type="regular",
+            owner_id=gym_fitzone.id,
+        )
+        gym_yoga_morning = Event(
+            name="Yoga matinal",
+            description="Sesión de yoga para comenzar el día con energía",
+            start_date=datetime(2025, 11, 1, 7, 30),
+            event_type="regular",
+            owner_id=gym_fitzone.id,
+        )
+        gym_crossfit = Event(
+            name="CrossFit Challenge",
+            description="Desafío mensual de CrossFit - Todos los niveles",
+            start_date=datetime(2025, 11, 8, 19, 0),
+            event_type="regular",
+            owner_id=gym_fitzone.id,
+        )
+        gym_pilates = Event(
+            name="Pilates para principiantes",
+            description="Introducción al método Pilates",
+            start_date=datetime(2025, 11, 14, 10, 0),
+            event_type="regular",
+            owner_id=gym_fitzone.id,
+        )
+
+        # Restaurante El Buen Sabor events
+        restaurant_tasting = Event(
+            name="Degustación de vinos",
+            description="Cata de vinos de la Rioja con maridaje",
+            start_date=datetime(2025, 10, 30, 20, 0),
+            event_type="regular",
+            owner_id=restaurant_sabor.id,
+        )
+        restaurant_cooking = Event(
+            name="Taller de cocina mediterránea",
+            description="Aprende a cocinar platos mediterráneos tradicionales",
+            start_date=datetime(2025, 11, 6, 18, 30),
+            event_type="regular",
+            owner_id=restaurant_sabor.id,
+        )
+        restaurant_brunch = Event(
+            name="Brunch especial domingo",
+            description="Brunch buffet con opciones veganas y sin gluten",
+            start_date=datetime(2025, 11, 10, 11, 0),
+            event_type="regular",
+            owner_id=restaurant_sabor.id,
+        )
+
+        # Centro Cultural La Llotja events
+        cultural_concert = Event(
+            name="Concierto de jazz",
+            description="Trio de jazz en vivo - Entrada libre",
+            start_date=datetime(2025, 11, 1, 20, 30),
+            event_type="regular",
+            owner_id=cultural_llotja.id,
+        )
+        cultural_expo = Event(
+            name="Exposición de arte contemporáneo",
+            description="Inauguración: Artistas emergentes de Barcelona",
+            start_date=datetime(2025, 11, 7, 19, 0),
+            event_type="regular",
+            owner_id=cultural_llotja.id,
+        )
+        cultural_theater = Event(
+            name="Obra de teatro: Hamlet",
+            description="Adaptación moderna del clásico de Shakespeare",
+            start_date=datetime(2025, 11, 15, 21, 0),
+            event_type="regular",
+            owner_id=cultural_llotja.id,
+        )
+        cultural_workshop = Event(
+            name="Taller de fotografía",
+            description="Técnicas básicas de fotografía urbana",
+            start_date=datetime(2025, 11, 20, 17, 0),
+            event_type="regular",
+            owner_id=cultural_llotja.id,
+        )
+
+        db.add_all([
+            gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates,
+            restaurant_tasting, restaurant_cooking, restaurant_brunch,
+            cultural_concert, cultural_expo, cultural_theater, cultural_workshop
+        ])
+        db.flush()
+        logger.info(f"  ✓ Inserted 11 events for public venues (4 gym, 3 restaurant, 4 cultural)")
+
+        # 16. Create shared family events
+        family_dinner = Event(
+            name="Cena familiar",
+            description="Cena mensual en casa de los abuelos",
+            start_date=datetime(2025, 11, 9, 20, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+        )
+        family_picnic = Event(
+            name="Picnic familiar",
+            description="Picnic en el parque",
+            start_date=datetime(2025, 11, 11, 12, 0),
+            event_type="regular",
+            owner_id=miquel.id,
+        )
+        family_trip = Event(
+            name="Viaje familiar a la playa",
+            description="Fin de semana en la costa",
+            start_date=datetime(2025, 11, 22, 10, 0),
+            event_type="regular",
+            owner_id=sonia.id,
+        )
+
+        db.add_all([family_dinner, family_picnic, family_trip])
+        db.flush()
+        logger.info(f"  ✓ Inserted 3 family events")
+
+        # 16. Create event interactions
         interactions = []
 
         # Sonia owns all her recurring base events
@@ -731,6 +1021,390 @@ def insert_sample_data():
                 )
             )
 
+        # === INTERACTIONS FOR NEW USER EVENTS ===
+
+        # Miquel owns his events
+        for event in [miquel_gym, miquel_dentist, miquel_dinner, miquel_meeting, miquel_weekend]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=miquel.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
+
+        # Ada owns her events
+        for event in [ada_school, ada_ballet, ada_party, ada_swimming, ada_movie]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=ada.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
+
+        # Sara owns her events
+        for event in [sara_work, sara_lunch, sara_yoga, sara_conference, sara_brunch]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sara.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
+
+        # === INVITATIONS TO MIQUEL'S EVENTS ===
+
+        # Miquel's dinner - invites Sonia (accepted) and Sara (pending)
+        interactions.extend([
+            EventInteraction(
+                event_id=miquel_dinner.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=miquel.id,
+            ),
+            EventInteraction(
+                event_id=miquel_dinner.id,
+                user_id=sara.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=miquel.id,
+            ),
+        ])
+
+        # Miquel's meeting - invites Sara (accepted)
+        interactions.append(
+            EventInteraction(
+                event_id=miquel_meeting.id,
+                user_id=sara.id,
+                interaction_type="invited",
+                status="accepted",
+                role="participant",
+                invited_by_user_id=miquel.id,
+            )
+        )
+
+        # === INVITATIONS TO ADA'S EVENTS ===
+
+        # Ada's Halloween party - invites everyone
+        interactions.extend([
+            EventInteraction(
+                event_id=ada_party.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=ada.id,
+                note="Llevar disfraz de bruja 🧙‍♀️",
+            ),
+            EventInteraction(
+                event_id=ada_party.id,
+                user_id=miquel.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=ada.id,
+            ),
+            EventInteraction(
+                event_id=ada_party.id,
+                user_id=sara.id,
+                interaction_type="invited",
+                status="rejected",
+                invited_by_user_id=ada.id,
+                rejection_message="Lo siento, tengo otro compromiso ese día",
+            ),
+        ])
+
+        # Ada's movie - invites family
+        interactions.extend([
+            EventInteraction(
+                event_id=ada_movie.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=ada.id,
+            ),
+            EventInteraction(
+                event_id=ada_movie.id,
+                user_id=miquel.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=ada.id,
+            ),
+        ])
+
+        # === INVITATIONS TO SARA'S EVENTS ===
+
+        # Sara's brunch - invites Sonia (accepted)
+        interactions.append(
+            EventInteraction(
+                event_id=sara_brunch.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=sara.id,
+                note="¡Ganas de un brunch relajado! ☕",
+            )
+        )
+
+        # Sara's yoga - invites Sonia (pending)
+        interactions.append(
+            EventInteraction(
+                event_id=sara_yoga.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=sara.id,
+            )
+        )
+
+        # Sara's work meeting - invites Sonia (pending)
+        interactions.append(
+            EventInteraction(
+                event_id=sara_work.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=sara.id,
+            )
+        )
+
+        # Sara's conference - invites Sonia (pending)
+        interactions.append(
+            EventInteraction(
+                event_id=sara_conference.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=sara.id,
+            )
+        )
+
+        # === PUBLIC VENUES INTERACTIONS ===
+
+        # Gym FitZone owns their events
+        for event in [gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=gym_fitzone.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
+
+        # Restaurant owns their events
+        for event in [restaurant_tasting, restaurant_cooking, restaurant_brunch]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=restaurant_sabor.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
+
+        # Cultural center owns their events
+        for event in [cultural_concert, cultural_expo, cultural_theater, cultural_workshop]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=cultural_llotja.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                )
+            )
+
+        # Sonia subscribed to Gym FitZone events
+        for event in [gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="subscribed",
+                    status="accepted",
+                )
+            )
+
+        # Sonia subscribed to Restaurant events
+        for event in [restaurant_tasting, restaurant_cooking, restaurant_brunch]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="subscribed",
+                    status="accepted",
+                )
+            )
+
+        # Sonia subscribed to Cultural center events
+        for event in [cultural_concert, cultural_expo, cultural_theater, cultural_workshop]:
+            interactions.append(
+                EventInteraction(
+                    event_id=event.id,
+                    user_id=sonia.id,
+                    interaction_type="subscribed",
+                    status="accepted",
+                )
+            )
+
+        # === MORE INVITATIONS FOR SONIA (PENDING) ===
+
+        # Miquel's gym - invites Sonia (pending)
+        interactions.append(
+            EventInteraction(
+                event_id=miquel_gym.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=miquel.id,
+                note="¿Vienes al gym conmigo? 💪",
+            )
+        )
+
+        # Miquel's weekend trip - invites Sonia (pending)
+        interactions.append(
+            EventInteraction(
+                event_id=miquel_weekend.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=miquel.id,
+            )
+        )
+
+        # Ada's ballet - invites Sonia (pending)
+        interactions.append(
+            EventInteraction(
+                event_id=ada_ballet.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=ada.id,
+                note="¡Mamá ven a ver mi clase de ballet! 🩰",
+            )
+        )
+
+        # Ada's swimming - invites Sonia (pending)
+        interactions.append(
+            EventInteraction(
+                event_id=ada_swimming.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=ada.id,
+            )
+        )
+
+        # === FAMILY EVENTS INTERACTIONS ===
+
+        # Family dinner - Sonia is owner, everyone else invited
+        interactions.extend([
+            EventInteraction(
+                event_id=family_dinner.id,
+                user_id=sonia.id,
+                interaction_type="joined",
+                status="accepted",
+                role="owner",
+            ),
+            EventInteraction(
+                event_id=family_dinner.id,
+                user_id=miquel.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=sonia.id,
+            ),
+            EventInteraction(
+                event_id=family_dinner.id,
+                user_id=ada.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=sonia.id,
+            ),
+            EventInteraction(
+                event_id=family_dinner.id,
+                user_id=sara.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=sonia.id,
+            ),
+        ])
+
+        # Family picnic - Miquel is owner, everyone else invited
+        interactions.extend([
+            EventInteraction(
+                event_id=family_picnic.id,
+                user_id=miquel.id,
+                interaction_type="joined",
+                status="accepted",
+                role="owner",
+            ),
+            EventInteraction(
+                event_id=family_picnic.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=miquel.id,
+            ),
+            EventInteraction(
+                event_id=family_picnic.id,
+                user_id=ada.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=miquel.id,
+            ),
+            EventInteraction(
+                event_id=family_picnic.id,
+                user_id=sara.id,
+                interaction_type="invited",
+                status="rejected",
+                invited_by_user_id=miquel.id,
+                rejection_message="Tengo la conferencia tech ese fin de semana",
+            ),
+        ])
+
+        # Family trip - Sonia is owner, everyone else invited
+        interactions.extend([
+            EventInteraction(
+                event_id=family_trip.id,
+                user_id=sonia.id,
+                interaction_type="joined",
+                status="accepted",
+                role="owner",
+            ),
+            EventInteraction(
+                event_id=family_trip.id,
+                user_id=miquel.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=sonia.id,
+                note="¡Por fin vacaciones en familia! 🏖️",
+            ),
+            EventInteraction(
+                event_id=family_trip.id,
+                user_id=ada.id,
+                interaction_type="invited",
+                status="accepted",
+                invited_by_user_id=sonia.id,
+                note="¡Voy a nadar todos los días! 🏊‍♀️",
+            ),
+            EventInteraction(
+                event_id=family_trip.id,
+                user_id=sara.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=sonia.id,
+            ),
+        ])
+
         db.add_all(interactions)
         db.flush()
         logger.info(f"  ✓ Inserted {len(interactions)} event interactions")
@@ -841,6 +1515,73 @@ def setup_realtime():
         logger.warning("⚠️  Realtime sync may not work, but backend will continue")
 
 
+def create_supabase_auth_users():
+    """
+    Create test users in Supabase Auth.
+    This allows users to log in with their phone numbers.
+    """
+    logger.info("👤 Creating Supabase Auth users...")
+
+    # Supabase configuration
+    SUPABASE_URL = os.getenv('SUPABASE_URL', 'http://localhost:8000')
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv(
+        'SUPABASE_SERVICE_ROLE_KEY',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
+    )
+
+    try:
+        # Create Supabase admin client (using service_role key to bypass RLS)
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+        # Test users to create
+        test_users = [
+            {'phone': '+34606014680', 'password': 'testpass123', 'name': 'Sonia'},
+            {'phone': '+34626034421', 'password': 'testpass123', 'name': 'Miquel'},
+            {'phone': '+34623949193', 'password': 'testpass123', 'name': 'Ada'},
+            {'phone': '+34611223344', 'password': 'testpass123', 'name': 'Sara'},
+            {'phone': '+34600000001', 'password': 'testpass123', 'name': 'TDB'},
+            {'phone': '+34600000002', 'password': 'testpass123', 'name': 'PolR'},
+        ]
+
+        created_count = 0
+        skipped_count = 0
+
+        for user_data in test_users:
+            try:
+                # Try to create user with phone authentication
+                result = supabase.auth.admin.create_user({
+                    'phone': user_data['phone'],
+                    'password': user_data['password'],
+                    'phone_confirm': True,  # Auto-confirm phone
+                    'user_metadata': {
+                        'name': user_data['name']
+                    }
+                })
+
+                if result:
+                    logger.info(f"  ✓ Created user: {user_data['name']} ({user_data['phone']})")
+                    created_count += 1
+
+            except Exception as e:
+                error_msg = str(e).lower()
+                # Skip if user already exists
+                if 'already registered' in error_msg or 'already exists' in error_msg or 'duplicate' in error_msg:
+                    logger.info(f"  ℹ️  User already exists: {user_data['name']} ({user_data['phone']})")
+                    skipped_count += 1
+                else:
+                    logger.warning(f"  ⚠️  Could not create user {user_data['name']}: {e}")
+
+        logger.info(f"✅ Supabase Auth setup completed: {created_count} created, {skipped_count} skipped")
+        logger.info("📱 Test users can now log in with:")
+        logger.info("   Phone: +34606014680, Password: testpass123 (Sonia)")
+        logger.info("   Phone: +34626034421, Password: testpass123 (Miquel)")
+
+    except Exception as e:
+        logger.error(f"❌ Error creating Supabase Auth users: {e}")
+        logger.warning("⚠️  Users may need to be created manually in Supabase Dashboard")
+        # Don't raise - this is optional, backend can work without it
+
+
 def init_database():
     """
     Main function to initialize the database.
@@ -857,11 +1598,14 @@ def init_database():
         # Step 2: Create all tables
         create_all_tables()
 
-        # Step 3: Setup Supabase Realtime (NEW!)
+        # Step 3: Setup Supabase Realtime
         setup_realtime()
 
         # Step 4: Insert sample data
         insert_sample_data()
+
+        # Step 5: Create Supabase Auth users (NEW!)
+        create_supabase_auth_users()
 
         logger.info("=" * 60)
         logger.info("✅ Database initialization completed successfully!")

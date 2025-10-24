@@ -35,7 +35,10 @@ class ApiClient implements IApiClient {
     // Note: current_user_id is no longer sent as query param
     // User identity is now determined from JWT token in Authorization header
 
-    final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
+    // Add /api/v1 prefix if not already present
+    final normalizedPath = path.startsWith('/api/v1') ? path : '/api/v1$path';
+
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}$normalizedPath');
     if (params.isNotEmpty) {
       final nonNullParams = params.map(
         (key, value) => MapEntry(key, value?.toString()),
@@ -451,6 +454,7 @@ class ApiClient implements IApiClient {
     int? userId,
     String? interactionType,
     String? status,
+    bool? enriched,
     int? currentUserId,
   }) async {
     final result = await get(
@@ -460,6 +464,7 @@ class ApiClient implements IApiClient {
         if (userId != null) 'user_id': userId,
         if (interactionType != null) 'interaction_type': interactionType,
         if (status != null) 'status': status,
+        if (enriched != null) 'enriched': enriched,
       },
     );
     return List<Map<String, dynamic>>.from(result);
