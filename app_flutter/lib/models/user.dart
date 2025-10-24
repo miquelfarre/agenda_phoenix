@@ -41,10 +41,6 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    // Backend enriched response mapping:
-    // - 'username' (backend) -> 'instagramName' (Flutter)
-    // - 'contact_name' (backend) -> 'fullName' (Flutter)
-    // Also support legacy 'instagram_name' and 'full_name' if present
     final instagramName =
         json['instagram_name'] as String? ?? json['username'] as String?;
     final fullName =

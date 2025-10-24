@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/event.dart';
 import '../models/event_hive.dart';
 import '../services/supabase_service.dart';
+import '../services/config_service.dart';
+import '../services/api_client.dart';
 
 class EventRepository {
   static const String _boxName = 'events';
@@ -11,8 +13,11 @@ class EventRepository {
 
   Box<EventHive>? _box;
   RealtimeChannel? _realtimeChannel;
+  RealtimeChannel? _interactionsChannel;
   final StreamController<List<Event>> _eventsStreamController =
       StreamController<List<Event>>.broadcast();
+
+  List<Event> _cachedEvents = [];
 
   Stream<List<Event>> get eventsStream => _eventsStreamController.stream;
 
@@ -20,15 +25,13 @@ class EventRepository {
     _box = await Hive.openBox<EventHive>(_boxName);
 
     await _startRealtimeSubscription();
+    await _startInteractionsSubscription();
 
     _emitCurrentEvents();
   }
 
   List<Event> getLocalEvents() {
-    if (_box == null) {
-      throw Exception('EventRepository not initialized');
-    }
-    return _box!.values.map((eventHive) => eventHive.toEvent()).toList()
+    return List<Event>.from(_cachedEvents)
       ..sort((a, b) {
         final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
         final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -38,20 +41,19 @@ class EventRepository {
 
   Future<List<Event>> fetchAndSyncEvents() async {
     try {
-      final response = await _supabaseService.events.select().order(
-        'created_at',
-        ascending: false,
-      );
+      final userId = ConfigService.instance.currentUserId;
+      final apiData = await ApiClient().fetchUserEvents(userId);
 
-      final events = (response as List)
-          .map((json) => Event.fromJson(json))
-          .toList();
+      _cachedEvents =
+          apiData.map((json) => Event.fromJson(json)).toList();
 
-      await _updateLocalCache(events);
+      await _updateLocalCache(_cachedEvents);
 
       _emitCurrentEvents();
 
-      return events;
+      print('✅ Synced ${_cachedEvents.length} events from API');
+
+      return _cachedEvents;
     } catch (e) {
       print('Error fetching events: $e');
 
@@ -80,6 +82,107 @@ class EventRepository {
     print('✅ Realtime subscription started for events table');
   }
 
+  Future<void> _startInteractionsSubscription() async {
+    _interactionsChannel =
+        _supabaseService.realtimeChannel('interactions_channel');
+
+    _interactionsChannel!
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'event_interactions',
+          callback: _handleInteractionChange,
+        )
+        .subscribe();
+
+    print('✅ Realtime subscription started for event_interactions table');
+  }
+
+  void _handleInteractionChange(PostgresChangePayload payload) {
+    print(
+      '📡 Interaction change received: ${payload.eventType}',
+    );
+
+    try {
+      final eventId = payload.newRecord['event_id'] as int? ??
+          payload.oldRecord['event_id'] as int?;
+      final userId = ConfigService.instance.currentUserId;
+
+      if (eventId != null) {
+        final index = _cachedEvents.indexWhere((e) => e.id == eventId);
+        if (index != -1) {
+          final currentEvent = _cachedEvents[index];
+
+          if (payload.newRecord['user_id'] == userId) {
+            final updatedInteractionData = Map<String, dynamic>.from(
+              currentEvent.interactionData ?? {},
+            );
+
+            updatedInteractionData['status'] = payload.newRecord['status'];
+            updatedInteractionData['interaction_type'] =
+                payload.newRecord['interaction_type'];
+            updatedInteractionData['note'] = payload.newRecord['note'];
+            updatedInteractionData['updated_at'] = payload.newRecord['updated_at'];
+
+            final updatedEvent = Event(
+              id: currentEvent.id,
+              name: currentEvent.name,
+              description: currentEvent.description,
+              startDate: currentEvent.startDate,
+              eventType: currentEvent.eventType,
+              ownerId: currentEvent.ownerId,
+              calendarId: currentEvent.calendarId,
+              parentRecurringEventId: currentEvent.parentRecurringEventId,
+              createdAt: currentEvent.createdAt,
+              updatedAt: currentEvent.updatedAt,
+              ownerName: currentEvent.ownerName,
+              ownerProfilePicture: currentEvent.ownerProfilePicture,
+              isOwnerPublic: currentEvent.isOwnerPublic,
+              calendarName: currentEvent.calendarName,
+              calendarColor: currentEvent.calendarColor,
+              isBirthdayEvent: currentEvent.isBirthdayEvent,
+              attendeesList: currentEvent.attendeesList,
+              personalNote: currentEvent.personalNote,
+              clientTempId: currentEvent.clientTempId,
+              interactionData: updatedInteractionData,
+            );
+
+            _cachedEvents[index] = updatedEvent;
+            _emitCurrentEvents();
+
+            print('✅ Event interaction updated locally: ${currentEvent.name}');
+          }
+        } else {
+          _refreshEventFull(eventId);
+        }
+      }
+    } catch (e) {
+      print('Error handling interaction change: $e');
+    }
+  }
+
+  Future<void> _refreshEventFull(int eventId) async {
+    try {
+      final eventData = await ApiClient().fetchEvent(eventId);
+      final event = Event.fromJson(eventData);
+
+      final index = _cachedEvents.indexWhere((e) => e.id == eventId);
+      if (index != -1) {
+        _cachedEvents[index] = event;
+      } else {
+        _cachedEvents.add(event);
+      }
+
+      final eventHive = EventHive.fromEvent(event);
+      _box?.put(event.id, eventHive);
+      _emitCurrentEvents();
+
+      print('✅ Event refreshed (full fetch): ${event.name}');
+    } catch (e) {
+      print('Error refreshing event $eventId: $e');
+    }
+  }
+
   void _handleRealtimeEvent(PostgresChangePayload payload) {
     print('📡 Realtime event received: ${payload.eventType}');
 
@@ -104,6 +207,7 @@ class EventRepository {
 
   void _handleInsert(Map<String, dynamic> record) {
     final event = Event.fromJson(record);
+    _cachedEvents.add(event);
     final eventHive = EventHive.fromEvent(event);
     _box?.put(event.id, eventHive);
     _emitCurrentEvents();
@@ -112,6 +216,12 @@ class EventRepository {
 
   void _handleUpdate(Map<String, dynamic> record) {
     final event = Event.fromJson(record);
+    final index = _cachedEvents.indexWhere((e) => e.id == event.id);
+    if (index != -1) {
+      _cachedEvents[index] = event;
+    } else {
+      _cachedEvents.add(event);
+    }
     final eventHive = EventHive.fromEvent(event);
     _box?.put(event.id, eventHive);
     _emitCurrentEvents();
@@ -120,6 +230,7 @@ class EventRepository {
 
   void _handleDelete(Map<String, dynamic> record) {
     final id = record['id'] as int;
+    _cachedEvents.removeWhere((e) => e.id == id);
     _box?.delete(id);
     _emitCurrentEvents();
     print('✅ Event deleted: ID $id');
@@ -147,6 +258,7 @@ class EventRepository {
 
   Future<void> dispose() async {
     await _realtimeChannel?.unsubscribe();
+    await _interactionsChannel?.unsubscribe();
     await _eventsStreamController.close();
     await _box?.close();
   }

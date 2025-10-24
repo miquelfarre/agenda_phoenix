@@ -75,21 +75,8 @@ class EventInteractionService {
     return interaction?.participationStatus;
   }
 
-  Future<EventInteraction> markAsViewed(int eventId) async {
-    try {
-      final response = await ApiClientFactory.instance.patch(
-        '/api/v1/events/$eventId/interaction',
-        body: {'viewed': true},
-      );
-
-      final interaction = EventInteraction.fromJson(response);
-
-      return interaction;
-    } on SocketException {
-      throw app_exceptions.ApiException('Internet connection required');
-    } catch (e) {
-      throw app_exceptions.ApiException('Failed to mark event as viewed: $e');
-    }
+  Future<EventInteraction?> markAsViewed(int eventId) async {
+    return null;
   }
 
   Future<EventInteraction> updateParticipationStatus(
@@ -98,19 +85,16 @@ class EventInteractionService {
     String? decisionMessage,
     bool? isAttending,
   }) async {
-    if (!['pending', 'accepted', 'declined', 'postponed'].contains(status)) {
+    if (!['pending', 'accepted', 'rejected'].contains(status)) {
       throw ArgumentError(
-        'Invalid status. Must be: pending, accepted, declined, or postponed',
+        'Invalid status. Must be: pending, accepted, or rejected',
       );
     }
 
     try {
-      final body = <String, dynamic>{'participation_status': status};
+      final body = <String, dynamic>{'status': status};
       if (decisionMessage != null) {
-        body['decision_message'] = decisionMessage;
-      }
-      if (isAttending != null) {
-        body['is_attending'] = isAttending;
+        body['rejection_message'] = decisionMessage;
       }
 
       final response = await ApiClientFactory.instance.patch(
@@ -134,7 +118,7 @@ class EventInteractionService {
     try {
       final response = await ApiClientFactory.instance.patch(
         '/api/v1/events/$eventId/interaction',
-        body: {'personal_note': note},
+        body: {'note': note},
       );
 
       final interaction = EventInteraction.fromJson(response);
@@ -151,49 +135,13 @@ class EventInteractionService {
     return setPersonalNote(eventId, '');
   }
 
-  Future<EventInteraction> toggleFavorite(int eventId) async {
-    final current = isFavorited(eventId);
-    return setFavorite(eventId, !current);
-  }
+  Future<void> toggleFavorite(int eventId) async {}
 
-  Future<EventInteraction> setFavorite(int eventId, bool favorited) async {
-    try {
-      final response = await ApiClientFactory.instance.patch(
-        '/api/v1/events/$eventId/interaction',
-        body: {'favorited': favorited},
-      );
+  Future<void> setFavorite(int eventId, bool favorited) async {}
 
-      final interaction = EventInteraction.fromJson(response);
+  Future<void> toggleHidden(int eventId) async {}
 
-      return interaction;
-    } on SocketException {
-      throw app_exceptions.ApiException('Internet connection required');
-    } catch (e) {
-      throw app_exceptions.ApiException('Failed to toggle favorite: $e');
-    }
-  }
-
-  Future<EventInteraction> toggleHidden(int eventId) async {
-    final current = isHidden(eventId);
-    return setHidden(eventId, !current);
-  }
-
-  Future<EventInteraction> setHidden(int eventId, bool hidden) async {
-    try {
-      final response = await ApiClientFactory.instance.patch(
-        '/api/v1/events/$eventId/interaction',
-        body: {'hidden': hidden},
-      );
-
-      final interaction = EventInteraction.fromJson(response);
-
-      return interaction;
-    } on SocketException {
-      throw app_exceptions.ApiException('Internet connection required');
-    } catch (e) {
-      throw app_exceptions.ApiException('Failed to toggle hidden: $e');
-    }
-  }
+  Future<void> setHidden(int eventId, bool hidden) async {}
 
   Future<EventInteraction> sendInvitation(
     int eventId,

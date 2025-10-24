@@ -10,6 +10,7 @@ import '../models/recurrence_pattern.dart';
 import '../models/user.dart';
 import '../services/event_service.dart';
 import '../services/api_client.dart';
+import '../repositories/event_repository.dart';
 import '../core/state/app_state.dart';
 import 'create_edit_event_screen.dart';
 import 'invite_users_screen.dart';
@@ -59,6 +60,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   bool _isLoadingComposite = false;
 
   EventInteraction? _interaction;
+
+  EventRepository? _eventRepository;
+  StreamSubscription<List<Event>>? _eventsSubscription;
 
   Future<void> _loadDetailData() async {
     if (!mounted || _isLoadingComposite) return;
@@ -120,9 +124,38 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
     if (currentEvent.owner?.isPublic == true) {}
 
+    _initializeRealtimeListener();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _loadDetailData();
     });
+  }
+
+  Future<void> _initializeRealtimeListener() async {
+    try {
+      _eventRepository = EventRepository();
+      await _eventRepository!.initialize();
+
+      _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
+        if (currentEvent.id == null) return;
+
+        final updatedEvent = events
+            .where((e) => e.id == currentEvent.id)
+            .firstOrNull;
+
+        if (updatedEvent != null && mounted) {
+          print(
+            '🔔 [EventDetail] Event ${updatedEvent.name} updated via realtime',
+          );
+          setState(() {
+            currentEvent = updatedEvent;
+            _detailedEvent = updatedEvent;
+          });
+        }
+      });
+    } catch (e) {
+      print('🔴 [EventDetail] Error initializing realtime: $e');
+    }
   }
 
   @override
@@ -131,6 +164,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     _cancellationNotificationController.dispose();
     _decisionMessageController.dispose();
     _ephemeralTimer?.cancel();
+    _eventsSubscription?.cancel();
+    _eventRepository?.dispose();
     super.dispose();
   }
 
@@ -768,7 +803,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.upcomingEventsOf(event.owner!.fullName!),
+              l10n.upcomingEventsOf(event.owner?.fullName ?? ''),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -1238,7 +1273,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     switch (status) {
       case 'accepted':
         return AppStyles.green600;
-      case 'declined':
+      case 'rejected':
         return AppStyles.red600;
       case 'postponed':
         return AppStyles.orange600;
@@ -1253,7 +1288,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     switch (status) {
       case 'accepted':
         return l10n.accepted;
-      case 'declined':
+      case 'rejected':
         return l10n.declined;
       case 'postponed':
         return l10n.postponed;
@@ -1269,7 +1304,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
     final status = _interaction!.participationStatus ?? 'pending';
     final isDeclinedButAttending =
-        status == 'declined' && (_interaction!.isAttending == true);
+        status == 'rejected' && (_interaction!.isAttending == true);
 
     String statusText;
     Color statusColor;
@@ -1329,7 +1364,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
     final status = _interaction!.participationStatus ?? 'pending';
     final isAccepted = status == 'accepted';
-    final isDeclined = status == 'declined';
+    final isDeclined = status == 'rejected';
     final isDeclinedNotAttending =
         isDeclined && (_interaction!.isAttending == false);
     final isDeclinedButAttending =
@@ -1380,7 +1415,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                       color: AppStyles.red600,
                       isActive: isDeclinedNotAttending,
                       onTap: () => _updateParticipationStatus(
-                        'declined',
+                        'rejected',
                         isAttending: false,
                       ),
                     ),
@@ -1397,7 +1432,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                         color: AppStyles.blue600,
                         isActive: isDeclinedButAttending,
                         onTap: () => _updateParticipationStatus(
-                          'declined',
+                          'rejected',
                           isAttending: true,
                         ),
                       ),
@@ -1480,11 +1515,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         if (status == 'accepted') {
           message = l10n.invitationAccepted;
           messageColor = AppStyles.green600;
-        } else if (status == 'declined' && isAttending) {
+        } else if (status == 'rejected' && isAttending) {
           message = l10n.acceptEventButRejectInvitationAck;
           messageColor = AppStyles.blue600;
         } else {
-          message = 'Invitation declined';
+          message = 'Invitation rejected';
           messageColor = AppStyles.red600;
         }
 

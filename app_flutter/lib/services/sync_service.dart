@@ -302,7 +302,11 @@ class SyncService {
       );
 
       // Transform interactions to subscription format
-      final subscriptionItems = (interactions as List).map((interaction) {
+      final subscriptionItems = (interactions as List)
+          .where((interaction) =>
+              interaction['event'] != null &&
+              interaction['event']['owner_id'] != null)
+          .map((interaction) {
         return {
           'id': interaction['id'],
           'user_id': interaction['user_id'],

@@ -285,11 +285,10 @@ class EventCard extends ConsumerWidget {
       );
     }
 
-    // Show accept/reject buttons for pending invitations
-    if (event.wasInvited && event.interactionStatus == 'pending') {
-      final isCurrentlyAccepted = event.interactionStatus == 'accepted';
-      final isCurrentlyDeclined = event.interactionStatus == 'rejected';
-      final isDeclinedNotAttending = isCurrentlyDeclined;
+    if (event.wasInvited && event.interactionStatus != null) {
+      final currentStatus = event.interactionStatus;
+      final isCurrentlyAccepted = currentStatus == 'accepted';
+      final isCurrentlyRejected = currentStatus == 'rejected';
 
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -313,7 +312,6 @@ class EventCard extends ConsumerWidget {
                         newStatus,
                         isAttending: false,
                       );
-                  ref.read(eventStateProvider.notifier).refresh();
                 } catch (e) {
                   if (!context.mounted) return;
                   PlatformWidgets.showSnackBar(
@@ -327,7 +325,7 @@ class EventCard extends ConsumerWidget {
           const SizedBox(width: 8),
 
           actionCircle(
-            icon: isDeclinedNotAttending
+            icon: isCurrentlyRejected
                 ? CupertinoIcons.xmark_circle_fill
                 : CupertinoIcons.xmark,
             color: AppStyles.red600,
@@ -335,14 +333,16 @@ class EventCard extends ConsumerWidget {
             onTap: () async {
               if (event.id == null) return;
               try {
+                final newStatus = isCurrentlyRejected
+                    ? 'pending'
+                    : 'rejected';
                 await ref
                     .read(eventInteractionsProvider.notifier)
                     .updateParticipationStatus(
                       event.id!,
-                      'declined',
+                      newStatus,
                       isAttending: false,
                     );
-                ref.read(eventStateProvider.notifier).refresh();
               } catch (e) {
                 if (!context.mounted) return;
                 PlatformWidgets.showSnackBar(

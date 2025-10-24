@@ -386,15 +386,13 @@ class GroupService {
 
       final membershipId = memberships[0]['id'];
 
-      // Delete current membership
       await ApiClientFactory.instance.delete(
         '/api/v1/group_memberships/$membershipId',
       );
 
-      // Create new membership with admin role
       await ApiClientFactory.instance.post(
         '/api/v1/group_memberships',
-        body: {'group_id': groupId, 'user_id': userId, 'role': 'admin'},
+        body: {'group_id': groupId, 'user_id': userId},
       );
 
       try {
@@ -441,15 +439,13 @@ class GroupService {
 
       final membershipId = memberships[0]['id'];
 
-      // Delete current membership
       await ApiClientFactory.instance.delete(
         '/api/v1/group_memberships/$membershipId',
       );
 
-      // Create new membership with member role
       await ApiClientFactory.instance.post(
         '/api/v1/group_memberships',
-        body: {'group_id': groupId, 'user_id': userId, 'role': 'member'},
+        body: {'group_id': groupId, 'user_id': userId},
       );
 
       try {

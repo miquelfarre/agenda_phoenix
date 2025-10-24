@@ -5,18 +5,19 @@ This module provides:
 1. JWT validation using Supabase's public keys
 2. User extraction from validated tokens
 3. FastAPI dependency for protected endpoints
+4. Test mode authentication via X-Test-User-Id header (development only)
 """
 
 import os
 from typing import Optional
 
 import httpx
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
 # Security scheme for JWT Bearer tokens
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # Cache for JWKS (JSON Web Key Set)
 _jwks_cache: Optional[dict] = None
@@ -114,10 +115,14 @@ def verify_jwt_token(token: str) -> dict:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    x_test_user_id: Optional[str] = Header(None),
 ) -> dict:
     """
     FastAPI dependency to extract and validate current user from JWT.
+
+    In development mode (ENVIRONMENT != production), supports X-Test-User-Id header
+    for testing without real JWT tokens.
 
     Usage in endpoints:
     ```python
@@ -129,8 +134,8 @@ async def get_current_user(
 
     Returns:
         dict: JWT payload containing:
-            - sub: User ID (UUID)
-            - email: User email
+            - sub: User ID (UUID or test ID)
+            - email: User email (in test mode: "test@example.com")
             - role: User role
             - aud: Audience
             - exp: Expiration timestamp
@@ -138,7 +143,25 @@ async def get_current_user(
 
     Raises:
         HTTPException 401: If token is missing, invalid, or expired
-    """
+   """
+    # Check for test mode header (only in non-production environments)
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+    if environment != "production" and x_test_user_id:
+        # Test mode: return mock payload with test user ID
+        return {
+            "sub": x_test_user_id,
+            "email": "test@example.com",
+            "role": "authenticated",
+            "aud": "authenticated",
+        }
+
+    # Production/normal mode: require JWT token
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authenticated",
+        )
+
     token = credentials.credentials
     payload = verify_jwt_token(token)
 
@@ -216,8 +239,7 @@ async def get_current_user_id_optional(
 
 
 async def get_current_user_id(
-    current_user: dict = Depends(get_current_user),
-    db = Depends(None)  # Will be set in dependencies.py
+    current_user: dict = Depends(get_current_user)
 ) -> int:
     """
     Extract integer user ID from JWT payload and validate against database.
@@ -225,9 +247,10 @@ async def get_current_user_id(
     Supabase returns UUID as 'sub', but your app uses integer IDs.
     This dependency queries the database to find the user by auth_id.
 
+    In test mode (X-Test-User-Id header), sub contains the integer user ID directly.
+
     Usage in endpoints:
     ```python
-    from dependencies import get_db
     from auth import get_current_user_id
 
     @router.put("/events/{event_id}")
@@ -242,7 +265,6 @@ async def get_current_user_id(
 
     Args:
         current_user: JWT payload from get_current_user dependency
-        db: Database session from get_db dependency
 
     Returns:
         int: User ID from your database
@@ -255,20 +277,23 @@ async def get_current_user_id(
     from sqlalchemy.orm import Session
 
     try:
-        user_uuid = current_user["sub"]
+        user_sub = current_user["sub"]
 
-        # Get db session
-        if db is None or isinstance(db, type(Depends)):
-            # If db dependency not resolved, get it manually
-            db_gen = _get_db()
-            db = next(db_gen)
-            close_db = True
-        else:
-            close_db = False
+        # Check if this is a test mode request (sub is a numeric string)
+        try:
+            # If sub can be converted to int, it's a test mode user ID
+            return int(user_sub)
+        except ValueError:
+            # Not a numeric ID, so it's a UUID - query database
+            pass
+
+        # Get db session manually (function doesn't use dependency injection for db)
+        db_gen = _get_db()
+        db = next(db_gen)
 
         try:
             # Query user by auth_id (contains Supabase UUID)
-            user = db.query(User).filter(User.auth_id == user_uuid).first()
+            user = db.query(User).filter(User.auth_id == user_sub).first()
 
             if not user:
                 raise HTTPException(
@@ -278,8 +303,7 @@ async def get_current_user_id(
 
             return user.id
         finally:
-            if close_db:
-                db.close()
+            db.close()
 
     except HTTPException:
         raise

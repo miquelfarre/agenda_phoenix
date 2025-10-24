@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 
 import 'package:flutter/cupertino.dart';
@@ -15,7 +16,7 @@ import 'create_edit_event_screen.dart';
 
 import '../services/config_service.dart';
 import '../services/event_service.dart';
-import '../services/api_client.dart';
+import '../repositories/event_repository.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   String _searchQuery = '';
   EventsData? _eventsData;
   bool _isLoading = true;
+  EventRepository? _eventRepository;
+  StreamSubscription<List<Event>>? _eventsSubscription;
 
   @override
   void initState() {
@@ -70,34 +73,61 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       });
     });
 
-    _loadData();
+    _initializeRepository();
+  }
+
+  Future<void> _initializeRepository() async {
+    try {
+      _eventRepository = EventRepository();
+      await _eventRepository!.initialize();
+
+      _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
+        print('🔔 [EventsScreen] Received ${events.length} events from stream');
+        _buildEventsDataFromRepository(events);
+      });
+
+      await _loadData();
+    } catch (e) {
+      print('🔴 [EventsScreen] Error initializing repository: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadData() async {
     print('🔵 [EventsScreen] _loadData START');
     setState(() => _isLoading = true);
     try {
-      print('🔵 [EventsScreen] Loading events from Backend API...');
+      print('🔵 [EventsScreen] Fetching events from EventRepository...');
+
+      await _eventRepository?.fetchAndSyncEvents();
+
+      final events = _eventRepository?.getLocalEvents() ?? [];
+      _buildEventsDataFromRepository(events);
+
+      print('🔵 [EventsScreen] _loadData completed');
+    } catch (e) {
+      print('🔴 [EventsScreen] ERROR in _loadData: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _buildEventsDataFromRepository(List<Event> events) {
+    try {
       final userId = ConfigService.instance.currentUserId;
 
-      // Get raw JSON from backend API (includes interaction field)
-      final apiData = await ApiClient().fetchUserEvents(userId);
-
-      // Convert backend data to EventWithInteraction
       final eventItems = <EventWithInteraction>[];
-      for (final data in apiData) {
-        final event = Event.fromJson(data);
+      for (final event in events) {
         final eventOwnerId = event.ownerId;
         final isOwner = eventOwnerId == userId;
 
-        // Get interaction from backend response
         String? interactionType;
         String? invitationStatus;
 
-        if (!isOwner && data['interaction'] != null) {
-          final interaction = data['interaction'] as Map<String, dynamic>;
-          interactionType = interaction['interaction_type'] as String?;
-          invitationStatus = interaction['status'] as String?;
+        if (!isOwner && event.interactionData != null) {
+          interactionType = event.interactionData!['interaction_type'] as String?;
+          invitationStatus = event.interactionData!['status'] as String?;
         }
 
         eventItems.add(
@@ -105,8 +135,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         );
       }
 
-      // Calculate filters
-      // My Events: events I own + events I'm participating in (invited/joined + accepted)
       final myEvents = eventItems
           .where(
             (e) =>
@@ -138,9 +166,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       print('   invitations: $invitations');
       print('   subscribed: $subscribed');
       print('   total: ${eventItems.length}');
-      if (eventItems.isNotEmpty) {
-        print('   First event ownerId: ${eventItems.first.event.ownerId}');
-      }
 
       final data = EventsData(
         events: eventItems,
@@ -148,10 +173,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         invitationsCount: invitations,
         subscribedCount: subscribed,
         allCount: eventItems.length,
-      );
-
-      print(
-        '🔵 [EventsScreen] Loaded ${eventItems.length} events from Backend API',
       );
 
       if (mounted) {
@@ -162,7 +183,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         print('🔵 [EventsScreen] setState completed, _isLoading=false');
       }
     } catch (e) {
-      print('🔴 [EventsScreen] ERROR in _loadData: $e');
+      print('🔴 [EventsScreen] ERROR in _buildEventsDataFromRepository: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -172,6 +193,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _eventsSubscription?.cancel();
+    _eventRepository?.dispose();
     super.dispose();
   }
 

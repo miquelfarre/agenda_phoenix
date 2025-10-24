@@ -82,45 +82,44 @@ class EventInteraction {
       wasInvited || viewed || hasNote || favorited || hidden;
 
   factory EventInteraction.fromJson(Map<String, dynamic> json) {
+    final role = json['role'];
+    final isAdmin = role == 'admin';
+    final readAt = json['read_at'];
+    final isViewed = readAt != null;
+
     return EventInteraction(
       userId: json['user_id'],
       eventId: json['event_id'],
       user: json['user'] != null ? User.fromJson(json['user']) : null,
-      inviterId: json['inviter_id'],
+      inviterId: json['invited_by_user_id'],
       inviter: json['inviter'] != null ? User.fromJson(json['inviter']) : null,
-      invitationMessage: json['invitation_message'],
-      invitedAt: json['invited_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['invited_at'])
+      invitationMessage: json['note'],
+      invitedAt: json['created_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['created_at'])
           : null,
-      participationStatus: json['participation_status'],
-      participationDecidedAt: json['participation_decided_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['participation_decided_at'])
+      participationStatus: json['status'],
+      participationDecidedAt: json['updated_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
           : null,
-      decisionMessage: json['decision_message'],
-      postponeUntil: json['postpone_until'] != null
-          ? DateTimeUtils.parseAndNormalize(json['postpone_until'])
+      decisionMessage: json['rejection_message'],
+      postponeUntil: null,
+      isAttending: false,
+      isEventAdmin: isAdmin,
+      viewed: isViewed,
+      firstViewedAt: readAt != null
+          ? DateTimeUtils.parseAndNormalize(readAt)
           : null,
-      isAttending: json['is_attending'] ?? false,
-      isEventAdmin: json['is_event_admin'] ?? false,
-      viewed: json['viewed'] ?? false,
-      firstViewedAt: json['first_viewed_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['first_viewed_at'])
+      lastViewedAt: readAt != null
+          ? DateTimeUtils.parseAndNormalize(readAt)
           : null,
-      lastViewedAt: json['last_viewed_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['last_viewed_at'])
+      personalNote: json['note'],
+      noteUpdatedAt: json['updated_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
           : null,
-      personalNote: json['personal_note'],
-      noteUpdatedAt: json['note_updated_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['note_updated_at'])
-          : null,
-      favorited: json['favorited'] ?? false,
-      favoritedAt: json['favorited_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['favorited_at'])
-          : null,
-      hidden: json['hidden'] ?? false,
-      hiddenAt: json['hidden_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['hidden_at'])
-          : null,
+      favorited: false,
+      favoritedAt: null,
+      hidden: false,
+      hiddenAt: null,
       createdAt: DateTimeUtils.parseAndNormalize(json['created_at']),
       updatedAt: DateTimeUtils.parseAndNormalize(json['updated_at']),
     );

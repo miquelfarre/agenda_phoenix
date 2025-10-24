@@ -163,7 +163,8 @@ class CalendarService {
     required CalendarPermission permission,
   }) async {
     try {
-      final data = {'user_id': userId, 'permission': permission.value};
+      String role = permission == CalendarPermission.admin ? 'admin' : 'member';
+      final data = {'user_id': userId, 'role': role};
 
       final response = await ApiClientFactory.instance.post(
         '/api/v1/calendars/$calendarId/memberships',

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../config/app_constants.dart';
 import '../config/debug_config.dart';
 import 'supabase_service.dart';
+import 'config_service.dart';
 import '../utils/app_exceptions.dart' as app_exceptions;
 import 'contracts/api_client_contract.dart';
 
@@ -12,6 +13,17 @@ class ApiClient implements IApiClient {
 
   Future<Map<String, String>> _getHeaders() async {
     final headers = <String, String>{'Content-Type': 'application/json'};
+
+    // In test mode, use X-Test-User-Id header instead of JWT
+    final configService = ConfigService.instance;
+    if (configService.isTestMode && configService.currentUserId != 0) {
+      headers['X-Test-User-Id'] = configService.currentUserId.toString();
+      DebugConfig.info(
+        'Added test user ID to request headers: ${configService.currentUserId}',
+        tag: 'API',
+      );
+      return headers;
+    }
 
     // Get JWT token from Supabase session
     try {
@@ -34,9 +46,6 @@ class ApiClient implements IApiClient {
 
   Uri _buildUri(String path, {Map<String, dynamic>? queryParams}) {
     final params = Map<String, dynamic>.from(queryParams ?? {});
-
-    // Note: current_user_id is no longer sent as query param
-    // User identity is now determined from JWT token in Authorization header
 
     // Add /api/v1 prefix if not already present
     final normalizedPath = path.startsWith('/api/v1') ? path : '/api/v1$path';
