@@ -253,13 +253,3 @@ class UserService {
     }
   }
 }
-
-class UserManagementService {
-  static final UserService _unified = UserService();
-
-  User? get currentUser => _unified.currentUser;
-  bool get isLoggedIn => _unified.isLoggedIn;
-
-  Future<User?> loadCurrentUser({bool forceRefresh = false}) =>
-      _unified.loadCurrentUser(forceRefresh: forceRefresh);
-}
