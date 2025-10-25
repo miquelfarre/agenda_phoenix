@@ -601,6 +601,53 @@ async def subscribe_to_user(
     return {"message": f"Subscribed to {subscribed_count} events", "subscribed_count": subscribed_count, "already_subscribed_count": already_subscribed_count, "error_count": error_count, "total_events": len(events)}
 
 
+@router.delete("/{target_user_id}/subscribe")
+async def unsubscribe_from_user(
+    target_user_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Unsubscribe the authenticated user from all events of another user (bulk operation).
+
+    Requires JWT authentication - provide token in Authorization header.
+
+    This deletes all 'subscribed' interactions for all events owned by target_user_id.
+    Returns the count of successful unsubscriptions.
+    """
+    # Verify both users exist
+    db_user = user.get(db, id=current_user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db_target_user = user.get(db, id=target_user_id)
+    if not db_target_user:
+        raise HTTPException(status_code=404, detail="Target user not found")
+
+    # Get all events owned by target user
+    events = event.get_by_owner(db, owner_id=target_user_id)
+
+    if not events:
+        return {"message": "Target user has no events", "unsubscribed_count": 0}
+
+    unsubscribed_count = 0
+
+    for db_event in events:
+        # Check if subscription exists
+        existing = event_interaction.get_interaction(db, event_id=db_event.id, user_id=current_user_id)
+
+        if existing and existing.interaction_type == "subscribed":
+            try:
+                event_interaction.delete(db, id=existing.id)
+                unsubscribed_count += 1
+            except Exception as e:
+                logger.error(f"Error unsubscribing from event {db_event.id}: {e}")
+
+    db.commit()
+
+    return {"message": f"Unsubscribed from {unsubscribed_count} events", "unsubscribed_count": unsubscribed_count}
+
+
 @router.get("/{user_id}/subscriptions", response_model=List[UserSubscriptionResponse])
 async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
     """

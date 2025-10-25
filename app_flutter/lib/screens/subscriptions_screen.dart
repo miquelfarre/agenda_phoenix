@@ -4,11 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
-import '../models/subscription.dart';
 import '../models/user.dart';
 import '../core/state/app_state.dart';
 import '../services/api_client.dart';
-import '../services/subscription_service.dart';
 import '../services/config_service.dart';
 import '../widgets/subscription_card.dart';
 import '../widgets/empty_state.dart';
@@ -300,24 +298,13 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   Future<void> _removeUser(User user, WidgetRef ref) async {
     final l10n = context.l10n;
     try {
-      final subscriptionsAsync = ref.read(subscriptionsProvider);
-      final subscriptions = subscriptionsAsync.maybeWhen(
-        data: (data) => data,
-        orElse: () => <Subscription>[],
-      );
-
-      final currentUserId = ConfigService.instance.currentUserId;
-      final subscription = subscriptions.firstWhere(
-        (sub) => sub.userId == currentUserId && sub.subscribedToId == user.id,
-        orElse: () => throw Exception('Subscription not found'),
-      );
-
-      await SubscriptionService().deleteSubscription(
-        subscriptionId: subscription.id,
-      );
+      // Use new bulk unsubscribe endpoint
+      await ApiClient().delete('/users/${user.id}/subscribe');
 
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
 
+      // Refresh subscriptions provider AND local state
+      await ref.read(subscriptionsProvider.notifier).refresh();
       await _loadData();
     } catch (e) {
       String cleanError = e.toString().replaceFirst('Exception: ', '');

@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/event.dart';
 import '../models/user.dart';
-import '../models/subscription.dart';
-import '../services/config_service.dart';
 import '../services/api_client.dart';
 import '../core/state/app_state.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
@@ -103,15 +101,8 @@ class _PublicUserEventsScreenState
     if (_isProcessingSubscription) return;
     setState(() => _isProcessingSubscription = true);
     try {
-      final subscriptionsNotifier = ref.read(subscriptionsProvider.notifier);
-      await subscriptionsNotifier.createSubscription(
-        Subscription(
-          id: 0,
-          userId: ConfigService.instance.currentUserId,
-          subscribedToId: widget.publicUser.id,
-          subscribed: widget.publicUser,
-        ),
-      );
+      // Use new bulk subscribe endpoint
+      await ApiClient().post('/users/${widget.publicUser.id}/subscribe');
 
       if (mounted) {
         PlatformDialogHelpers.showSnackBar(
@@ -120,6 +111,8 @@ class _PublicUserEventsScreenState
         );
       }
 
+      // Refresh subscriptions provider AND local state
+      await ref.read(subscriptionsProvider.notifier).refresh();
       await _loadData();
     } catch (e) {
       if (mounted) {
@@ -138,22 +131,8 @@ class _PublicUserEventsScreenState
     if (_isProcessingSubscription) return;
     setState(() => _isProcessingSubscription = true);
     try {
-      final subscriptionsAsync = ref.read(subscriptionsProvider);
-      final subscriptions = subscriptionsAsync.maybeWhen(
-        data: (data) => data,
-        orElse: () => <Subscription>[],
-      );
-
-      final currentUserId = ConfigService.instance.currentUserId;
-      final subscription = subscriptions.firstWhere(
-        (sub) =>
-            sub.userId == currentUserId &&
-            sub.subscribedToId == widget.publicUser.id,
-        orElse: () => throw Exception('Subscription not found'),
-      );
-
-      final subscriptionsNotifier = ref.read(subscriptionsProvider.notifier);
-      await subscriptionsNotifier.deleteSubscription(subscription.id);
+      // Use new bulk unsubscribe endpoint
+      await ApiClient().delete('/users/${widget.publicUser.id}/subscribe');
 
       if (mounted) {
         PlatformDialogHelpers.showSnackBar(
@@ -162,6 +141,8 @@ class _PublicUserEventsScreenState
         );
       }
 
+      // Refresh subscriptions provider AND local state
+      await ref.read(subscriptionsProvider.notifier).refresh();
       await _loadData();
     } catch (e) {
       if (mounted) {
