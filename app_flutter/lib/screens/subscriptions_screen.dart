@@ -6,7 +6,7 @@ import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
-import '../services/config_service.dart';
+import '../core/state/app_state.dart';
 import '../widgets/subscription_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
@@ -25,12 +25,7 @@ class SubscriptionsScreen extends ConsumerStatefulWidget {
 class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
-  bool _isRefreshing = false;
   String _searchQuery = '';
-
-  List<Map<String, dynamic>> _subscriptions = [];
-  bool _isLoading = false;
-  String? _error;
 
   @override
   void initState() {
@@ -44,42 +39,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
         });
       }
     });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
-    });
-  }
-
-  Future<void> _loadData() async {
-    if (!mounted || _isLoading) return;
-
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final userId = ConfigService.instance.currentUserId;
-
-      // Use optimized endpoint that returns public users directly
-      final subscriptionsData = await ApiClient().fetchUserSubscriptions(
-        userId,
-      );
-
-      if (mounted) {
-        setState(() {
-          _subscriptions = subscriptionsData;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _isLoading = false;
-        });
-      }
-    }
   }
 
   Widget _buildSearchField(bool isIOS) {
@@ -138,12 +97,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
     return PlatformRefresh(
       onRefresh: () async {
-        _isRefreshing = true;
-        try {
-          await _loadData();
-        } finally {
-          if (mounted) _isRefreshing = false;
-        }
+        // Trigger a refresh by invalidating the provider
+        ref.invalidate(subscriptionsStreamProvider);
       },
       sliverChild: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
@@ -187,11 +142,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    if (state == AppLifecycleState.resumed && mounted && !_isRefreshing) {
-      _isRefreshing = true;
-      _loadData().then((_) {
-        if (mounted) _isRefreshing = false;
-      });
+    if (state == AppLifecycleState.resumed && mounted) {
+      ref.invalidate(subscriptionsStreamProvider);
     }
   }
 
@@ -207,8 +159,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   Widget build(BuildContext context) {
     Navigator.of(context);
     final isIOS = PlatformWidgets.isIOS;
-
     final l10n = context.l10n;
+    final subscriptionsAsync = ref.watch(subscriptionsStreamProvider);
 
     return AdaptivePageScaffold(
       key: const Key('subscriptions_screen_scaffold'),
@@ -220,15 +172,9 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             child: CupertinoButton(
               key: const Key('subscriptions_refresh_button'),
               padding: const EdgeInsets.all(8),
-              onPressed: _isRefreshing
-                  ? null
-                  : () async {
-                      if (!_isRefreshing) {
-                        _isRefreshing = true;
-                        await _loadData();
-                        if (mounted) _isRefreshing = false;
-                      }
-                    },
+              onPressed: () {
+                ref.invalidate(subscriptionsStreamProvider);
+              },
               child: PlatformWidgets.platformIcon(
                 CupertinoIcons.refresh,
                 size: 20,
@@ -236,54 +182,44 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             ),
           ),
       ],
-      body: _buildBody(context, isIOS: isIOS, l10n: l10n),
-    );
-  }
+      body: SafeArea(
+        child: subscriptionsAsync.when(
+          data: (subscriptions) {
+            // Convert subscriptions to users list by extracting the subscribed user
+            final users = subscriptions
+                .where((sub) => sub.subscribed != null)
+                .map((sub) => sub.subscribed!)
+                .toList();
 
-  Widget _buildBody(
-    BuildContext context, {
-    required bool isIOS,
-    required AppLocalizations l10n,
-  }) {
-    return SafeArea(
-      child: Builder(
-        builder: (context) {
-          if (_isLoading) {
-            return const Center(child: CupertinoActivityIndicator());
-          }
+            final filteredUsers = users.where((user) {
+              if (_searchQuery.isEmpty) return true;
+              final query = _searchQuery.toLowerCase();
+              return (user.fullName?.toLowerCase().contains(query) ?? false) ||
+                  (user.instagramName?.toLowerCase().contains(query) ?? false);
+            }).toList();
 
-          if (_error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${l10n.error}: $_error',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-                  CupertinoButton(
-                    onPressed: _loadData,
-                    child: Text(l10n.retry),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final users = _subscriptions.map((data) {
-            return User.fromJson(data);
-          }).toList();
-
-          final filteredUsers = users.where((user) {
-            if (_searchQuery.isEmpty) return true;
-            final query = _searchQuery.toLowerCase();
-            return (user.fullName?.toLowerCase().contains(query) ?? false) ||
-                (user.instagramName?.toLowerCase().contains(query) ?? false);
-          }).toList();
-
-          return _buildScrollableContent(filteredUsers, isIOS, l10n, ref);
-        },
+            return _buildScrollableContent(filteredUsers, isIOS, l10n, ref);
+          },
+          loading: () => const Center(child: CupertinoActivityIndicator()),
+          error: (error, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '${l10n.error}: $error',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+                CupertinoButton(
+                  onPressed: () {
+                    ref.invalidate(subscriptionsStreamProvider);
+                  },
+                  child: Text(l10n.retry),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

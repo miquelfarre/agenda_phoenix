@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../widgets/adaptive_scaffold.dart';
-import '../core/providers/calendar_provider.dart';
 import '../models/calendar.dart';
 
 class EditCalendarScreen extends ConsumerStatefulWidget {

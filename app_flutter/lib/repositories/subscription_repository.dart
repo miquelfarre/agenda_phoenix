@@ -29,7 +29,10 @@ class SubscriptionRepository {
 
       final response = await _supabaseService.client
           .from('user_subscriptions')
-          .select('*')
+          .select('''
+            *,
+            followed:users!user_subscriptions_subscribed_to_id_fkey(*)
+          ''')
           .eq('user_id', userId);
 
       _cachedSubscriptions = (response as List)
@@ -66,18 +69,12 @@ class SubscriptionRepository {
       return;
     }
 
-    if (payload.eventType == PostgresChangeEvent.insert) {
-      final subscription = Subscription.fromJson(payload.newRecord);
-      _cachedSubscriptions.add(subscription);
-      _emitCurrentSubscriptions();
-    } else if (payload.eventType == PostgresChangeEvent.update) {
-      final updatedSub = Subscription.fromJson(payload.newRecord);
-      final index = _cachedSubscriptions.indexWhere(
-        (s) => s.id == updatedSub.id,
-      );
-      if (index != -1) {
-        _cachedSubscriptions[index] = updatedSub;
-        _emitCurrentSubscriptions();
+    if (payload.eventType == PostgresChangeEvent.insert ||
+        payload.eventType == PostgresChangeEvent.update) {
+      // For INSERT and UPDATE, re-fetch with user data included
+      final subId = payload.newRecord['id'];
+      if (subId != null) {
+        _refetchSubscription(subId);
       }
     } else if (payload.eventType == PostgresChangeEvent.delete) {
       final subId = payload.oldRecord['id'];
@@ -85,6 +82,30 @@ class SubscriptionRepository {
         _cachedSubscriptions.removeWhere((s) => s.id == subId);
         _emitCurrentSubscriptions();
       }
+    }
+  }
+
+  Future<void> _refetchSubscription(int subId) async {
+    try {
+      final response = await _supabaseService.client
+          .from('user_subscriptions')
+          .select('''
+            *,
+            followed:users!user_subscriptions_subscribed_to_id_fkey(*)
+          ''')
+          .eq('id', subId)
+          .single();
+
+      final subscription = Subscription.fromJson(response);
+      final index = _cachedSubscriptions.indexWhere((s) => s.id == subId);
+      if (index != -1) {
+        _cachedSubscriptions[index] = subscription;
+      } else {
+        _cachedSubscriptions.add(subscription);
+      }
+      _emitCurrentSubscriptions();
+    } catch (e) {
+      print('Error refetching subscription: $e');
     }
   }
 

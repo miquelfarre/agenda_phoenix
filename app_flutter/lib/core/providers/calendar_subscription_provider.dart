@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/calendar.dart';
 import '../../services/calendar_service.dart';
-import 'calendar_provider.dart';
+import '../state/app_state.dart';
 
 final publicCalendarsProvider = FutureProvider.family<List<Calendar>, String?>((
   ref,
@@ -53,7 +53,7 @@ class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
         state = AsyncValue.data({...subscribedIds, calendarId});
       });
 
-      ref.invalidate(availableCalendarsProvider);
+      ref.invalidate(calendarsStreamProvider);
     } catch (error) {
       await refresh();
       rethrow;
@@ -70,7 +70,7 @@ class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
         state = AsyncValue.data(newSet);
       });
 
-      ref.invalidate(availableCalendarsProvider);
+      ref.invalidate(calendarsStreamProvider);
     } catch (error) {
       await refresh();
       rethrow;
