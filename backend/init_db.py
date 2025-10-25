@@ -1515,6 +1515,51 @@ def setup_realtime():
         logger.warning("⚠️  Realtime sync may not work, but backend will continue")
 
 
+def setup_realtime_tenant():
+    """
+    Configure Supabase Realtime tenant.
+    This creates the tenant record needed for Realtime service to function.
+    """
+    logger.info("🔧 Setting up Realtime tenant...")
+
+    try:
+        with engine.connect() as conn:
+            # Check if tenant already exists
+            result = conn.execute(text(
+                "SELECT id FROM tenants WHERE external_id = 'realtime'"
+            ))
+            existing_tenant = result.fetchone()
+
+            if existing_tenant:
+                logger.info("  ℹ️  Realtime tenant already exists")
+            else:
+                # Insert tenant with correct configuration
+                conn.execute(text("""
+                    INSERT INTO tenants (
+                        id, name, external_id, jwt_secret,
+                        max_concurrent_users, inserted_at, updated_at,
+                        max_events_per_second, max_bytes_per_second,
+                        max_channels_per_client, max_joins_per_second
+                    ) VALUES (
+                        gen_random_uuid(), 'realtime', 'realtime',
+                        'super-secret-jwt-token-with-at-least-32-characters-long',
+                        200, NOW(), NOW(),
+                        100, 100000,
+                        100, 500
+                    )
+                """))
+                logger.info("  ✓ Created Realtime tenant")
+
+            conn.commit()
+
+        logger.info("✅ Realtime tenant setup completed successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Error setting up realtime tenant: {e}")
+        # Don't raise - realtime is optional, backend can work without it
+        logger.warning("⚠️  Realtime may not work, but backend will continue")
+
+
 def create_supabase_auth_users():
     """
     Create test users in Supabase Auth.
@@ -1600,6 +1645,7 @@ def init_database():
 
         # Step 3: Setup Supabase Realtime
         setup_realtime()
+        setup_realtime_tenant()
 
         # Step 4: Insert sample data
         insert_sample_data()

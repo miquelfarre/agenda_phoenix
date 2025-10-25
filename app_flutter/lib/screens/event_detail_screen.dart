@@ -747,30 +747,79 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
+    print('🗑️ [EventDetail] _deleteEvent START');
+    print('🗑️ [EventDetail] Event ID: ${event.id}');
+    print('🗑️ [EventDetail] Event Name: "${event.name}"');
+    print('🗑️ [EventDetail] Event Owner ID: ${event.ownerId}');
+    print('🗑️ [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}');
+    print('🗑️ [EventDetail] Should Navigate: $shouldNavigate');
+
     if (event.id == null) {
+      print('❌ [EventDetail] Event ID is null, aborting');
       throw Exception('Event ID is null');
     }
 
-    await ref.read(eventServiceProvider).deleteEvent(event.id!);
+    try {
+      print('🗑️ [EventDetail] Calling EventService.deleteEvent(${event.id})...');
+      await ref.read(eventServiceProvider).deleteEvent(event.id!);
+      print('✅ [EventDetail] EventService.deleteEvent completed successfully');
+    } catch (e) {
+      print('❌ [EventDetail] Error in deleteEvent: $e');
+      rethrow;
+    }
 
     if (shouldNavigate && mounted) {
+      print('🗑️ [EventDetail] Navigating back...');
       Navigator.of(context).pop();
     }
+    print('✅ [EventDetail] _deleteEvent COMPLETED');
   }
 
   Future<void> _leaveEvent(Event event, {bool shouldNavigate = false}) async {
-    if (event.id == null) return;
+    print('👋 [EventDetail] _leaveEvent START');
+    print('👋 [EventDetail] Event ID: ${event.id}');
+    print('👋 [EventDetail] Event Name: "${event.name}"');
+    print('👋 [EventDetail] Event Owner ID: ${event.ownerId}');
+    print('👋 [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}');
+    print('👋 [EventDetail] Should Navigate: $shouldNavigate');
+
+    if (event.id == null) {
+      print('❌ [EventDetail] Event ID is null, aborting _leaveEvent');
+      return;
+    }
 
     try {
+      print('👋 [EventDetail] Calling DELETE /events/${event.id}/interaction...');
       await ref.read(apiClientProvider).delete('/events/${event.id}/interaction');
+      print('✅ [EventDetail] DELETE interaction completed successfully');
+
+      print('👋 [EventDetail] Manually removing event from EventRepository cache...');
+      final repository = ref.read(eventRepositoryProvider);
+      final userId = ConfigService.instance.currentUserId;
+
+      // Manually remove the event from cache since realtime DELETE doesn't work
+      if (event.ownerId != userId) {
+        print('👋 [EventDetail] User is not owner, removing event ${event.id} from cache');
+        repository.removeEventFromCache(event.id!);
+      } else {
+        print('👋 [EventDetail] User is owner, keeping event but clearing interaction data');
+      }
+
+      print('👋 [EventDetail] Refreshing eventStateProvider...');
       await ref.read(eventStateProvider.notifier).refresh();
+      print('✅ [EventDetail] eventStateProvider refreshed');
+
+      print('👋 [EventDetail] Reloading detail data...');
       await _loadDetailData();
+      print('✅ [EventDetail] Detail data reloaded');
 
       if (shouldNavigate && mounted) {
+        print('👋 [EventDetail] Navigating back...');
         Navigator.of(context).pop();
       }
+      print('✅ [EventDetail] _leaveEvent COMPLETED');
     } catch (e) {
-      print('Error leaving event: $e');
+      print('❌ [EventDetail] Error leaving event: $e');
       if (mounted) {
         _showEphemeralMessage(
           'Error al salir del evento',

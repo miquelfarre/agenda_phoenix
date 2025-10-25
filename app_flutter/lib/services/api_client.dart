@@ -457,7 +457,9 @@ class ApiClient implements IApiClient {
 
   @override
   Future<void> deleteEvent(int eventId, {int? currentUserId}) async {
+    print('🗑️ [ApiClient] deleteEvent START - eventId: $eventId');
     await delete('/events/$eventId');
+    print('✅ [ApiClient] deleteEvent COMPLETED');
   }
 
   @override

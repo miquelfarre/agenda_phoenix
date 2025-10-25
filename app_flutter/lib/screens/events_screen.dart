@@ -80,6 +80,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       _eventRepository = ref.read(eventRepositoryProvider);
 
       _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
+        print('📥 [EventsScreen] Stream received ${events.length} events');
+        print('📥 [EventsScreen] Event IDs: ${events.map((e) => e.id).take(10).toList()}${events.length > 10 ? '...' : ''}');
         _buildEventsDataFromRepository(events);
       });
 
@@ -115,8 +117,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   void _buildEventsDataFromRepository(List<Event> events) {
+    print('🔧 [EventsScreen] _buildEventsDataFromRepository START');
+    print('🔧 [EventsScreen] Received ${events.length} events from repository');
+
     try {
       final userId = ConfigService.instance.currentUserId;
+      print('🔧 [EventsScreen] Current userId: $userId');
 
       final eventItems = <EventWithInteraction>[];
       for (final event in events) {
@@ -135,6 +141,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           EventWithInteraction(event, interactionType, invitationStatus),
         );
       }
+
+      print('🔧 [EventsScreen] Processed ${eventItems.length} event items');
 
       final myEvents = eventItems
           .where(
@@ -177,13 +185,17 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         allCount: eventItems.length,
       );
 
+      print('🔧 [EventsScreen] Filter results - myEvents: $myEvents, invitations: $invitations, subscribed: $subscribed, all: ${eventItems.length}');
+
       if (mounted) {
+        print('🔧 [EventsScreen] Calling setState with new data...');
         setState(() {
           _eventsData = data;
           _isLoading = false;
         });
-        // Uncomment for debugging:
-        // print('🔵 [EventsScreen] setState completed, _isLoading=false');
+        print('✅ [EventsScreen] setState completed, UI should update now');
+      } else {
+        print('⚠️ [EventsScreen] Widget not mounted, skipping setState');
       }
     } catch (e) {
       print('🔴 [EventsScreen] ERROR in _buildEventsDataFromRepository: $e');

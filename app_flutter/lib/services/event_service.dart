@@ -125,15 +125,21 @@ class EventService {
   }
 
   Future<void> deleteEvent(int eventId) async {
+    print('🗑️ [EventService] deleteEvent START - eventId: $eventId');
     try {
+      print('🗑️ [EventService] Calling ApiClient.deleteEvent($eventId)...');
       await _client.deleteEvent(eventId);
-    } on SocketException {
+      print('✅ [EventService] ApiClient.deleteEvent completed successfully');
+    } on SocketException catch (e) {
+      print('❌ [EventService] SocketException: $e');
       throw app_exceptions.ApiException('Internet connection required');
-    } on app_exceptions.NotFoundException {
-      // Event already deleted - ignore
+    } on app_exceptions.NotFoundException catch (e) {
+      print('⚠️ [EventService] NotFoundException (event already deleted): $e');
     } catch (e) {
+      print('❌ [EventService] Unexpected error: $e');
       throw app_exceptions.ApiException('Failed to delete event: $e');
     }
+    print('✅ [EventService] deleteEvent COMPLETED');
   }
 
   Future<List<Event>> refreshEvents() async {

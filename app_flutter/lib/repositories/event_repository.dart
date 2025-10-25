@@ -117,6 +117,26 @@ class EventRepository {
     return eventHive?.toEvent();
   }
 
+  /// Manually remove an event from cache
+  /// Used when realtime DELETE events don't work properly
+  void removeEventFromCache(int eventId) {
+    print('🗑️ [EventRepository] removeEventFromCache START - eventId: $eventId');
+
+    final eventBefore = _cachedEvents.where((e) => e.id == eventId).firstOrNull;
+    print('🗑️ [EventRepository] Event in cache: ${eventBefore != null ? '"${eventBefore.name}"' : 'NOT FOUND'}');
+    print('🗑️ [EventRepository] Cache size before: ${_cachedEvents.length}');
+
+    _cachedEvents.removeWhere((e) => e.id == eventId);
+    print('🗑️ [EventRepository] Cache size after: ${_cachedEvents.length}');
+
+    _box?.delete(eventId);
+    print('🗑️ [EventRepository] Deleted from Hive box');
+
+    print('🗑️ [EventRepository] Emitting updated events to stream...');
+    _emitCurrentEvents();
+    print('✅ [EventRepository] Event manually removed and stream emitted - ID $eventId');
+  }
+
   Future<void> _startRealtimeSubscription() async {
     _realtimeChannel = _supabaseService.realtimeChannel('events_channel');
 
@@ -152,6 +172,13 @@ class EventRepository {
   /// Returns true if the event is NEW (after sync), false if HISTORICAL (before sync)
   bool _shouldProcessEvent(PostgresChangePayload payload, String eventType) {
     print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
+
+    // DELETE events should ALWAYS be processed, regardless of timestamp
+    // because they are current actions, not historical data
+    if (payload.eventType == PostgresChangeEvent.delete) {
+      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
+      return true;
+    }
 
     // Try to extract updated_at from newRecord or oldRecord
     final updatedAtStr = payload.newRecord['updated_at'] as String? ??
@@ -412,10 +439,21 @@ class EventRepository {
 
   void _handleDelete(Map<String, dynamic> record) {
     final id = record['id'] as int;
+    print('🗑️ [EventRepository] _handleDelete START - eventId: $id');
+
+    final eventBefore = _cachedEvents.where((e) => e.id == id).firstOrNull;
+    print('🗑️ [EventRepository] Event in cache before delete: ${eventBefore != null ? '"${eventBefore.name}"' : 'NOT FOUND'}');
+    print('🗑️ [EventRepository] Cache size before delete: ${_cachedEvents.length}');
+
     _cachedEvents.removeWhere((e) => e.id == id);
+    print('🗑️ [EventRepository] Cache size after removeWhere: ${_cachedEvents.length}');
+
     _box?.delete(id);
+    print('🗑️ [EventRepository] Deleted from Hive box');
+
+    print('🗑️ [EventRepository] Emitting updated events to stream...');
     _emitCurrentEvents();
-    print('✅ Event deleted: ID $id');
+    print('✅ [EventRepository] Event deleted and stream emitted - ID $id');
   }
 
   Future<void> _updateLocalCache(List<Event> events) async {
@@ -435,6 +473,8 @@ class EventRepository {
 
   void _emitCurrentEvents() {
     final events = getLocalEvents();
+    print('📤 [EventRepository] _emitCurrentEvents - Emitting ${events.length} events to stream');
+    print('📤 [EventRepository] Event IDs: ${events.map((e) => e.id).take(10).toList()}${events.length > 10 ? '...' : ''}');
     _eventsStreamController.add(events);
   }
 
