@@ -127,19 +127,12 @@ class SyncService {
     final notesBox = Hive.box<UserEventNoteHive>('user_event_note');
     await notesBox.clear();
 
-    final interactionsBox = Hive.box<EventInteractionHive>(
-      'event_interactions',
-    );
     final usersBox = Hive.box<UserHive>('users');
     final userId = ConfigService.instance.currentUserId;
 
-    final keysToDelete = interactionsBox.keys.where((k) {
-      final interaction = interactionsBox.get(k);
-      return interaction != null && interaction.userId == userId;
-    }).toList();
-    for (final key in keysToDelete) {
-      await interactionsBox.delete(key);
-    }
+    // NOTE: syncEvents() NO maneja interacciones.
+    // Las interacciones se manejan exclusivamente por syncEventInteractions()
+    // que usa el endpoint GET /api/v1/interactions como fuente de verdad.
 
     for (final item in eventItems) {
       final eventId = item['id'] as int;
@@ -176,35 +169,11 @@ class SyncService {
         await notesBox.put(noteHiveKey, noteHive);
       }
 
-      final invitationStatus = item['invitation_status'] as String?;
-      if (invitationStatus != null) {
-        final inviterId = item['inviter_id'] as int?;
-        final inviterData = item['inviter'] as Map<String, dynamic>?;
-
-        if (inviterId != null && inviterData != null) {
-          final inviterUser = User.fromJson(inviterData);
-          await usersBox.put(inviterId, inviterUser.toUserHive());
-        }
-
-        final interactionHive = EventInteractionHive(
-          userId: userId,
-          eventId: eventId,
-          inviterId: inviterId,
-          participationStatus: invitationStatus,
-          viewed: false,
-          favorited: false,
-          hidden: false,
-          isAttending: false,
-          isEventAdmin: false,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-
-        final interactionKey = EventInteractionHive.createHiveKey(
-          userId,
-          eventId,
-        );
-        await interactionsBox.put(interactionKey, interactionHive);
+      // Store inviter user data if present (for display purposes)
+      final inviterData = item['inviter'] as Map<String, dynamic>?;
+      if (inviterData != null) {
+        final inviterUser = User.fromJson(inviterData);
+        await usersBox.put(inviterUser.id, inviterUser.toUserHive());
       }
     }
   }
@@ -371,7 +340,7 @@ class SyncService {
 
     try {
       final interactionsData = await ApiClientFactory.instance
-          .fetchEventInteractions(userId);
+          .fetchUserInteractions();
 
       final interactions = interactionsData
           .map((data) => EventInteraction.fromJson(data))

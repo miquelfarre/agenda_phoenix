@@ -346,6 +346,7 @@ class EventInteractionsNotifier
         isAttending: isAttending,
       );
       await refresh();
+      ref.read(eventStateProvider.notifier).refresh();
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
       rethrow;

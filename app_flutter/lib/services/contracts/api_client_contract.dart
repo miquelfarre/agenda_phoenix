@@ -73,6 +73,10 @@ abstract class IApiClient {
     int? currentUserId,
   });
 
+  Future<List<Map<String, dynamic>>> fetchUserInteractions({
+    int? currentUserId,
+  });
+
   Future<List<Map<String, dynamic>>> fetchAvailableInvitees(
     int eventId, {
     int? currentUserId,

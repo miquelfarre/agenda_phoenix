@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/event.dart';
+import '../models/event_interaction.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
@@ -29,8 +30,11 @@ class EventCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
 
-    // Use interaction data from event (from backend) instead of Hive
-    final participationStatus = event.interactionStatus;
+    // Get interaction from provider (source of truth for interaction state)
+    final interactions = ref.watch(eventInteractionsProvider).value ?? [];
+    final interaction = interactions.where((i) => i.eventId == event.id).firstOrNull;
+
+    final participationStatus = interaction?.participationStatus;
 
     final effectiveConfig = participationStatus != null
         ? config.copyWith(
@@ -73,7 +77,7 @@ class EventCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _buildTrailingActions(context, ref, effectiveConfig),
+                _buildTrailingActions(context, ref, effectiveConfig, interaction, participationStatus),
               ],
             ),
 
@@ -252,6 +256,8 @@ class EventCard extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     EventCardConfig config,
+    EventInteraction? interaction,
+    String? participationStatus,
   ) {
     final currentUserId = ConfigService.instance.currentUserId;
     final isOwner = event.ownerId == currentUserId;
@@ -285,8 +291,8 @@ class EventCard extends ConsumerWidget {
       );
     }
 
-    if (event.wasInvited && event.interactionStatus != null) {
-      final currentStatus = event.interactionStatus;
+    if (interaction != null && interaction.inviterId != null) {
+      final currentStatus = participationStatus ?? 'pending';
       final isCurrentlyAccepted = currentStatus == 'accepted';
       final isCurrentlyRejected = currentStatus == 'rejected';
 

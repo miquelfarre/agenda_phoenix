@@ -393,6 +393,21 @@ class ApiClient implements IApiClient {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> fetchUserInteractions({
+    int? currentUserId,
+  }) async {
+    final userId = currentUserId ?? ConfigService.instance.currentUserId;
+    final result = await get(
+      '/interactions',
+      queryParams: {
+        'user_id': userId.toString(),
+        'limit': '1000',
+      },
+    );
+    return List<Map<String, dynamic>>.from(result);
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> fetchAvailableInvitees(
     int eventId, {
     int? currentUserId,
