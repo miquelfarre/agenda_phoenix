@@ -16,6 +16,7 @@ import 'create_edit_event_screen.dart';
 
 import '../services/config_service.dart';
 import '../services/event_service.dart';
+import '../services/api_client.dart';
 import '../repositories/event_repository.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
@@ -62,6 +63,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   bool _isLoading = true;
   EventRepository? _eventRepository;
   StreamSubscription<List<Event>>? _eventsSubscription;
+
+  // Singleton service instances
+  final _apiClient = ApiClient();
+  final _eventService = EventService();
 
   @override
   void initState() {
@@ -410,7 +415,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     try {
       date = DateTime.parse('${dateStr}T00:00:00');
     } catch (_) {
-      date = DateTime.parse('${dateStr}T00:00:00');
+      // Fallback: use current date if parsing fails
+      date = DateTime.now();
     }
 
     final formattedDate = _formatDate(context, date);
@@ -646,7 +652,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         CupertinoIcons.search,
         color: AppStyles.grey600,
       ),
-      suffixIcon: _searchController.text.isNotEmpty
+      suffixIcon: _searchQuery.isNotEmpty
           ? AdaptiveButton(
               key: const Key('events_search_clear_button'),
               config: const AdaptiveButtonConfig(
@@ -687,12 +693,24 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
     try {
+      if (event.id == null) {
+        throw Exception('Event ID is null');
+      }
+
       final currentUserId = ConfigService.instance.currentUserId;
       final isOwner = event.ownerId == currentUserId;
 
       if (isOwner) {
-        await EventService().deleteEvent(event.id!);
-      } else {}
+        // Owner deletes the event
+        await _eventService.deleteEvent(event.id!);
+      } else {
+        // Non-owner removes their interaction (leaves event)
+        await _apiClient.delete('/events/${event.id}/interaction');
+      }
+
+      if (shouldNavigate && mounted) {
+        Navigator.of(context).pop();
+      }
 
       // Supabase handles caching automatically via realtime
       await _loadData();

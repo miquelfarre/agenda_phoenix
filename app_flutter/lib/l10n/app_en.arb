@@ -1883,5 +1883,13 @@
   "inOneYear": "in 1 year",
   "@inOneYear": {
     "description": "Label for birthday timing exactly one year away"
+  },
+  "eventSeries": "Event Series",
+  "@eventSeries": {
+    "description": "Title for event series screen showing recurring events"
+  },
+  "noEventsInSeries": "No events in this series",
+  "@noEventsInSeries": {
+    "description": "Message shown when there are no events in the recurring series"
   }
 }

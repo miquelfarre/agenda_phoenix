@@ -1633,6 +1633,14 @@
   "inOneYear": "en 1 año",
   "@inOneYear": {
     "description": "Etiqueta para cumpleaños exactamente a un año"
+  },
+  "eventSeries": "Serie de Eventos",
+  "@eventSeries": {
+    "description": "Título para pantalla de serie de eventos recurrentes"
+  },
+  "noEventsInSeries": "No hay eventos en esta serie",
+  "@noEventsInSeries": {
+    "description": "Mensaje mostrado cuando no hay eventos en la serie recurrente"
   }
 }
 

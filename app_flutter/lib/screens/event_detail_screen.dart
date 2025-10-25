@@ -26,6 +26,7 @@ import '../widgets/personal_note_widget.dart';
 import '../widgets/user_avatar.dart';
 import 'public_user_events_screen.dart';
 import 'calendar_events_screen.dart';
+import 'event_series_screen.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
   final Event event;
@@ -64,6 +65,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   EventRepository? _eventRepository;
   StreamSubscription<List<Event>>? _eventsSubscription;
 
+  // Singleton service instances
+  final _apiClient = ApiClient();
+  final _eventService = EventService();
+
   Future<void> _loadDetailData() async {
     if (!mounted || _isLoadingComposite) return;
     final eventId = currentEvent.id;
@@ -74,7 +79,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     });
 
     try {
-      final data = await ApiClient().fetchEvent(eventId);
+      final data = await _apiClient.fetchEvent(eventId);
 
       final Event detailedEvent = Event.fromJson(data);
 
@@ -750,23 +755,40 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-    final eventService = EventService();
-    await eventService.deleteEvent(event.id!);
+    if (event.id == null) {
+      throw Exception('Event ID is null');
+    }
+
+    await _eventService.deleteEvent(event.id!);
 
     if (shouldNavigate && mounted) {
       Navigator.of(context).pop();
     }
-
-    if (!shouldNavigate && currentEvent.owner?.isPublic == true) {}
   }
 
   Future<void> _leaveEvent(Event event, {bool shouldNavigate = false}) async {
-    await ref.read(eventStateProvider.notifier).refresh();
+    if (event.id == null) return;
 
-    await _loadDetailData();
+    try {
+      // Delete user's interaction with this event
+      await _apiClient.delete('/events/${event.id}/interaction');
 
-    if (shouldNavigate && mounted) {
-      Navigator.of(context).pop();
+      // Refresh states
+      await ref.read(eventStateProvider.notifier).refresh();
+      await _loadDetailData();
+
+      if (shouldNavigate && mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      print('Error leaving event: $e');
+      if (mounted) {
+        _showEphemeralMessage(
+          'Error al salir del evento',
+          color: AppStyles.errorColor,
+        );
+      }
+      rethrow;
     }
   }
 
@@ -943,7 +965,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               config: AdaptiveButtonConfigExtended.destructive(),
               text: l10n.deleteEvent,
               icon: CupertinoIcons.delete,
-              onPressed: () => _deleteEvent(currentEvent, shouldNavigate: true),
+              onPressed: () => _deleteEvent(_detailedEvent ?? currentEvent, shouldNavigate: true),
             ),
           ),
         ],
@@ -960,7 +982,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         config: AdaptiveButtonConfigExtended.destructive(),
         text: l10n.removeFromMyList,
         icon: CupertinoIcons.minus_circle,
-        onPressed: () => _leaveEvent(currentEvent, shouldNavigate: true),
+        onPressed: () => _leaveEvent(_detailedEvent ?? currentEvent, shouldNavigate: true),
       ),
     );
   }
@@ -1001,7 +1023,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         const SizedBox(height: 8),
         _buildInfoRow(
           l10n.recurrencePatterns,
-          _formatRecurrencePatterns([], locale),
+          _formatRecurrencePatterns(
+            event.recurrencePatterns
+                .whereType<RecurrencePattern>()
+                .toList(),
+            locale,
+          ),
         ),
       ],
     );
@@ -1162,7 +1189,69 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
   }
 
-  void _viewParentEventSeries() {}
+  void _viewParentEventSeries() async {
+    final event = _detailedEvent ?? currentEvent;
+
+    if (event.parentRecurringEventId == null) {
+      print('⚠️ [EventDetail] Event has no parent recurring event');
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      if (mounted) {
+        _showEphemeralMessage(
+          'Cargando serie de eventos...',
+          color: AppStyles.blue600,
+        );
+      }
+
+      // Get all events for the current user
+      final userId = ConfigService.instance.currentUserId;
+      final response = await _apiClient.get(
+        '/users/$userId/events',
+      );
+
+      // Filter events that belong to the same series
+      final allEvents = (response as List)
+          .map((json) => Event.fromJson(json))
+          .toList();
+
+      final seriesEvents = allEvents
+          .where((e) =>
+              e.parentRecurringEventId == event.parentRecurringEventId ||
+              e.id == event.parentRecurringEventId)
+          .toList();
+
+      if (mounted) {
+        if (seriesEvents.isEmpty) {
+          _showEphemeralMessage(
+            'No se encontraron eventos en esta serie',
+            color: AppStyles.orange600,
+          );
+          return;
+        }
+
+        // Navigate to event series screen
+        Navigator.of(context).push(
+          CupertinoPageRoute(
+            builder: (context) => EventSeriesScreen(
+              events: seriesEvents,
+              seriesName: event.name,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print('🔴 [EventDetail] Error loading event series: $e');
+      if (mounted) {
+        _showEphemeralMessage(
+          'Error al cargar la serie de eventos',
+          color: AppStyles.errorColor,
+        );
+      }
+    }
+  }
 
   Widget _buildInvitedUsersList() {
     if (_otherInvitations == null || _otherInvitations!.isEmpty) {

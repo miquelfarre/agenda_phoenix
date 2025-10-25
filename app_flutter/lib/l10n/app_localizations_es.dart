@@ -2844,4 +2844,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get inOneYear => 'en 1 año';
+
+  @override
+  String get eventSeries => 'Serie de Eventos';
+
+  @override
+  String get noEventsInSeries => 'No hay eventos en esta serie';
 }

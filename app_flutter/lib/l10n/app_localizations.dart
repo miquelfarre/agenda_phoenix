@@ -5500,6 +5500,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'in 1 year'**
   String get inOneYear;
+
+  /// Title for event series screen showing recurring events
+  ///
+  /// In en, this message translates to:
+  /// **'Event Series'**
+  String get eventSeries;
+
+  /// Message shown when there are no events in the recurring series
+  ///
+  /// In en, this message translates to:
+  /// **'No events in this series'**
+  String get noEventsInSeries;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
