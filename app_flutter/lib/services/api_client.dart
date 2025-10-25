@@ -468,6 +468,15 @@ class ApiClient implements IApiClient {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> fetchUserSubscriptions(
+    int userId, {
+    int? currentUserId,
+  }) async {
+    final result = await get('/users/$userId/subscriptions');
+    return List<Map<String, dynamic>>.from(result);
+  }
+
+  @override
   Future<Map<String, dynamic>> fetchInteraction(
     int interactionId, {
     int? currentUserId,

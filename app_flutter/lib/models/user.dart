@@ -20,6 +20,10 @@ class User {
   final String defaultCountryCode;
   final String defaultCity;
   final DateTime? createdAt;
+  // Subscription statistics (only present in /users/{id}/subscriptions endpoint)
+  final int? newEventsCount;
+  final int? totalEventsCount;
+  final int? subscribersCount;
 
   const User({
     required this.id,
@@ -38,6 +42,9 @@ class User {
     this.defaultCountryCode = 'ES',
     this.defaultCity = 'Madrid',
     this.createdAt,
+    this.newEventsCount,
+    this.totalEventsCount,
+    this.subscribersCount,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -71,6 +78,9 @@ class User {
                 ? DateTimeUtils.parseAndNormalize(json['created_at'])
                 : json['created_at'])
           : null,
+      newEventsCount: json['new_events_count'] as int?,
+      totalEventsCount: json['total_events_count'] as int?,
+      subscribersCount: json['subscribers_count'] as int?,
     );
   }
 
@@ -92,6 +102,9 @@ class User {
       'default_country_code': defaultCountryCode,
       'default_city': defaultCity,
       'created_at': createdAt?.toIso8601String(),
+      if (newEventsCount != null) 'new_events_count': newEventsCount,
+      if (totalEventsCount != null) 'total_events_count': totalEventsCount,
+      if (subscribersCount != null) 'subscribers_count': subscribersCount,
     };
   }
 

@@ -923,6 +923,30 @@ abstract class AppLocalizations {
   /// **'Event'**
   String get event;
 
+  /// No description provided for @newEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'new event'**
+  String get newEvent;
+
+  /// No description provided for @newEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'new events'**
+  String get newEvents;
+
+  /// No description provided for @subscriber.
+  ///
+  /// In en, this message translates to:
+  /// **'subscriber'**
+  String get subscriber;
+
+  /// No description provided for @subscribers.
+  ///
+  /// In en, this message translates to:
+  /// **'subscribers'**
+  String get subscribers;
+
   /// No description provided for @myEvents.
   ///
   /// In en, this message translates to:

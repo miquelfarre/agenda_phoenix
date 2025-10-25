@@ -16,7 +16,7 @@ from crud import calendar_membership, contact, event, event_interaction, recurri
 from dependencies import check_user_not_banned, get_db
 import models
 from models import EventInteraction
-from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserPublicStats, UserResponse
+from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserPublicStats, UserResponse, UserSubscriptionResponse
 
 logger = logging.getLogger(__name__)
 
@@ -599,3 +599,84 @@ async def subscribe_to_user(
     db.commit()
 
     return {"message": f"Subscribed to {subscribed_count} events", "subscribed_count": subscribed_count, "already_subscribed_count": already_subscribed_count, "error_count": error_count, "total_events": len(events)}
+
+
+@router.get("/{user_id}/subscriptions", response_model=List[UserSubscriptionResponse])
+async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get all public users that the given user is subscribed to with statistics.
+
+    This endpoint is optimized to avoid N+1 queries by using JOINs and aggregations.
+    It returns a list of unique public users with:
+    - new_events_count: Events created in the last 7 days
+    - total_events_count: Total events owned by this user
+    - subscribers_count: Total unique subscribers to this user's events
+
+    Returns:
+    - List of UserSubscriptionResponse objects for each public user
+    """
+    from datetime import timedelta
+    from sqlalchemy import func, distinct
+
+    # Verify user exists
+    db_user = user.get(db, id=user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Query to get unique public users from subscribed events
+    subscribed_users = (
+        db.query(models.User)
+        .join(models.Event, models.Event.owner_id == models.User.id)
+        .join(models.EventInteraction, models.EventInteraction.event_id == models.Event.id)
+        .filter(
+            models.EventInteraction.user_id == user_id,
+            models.EventInteraction.interaction_type == "subscribed",
+            models.User.is_public == True
+        )
+        .distinct()
+        .all()
+    )
+
+    # Calculate statistics for each user
+    result = []
+    seven_days_ago = datetime.now() - timedelta(days=7)
+
+    for public_user in subscribed_users:
+        # Count total events
+        total_events = db.query(func.count(models.Event.id)).filter(
+            models.Event.owner_id == public_user.id
+        ).scalar()
+
+        # Count new events (created in last 7 days)
+        new_events = db.query(func.count(models.Event.id)).filter(
+            models.Event.owner_id == public_user.id,
+            models.Event.created_at >= seven_days_ago
+        ).scalar()
+
+        # Count unique subscribers (distinct users subscribed to any event of this owner)
+        subscribers = db.query(func.count(distinct(models.EventInteraction.user_id))).join(
+            models.Event, models.Event.id == models.EventInteraction.event_id
+        ).filter(
+            models.Event.owner_id == public_user.id,
+            models.EventInteraction.interaction_type == "subscribed"
+        ).scalar()
+
+        # Build response
+        result.append(UserSubscriptionResponse(
+            id=public_user.id,
+            contact_id=public_user.contact_id,
+            username=public_user.username,
+            auth_provider=public_user.auth_provider,
+            auth_id=public_user.auth_id,
+            is_public=public_user.is_public,
+            is_admin=public_user.is_admin,
+            profile_picture_url=public_user.profile_picture_url,
+            last_login=public_user.last_login,
+            created_at=public_user.created_at,
+            updated_at=public_user.updated_at,
+            new_events_count=new_events or 0,
+            total_events_count=total_events or 0,
+            subscribers_count=subscribers or 0,
+        ))
+
+    return result

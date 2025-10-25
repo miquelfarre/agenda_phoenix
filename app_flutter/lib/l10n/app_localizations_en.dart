@@ -427,6 +427,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get event => 'Event';
 
   @override
+  String get newEvent => 'new event';
+
+  @override
+  String get newEvents => 'new events';
+
+  @override
+  String get subscriber => 'subscriber';
+
+  @override
+  String get subscribers => 'subscribers';
+
+  @override
   String get myEvents => 'My Events';
 
   @override

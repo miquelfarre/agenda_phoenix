@@ -73,6 +73,22 @@ class UserEnrichedResponse(UserBase):
     updated_at: datetime
 
 
+class UserSubscriptionResponse(UserBase):
+    """User response with subscription statistics"""
+
+    id: int
+    contact_id: Optional[int]
+    last_login: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
+    # Subscription statistics
+    new_events_count: int  # Events created in last 7 days
+    total_events_count: int  # Total events owned by this user
+    subscribers_count: int  # Total unique subscribers to this user's events
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class EventStats(BaseModel):
     """Statistics for a single event of a public user"""
 

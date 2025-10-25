@@ -5,15 +5,12 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import '../models/subscription.dart';
-import '../models/event.dart';
 import '../models/user.dart';
 import '../core/state/app_state.dart';
 import '../services/api_client.dart';
 import '../services/subscription_service.dart';
 import '../services/config_service.dart';
-import '../repositories/event_repository.dart';
-import '../widgets/event_card.dart';
-import '../widgets/event_card/event_card_config.dart';
+import '../widgets/subscription_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/platform_refresh.dart';
@@ -67,45 +64,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     try {
       final userId = ConfigService.instance.currentUserId;
 
-      // Get all "subscribed" interactions for this user
-      final interactionsData = await ApiClient().fetchInteractions(
-        userId: userId,
-        interactionType: 'subscribed',
-      );
-
-      // Get cached events from EventRepository to avoid N+1 queries
-      final eventRepository = EventRepository();
-      final cachedEvents = eventRepository.getLocalEvents();
-      final eventsMap = {for (var e in cachedEvents) if (e.id != null) e.id!: e};
-
-      // Extract unique owner IDs from events
-      final Map<int, Map<String, dynamic>> ownersMap = {};
-
-      for (final interactionData in interactionsData) {
-        final eventId = interactionData['event_id'] as int?;
-        if (eventId != null) {
-          // Look up event from cache instead of making individual API calls
-          final cachedEvent = eventsMap[eventId];
-          if (cachedEvent != null) {
-            final ownerId = cachedEvent.ownerId;
-            if (ownerId != null && ownerId > 0) {
-              final isPublic = cachedEvent.isOwnerPublic ?? false;
-              if (isPublic && !ownersMap.containsKey(ownerId)) {
-                ownersMap[ownerId] = {
-                  'id': ownerId,
-                  'full_name': cachedEvent.ownerName,
-                  'profile_picture': cachedEvent.ownerProfilePicture,
-                  'is_public': isPublic,
-                };
-              }
-            }
-          }
-        }
-      }
+      // Use optimized endpoint that returns public users directly
+      final subscriptionsData = await ApiClient().fetchUserSubscriptions(userId);
 
       if (mounted) {
         setState(() {
-          _subscriptions = ownersMap.values.toList();
+          _subscriptions = subscriptionsData;
           _isLoading = false;
         });
       }
@@ -203,81 +167,12 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     AppLocalizations l10n,
     WidgetRef ref,
   ) {
-    final displayTitle = user.displayName.isNotEmpty
-        ? user.displayName
-        : user.fullName ?? user.instagramName ?? l10n.unknownUser;
-
-    final displaySubtitle = l10n.publicUser;
-
-    final uniqueEventId = -user.id;
-
-    final fakeEvent = Event(
-      id: uniqueEventId,
-      name: displayTitle,
-      description: displaySubtitle,
-      startDate: DateTime.now(),
-      ownerId: 0,
-      eventType: 'regular',
-    );
-
-    String initials = '?';
-    if (user.fullName?.isNotEmpty == true) {
-      final nameParts = user.fullName!.trim().split(' ');
-      if (nameParts.length >= 2) {
-        initials =
-            nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
-      } else {
-        initials = nameParts[0][0].toUpperCase();
-      }
-    } else if (user.instagramName?.isNotEmpty == true) {
-      initials = user.instagramName![0].toUpperCase();
-    } else if (user.id > 0) {
-      initials = user.id.toString()[0];
-    }
-
-    final customAvatar = Container(
-      width: 65,
-      height: 65,
-      decoration: BoxDecoration(
-        color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.3),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            initials,
-            style: AppStyles.cardTitle.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppStyles.blue600,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: EventCard(
-        event: fakeEvent,
-        onTap: () {
-          _showUserDetails(user);
-        },
-        config: EventCardConfig(
-          showChevron: true,
-          onDelete: (_, {bool shouldNavigate = false}) {
-            _removeUser(user, ref);
-          },
-          customAvatar: customAvatar,
-          customTitle: displayTitle,
-          customSubtitle: displaySubtitle,
-        ),
+      child: SubscriptionCard(
+        user: user,
+        onTap: () => _showUserDetails(user),
+        onDelete: () => _removeUser(user, ref),
       ),
     );
   }

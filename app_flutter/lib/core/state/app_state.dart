@@ -212,43 +212,11 @@ class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
 
       final userId = ConfigService.instance.currentUserId;
 
-      // Get all "subscribed" interactions for this user
-      final interactionsData = await ApiClient().fetchInteractions(
-        userId: userId,
-        interactionType: 'subscribed',
-      );
+      // Use optimized endpoint that returns public users directly
+      final subscriptionsData = await ApiClient().fetchUserSubscriptions(userId);
 
-      // Get cached events from EventRepository to avoid N+1 queries
-      final eventRepository = EventRepository();
-      final cachedEvents = eventRepository.getLocalEvents();
-      final eventsMap = {for (var e in cachedEvents) if (e.id != null) e.id!: e};
-
-      // Extract unique owner IDs from events
-      final Map<int, User> ownersMap = {};
-
-      for (final interactionData in interactionsData) {
-        final eventId = interactionData['event_id'] as int?;
-        if (eventId != null) {
-          // Look up event from cache instead of making individual API calls
-          final cachedEvent = eventsMap[eventId];
-          if (cachedEvent != null) {
-            final ownerId = cachedEvent.ownerId;
-            if (ownerId != null && ownerId > 0) {
-              final isPublic = cachedEvent.isOwnerPublic ?? false;
-              if (isPublic && !ownersMap.containsKey(ownerId)) {
-                ownersMap[ownerId] = User(
-                  id: ownerId,
-                  fullName: cachedEvent.ownerName,
-                  profilePicture: cachedEvent.ownerProfilePicture,
-                  isPublic: isPublic,
-                );
-              }
-            }
-          }
-        }
-      }
-
-      final subscriptions = ownersMap.values.map((user) {
+      final subscriptions = subscriptionsData.map((userData) {
+        final user = User.fromJson(userData);
         return Subscription(
           id: user.id,
           userId: userId,
