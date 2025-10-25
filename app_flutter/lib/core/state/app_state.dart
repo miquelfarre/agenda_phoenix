@@ -1,10 +1,11 @@
 import 'dart:ui' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gotrue/gotrue.dart' as gotrue;
 import '../../models/event.dart';
 import '../../models/subscription.dart';
 import '../../models/event_interaction.dart';
-import '../../models/user.dart';
+import '../../models/user.dart' as models;
 import '../../models/calendar.dart';
 import '../../models/group.dart';
 import '../../services/user_service.dart';
@@ -27,7 +28,7 @@ import '../../services/group_service.dart';
 import 'dart:async';
 
 class AuthState {
-  final User? currentUser;
+  final models.User? currentUser;
   final bool isAuthenticated;
   final bool isLoading;
   final String? error;
@@ -42,7 +43,7 @@ class AuthState {
   String? get userLogoPath => currentUser?.id != null ? null : null;
 
   AuthState copyWith({
-    User? currentUser,
+    models.User? currentUser,
     bool? isAuthenticated,
     bool? isLoading,
     String? error,
@@ -155,7 +156,7 @@ final groupsStreamProvider = StreamProvider<List<Group>>((ref) {
   return repository.groupsStream;
 });
 
-final subscriptionsStreamProvider = StreamProvider<List<Subscription>>((ref) {
+final subscriptionsStreamProvider = StreamProvider<List<models.User>>((ref) {
   final repository = ref.watch(subscriptionRepositoryProvider);
   return repository.subscriptionsStream;
 });
@@ -297,7 +298,7 @@ class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
           .fetchUserSubscriptions(userId);
 
       final subscriptions = subscriptionsData.map((userData) {
-        final user = User.fromJson(userData);
+        final user = models.User.fromJson(userData);
         return Subscription(
           id: user.id,
           userId: userId,
@@ -484,9 +485,9 @@ class EventInteractionsNotifier
   }
 }
 
-class BlockedUsersNotifier extends Notifier<AsyncValue<List<User>>> {
+class BlockedUsersNotifier extends Notifier<AsyncValue<List<models.User>>> {
   @override
-  AsyncValue<List<User>> build() {
+  AsyncValue<List<models.User>> build() {
     _loadBlockedUsers();
     return const AsyncValue.loading();
   }
@@ -526,18 +527,19 @@ class BlockedUsersNotifier extends Notifier<AsyncValue<List<User>>> {
 }
 
 final blockedUsersProvider =
-    NotifierProvider<BlockedUsersNotifier, AsyncValue<List<User>>>(
+    NotifierProvider<BlockedUsersNotifier, AsyncValue<List<models.User>>>(
       BlockedUsersNotifier.new,
     );
 
 final publicUsersSearchProvider =
-    NotifierProvider<PublicUsersSearchNotifier, AsyncValue<List<User>>>(
+    NotifierProvider<PublicUsersSearchNotifier, AsyncValue<List<models.User>>>(
       PublicUsersSearchNotifier.new,
     );
 
-class PublicUsersSearchNotifier extends Notifier<AsyncValue<List<User>>> {
+class PublicUsersSearchNotifier
+    extends Notifier<AsyncValue<List<models.User>>> {
   @override
-  AsyncValue<List<User>> build() {
+  AsyncValue<List<models.User>> build() {
     return const AsyncValue.data([]);
   }
 

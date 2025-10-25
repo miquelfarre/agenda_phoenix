@@ -97,7 +97,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
     return PlatformRefresh(
       onRefresh: () async {
-        // Trigger a refresh by invalidating the provider
         ref.invalidate(subscriptionsStreamProvider);
       },
       sliverChild: SliverList(
@@ -184,13 +183,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       ],
       body: SafeArea(
         child: subscriptionsAsync.when(
-          data: (subscriptions) {
-            // Convert subscriptions to users list by extracting the subscribed user
-            final users = subscriptions
-                .where((sub) => sub.subscribed != null)
-                .map((sub) => sub.subscribed!)
-                .toList();
-
+          data: (users) {
             final filteredUsers = users.where((user) {
               if (_searchQuery.isEmpty) return true;
               final query = _searchQuery.toLowerCase();

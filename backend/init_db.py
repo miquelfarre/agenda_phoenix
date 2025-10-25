@@ -28,6 +28,17 @@ def drop_all_tables():
     """Drop all tables in the database"""
     logger.info("🗑️  Dropping all tables...")
     try:
+        # Tables managed by Supabase Realtime - DO NOT DROP
+        realtime_tables = {
+            'tenants',
+            'extensions',
+            'schema_migrations',
+            'messages',
+            'broadcast_policies',
+            'presence_policies',
+            'channels'
+        }
+
         # Use inspector to get all tables and drop them with CASCADE
         # This handles circular foreign key dependencies
         inspector = inspect(engine)
@@ -35,9 +46,13 @@ def drop_all_tables():
 
         if tables:
             with engine.connect() as conn:
-                # Drop all tables with CASCADE
+                # Drop all tables except Realtime-managed ones
                 for table in tables:
-                    conn.execute(text(f'DROP TABLE IF EXISTS "{table}" CASCADE'))
+                    if table not in realtime_tables:
+                        conn.execute(text(f'DROP TABLE IF EXISTS "{table}" CASCADE'))
+                        logger.info(f"  🗑️  Dropped table: {table}")
+                    else:
+                        logger.info(f"  ⏩ Skipped Realtime table: {table}")
                 conn.commit()
 
         logger.info("✅ All tables dropped successfully")
@@ -55,6 +70,49 @@ def create_all_tables():
     except Exception as e:
         logger.error(f"❌ Error creating tables: {e}")
         raise
+
+
+def grant_supabase_permissions():
+    """
+    Grant necessary permissions to postgres user on Supabase-managed schemas.
+    This fixes permission errors when Supabase services try to run migrations.
+    """
+    logger.info("🔐 Granting permissions on Supabase schemas...")
+
+    try:
+        with engine.connect() as conn:
+            # Grant CREATE and USAGE on storage schema
+            conn.execute(text("""
+                GRANT CREATE, USAGE ON SCHEMA storage TO postgres;
+            """))
+            logger.info("  ✓ Granted CREATE, USAGE on storage schema")
+
+            # Grant CREATE and USAGE on auth schema (for gotrue)
+            conn.execute(text("""
+                GRANT CREATE, USAGE ON SCHEMA auth TO postgres;
+            """))
+            logger.info("  ✓ Granted CREATE, USAGE on auth schema")
+
+            # Grant all privileges on existing tables in storage schema
+            conn.execute(text("""
+                GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA storage TO postgres;
+            """))
+            logger.info("  ✓ Granted ALL on existing storage tables")
+
+            # Grant all privileges on existing tables in auth schema
+            conn.execute(text("""
+                GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO postgres;
+            """))
+            logger.info("  ✓ Granted ALL on existing auth tables")
+
+            conn.commit()
+
+        logger.info("✅ Permissions granted successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Error granting permissions: {e}")
+        # Don't raise - this is not critical for core functionality
+        logger.warning("⚠️  Some Supabase services may have permission issues")
 
 
 def insert_sample_data():
@@ -1440,6 +1498,73 @@ def insert_sample_data():
         db.close()
 
 
+def create_database_views():
+    """
+    Create database views for optimized queries.
+    These views enable the Flutter app to query calculated fields directly from Supabase.
+    """
+    logger.info("👁️  Creating database views...")
+
+    try:
+        with engine.connect() as conn:
+            # Create user_subscriptions_with_stats view
+            # This view provides subscription statistics with 3 calculated fields:
+            # 1. new_events_count: Events created in last 7 days
+            # 2. total_events_count: Total events owned by user
+            # 3. subscribers_count: Unique subscribers to user's events
+            conn.execute(text("""
+                CREATE OR REPLACE VIEW user_subscriptions_with_stats AS
+                SELECT DISTINCT
+                    ei.user_id AS subscriber_id,
+                    u.id AS subscribed_to_id,
+                    u.contact_id,
+                    u.username AS instagram_name,
+                    u.auth_provider,
+                    u.auth_id,
+                    u.is_public,
+                    u.is_admin,
+                    u.profile_picture_url AS profile_picture,
+                    u.last_login AS last_seen,
+                    u.created_at,
+                    u.updated_at,
+                    -- Calculate new events count (last 7 days)
+                    (
+                        SELECT COUNT(*)
+                        FROM events e
+                        WHERE e.owner_id = u.id
+                        AND e.created_at >= NOW() - INTERVAL '7 days'
+                    ) AS new_events_count,
+                    -- Calculate total events count
+                    (
+                        SELECT COUNT(*)
+                        FROM events e
+                        WHERE e.owner_id = u.id
+                    ) AS total_events_count,
+                    -- Calculate subscribers count (distinct users subscribed to any event owned by this user)
+                    (
+                        SELECT COUNT(DISTINCT ei2.user_id)
+                        FROM event_interactions ei2
+                        JOIN events e2 ON e2.id = ei2.event_id
+                        WHERE e2.owner_id = u.id
+                        AND ei2.interaction_type = 'subscribed'
+                    ) AS subscribers_count
+                FROM event_interactions ei
+                JOIN events e ON e.id = ei.event_id
+                JOIN users u ON u.id = e.owner_id
+                WHERE ei.interaction_type = 'subscribed'
+                AND u.is_public = TRUE
+            """))
+            logger.info("  ✓ Created view: user_subscriptions_with_stats")
+
+            conn.commit()
+
+        logger.info("✅ Database views created successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Error creating database views: {e}")
+        raise
+
+
 def setup_realtime():
     """
     Configure Supabase Realtime for all tables.
@@ -1518,12 +1643,31 @@ def setup_realtime():
 def setup_realtime_tenant():
     """
     Configure Supabase Realtime tenant.
-    This creates the tenant record needed for Realtime service to function.
+    This inserts the tenant record into the table created by Realtime's migrations.
+
+    NOTE: The tenants table is owned by Supabase Realtime service.
+    We don't create it - Realtime's migrations create it.
+    We only insert our tenant configuration into the existing table.
     """
     logger.info("🔧 Setting up Realtime tenant...")
 
     try:
         with engine.connect() as conn:
+            # Check if tenants table exists (created by Realtime migrations)
+            result = conn.execute(text("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                    AND table_name = 'tenants'
+                )
+            """))
+            table_exists = result.scalar()
+
+            if not table_exists:
+                logger.warning("  ⚠️  Tenants table doesn't exist yet - Realtime migrations haven't run")
+                logger.info("  ℹ️  Realtime service will create this table on first startup")
+                return
+
             # Check if tenant already exists
             result = conn.execute(text(
                 "SELECT id FROM tenants WHERE external_id = 'realtime'"
@@ -1534,6 +1678,7 @@ def setup_realtime_tenant():
                 logger.info("  ℹ️  Realtime tenant already exists")
             else:
                 # Insert tenant with correct configuration
+                # Use raw SQL because this table is owned by Realtime
                 conn.execute(text("""
                     INSERT INTO tenants (
                         id, name, external_id, jwt_secret,
@@ -1549,6 +1694,16 @@ def setup_realtime_tenant():
                     )
                 """))
                 logger.info("  ✓ Created Realtime tenant")
+
+            # Mark ONLY the CreateTenants migration as complete
+            # Other migrations need to run to create their tables (extensions, channels, etc.)
+            logger.info("  📝 Marking CreateTenants migration as complete...")
+            conn.execute(text("""
+                INSERT INTO schema_migrations (version, inserted_at)
+                VALUES (20210706140551, NOW())
+                ON CONFLICT DO NOTHING
+            """))
+            logger.info("  ✓ Marked CreateTenants migration as complete")
 
             conn.commit()
 
@@ -1643,14 +1798,20 @@ def init_database():
         # Step 2: Create all tables
         create_all_tables()
 
-        # Step 3: Setup Supabase Realtime
+        # Step 3: Grant permissions on Supabase schemas
+        grant_supabase_permissions()
+
+        # Step 4: Create database views
+        create_database_views()
+
+        # Step 5: Setup Supabase Realtime
         setup_realtime()
         setup_realtime_tenant()
 
-        # Step 4: Insert sample data
+        # Step 6: Insert sample data
         insert_sample_data()
 
-        # Step 5: Create Supabase Auth users (NEW!)
+        # Step 7: Create Supabase Auth users
         create_supabase_auth_users()
 
         logger.info("=" * 60)

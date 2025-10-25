@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../models/calendar.dart';
+import '../core/state/app_state.dart';
 
 class EditCalendarScreen extends ConsumerStatefulWidget {
   final String calendarId;
