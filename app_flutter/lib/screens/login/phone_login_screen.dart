@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/config_service.dart';
-import '../../services/unified_user_service.dart';
+import '../../services/user_service.dart';
 import '../../services/api_client.dart';
 import '../../services/country_service.dart';
 import '../../models/country.dart';
@@ -363,7 +363,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   Future<void> _onAuthSuccess() async {
     try {
       // Get current user from Supabase authenticated session
-      final user = await UnifiedUserService.getCurrentUser();
+      final user = await UserService.getCurrentUser();
 
       if (user == null) {
         if (mounted && context.mounted) {

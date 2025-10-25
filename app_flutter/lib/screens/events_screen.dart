@@ -15,8 +15,6 @@ import 'event_detail_screen.dart';
 import 'create_edit_event_screen.dart';
 
 import '../services/config_service.dart';
-import '../services/event_service.dart';
-import '../services/api_client.dart';
 import '../repositories/event_repository.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
@@ -64,10 +62,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   EventRepository? _eventRepository;
   StreamSubscription<List<Event>>? _eventsSubscription;
 
-  // Singleton service instances
-  final _apiClient = ApiClient();
-  final _eventService = EventService();
-
   @override
   void initState() {
     super.initState();
@@ -83,17 +77,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   Future<void> _initializeRepository() async {
     try {
-      _eventRepository = EventRepository();
-      await _eventRepository!.initialize();
+      _eventRepository = ref.read(eventRepositoryProvider);
 
       _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
-        // Uncomment for debugging:
-        // print('🔔 [EventsScreen] Received ${events.length} events from stream');
         _buildEventsDataFromRepository(events);
       });
 
-      // Don't call _loadData() here - initialize() already fetches events
-      // Just build the UI with the events we already have
       final events = _eventRepository?.getLocalEvents() ?? [];
       _buildEventsDataFromRepository(events);
     } catch (e) {
@@ -208,7 +197,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   void dispose() {
     _searchController.dispose();
     _eventsSubscription?.cancel();
-    _eventRepository?.dispose();
     super.dispose();
   }
 
@@ -710,18 +698,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       final isOwner = event.ownerId == currentUserId;
 
       if (isOwner) {
-        // Owner deletes the event
-        await _eventService.deleteEvent(event.id!);
+        await ref.read(eventServiceProvider).deleteEvent(event.id!);
       } else {
-        // Non-owner removes their interaction (leaves event)
-        await _apiClient.delete('/events/${event.id}/interaction');
+        await ref.read(apiClientProvider).delete('/events/${event.id}/interaction');
       }
 
       if (shouldNavigate && mounted) {
         Navigator.of(context).pop();
       }
 
-      // Supabase handles caching automatically via realtime
       await _loadData();
     } catch (e) {
       rethrow;

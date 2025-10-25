@@ -1,7 +1,7 @@
 import '../models/user.dart';
 import 'api_client.dart';
 import '../core/services/base_service.dart';
-import 'unified_user_service.dart';
+import 'user_service.dart';
 
 class UserManagementService extends BaseService {
   static final UserManagementService _instance =
@@ -18,12 +18,12 @@ class UserManagementService extends BaseService {
   @override
   dynamic getDefaultApiService() => ApiClientFactory.instance;
 
-  User? get currentUser => UnifiedUserService().currentUser;
+  User? get currentUser => UserService().currentUser;
 
-  bool get isLoggedIn => UnifiedUserService().isLoggedIn;
+  bool get isLoggedIn => UserService().isLoggedIn;
 
   Future<User?> loadCurrentUser({bool forceRefresh = false}) async {
-    return await UnifiedUserService().loadCurrentUser(
+    return await UserService().loadCurrentUser(
       forceRefresh: forceRefresh,
     );
   }
@@ -35,7 +35,7 @@ class UserManagementService extends BaseService {
 
   Future<void> signOut() async {
     try {
-      await UnifiedUserService().logout();
+      await UserService().logout();
     } catch (e) {
       rethrow;
     }

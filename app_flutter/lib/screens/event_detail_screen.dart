@@ -8,8 +8,6 @@ import '../models/event.dart';
 import '../models/event_interaction.dart';
 import '../models/recurrence_pattern.dart';
 import '../models/user.dart';
-import '../services/event_service.dart';
-import '../services/api_client.dart';
 import '../repositories/event_repository.dart';
 import '../core/state/app_state.dart';
 import 'create_edit_event_screen.dart';
@@ -65,10 +63,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   EventRepository? _eventRepository;
   StreamSubscription<List<Event>>? _eventsSubscription;
 
-  // Singleton service instances
-  final _apiClient = ApiClient();
-  final _eventService = EventService();
-
   Future<void> _loadDetailData() async {
     if (!mounted || _isLoadingComposite) return;
     final eventId = currentEvent.id;
@@ -79,7 +73,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     });
 
     try {
-      final data = await _apiClient.fetchEvent(eventId);
+      final data = await ref.read(apiClientProvider).fetchEvent(eventId);
 
       final Event detailedEvent = Event.fromJson(data);
 
@@ -138,8 +132,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
   Future<void> _initializeRealtimeListener() async {
     try {
-      _eventRepository = EventRepository();
-      await _eventRepository!.initialize();
+      _eventRepository = ref.read(eventRepositoryProvider);
 
       _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
         if (currentEvent.id == null) return;
@@ -170,7 +163,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     _decisionMessageController.dispose();
     _ephemeralTimer?.cancel();
     _eventsSubscription?.cancel();
-    _eventRepository?.dispose();
     super.dispose();
   }
 
@@ -759,7 +751,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       throw Exception('Event ID is null');
     }
 
-    await _eventService.deleteEvent(event.id!);
+    await ref.read(eventServiceProvider).deleteEvent(event.id!);
 
     if (shouldNavigate && mounted) {
       Navigator.of(context).pop();
@@ -770,10 +762,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     if (event.id == null) return;
 
     try {
-      // Delete user's interaction with this event
-      await _apiClient.delete('/events/${event.id}/interaction');
-
-      // Refresh states
+      await ref.read(apiClientProvider).delete('/events/${event.id}/interaction');
       await ref.read(eventStateProvider.notifier).refresh();
       await _loadDetailData();
 
@@ -1206,11 +1195,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         );
       }
 
-      // Get all events for the current user
       final userId = ConfigService.instance.currentUserId;
-      final response = await _apiClient.get(
-        '/users/$userId/events',
-      );
+      final response = await ref.read(apiClientProvider).get('/users/$userId/events');
 
       // Filter events that belong to the same series
       final allEvents = (response as List)

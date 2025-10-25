@@ -5,7 +5,7 @@ import '../../models/event.dart';
 import '../../models/subscription.dart';
 import '../../models/event_interaction.dart';
 import '../../models/user.dart';
-import '../../services/unified_user_service.dart';
+import '../../services/user_service.dart';
 import '../../services/user_blocking_service.dart';
 import '../../services/event_service.dart';
 import '../../services/subscription_service.dart';
@@ -16,6 +16,8 @@ import '../../services/supabase_auth_service.dart';
 import '../../services/logo_service.dart';
 import '../../services/api_client.dart';
 import '../../repositories/event_repository.dart';
+import '../../services/calendar_service.dart';
+import '../../services/group_service.dart';
 import 'dart:async';
 
 class AuthState {
@@ -61,7 +63,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         isAuth = SupabaseAuthService.isLoggedIn;
       }
 
-      final user = await UnifiedUserService.getCurrentUser();
+      final user = await UserService.getCurrentUser();
 
       return AuthState(
         currentUser: user,
@@ -84,7 +86,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       final currentState =
           state.value ?? const AuthState(isAuthenticated: false);
 
-      final user = await UnifiedUserService.getCurrentUser();
+      final user = await UserService.getCurrentUser();
 
       final configService = ConfigService.instance;
       final isAuth = configService.isTestMode || SupabaseAuthService.isLoggedIn;
@@ -102,6 +104,21 @@ final authProvider = AsyncNotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );
 
+final eventRepositoryProvider = Provider<EventRepository>((ref) {
+  final repository = EventRepository();
+  repository.initialize();
+  ref.onDispose(() => repository.dispose());
+  return repository;
+});
+
+final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+final eventServiceProvider = Provider<EventService>((ref) => EventService());
+final subscriptionServiceProvider = Provider<SubscriptionService>((ref) => SubscriptionService());
+final eventInteractionServiceProvider = Provider<EventInteractionService>((ref) => EventInteractionService());
+final calendarServiceProvider = Provider<CalendarService>((ref) => CalendarService());
+final groupServiceProvider = Provider<GroupService>((ref) => GroupService());
+final userServiceProvider = Provider<UserService>((ref) => UserService());
+
 final logoPathProvider = FutureProvider.family<String?, int>((ref, userId) {
   return LogoService.instance.getLogoPath(userId);
 });
@@ -111,7 +128,7 @@ final eventStateProvider = NotifierProvider<EventStateNotifier, List<Event>>(
 );
 
 class EventStateNotifier extends Notifier<List<Event>> {
-  EventService get _eventService => EventService();
+  EventService get _eventService => ref.read(eventServiceProvider);
 
   @override
   List<Event> build() {
@@ -198,7 +215,7 @@ final subscriptionsProvider =
     );
 
 class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
-  SubscriptionService get _subscriptionService => SubscriptionService();
+  SubscriptionService get _subscriptionService => ref.read(subscriptionServiceProvider);
 
   @override
   AsyncValue<List<Subscription>> build() {
@@ -212,8 +229,7 @@ class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
 
       final userId = ConfigService.instance.currentUserId;
 
-      // Use optimized endpoint that returns public users directly
-      final subscriptionsData = await ApiClient().fetchUserSubscriptions(userId);
+      final subscriptionsData = await ref.read(apiClientProvider).fetchUserSubscriptions(userId);
 
       final subscriptions = subscriptionsData.map((userData) {
         final user = User.fromJson(userData);
@@ -285,7 +301,7 @@ final eventInteractionsProvider =
 
 class EventInteractionsNotifier
     extends Notifier<AsyncValue<List<EventInteraction>>> {
-  EventInteractionService get _interactionService => EventInteractionService();
+  EventInteractionService get _interactionService => ref.read(eventInteractionServiceProvider);
 
   @override
   AsyncValue<List<EventInteraction>> build() {
@@ -467,7 +483,7 @@ class PublicUsersSearchNotifier extends Notifier<AsyncValue<List<User>>> {
 
     try {
       state = const AsyncValue.loading();
-      final users = await UnifiedUserService.searchPublicUsers(query);
+      final users = await UserService.searchPublicUsers(query);
       state = AsyncValue.data(users);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -535,17 +551,10 @@ class LocaleNotifier extends Notifier<Locale> {
   }
 }
 
-final publicUserEventsProvider = FutureProvider.family<List<Event>, int>((
-  ref,
-  userId,
-) async {
+final publicUserEventsProvider = FutureProvider.family<List<Event>, int>((ref, userId) async {
   try {
-    final apiClient = ApiClient();
-    final eventsData = await apiClient.fetchUserEvents(userId);
-
-    final events = eventsData.map((data) => Event.fromJson(data)).toList();
-
-    return events;
+    final eventsData = await ref.read(apiClientProvider).fetchUserEvents(userId);
+    return eventsData.map((data) => Event.fromJson(data)).toList();
   } catch (e) {
     rethrow;
   }
@@ -571,9 +580,7 @@ class AggregatedEventsNotifier extends Notifier<AsyncValue<List<Event>>> {
       final currentUserId = ConfigService.instance.currentUserId;
       final allEvents = <Event>{};
 
-      final eventRepository = EventRepository();
-      await eventRepository.initialize();
-
+      final eventRepository = ref.read(eventRepositoryProvider);
       final allLocalEvents = eventRepository.getLocalEvents();
 
       final ownEvents = allLocalEvents.where((e) => e.ownerId == currentUserId);
@@ -630,24 +637,16 @@ final aggregatedEventsProvider =
 
 typedef EventFilter = ({String filter, String searchQuery});
 
-final serverFilteredEventsProvider = FutureProvider.family
-    .autoDispose<List<Event>, EventFilter>((ref, filter) async {
-      final eventService = EventService();
+final serverFilteredEventsProvider = FutureProvider.family.autoDispose<List<Event>, EventFilter>((ref, filter) async {
+  if (filter.searchQuery.isEmpty && filter.filter == 'all') {
+    return [];
+  }
 
-      if (filter.searchQuery.isEmpty && filter.filter == 'all') {
-        return [];
-      }
-
-      final allEvents = await eventService.fetchEvents();
-
-      return allEvents.where((event) {
-        final matchesSearch =
-            filter.searchQuery.isEmpty ||
-            event.name.toLowerCase().contains(filter.searchQuery.toLowerCase());
-
-        return matchesSearch;
-      }).toList();
-    });
+  final allEvents = await ref.read(eventServiceProvider).fetchEvents();
+  return allEvents.where((event) {
+    return filter.searchQuery.isEmpty || event.name.toLowerCase().contains(filter.searchQuery.toLowerCase());
+  }).toList();
+});
 
 final subscribedUserEventsProvider =
     Provider.family<AsyncValue<List<Event>>, int>((ref, subscribedUserId) {
