@@ -87,11 +87,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       await _eventRepository!.initialize();
 
       _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
-        print('🔔 [EventsScreen] Received ${events.length} events from stream');
+        // Uncomment for debugging:
+        // print('🔔 [EventsScreen] Received ${events.length} events from stream');
         _buildEventsDataFromRepository(events);
       });
 
-      await _loadData();
+      // Don't call _loadData() here - initialize() already fetches events
+      // Just build the UI with the events we already have
+      final events = _eventRepository?.getLocalEvents() ?? [];
+      _buildEventsDataFromRepository(events);
     } catch (e) {
       print('🔴 [EventsScreen] Error initializing repository: $e');
       setState(() => _isLoading = false);
@@ -99,17 +103,20 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   Future<void> _loadData() async {
-    print('🔵 [EventsScreen] _loadData START');
+    // Uncomment for debugging:
+    // print('🔵 [EventsScreen] _loadData START');
     setState(() => _isLoading = true);
     try {
-      print('🔵 [EventsScreen] Fetching events from EventRepository...');
+      // Uncomment for debugging:
+      // print('🔵 [EventsScreen] Fetching events from EventRepository...');
 
       await _eventRepository?.fetchAndSyncEvents();
 
       final events = _eventRepository?.getLocalEvents() ?? [];
       _buildEventsDataFromRepository(events);
 
-      print('🔵 [EventsScreen] _loadData completed');
+      // Uncomment for debugging:
+      // print('🔵 [EventsScreen] _loadData completed');
     } catch (e) {
       print('🔴 [EventsScreen] ERROR in _loadData: $e');
       if (mounted) {
@@ -165,12 +172,13 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           )
           .length;
 
-      print('🔍 [EventsScreen] Filter counts:');
-      print('   userId: $userId');
-      print('   myEvents: $myEvents');
-      print('   invitations: $invitations');
-      print('   subscribed: $subscribed');
-      print('   total: ${eventItems.length}');
+      // Uncomment for debugging:
+      // print('🔍 [EventsScreen] Filter counts:');
+      // print('   userId: $userId');
+      // print('   myEvents: $myEvents');
+      // print('   invitations: $invitations');
+      // print('   subscribed: $subscribed');
+      // print('   total: ${eventItems.length}');
 
       final data = EventsData(
         events: eventItems,
@@ -185,7 +193,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           _eventsData = data;
           _isLoading = false;
         });
-        print('🔵 [EventsScreen] setState completed, _isLoading=false');
+        // Uncomment for debugging:
+        // print('🔵 [EventsScreen] setState completed, _isLoading=false');
       }
     } catch (e) {
       print('🔴 [EventsScreen] ERROR in _buildEventsDataFromRepository: $e');

@@ -218,27 +218,32 @@ class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
         interactionType: 'subscribed',
       );
 
+      // Get cached events from EventRepository to avoid N+1 queries
+      final eventRepository = EventRepository();
+      final cachedEvents = eventRepository.getLocalEvents();
+      final eventsMap = {for (var e in cachedEvents) if (e.id != null) e.id!: e};
+
       // Extract unique owner IDs from events
       final Map<int, User> ownersMap = {};
 
       for (final interactionData in interactionsData) {
         final eventId = interactionData['event_id'] as int?;
         if (eventId != null) {
-          try {
-            // Fetch event to get owner information
-            final eventData = await ApiClient().fetchEvent(eventId);
-            final ownerId = eventData['owner_id'] as int?;
-            final ownerData = eventData['owner'] as Map<String, dynamic>?;
-
-            if (ownerId != null && ownerData != null) {
-              final isPublic = ownerData['is_public'] == true;
+          // Look up event from cache instead of making individual API calls
+          final cachedEvent = eventsMap[eventId];
+          if (cachedEvent != null) {
+            final ownerId = cachedEvent.ownerId;
+            if (ownerId != null && ownerId > 0) {
+              final isPublic = cachedEvent.isOwnerPublic ?? false;
               if (isPublic && !ownersMap.containsKey(ownerId)) {
-                ownersMap[ownerId] = User.fromJson(ownerData);
+                ownersMap[ownerId] = User(
+                  id: ownerId,
+                  fullName: cachedEvent.ownerName,
+                  profilePicture: cachedEvent.ownerProfilePicture,
+                  isPublic: isPublic,
+                );
               }
             }
-          } catch (e) {
-            // Skip events that can't be fetched
-            continue;
           }
         }
       }
