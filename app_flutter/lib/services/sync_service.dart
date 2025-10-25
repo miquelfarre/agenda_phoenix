@@ -272,17 +272,20 @@ class SyncService {
 
       // Transform interactions to subscription format
       final subscriptionItems = (interactions as List)
-          .where((interaction) =>
-              interaction['event'] != null &&
-              interaction['event']['owner_id'] != null)
+          .where(
+            (interaction) =>
+                interaction['event'] != null &&
+                interaction['event']['owner_id'] != null,
+          )
           .map((interaction) {
-        return {
-          'id': interaction['id'],
-          'user_id': interaction['user_id'],
-          'subscribed_to_id': interaction['event']['owner_id'],
-          'subscribed_to': interaction['event']['owner'],
-        };
-      }).toList();
+            return {
+              'id': interaction['id'],
+              'user_id': interaction['user_id'],
+              'subscribed_to_id': interaction['event']['owner_id'],
+              'subscribed_to': interaction['event']['owner'],
+            };
+          })
+          .toList();
 
       final compositeData = {'subscriptions': subscriptionItems};
 
@@ -413,7 +416,6 @@ class SyncService {
       return getLocalGroups(userId);
     }
   }
-
 
   static Future<void> clearGroupCache(int groupId) async {
     try {

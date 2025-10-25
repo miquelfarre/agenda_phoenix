@@ -18,7 +18,6 @@ import '../services/timezone_service.dart';
 import '../services/config_service.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'base/base_form_screen.dart';
-import '../core/providers/calendar_provider.dart';
 import '../core/providers/settings_provider.dart';
 
 class CreateEditEventScreen extends BaseFormScreen {
@@ -174,34 +173,38 @@ class CreateEditEventScreenState
       }
 
       if (widget.eventToEdit != null) {
-        final updatedEvent = widget.eventToEdit!.copyWith(
-          name: eventData['title'],
-          description: eventData['description'],
-          startDate: eventData['start_date'] is DateTime
-              ? eventData['start_date']
-              : (eventData['start_date'] != null
-                    ? DateTime.parse(eventData['start_date'].toString())
-                    : null),
-          eventType: eventData['is_recurring'] == true
-              ? 'recurring'
-              : 'regular',
-          calendarId: eventData['calendar_id'],
-        );
-        await ref.read(eventStateProvider.notifier).updateEvent(updatedEvent);
+        await ref
+            .read(eventServiceProvider)
+            .updateEvent(
+              eventId: widget.eventToEdit!.id!,
+              name: eventData['title'],
+              description: eventData['description'],
+              startDate: eventData['start_date'] is DateTime
+                  ? eventData['start_date']
+                  : (eventData['start_date'] != null
+                        ? DateTime.parse(eventData['start_date'].toString())
+                        : null),
+              eventType: eventData['is_recurring'] == true
+                  ? 'recurring'
+                  : 'regular',
+              calendarId: eventData['calendar_id'],
+            );
+        // Realtime handles refresh automatically via EventRepository
       } else {
-        final newEvent = Event(
-          name: eventData['title'] ?? '',
-          description: eventData['description'] ?? '',
-          startDate: eventData['start_date'] is DateTime
-              ? eventData['start_date']
-              : DateTime.parse(eventData['start_date'].toString()),
-          ownerId: ConfigService.instance.currentUserId,
-          eventType: eventData['is_recurring'] == true
-              ? 'recurring'
-              : 'regular',
-          calendarId: eventData['calendar_id'],
-        );
-        await ref.read(eventStateProvider.notifier).createEvent(newEvent);
+        await ref
+            .read(eventServiceProvider)
+            .createEvent(
+              name: eventData['title'] ?? '',
+              description: eventData['description'],
+              startDate: eventData['start_date'] is DateTime
+                  ? eventData['start_date']
+                  : DateTime.parse(eventData['start_date'].toString()),
+              eventType: eventData['is_recurring'] == true
+                  ? 'recurring'
+                  : 'regular',
+              calendarId: eventData['calendar_id'],
+            );
+        // Realtime handles refresh automatically via EventRepository
       }
 
       return true;
@@ -332,7 +335,7 @@ class CreateEditEventScreenState
 
                   _useCustomCalendar = true;
 
-                  final calendarsAsync = ref.read(availableCalendarsProvider);
+                  final calendarsAsync = ref.read(calendarsStreamProvider);
                   calendarsAsync.whenData((calendars) {
                     try {
                       final birthdayCalendar = calendars.firstWhere(
@@ -905,7 +908,7 @@ class CreateEditEventScreenState
   }
 
   Widget _buildCalendarSection() {
-    final calendarsAsync = ref.watch(availableCalendarsProvider);
+    final calendarsAsync = ref.watch(calendarsStreamProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -988,7 +991,7 @@ class CreateEditEventScreenState
                     onPressed: () async {
                       await context.push('/communities/create');
 
-                      ref.invalidate(availableCalendarsProvider);
+                      ref.invalidate(calendarsStreamProvider);
                     },
                     child: Container(
                       padding: const EdgeInsets.all(8),

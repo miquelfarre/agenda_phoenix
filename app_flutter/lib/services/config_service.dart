@@ -20,7 +20,7 @@ class ConfigService with SingletonMixin, ErrorHandlingMixin {
   Map<String, dynamic>? _testUserInfo;
 
   // Recurring instances always enabled (feature flag removed)
-  bool _useRecurringInstances = true;
+  final bool _useRecurringInstances = true;
 
   Future<void> initialize() async {
     await withErrorHandling('initialize', () async {

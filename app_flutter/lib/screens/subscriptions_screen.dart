@@ -5,7 +5,6 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import '../models/user.dart';
-import '../core/state/app_state.dart';
 import '../services/api_client.dart';
 import '../services/config_service.dart';
 import '../widgets/subscription_card.dart';
@@ -63,7 +62,9 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       final userId = ConfigService.instance.currentUserId;
 
       // Use optimized endpoint that returns public users directly
-      final subscriptionsData = await ApiClient().fetchUserSubscriptions(userId);
+      final subscriptionsData = await ApiClient().fetchUserSubscriptions(
+        userId,
+      );
 
       if (mounted) {
         setState(() {
@@ -303,9 +304,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
 
-      // Refresh subscriptions provider AND local state
-      await ref.read(subscriptionsProvider.notifier).refresh();
-      await _loadData();
+      // Realtime handles refresh automatically via SubscriptionRepository
     } catch (e) {
       String cleanError = e.toString().replaceFirst('Exception: ', '');
       _showErrorMessage(cleanError);

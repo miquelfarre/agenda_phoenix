@@ -81,7 +81,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
       _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
         print('📥 [EventsScreen] Stream received ${events.length} events');
-        print('📥 [EventsScreen] Event IDs: ${events.map((e) => e.id).take(10).toList()}${events.length > 10 ? '...' : ''}');
+        print(
+          '📥 [EventsScreen] Event IDs: ${events.map((e) => e.id).take(10).toList()}${events.length > 10 ? '...' : ''}',
+        );
         _buildEventsDataFromRepository(events);
       });
 
@@ -133,7 +135,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         String? invitationStatus;
 
         if (!isOwner && event.interactionData != null) {
-          interactionType = event.interactionData!['interaction_type'] as String?;
+          interactionType =
+              event.interactionData!['interaction_type'] as String?;
           invitationStatus = event.interactionData!['status'] as String?;
         }
 
@@ -185,7 +188,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         allCount: eventItems.length,
       );
 
-      print('🔧 [EventsScreen] Filter results - myEvents: $myEvents, invitations: $invitations, subscribed: $subscribed, all: ${eventItems.length}');
+      print(
+        '🔧 [EventsScreen] Filter results - myEvents: $myEvents, invitations: $invitations, subscribed: $subscribed, all: ${eventItems.length}',
+      );
 
       if (mounted) {
         print('🔧 [EventsScreen] Calling setState with new data...');
@@ -712,7 +717,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       if (isOwner) {
         await ref.read(eventServiceProvider).deleteEvent(event.id!);
       } else {
-        await ref.read(apiClientProvider).delete('/events/${event.id}/interaction');
+        await ref
+            .read(apiClientProvider)
+            .delete('/events/${event.id}/interaction');
       }
 
       if (shouldNavigate && mounted) {

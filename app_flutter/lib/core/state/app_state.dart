@@ -5,6 +5,8 @@ import '../../models/event.dart';
 import '../../models/subscription.dart';
 import '../../models/event_interaction.dart';
 import '../../models/user.dart';
+import '../../models/calendar.dart';
+import '../../models/group.dart';
 import '../../services/user_service.dart';
 import '../../services/user_blocking_service.dart';
 import '../../services/event_service.dart';
@@ -16,6 +18,10 @@ import '../../services/supabase_auth_service.dart';
 import '../../services/logo_service.dart';
 import '../../services/api_client.dart';
 import '../../repositories/event_repository.dart';
+import '../../repositories/calendar_repository.dart';
+import '../../repositories/group_repository.dart';
+import '../../repositories/subscription_repository.dart';
+import '../../repositories/event_interaction_repository.dart';
 import '../../services/calendar_service.dart';
 import '../../services/group_service.dart';
 import 'dart:async';
@@ -111,11 +117,67 @@ final eventRepositoryProvider = Provider<EventRepository>((ref) {
   return repository;
 });
 
+final calendarRepositoryProvider = Provider((ref) {
+  final repository = CalendarRepository();
+  repository.initialize();
+  ref.onDispose(() => repository.dispose());
+  return repository;
+});
+
+final groupRepositoryProvider = Provider((ref) {
+  final repository = GroupRepository();
+  repository.initialize();
+  ref.onDispose(() => repository.dispose());
+  return repository;
+});
+
+final subscriptionRepositoryProvider = Provider((ref) {
+  final repository = SubscriptionRepository();
+  repository.initialize();
+  ref.onDispose(() => repository.dispose());
+  return repository;
+});
+
+final eventInteractionRepositoryProvider = Provider((ref) {
+  final repository = EventInteractionRepository();
+  repository.initialize();
+  ref.onDispose(() => repository.dispose());
+  return repository;
+});
+
+final calendarsStreamProvider = StreamProvider<List<Calendar>>((ref) {
+  final repository = ref.watch(calendarRepositoryProvider);
+  return repository.calendarsStream;
+});
+
+final groupsStreamProvider = StreamProvider<List<Group>>((ref) {
+  final repository = ref.watch(groupRepositoryProvider);
+  return repository.groupsStream;
+});
+
+final subscriptionsStreamProvider = StreamProvider<List<Subscription>>((ref) {
+  final repository = ref.watch(subscriptionRepositoryProvider);
+  return repository.subscriptionsStream;
+});
+
+final eventInteractionsStreamProvider = StreamProvider<List<EventInteraction>>((
+  ref,
+) {
+  final repository = ref.watch(eventInteractionRepositoryProvider);
+  return repository.interactionsStream;
+});
+
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 final eventServiceProvider = Provider<EventService>((ref) => EventService());
-final subscriptionServiceProvider = Provider<SubscriptionService>((ref) => SubscriptionService());
-final eventInteractionServiceProvider = Provider<EventInteractionService>((ref) => EventInteractionService());
-final calendarServiceProvider = Provider<CalendarService>((ref) => CalendarService());
+final subscriptionServiceProvider = Provider<SubscriptionService>(
+  (ref) => SubscriptionService(),
+);
+final eventInteractionServiceProvider = Provider<EventInteractionService>(
+  (ref) => EventInteractionService(),
+);
+final calendarServiceProvider = Provider<CalendarService>(
+  (ref) => CalendarService(),
+);
 final groupServiceProvider = Provider<GroupService>((ref) => GroupService());
 final userServiceProvider = Provider<UserService>((ref) => UserService());
 
@@ -215,7 +277,8 @@ final subscriptionsProvider =
     );
 
 class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
-  SubscriptionService get _subscriptionService => ref.read(subscriptionServiceProvider);
+  SubscriptionService get _subscriptionService =>
+      ref.read(subscriptionServiceProvider);
 
   @override
   AsyncValue<List<Subscription>> build() {
@@ -229,7 +292,9 @@ class SubscriptionsNotifier extends Notifier<AsyncValue<List<Subscription>>> {
 
       final userId = ConfigService.instance.currentUserId;
 
-      final subscriptionsData = await ref.read(apiClientProvider).fetchUserSubscriptions(userId);
+      final subscriptionsData = await ref
+          .read(apiClientProvider)
+          .fetchUserSubscriptions(userId);
 
       final subscriptions = subscriptionsData.map((userData) {
         final user = User.fromJson(userData);
@@ -301,7 +366,8 @@ final eventInteractionsProvider =
 
 class EventInteractionsNotifier
     extends Notifier<AsyncValue<List<EventInteraction>>> {
-  EventInteractionService get _interactionService => ref.read(eventInteractionServiceProvider);
+  EventInteractionService get _interactionService =>
+      ref.read(eventInteractionServiceProvider);
 
   @override
   AsyncValue<List<EventInteraction>> build() {
@@ -551,9 +617,14 @@ class LocaleNotifier extends Notifier<Locale> {
   }
 }
 
-final publicUserEventsProvider = FutureProvider.family<List<Event>, int>((ref, userId) async {
+final publicUserEventsProvider = FutureProvider.family<List<Event>, int>((
+  ref,
+  userId,
+) async {
   try {
-    final eventsData = await ref.read(apiClientProvider).fetchUserEvents(userId);
+    final eventsData = await ref
+        .read(apiClientProvider)
+        .fetchUserEvents(userId);
     return eventsData.map((data) => Event.fromJson(data)).toList();
   } catch (e) {
     rethrow;
@@ -637,16 +708,18 @@ final aggregatedEventsProvider =
 
 typedef EventFilter = ({String filter, String searchQuery});
 
-final serverFilteredEventsProvider = FutureProvider.family.autoDispose<List<Event>, EventFilter>((ref, filter) async {
-  if (filter.searchQuery.isEmpty && filter.filter == 'all') {
-    return [];
-  }
+final serverFilteredEventsProvider = FutureProvider.family
+    .autoDispose<List<Event>, EventFilter>((ref, filter) async {
+      if (filter.searchQuery.isEmpty && filter.filter == 'all') {
+        return [];
+      }
 
-  final allEvents = await ref.read(eventServiceProvider).fetchEvents();
-  return allEvents.where((event) {
-    return filter.searchQuery.isEmpty || event.name.toLowerCase().contains(filter.searchQuery.toLowerCase());
-  }).toList();
-});
+      final allEvents = await ref.read(eventServiceProvider).fetchEvents();
+      return allEvents.where((event) {
+        return filter.searchQuery.isEmpty ||
+            event.name.toLowerCase().contains(filter.searchQuery.toLowerCase());
+      }).toList();
+    });
 
 final subscribedUserEventsProvider =
     Provider.family<AsyncValue<List<Event>>, int>((ref, subscribedUserId) {

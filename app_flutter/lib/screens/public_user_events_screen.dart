@@ -4,7 +4,6 @@ import '../l10n/app_localizations.dart';
 import '../models/event.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
-import '../core/state/app_state.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_card/event_card_config.dart';
@@ -50,39 +49,69 @@ class _PublicUserEventsScreenState
   }
 
   Future<void> _loadData() async {
-    if (_isLoading && !_isProcessingSubscription) return;
+    print('📊 [PublicUserEvents] _loadData START');
+    print(
+      '📊 [PublicUserEvents] _isLoading: $_isLoading, _isProcessingSubscription: $_isProcessingSubscription',
+    );
 
+    if (_isLoading && !_isProcessingSubscription) {
+      print(
+        '⚠️ [PublicUserEvents] Already loading and not processing subscription, returning',
+      );
+      return;
+    }
+
+    print('📊 [PublicUserEvents] Setting _isLoading = true');
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
+      print(
+        '📊 [PublicUserEvents] Fetching events for user ${widget.publicUser.id}',
+      );
       final eventsData = await ApiClient().fetchUserEvents(
         widget.publicUser.id,
       );
       final events = eventsData.map((e) => Event.fromJson(e)).toList();
+      print('✅ [PublicUserEvents] Fetched ${events.length} events');
 
       // Check if user is subscribed by looking at interactions in events
       bool isSubscribed = false;
+      print('📊 [PublicUserEvents] Checking subscription status in events...');
       for (final eventData in eventsData) {
         if (eventData['interaction'] != null) {
           final interaction = eventData['interaction'] as Map<String, dynamic>;
+          print(
+            '📊 [PublicUserEvents] Found interaction: ${interaction['interaction_type']}',
+          );
           if (interaction['interaction_type'] == 'subscribed') {
             isSubscribed = true;
+            print(
+              '✅ [PublicUserEvents] User IS subscribed (found in event interaction)',
+            );
             break;
           }
         }
       }
+      print('📊 [PublicUserEvents] Subscription status: $isSubscribed');
 
       if (mounted) {
+        print(
+          '📊 [PublicUserEvents] Setting state with events and subscription status',
+        );
         setState(() {
           _events = events;
           _isSubscribed = isSubscribed;
           _isLoading = false;
         });
+        print(
+          '✅ [PublicUserEvents] State updated: _isSubscribed=$isSubscribed, events count=${events.length}',
+        );
       }
     } catch (e) {
+      print('❌ [PublicUserEvents] ERROR in _loadData: $e');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -90,6 +119,7 @@ class _PublicUserEventsScreenState
         });
       }
     }
+    print('📊 [PublicUserEvents] _loadData END');
   }
 
   Future<void> _refreshEvents() async {
@@ -98,23 +128,44 @@ class _PublicUserEventsScreenState
   }
 
   Future<void> _subscribeToUser() async {
-    if (_isProcessingSubscription) return;
+    print(
+      '🟢 [PublicUserEvents] _subscribeToUser START - userId: ${widget.publicUser.id}',
+    );
+    if (_isProcessingSubscription) {
+      print('⚠️ [PublicUserEvents] Already processing subscription, returning');
+      return;
+    }
+
+    print('🟢 [PublicUserEvents] Setting _isProcessingSubscription = true');
     setState(() => _isProcessingSubscription = true);
+
     try {
+      print(
+        '🟢 [PublicUserEvents] Calling API POST /users/${widget.publicUser.id}/subscribe',
+      );
       // Use new bulk subscribe endpoint
       await ApiClient().post('/users/${widget.publicUser.id}/subscribe');
+      print('✅ [PublicUserEvents] API call successful');
 
       if (mounted) {
+        print('🟢 [PublicUserEvents] Showing success message');
         PlatformDialogHelpers.showSnackBar(
           context: context,
           message: AppLocalizations.of(context)!.subscribedSuccessfully,
         );
       }
 
-      // Refresh subscriptions provider AND local state
-      await ref.read(subscriptionsProvider.notifier).refresh();
+      print(
+        '🟢 [PublicUserEvents] Realtime handles subscriptions automatically',
+      );
+      // Realtime handles refresh automatically via SubscriptionRepository
+
+      print('🟢 [PublicUserEvents] Reloading local data...');
       await _loadData();
+      print('✅ [PublicUserEvents] Local data reloaded');
     } catch (e) {
+      print('❌ [PublicUserEvents] ERROR in _subscribeToUser: $e');
+      print('❌ [PublicUserEvents] Stack trace: ${StackTrace.current}');
       if (mounted) {
         PlatformDialogHelpers.showSnackBar(
           context: context,
@@ -123,28 +174,51 @@ class _PublicUserEventsScreenState
         );
       }
     } finally {
+      print('🟢 [PublicUserEvents] Setting _isProcessingSubscription = false');
       if (mounted) setState(() => _isProcessingSubscription = false);
     }
+    print('🟢 [PublicUserEvents] _subscribeToUser END');
   }
 
   Future<void> _unsubscribeFromUser() async {
-    if (_isProcessingSubscription) return;
+    print(
+      '🔴 [PublicUserEvents] _unsubscribeFromUser START - userId: ${widget.publicUser.id}',
+    );
+    if (_isProcessingSubscription) {
+      print('⚠️ [PublicUserEvents] Already processing subscription, returning');
+      return;
+    }
+
+    print('🔴 [PublicUserEvents] Setting _isProcessingSubscription = true');
     setState(() => _isProcessingSubscription = true);
+
     try {
+      print(
+        '🔴 [PublicUserEvents] Calling API DELETE /users/${widget.publicUser.id}/subscribe',
+      );
       // Use new bulk unsubscribe endpoint
       await ApiClient().delete('/users/${widget.publicUser.id}/subscribe');
+      print('✅ [PublicUserEvents] API DELETE call successful');
 
       if (mounted) {
+        print('🔴 [PublicUserEvents] Showing success message');
         PlatformDialogHelpers.showSnackBar(
           context: context,
           message: AppLocalizations.of(context)!.unsubscribedSuccessfully,
         );
       }
 
-      // Refresh subscriptions provider AND local state
-      await ref.read(subscriptionsProvider.notifier).refresh();
+      print(
+        '🔴 [PublicUserEvents] Realtime handles subscriptions automatically',
+      );
+      // Realtime handles refresh automatically via SubscriptionRepository
+
+      print('🔴 [PublicUserEvents] Reloading local data...');
       await _loadData();
+      print('✅ [PublicUserEvents] Local data reloaded');
     } catch (e) {
+      print('❌ [PublicUserEvents] ERROR in _unsubscribeFromUser: $e');
+      print('❌ [PublicUserEvents] Stack trace: ${StackTrace.current}');
       if (mounted) {
         PlatformDialogHelpers.showSnackBar(
           context: context,
@@ -153,8 +227,10 @@ class _PublicUserEventsScreenState
         );
       }
     } finally {
+      print('🔴 [PublicUserEvents] Setting _isProcessingSubscription = false');
       if (mounted) setState(() => _isProcessingSubscription = false);
     }
+    print('🔴 [PublicUserEvents] _unsubscribeFromUser END');
   }
 
   List<Event> _applySearchAndStatusFilters(List<Event> events) {
@@ -174,6 +250,9 @@ class _PublicUserEventsScreenState
 
   @override
   Widget build(BuildContext context) {
+    print(
+      '🎨 [PublicUserEvents] BUILD - _isSubscribed: $_isSubscribed, _isProcessingSubscription: $_isProcessingSubscription',
+    );
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(
@@ -185,8 +264,14 @@ class _PublicUserEventsScreenState
           onPressed: _isProcessingSubscription
               ? null
               : _isSubscribed
-              ? _unsubscribeFromUser
-              : _subscribeToUser,
+              ? () {
+                  print('🔘 [PublicUserEvents] UNFOLLOW button pressed');
+                  _unsubscribeFromUser();
+                }
+              : () {
+                  print('🔘 [PublicUserEvents] FOLLOW button pressed');
+                  _subscribeToUser();
+                },
           child: Text(
             _isSubscribed
                 ? AppLocalizations.of(context)!.unfollow

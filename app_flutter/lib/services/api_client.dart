@@ -399,10 +399,7 @@ class ApiClient implements IApiClient {
     final userId = currentUserId ?? ConfigService.instance.currentUserId;
     final result = await get(
       '/interactions',
-      queryParams: {
-        'user_id': userId.toString(),
-        'limit': '1000',
-      },
+      queryParams: {'user_id': userId.toString(), 'limit': '1000'},
     );
     return List<Map<String, dynamic>>.from(result);
   }

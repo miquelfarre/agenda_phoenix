@@ -739,7 +739,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     ).pushScreen(context, CreateEditEventScreen(eventToEdit: currentEvent));
 
     if (updatedEvent != null) {
-      await ref.read(eventStateProvider.notifier).refresh();
+      // Realtime handles refresh automatically via EventRepository
       if (mounted) {
         setState(() {});
       }
@@ -751,7 +751,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     print('🗑️ [EventDetail] Event ID: ${event.id}');
     print('🗑️ [EventDetail] Event Name: "${event.name}"');
     print('🗑️ [EventDetail] Event Owner ID: ${event.ownerId}');
-    print('🗑️ [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}');
+    print(
+      '🗑️ [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}',
+    );
     print('🗑️ [EventDetail] Should Navigate: $shouldNavigate');
 
     if (event.id == null) {
@@ -760,7 +762,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
 
     try {
-      print('🗑️ [EventDetail] Calling EventService.deleteEvent(${event.id})...');
+      print(
+        '🗑️ [EventDetail] Calling EventService.deleteEvent(${event.id})...',
+      );
       await ref.read(eventServiceProvider).deleteEvent(event.id!);
       print('✅ [EventDetail] EventService.deleteEvent completed successfully');
     } catch (e) {
@@ -780,7 +784,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     print('👋 [EventDetail] Event ID: ${event.id}');
     print('👋 [EventDetail] Event Name: "${event.name}"');
     print('👋 [EventDetail] Event Owner ID: ${event.ownerId}');
-    print('👋 [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}');
+    print(
+      '👋 [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}',
+    );
     print('👋 [EventDetail] Should Navigate: $shouldNavigate');
 
     if (event.id == null) {
@@ -789,25 +795,34 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
 
     try {
-      print('👋 [EventDetail] Calling DELETE /events/${event.id}/interaction...');
-      await ref.read(apiClientProvider).delete('/events/${event.id}/interaction');
+      print(
+        '👋 [EventDetail] Calling DELETE /events/${event.id}/interaction...',
+      );
+      await ref
+          .read(apiClientProvider)
+          .delete('/events/${event.id}/interaction');
       print('✅ [EventDetail] DELETE interaction completed successfully');
 
-      print('👋 [EventDetail] Manually removing event from EventRepository cache...');
+      print(
+        '👋 [EventDetail] Manually removing event from EventRepository cache...',
+      );
       final repository = ref.read(eventRepositoryProvider);
       final userId = ConfigService.instance.currentUserId;
 
       // Manually remove the event from cache since realtime DELETE doesn't work
       if (event.ownerId != userId) {
-        print('👋 [EventDetail] User is not owner, removing event ${event.id} from cache');
+        print(
+          '👋 [EventDetail] User is not owner, removing event ${event.id} from cache',
+        );
         repository.removeEventFromCache(event.id!);
       } else {
-        print('👋 [EventDetail] User is owner, keeping event but clearing interaction data');
+        print(
+          '👋 [EventDetail] User is owner, keeping event but clearing interaction data',
+        );
       }
 
-      print('👋 [EventDetail] Refreshing eventStateProvider...');
-      await ref.read(eventStateProvider.notifier).refresh();
-      print('✅ [EventDetail] eventStateProvider refreshed');
+      print('👋 [EventDetail] Realtime handles refresh automatically');
+      // Realtime handles refresh automatically via EventRepository
 
       print('👋 [EventDetail] Reloading detail data...');
       await _loadDetailData();
@@ -1003,7 +1018,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               config: AdaptiveButtonConfigExtended.destructive(),
               text: l10n.deleteEvent,
               icon: CupertinoIcons.delete,
-              onPressed: () => _deleteEvent(_detailedEvent ?? currentEvent, shouldNavigate: true),
+              onPressed: () => _deleteEvent(
+                _detailedEvent ?? currentEvent,
+                shouldNavigate: true,
+              ),
             ),
           ),
         ],
@@ -1020,7 +1038,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         config: AdaptiveButtonConfigExtended.destructive(),
         text: l10n.removeFromMyList,
         icon: CupertinoIcons.minus_circle,
-        onPressed: () => _leaveEvent(_detailedEvent ?? currentEvent, shouldNavigate: true),
+        onPressed: () =>
+            _leaveEvent(_detailedEvent ?? currentEvent, shouldNavigate: true),
       ),
     );
   }
@@ -1062,9 +1081,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         _buildInfoRow(
           l10n.recurrencePatterns,
           _formatRecurrencePatterns(
-            event.recurrencePatterns
-                .whereType<RecurrencePattern>()
-                .toList(),
+            event.recurrencePatterns.whereType<RecurrencePattern>().toList(),
             locale,
           ),
         ),
@@ -1245,7 +1262,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       }
 
       final userId = ConfigService.instance.currentUserId;
-      final response = await ref.read(apiClientProvider).get('/users/$userId/events');
+      final response = await ref
+          .read(apiClientProvider)
+          .get('/users/$userId/events');
 
       // Filter events that belong to the same series
       final allEvents = (response as List)
@@ -1253,9 +1272,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           .toList();
 
       final seriesEvents = allEvents
-          .where((e) =>
-              e.parentRecurringEventId == event.parentRecurringEventId ||
-              e.id == event.parentRecurringEventId)
+          .where(
+            (e) =>
+                e.parentRecurringEventId == event.parentRecurringEventId ||
+                e.id == event.parentRecurringEventId,
+          )
           .toList();
 
       if (mounted) {
@@ -1270,10 +1291,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         // Navigate to event series screen
         Navigator.of(context).push(
           CupertinoPageRoute(
-            builder: (context) => EventSeriesScreen(
-              events: seriesEvents,
-              seriesName: event.name,
-            ),
+            builder: (context) =>
+                EventSeriesScreen(events: seriesEvents, seriesName: event.name),
           ),
         );
       }
@@ -1629,7 +1648,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           );
 
       await _loadDetailData();
-      await ref.read(eventStateProvider.notifier).refresh();
+      // Realtime handles refresh automatically via EventRepository
 
       if (mounted) {
         final l10n = context.l10n;

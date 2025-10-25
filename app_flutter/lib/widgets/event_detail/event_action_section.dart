@@ -173,7 +173,9 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
     try {
       if (!mounted) return;
 
-      await ref.read(eventStateProvider.notifier).deleteEvent(widget.event.id!);
+      await ref.read(eventServiceProvider).deleteEvent(widget.event.id!);
+
+      // Realtime handles refresh automatically via EventRepository
 
       if (mounted) {
         PlatformDialogHelpers.showGlobalPlatformMessage(
@@ -209,7 +211,9 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
     try {
       if (!mounted) return;
 
-      await ref.read(eventStateProvider.notifier).deleteEvent(widget.event.id!);
+      await ref.read(eventServiceProvider).deleteEvent(widget.event.id!);
+
+      // Realtime handles refresh automatically via EventRepository
 
       if (mounted) {
         PlatformDialogHelpers.showGlobalPlatformMessage(

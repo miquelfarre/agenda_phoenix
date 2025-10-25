@@ -101,14 +101,16 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      final calendarNotifier = ref.read(calendarsNotifierProvider.notifier);
+      await ref
+          .read(calendarServiceProvider)
+          .updateCalendar(
+            widget.calendarId,
+            name: name,
+            description: description.isEmpty ? null : description,
+            color: _selectedColor,
+          );
 
-      await calendarNotifier.updateCalendar(
-        widget.calendarId,
-        name: name,
-        description: description.isEmpty ? null : description,
-        color: _selectedColor,
-      );
+      // Realtime handles refresh automatically via CalendarRepository
 
       if (!mounted) return;
       context.pop();
@@ -135,8 +137,9 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      final calendarNotifier = ref.read(calendarsNotifierProvider.notifier);
-      await calendarNotifier.deleteCalendar(widget.calendarId);
+      await ref.read(calendarServiceProvider).deleteCalendar(widget.calendarId);
+
+      // Realtime handles refresh automatically via CalendarRepository
 
       if (!mounted) return;
       context.pop();
