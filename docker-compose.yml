@@ -1,12 +1,15 @@
 services:
   # Supabase PostgreSQL Database
   db:
-    image: supabase/postgres:15.8.1.085
+    build:
+      context: ./database
+      dockerfile: Dockerfile
     container_name: agenda_phoenix_db
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
     volumes:

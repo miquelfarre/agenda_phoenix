@@ -80,34 +80,10 @@ def grant_supabase_permissions():
     logger.info("🔐 Granting permissions on Supabase schemas...")
 
     try:
-        with engine.connect() as conn:
-            # Grant CREATE and USAGE on storage schema
-            conn.execute(text("""
-                GRANT CREATE, USAGE ON SCHEMA storage TO postgres;
-            """))
-            logger.info("  ✓ Granted CREATE, USAGE on storage schema")
-
-            # Grant CREATE and USAGE on auth schema (for gotrue)
-            conn.execute(text("""
-                GRANT CREATE, USAGE ON SCHEMA auth TO postgres;
-            """))
-            logger.info("  ✓ Granted CREATE, USAGE on auth schema")
-
-            # Grant all privileges on existing tables in storage schema
-            conn.execute(text("""
-                GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA storage TO postgres;
-            """))
-            logger.info("  ✓ Granted ALL on existing storage tables")
-
-            # Grant all privileges on existing tables in auth schema
-            conn.execute(text("""
-                GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA auth TO postgres;
-            """))
-            logger.info("  ✓ Granted ALL on existing auth tables")
-
-            conn.commit()
-
-        logger.info("✅ Permissions granted successfully")
+        # This logic is now handled by /database/init/00-initial-roles.sql
+        # which runs on DB startup before any services connect.
+        pass
+        logger.info("✅ Permissions handled by initial SQL scripts.")
 
     except Exception as e:
         logger.error(f"❌ Error granting permissions: {e}")
@@ -1806,7 +1782,7 @@ def init_database():
 
         # Step 5: Setup Supabase Realtime
         setup_realtime()
-        setup_realtime_tenant()
+        # setup_realtime_tenant()
 
         # Step 6: Insert sample data
         insert_sample_data()
