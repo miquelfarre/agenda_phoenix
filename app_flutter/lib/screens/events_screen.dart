@@ -631,28 +631,42 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
+    print(
+      '🗑️ [_deleteEvent] Initiating delete for event: "${event.name}" (ID: ${event.id})',
+    );
     try {
       if (event.id == null) {
+        print('❌ [_deleteEvent] Error: Event ID is null.');
         throw Exception('Event ID is null');
       }
 
       final currentUserId = ConfigService.instance.currentUserId;
       final isOwner = event.ownerId == currentUserId;
+      print('👤 [_deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner');
 
       if (isOwner) {
+        print('👑 [_deleteEvent] User is owner. Deleting event via eventServiceProvider.');
         await ref.read(eventServiceProvider).deleteEvent(event.id!);
       } else {
+        print('👤 [_deleteEvent] User is not owner. Deleting interaction via API.');
         await ref
             .read(apiClientProvider)
             .delete('/events/${event.id}/interaction');
+        print('✅ [_deleteEvent] API call successful. Manually removing from cache.');
+        ref.read(eventRepositoryProvider).removeEventFromCache(event.id!);
       }
 
       if (shouldNavigate && mounted) {
+        print('➡️ [_deleteEvent] Navigating back.');
         Navigator.of(context).pop();
       }
 
-      // EventRepository handles updates via Realtime - no manual refresh needed
-    } catch (e) {
+      print('✅ [_deleteEvent] Delete process finished for event ID: ${event.id}');
+      // EventRepository handles updates via Realtime, but we manually remove
+      // for non-owners as RLS policies can prevent the DELETE event from broadcasting.
+    } catch (e, s) {
+      print('❌ [_deleteEvent] Error deleting event: $e');
+      print('STACK TRACE: $s');
       rethrow;
     }
   }

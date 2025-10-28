@@ -233,8 +233,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
 
-      // Trigger an immediate refresh so UI updates without waiting for Realtime
-      await ref.read(subscriptionRepositoryProvider).refresh();
+      // Manually remove from cache for immediate UI update
+      ref.read(subscriptionRepositoryProvider).removeSubscriptionFromCache(user.id);
     } catch (e) {
       String cleanError = e.toString().replaceFirst('Exception: ', '');
       _showErrorMessage(cleanError);

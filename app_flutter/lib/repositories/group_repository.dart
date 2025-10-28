@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/group.dart';
+import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
+import '../utils/app_exceptions.dart' as exceptions;
 
 class GroupRepository {
   final _supabaseService = SupabaseService.instance;
+  final _apiClient = ApiClient();
   final RealtimeSync _rt = RealtimeSync();
 
   final StreamController<List<Group>> _groupsController =
@@ -44,6 +47,63 @@ class GroupRepository {
     }
   }
 
+  Future<void> leaveGroup(int groupId) async {
+    final userId = ConfigService.instance.currentUserId;
+    final group = _cachedGroups.firstWhere((g) => g.id == groupId, orElse: () => throw exceptions.NotFoundException(message: 'Group not found in cache'));
+
+    if (group.isCreator(userId)) {
+      throw const exceptions.ConflictException(
+        message: 'Group creator cannot leave. Delete the group instead.',
+      );
+    }
+
+    try {
+      final memberships = await _apiClient.get(
+        '/group_memberships',
+        queryParams: {
+          'group_id': groupId.toString(),
+          'user_id': userId.toString(),
+        },
+      );
+
+      if (memberships is! List || memberships.isEmpty) {
+        throw exceptions.NotFoundException(
+          message: 'Membership not found for user $userId in group $groupId',
+        );
+      }
+
+      final membershipId = memberships[0]['id'];
+      await _apiClient.delete(
+        '/group_memberships/$membershipId',
+      );
+
+      // Manually remove from cache to fix realtime issue
+      removeGroupFromCache(groupId);
+
+    } catch (e) {
+      print('Error leaving group: $e');
+      rethrow;
+    }
+  }
+
+  void removeGroupFromCache(int groupId) {
+    print(
+      '🗑️ [GroupRepository] Manually removing group ID: $groupId',
+    );
+    final initialCount = _cachedGroups.length;
+    _cachedGroups.removeWhere((group) => group.id == groupId);
+    if (_cachedGroups.length < initialCount) {
+      print(
+        '✅ [GroupRepository] Group $groupId removed from cache. Emitting update.',
+      );
+      _emitCurrentGroups();
+    } else {
+      print(
+        '⚠️ [GroupRepository] Group $groupId not found in cache. No update emitted.',
+      );
+    }
+  }
+
   Future<void> _startRealtimeSubscription() async {
     // Listen to ALL group changes and filter client-side
     _realtimeChannel = _supabaseService.client
@@ -58,7 +118,7 @@ class GroupRepository {
   }
 
   void _handleGroupChange(PostgresChangePayload payload) {
-    final ct = DateTime.tryParse(payload.commitTimestamp?.toString() ?? '');
+    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
 
     final userId = ConfigService.instance.currentUserId;
 

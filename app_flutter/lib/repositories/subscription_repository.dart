@@ -108,6 +108,24 @@ class SubscriptionRepository {
     _emitCurrentSubscriptions();
   }
 
+  void removeSubscriptionFromCache(int userId) {
+    print(
+      '🗑️ [SubscriptionRepository] Manually removing subscription for user ID: $userId',
+    );
+    final initialCount = _cachedUsers.length;
+    _cachedUsers.removeWhere((user) => user.id == userId);
+    if (_cachedUsers.length < initialCount) {
+      print(
+        '✅ [SubscriptionRepository] User $userId removed from cache. Emitting update.',
+      );
+      _emitCurrentSubscriptions();
+    } else {
+      print(
+        '⚠️ [SubscriptionRepository] User $userId not found in cache. No update emitted.',
+      );
+    }
+  }
+
   Future<void> _startRealtimeSubscription() async {
     final userId = ConfigService.instance.currentUserId;
 
@@ -156,13 +174,7 @@ class SubscriptionRepository {
           rec['interaction_type'] == 'subscribed';
     }
 
-    DateTime? ct;
-    final ctRaw = payload.commitTimestamp;
-    if (ctRaw is DateTime) {
-      ct = ctRaw.toUtc();
-    } else if (ctRaw != null) {
-      ct = DateTime.tryParse(ctRaw.toString())?.toUtc();
-    }
+    final ct = payload.commitTimestamp.toUtc();
 
     if (payload.eventType == PostgresChangeEvent.delete) {
       final oldRec = Map<String, dynamic>.from(payload.oldRecord);

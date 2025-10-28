@@ -62,7 +62,7 @@ class CalendarRepository {
   }
 
   void _handleCalendarChange(PostgresChangePayload payload) {
-    final ct = DateTime.tryParse(payload.commitTimestamp?.toString() ?? '');
+    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
 
     if (payload.eventType == PostgresChangeEvent.insert) {
       if (!_rt.shouldProcessInsertOrUpdate(ct)) return;

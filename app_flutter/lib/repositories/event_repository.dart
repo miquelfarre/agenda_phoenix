@@ -187,7 +187,7 @@ class EventRepository {
       return _rt.shouldProcessDelete();
     }
 
-    final ct = DateTime.tryParse(payload.commitTimestamp?.toString() ?? '');
+    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
     final ok = _rt.shouldProcessInsertOrUpdate(ct);
     if (!ok) {
       print(

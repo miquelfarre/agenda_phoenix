@@ -52,7 +52,7 @@ class SupabaseService {
   }
 
   /// In debug/test mode, apply a generated test JWT as the current auth token
-  /// so Realtime connections use a user token (required for RLS).
+  /// so Realtime connections and HTTP requests use a user token (required for RLS).
   Future<void> applyTestAuthIfNeeded() async {
     final config = ConfigService.instance;
     if (!config.isTestMode) return;
@@ -62,10 +62,14 @@ class SupabaseService {
 
     try {
       // Update Realtime auth token so socket uses a user JWT (RLS-compatible)
-      Supabase.instance.client.realtime.setAuth(token);
-      print('🔐 [SupabaseService] Applied test auth token to Realtime client');
+      client.realtime.setAuth(token);
+
+      // Also update the token for HTTP requests
+      client.auth.headers['Authorization'] = 'Bearer $token';
+
+      print('🔐 [SupabaseService] Applied test auth token to Realtime and HTTP clients');
     } catch (e) {
-      print('❌ [SupabaseService] Failed to apply Realtime auth: $e');
+      print('❌ [SupabaseService] Failed to apply auth tokens: $e');
     }
   }
 

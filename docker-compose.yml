@@ -74,7 +74,7 @@ services:
       PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@db:5432/postgres
       PGRST_DB_SCHEMAS: public,storage
       PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_JWT_SECRET: "${SECRET_KEY_BASE:-b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1}"
       PGRST_DB_USE_LEGACY_GUCS: "false"
     depends_on:
       db:
@@ -97,10 +97,10 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
       PORT: 4000
       APP_NAME: realtime
-      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      JWT_SECRET: "${SECRET_KEY_BASE:-b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1}"
       # Phoenix requires a secret_key_base of at least 64 bytes; generate a long default if not provided
       SECRET_KEY_BASE: "${SECRET_KEY_BASE:-b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1}"
-      # DB_ENC_KEY removed - using plaintext mode for compatibility
+      DB_ENC_KEY: ${DB_ENC_KEY:-0123456789abcdef}
       REPLICATION_MODE: STREAM
       REPLICATION_POLL_INTERVAL: 100
       # Enable secure channels for proper WebSocket authentication
@@ -133,7 +133,7 @@ services:
       GOTRUE_JWT_AUD: authenticated
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
-      GOTRUE_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      GOTRUE_JWT_SECRET: "${SECRET_KEY_BASE:-b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1}"
 
       GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP:-true}
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-true}
@@ -150,7 +150,7 @@ services:
       ANON_KEY: ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0}
       SERVICE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxOTgzODEyOTk2fQ.DTZ2kRzUk5A16SC7lPkk396yf5pHeSq1u1rtdhnSiHM}
       POSTGREST_URL: http://rest:3000
-      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_JWT_SECRET: "${SECRET_KEY_BASE:-b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1}"
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@db:5432/postgres
       FILE_SIZE_LIMIT: 52428800
       STORAGE_BACKEND: file
@@ -203,11 +203,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
-      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      JWT_SECRET: "${SECRET_KEY_BASE:-b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1}"
       DB_ENC_KEY: ${DB_ENC_KEY:-0123456789abcdef}
       # Control how init_db.py stores tenants.jwt_secret to match the running Realtime image.
       # Options: 'plaintext' or 'encrypted'. Use plaintext for extensions db settings, encrypted for JWT.
-      REALTIME_TENANT_SECRET_MODE: ${REALTIME_TENANT_SECRET_MODE:-plaintext}
+      REALTIME_TENANT_SECRET_MODE: ${REALTIME_TENANT_SECRET_MODE:-encrypted}
       # Must match APP_NAME in realtime service (default 'supabase', but we use 'realtime')
       REALTIME_TENANT_EXTERNAL_ID: realtime
     healthcheck:
