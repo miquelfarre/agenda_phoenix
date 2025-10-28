@@ -14,6 +14,13 @@ import os
 from datetime import datetime, timedelta
 
 from sqlalchemy import inspect, text
+import json
+from typing import Optional
+
+# Crypto for AES-128-ECB (tenant jwt_secret encryption)
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+import base64
 from supabase import create_client, Client
 
 from database import Base, SessionLocal, engine
@@ -80,7 +87,7 @@ def grant_supabase_permissions():
     logger.info("🔐 Granting permissions on Supabase schemas...")
 
     try:
-        # This logic is now handled by /database/init/00-initial-roles.sql
+        # This logic is now handled by /database/init/01_init.sql
         # which runs on DB startup before any services connect.
         pass
         logger.info("✅ Permissions handled by initial SQL scripts.")
@@ -1557,21 +1564,28 @@ def setup_realtime():
             # Ensure supabase_realtime publication exists
             # If using self-hosted Supabase, it should already exist
             # If not, create it
+            pub_is_for_all_tables = False
             try:
                 result = conn.execute(text(
-                    "SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime'"
+                    "SELECT puballtables FROM pg_publication WHERE pubname = 'supabase_realtime'"
                 ))
-                if result.fetchone() is None:
-                    # Publication doesn't exist, create it
+                row = result.fetchone()
+                if row is None:
+                    # Publication doesn't exist, create it without tables (we'll add them individually)
                     conn.execute(text(
-                        "CREATE PUBLICATION supabase_realtime FOR ALL TABLES"
+                        "CREATE PUBLICATION supabase_realtime"
                     ))
-                    logger.info("  ✓ Created supabase_realtime publication")
+                    logger.info("  ✓ Created supabase_realtime publication (empty)")
                     conn.commit()
                 else:
-                    logger.info("  ✓ supabase_realtime publication already exists")
+                    pub_is_for_all_tables = row[0]
+                    if pub_is_for_all_tables:
+                        logger.info("  ✓ supabase_realtime publication exists (FOR ALL TABLES)")
+                    else:
+                        logger.info("  ✓ supabase_realtime publication already exists")
             except Exception as e:
                 logger.warning(f"  ⚠️  Could not check/create publication: {e}")
+                conn.rollback()  # Reset the transaction after error
 
             # List of tables to enable realtime sync
             realtime_tables = [
@@ -1595,16 +1609,21 @@ def setup_realtime():
 
                 # Add table to Supabase Realtime publication
                 # This makes changes visible to subscribed clients
-                try:
-                    conn.execute(text(f'ALTER PUBLICATION supabase_realtime ADD TABLE {table}'))
-                    logger.info(f"  ✓ Added '{table}' to supabase_realtime publication")
-                except Exception as e:
-                    # Table might already be in publication, that's ok
-                    error_msg = str(e).lower()
-                    if 'already a member' in error_msg or 'already exists' in error_msg:
-                        logger.info(f"  ℹ️  '{table}' already in publication (skipping)")
-                    else:
-                        logger.warning(f"  ⚠️  Could not add '{table}' to publication: {e}")
+                # Skip if publication is FOR ALL TABLES (it already includes all tables)
+                if pub_is_for_all_tables:
+                    logger.info(f"  ℹ️  '{table}' already in FOR ALL TABLES publication (skipping)")
+                else:
+                    try:
+                        conn.execute(text(f'ALTER PUBLICATION supabase_realtime ADD TABLE {table}'))
+                        logger.info(f"  ✓ Added '{table}' to supabase_realtime publication")
+                    except Exception as e:
+                        # Table might already be in publication, that's ok
+                        error_msg = str(e).lower()
+                        if 'already a member' in error_msg or 'already exists' in error_msg:
+                            logger.info(f"  ℹ️  '{table}' already in publication (skipping)")
+                        else:
+                            logger.warning(f"  ⚠️  Could not add '{table}' to publication: {e}")
+                            conn.rollback()  # Reset transaction after error
 
             conn.commit()
 
@@ -1624,71 +1643,274 @@ def setup_realtime_tenant():
     NOTE: The tenants table is owned by Supabase Realtime service.
     We don't create it - Realtime's migrations create it.
     We only insert our tenant configuration into the existing table.
+
+    This function includes retry logic to wait for Realtime migrations to complete.
     """
-    logger.info("🔧 Setting up Realtime tenant...")
+    logger.info("🔧 Setting up Realtime tenant and extension (idempotent)...")
 
-    try:
-        with engine.connect() as conn:
-            # Check if tenants table exists (created by Realtime migrations)
-            result = conn.execute(text("""
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables
-                    WHERE table_schema = 'public'
-                    AND table_name = 'tenants'
-                )
-            """))
-            table_exists = result.scalar()
+    import time
+    max_retries = 10
+    retry_delay = 2  # seconds
 
-            if not table_exists:
-                logger.warning("  ⚠️  Tenants table doesn't exist yet - Realtime migrations haven't run")
-                logger.info("  ℹ️  Realtime service will create this table on first startup")
-                return
-
-            # Check if tenant already exists
-            result = conn.execute(text(
-                "SELECT id FROM tenants WHERE external_id = 'realtime'"
-            ))
-            existing_tenant = result.fetchone()
-
-            if existing_tenant:
-                logger.info("  ℹ️  Realtime tenant already exists")
-            else:
-                # Insert tenant with correct configuration
-                # Use raw SQL because this table is owned by Realtime
-                conn.execute(text("""
-                    INSERT INTO tenants (
-                        id, name, external_id, jwt_secret,
-                        max_concurrent_users, inserted_at, updated_at,
-                        max_events_per_second, max_bytes_per_second,
-                        max_channels_per_client, max_joins_per_second
-                    ) VALUES (
-                        gen_random_uuid(), 'realtime', 'realtime',
-                        'super-secret-jwt-token-with-at-least-32-characters-long',
-                        200, NOW(), NOW(),
-                        100, 100000,
-                        100, 500
+    for attempt in range(max_retries):
+        try:
+            with engine.connect() as conn:
+                # Check if tenants table exists (created by Realtime migrations)
+                result = conn.execute(text("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        AND table_name = 'tenants'
                     )
                 """))
-                logger.info("  ✓ Created Realtime tenant")
+                table_exists = result.scalar()
 
-            # Mark ONLY the CreateTenants migration as complete
-            # Other migrations need to run to create their tables (extensions, channels, etc.)
-            logger.info("  📝 Marking CreateTenants migration as complete...")
-            conn.execute(text("""
-                INSERT INTO schema_migrations (version, inserted_at)
-                VALUES (20210706140551, NOW())
-                ON CONFLICT DO NOTHING
-            """))
-            logger.info("  ✓ Marked CreateTenants migration as complete")
+                if not table_exists:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"  ⏳ Tenants table not found, waiting for Realtime migrations... (attempt {attempt + 1}/{max_retries})")
+                        time.sleep(retry_delay)
+                        continue
+                    else:
+                        logger.warning("  ⚠️  Tenants table doesn't exist after max retries - Realtime migrations haven't run")
+                        logger.info("  ℹ️  Realtime service will create this table on first startup")
+                        return
 
-            conn.commit()
+                # Helper: AES-128-ECB encrypt + base64 (PKCS7 padding)
+                def _pkcs7_pad(data: bytes, block_size: int = 16) -> bytes:
+                    pad_len = block_size - (len(data) % block_size)
+                    return data + bytes([pad_len] * pad_len)
 
-        logger.info("✅ Realtime tenant setup completed successfully")
+                def _aes128_ecb_encrypt_b64(plaintext: str, key16: str) -> str:
+                    key_bytes = key16.encode("utf-8")
+                    pt = _pkcs7_pad(plaintext.encode("utf-8"), 16)
+                    cipher = Cipher(algorithms.AES(key_bytes), modes.ECB(), backend=default_backend())
+                    encryptor = cipher.encryptor()
+                    ct = encryptor.update(pt) + encryptor.finalize()
+                    return base64.b64encode(ct).decode("utf-8")
 
-    except Exception as e:
-        logger.error(f"❌ Error setting up realtime tenant: {e}")
-        # Don't raise - realtime is optional, backend can work without it
-        logger.warning("⚠️  Realtime may not work, but backend will continue")
+                # Read unified JWT secret and DB_ENC_KEY
+                unified_jwt_secret = os.getenv(
+                    "JWT_SECRET",
+                    "super-secret-jwt-token-with-at-least-32-characters-long",
+                )
+                db_enc_key = os.getenv("DB_ENC_KEY", "0123456789abcdef")
+
+                # Decide storage mode for tenants.jwt_secret to avoid flip-flopping across restarts.
+                # Accepted values: 'encrypted' (AES-128-ECB+base64) or 'plaintext'.
+                # Default to 'plaintext' which matches current Realtime image expectations in this stack.
+                secret_mode = os.getenv("REALTIME_TENANT_SECRET_MODE", "plaintext").lower()
+                if secret_mode not in ("encrypted", "plaintext"):
+                    logger.warning(
+                        f"  ⚠️  Unknown REALTIME_TENANT_SECRET_MODE='{secret_mode}', falling back to 'plaintext'"
+                    )
+                    secret_mode = "plaintext"
+
+                # Determine tenants schema shape (some Realtime versions have external_id, others don't)
+                tenants_has_external_id = False
+                try:
+                    res = conn.execute(text(
+                        """
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = 'public' AND table_name = 'tenants' AND column_name = 'external_id'
+                        """
+                    ))
+                    tenants_has_external_id = res.fetchone() is not None
+                except Exception:
+                    tenants_has_external_id = False
+
+                encrypted_jwt = _aes128_ecb_encrypt_b64(unified_jwt_secret, db_enc_key)
+                desired_secret = encrypted_jwt if secret_mode == "encrypted" else unified_jwt_secret
+                alt_secret = unified_jwt_secret if secret_mode == "encrypted" else encrypted_jwt
+
+                if tenants_has_external_id:
+                    tenant_external_id = os.getenv("REALTIME_TENANT_EXTERNAL_ID", "supabase")
+                    # Read current value first to avoid unnecessary writes and flip-flops
+                    current = conn.execute(text(
+                        """
+                        SELECT jwt_secret FROM tenants WHERE external_id = :external_id LIMIT 1
+                        """
+                    ), {"external_id": tenant_external_id}).fetchone()
+
+                    if current is None:
+                        # Ensure row exists with desired value
+                        conn.execute(text(
+                            """
+                            INSERT INTO tenants (id, external_id, jwt_secret, inserted_at, updated_at)
+                            VALUES (gen_random_uuid(), :external_id, :jwt_secret, NOW(), NOW())
+                            """
+                        ), {"external_id": tenant_external_id, "jwt_secret": desired_secret})
+                        logger.info(
+                            f"  ✓ Inserted tenants row (external_id='{tenant_external_id}') in {secret_mode} mode"
+                        )
+                    else:
+                        current_secret = current[0]
+                        if current_secret == desired_secret:
+                            logger.info(
+                                f"  ✓ Tenants jwt_secret already in desired {secret_mode} format (no change)"
+                            )
+                        elif current_secret == alt_secret:
+                            # Normalize to desired format
+                            conn.execute(text(
+                                """
+                                UPDATE tenants
+                                SET jwt_secret = :jwt_secret, updated_at = NOW()
+                                WHERE external_id = :external_id
+                                """
+                            ), {"external_id": tenant_external_id, "jwt_secret": desired_secret})
+                            logger.info(
+                                f"  ✓ Normalized tenants jwt_secret to {secret_mode} format"
+                            )
+                        else:
+                            # Unknown value; set to desired
+                            conn.execute(text(
+                                """
+                                UPDATE tenants
+                                SET jwt_secret = :jwt_secret, updated_at = NOW()
+                                WHERE external_id = :external_id
+                                """
+                            ), {"external_id": tenant_external_id, "jwt_secret": desired_secret})
+                            logger.info(
+                                f"  ✓ Updated tenants jwt_secret to desired {secret_mode} format"
+                            )
+                    logger.info(f"  ✓ Ensured tenants row (external_id='{tenant_external_id}') with correct jwt_secret")
+                else:
+                    # Schema without external_id: assume single-tenant. Update first row, or insert if empty.
+                    existing = conn.execute(text(
+                        """
+                        SELECT id, jwt_secret FROM tenants LIMIT 1
+                        """
+                    )).fetchone()
+                    if existing is None:
+                        conn.execute(text(
+                            """
+                            INSERT INTO tenants (id, jwt_secret, inserted_at, updated_at)
+                            VALUES (gen_random_uuid(), :jwt_secret, NOW(), NOW())
+                            """
+                        ), {"jwt_secret": desired_secret})
+                        logger.info("  ✓ Inserted tenants row (no external_id) with desired jwt_secret")
+                    else:
+                        current_secret = existing[1]
+                        if current_secret == desired_secret:
+                            logger.info(
+                                f"  ✓ Tenants jwt_secret already in desired {secret_mode} format (no change)"
+                            )
+                        elif current_secret == alt_secret:
+                            conn.execute(text(
+                                """
+                                UPDATE tenants SET jwt_secret = :jwt_secret, updated_at = NOW()
+                                """
+                            ), {"jwt_secret": desired_secret})
+                            logger.info(
+                                f"  ✓ Normalized tenants jwt_secret to {secret_mode} format"
+                            )
+                        else:
+                            conn.execute(text(
+                                """
+                                UPDATE tenants SET jwt_secret = :jwt_secret, updated_at = NOW()
+                                """
+                            ), {"jwt_secret": desired_secret})
+                            logger.info(
+                                f"  ✓ Updated tenants jwt_secret to desired {secret_mode} format"
+                            )
+                    logger.info("  ✓ Ensured tenants row (no external_id) with correct jwt_secret")
+
+                # Check if extensions table exists
+                result = conn.execute(text("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        AND table_name = 'extensions'
+                    )
+                """))
+                extensions_table_exists = result.scalar()
+
+                if extensions_table_exists:
+                    # Idempotent upsert for postgres_cdc_rls settings (plaintext expected by SubscriptionManager)
+                    settings = {
+                        "db_host": os.getenv("DB_HOST", "db"),
+                        "db_ip": os.getenv("DB_HOST", "db"),
+                        "db_name": os.getenv("POSTGRES_DB", "postgres"),
+                        "db_user": os.getenv("POSTGRES_USER", "postgres"),
+                        "db_password": os.getenv("POSTGRES_PASSWORD", "your-super-secret-and-long-postgres-password"),
+                        "db_port": int(os.getenv("DB_PORT", "5432")),
+                        "db_ssl": False,
+                        "ssl_enforced": False,
+                        "ip_version": "IPv4",
+                        "region": os.getenv("REGION", "local"),
+                        "slot_name": os.getenv("SLOT_NAME", "supabase_realtime_rls"),
+                        "temporary_slot": True,
+                    }
+
+                    # Some versions may not have tenant_external_id; handle both
+                    ext_has_tenant_external_id = False
+                    try:
+                        res = conn.execute(text(
+                            """
+                            SELECT 1
+                            FROM information_schema.columns
+                            WHERE table_schema = 'public' AND table_name = 'extensions' AND column_name = 'tenant_external_id'
+                            """
+                        ))
+                        ext_has_tenant_external_id = res.fetchone() is not None
+                    except Exception:
+                        ext_has_tenant_external_id = False
+
+                    if ext_has_tenant_external_id:
+                        # Update if changed, else ensure exists
+                        updated = conn.execute(text(
+                            """
+                            UPDATE extensions
+                            SET settings = CAST(:settings AS jsonb), updated_at = NOW()
+                            WHERE type = :type AND tenant_external_id = :tenant
+                            """
+                        ), {"settings": json.dumps(settings), "type": "postgres_cdc_rls", "tenant": os.getenv("REALTIME_TENANT_EXTERNAL_ID", "supabase")}).rowcount
+                        if updated == 0:
+                            conn.execute(text(
+                                """
+                                INSERT INTO extensions (id, type, settings, tenant_external_id, inserted_at, updated_at)
+                                VALUES (gen_random_uuid(), :type, CAST(:settings AS jsonb), :tenant, NOW(), NOW())
+                                """
+                            ), {"type": "postgres_cdc_rls", "tenant": os.getenv("REALTIME_TENANT_EXTERNAL_ID", "supabase"), "settings": json.dumps(settings)})
+                    else:
+                        # No tenant_external_id: assume single-tenant and single row per type
+                        updated = conn.execute(text(
+                            """
+                            UPDATE extensions
+                            SET settings = CAST(:settings AS jsonb), updated_at = NOW()
+                            WHERE type = :type
+                            """
+                        ), {"settings": json.dumps(settings), "type": "postgres_cdc_rls"}).rowcount
+                        if updated == 0:
+                            conn.execute(text(
+                                """
+                                INSERT INTO extensions (id, type, settings, inserted_at, updated_at)
+                                VALUES (gen_random_uuid(), :type, CAST(:settings AS jsonb), NOW(), NOW())
+                                """
+                            ), {"type": "postgres_cdc_rls", "settings": json.dumps(settings)})
+                    logger.info("  ✓ Ensured extension 'postgres_cdc_rls' settings (plaintext)")
+                else:
+                    logger.info("  ℹ️  Extensions table doesn't exist yet - will be created by Realtime migrations")
+
+                # Mark ONLY the CreateTenants migration as complete
+                # Other migrations need to run to create their tables (extensions, channels, etc.)
+                # Do not touch Realtime's internal migration markers; keep ownership with Realtime
+
+                conn.commit()
+
+            logger.info("✅ Realtime tenant/extension setup completed successfully")
+            break  # Success, exit retry loop
+
+        except Exception as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"  ⚠️  Error on attempt {attempt + 1}/{max_retries}: {e}")
+                logger.info(f"  ⏳ Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                continue
+            else:
+                logger.error(f"❌ Error setting up realtime tenant after {max_retries} attempts: {e}")
+                # Don't raise - realtime is optional, backend can work without it
+                logger.warning("⚠️  Realtime may not work, but backend will continue")
 
 
 def create_supabase_auth_users():
@@ -1782,7 +2004,7 @@ def init_database():
 
         # Step 5: Setup Supabase Realtime
         setup_realtime()
-        # setup_realtime_tenant()
+        setup_realtime_tenant()
 
         # Step 6: Insert sample data
         insert_sample_data()

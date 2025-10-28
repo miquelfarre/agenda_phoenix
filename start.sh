@@ -104,10 +104,12 @@ start_backend() {
     info "Building backend Docker image..."
     docker compose build backend
 
-    # Start database and backend in detached mode
-    info "Starting PostgreSQL and Backend in Docker (detached mode)..."
+    # Start all Supabase services in detached mode
+    info "Starting all Supabase services in Docker (detached mode)..."
     success "⚙️  FastAPI Backend on port 8001"
-    INIT_SCRIPT="$DB_SCRIPT" docker compose up -d db backend
+    success "⚙️  Supabase Studio on port 3000"
+    success "⚙️  Kong API Gateway on port 8000"
+    INIT_SCRIPT="$DB_SCRIPT" docker compose up -d
 
     # Wait for database
     info "Waiting for PostgreSQL to be ready..."
@@ -136,10 +138,13 @@ start_backend() {
     done
 
     success "Backend ready at http://localhost:8001"
-    info "Backend running in Docker container"
-    info "API Docs: http://localhost:8001/docs"
+    info "All services running in Docker containers:"
+    info "  - Backend API: http://localhost:8001"
+    info "  - API Docs: http://localhost:8001/docs"
+    info "  - Supabase Studio: http://localhost:3000"
+    info "  - Kong Gateway: http://localhost:8000"
     info ""
-    info "Use './start.sh stop' to stop the backend containers"
+    info "Use './start.sh stop' to stop all containers"
 }
 
 # Detect iOS device automatically (returns UDID)
@@ -269,12 +274,19 @@ start_flutter() {
         waited=$((waited + 2))
     done
 
+    # Build dart-define flags
+    DART_DEFINES=("--dart-define=USER_ID=$USER_ID")
+    if [[ -n "${SUPABASE_URL:-}" ]]; then
+        info "Using custom SUPABASE_URL: $SUPABASE_URL"
+        DART_DEFINES+=("--dart-define=SUPABASE_URL=$SUPABASE_URL")
+    fi
+
     if [[ -n "$flutter_device_id" ]]; then
         info "Running Flutter on device: $flutter_device_id"
-        flutter run -d "$flutter_device_id" --dart-define=USER_ID="$USER_ID"
+        flutter run -d "$flutter_device_id" "${DART_DEFINES[@]}"
     else
         warn "No iOS device found by Flutter, trying without device specification..."
-        flutter run --dart-define=USER_ID="$USER_ID"
+        flutter run "${DART_DEFINES[@]}"
     fi
 }
 

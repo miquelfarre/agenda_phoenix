@@ -97,7 +97,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
     return PlatformRefresh(
       onRefresh: () async {
-        ref.invalidate(subscriptionsStreamProvider);
+        await ref.read(subscriptionRepositoryProvider).refresh();
       },
       sliverChild: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
@@ -142,7 +142,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.resumed && mounted) {
-      ref.invalidate(subscriptionsStreamProvider);
+      ref.read(subscriptionRepositoryProvider).refresh();
     }
   }
 
@@ -172,7 +172,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
               key: const Key('subscriptions_refresh_button'),
               padding: const EdgeInsets.all(8),
               onPressed: () {
-                ref.invalidate(subscriptionsStreamProvider);
+                ref.read(subscriptionRepositoryProvider).refresh();
               },
               child: PlatformWidgets.platformIcon(
                 CupertinoIcons.refresh,
@@ -205,7 +205,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
                 const SizedBox(height: 16),
                 CupertinoButton(
                   onPressed: () {
-                    ref.invalidate(subscriptionsStreamProvider);
+                    ref.read(subscriptionRepositoryProvider).refresh();
                   },
                   child: Text(l10n.retry),
                 ),
@@ -233,7 +233,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
 
-      // Realtime handles refresh automatically via SubscriptionRepository
+      // Trigger an immediate refresh so UI updates without waiting for Realtime
+      await ref.read(subscriptionRepositoryProvider).refresh();
     } catch (e) {
       String cleanError = e.toString().replaceFirst('Exception: ', '');
       _showErrorMessage(cleanError);

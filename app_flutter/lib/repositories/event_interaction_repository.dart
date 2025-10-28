@@ -3,14 +3,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/event_interaction.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
+import '../core/realtime_sync.dart';
 
 class EventInteractionRepository {
   final _supabaseService = SupabaseService.instance;
+  final RealtimeSync _rt = RealtimeSync();
 
   final StreamController<List<EventInteraction>> _interactionsController =
       StreamController<List<EventInteraction>>.broadcast();
   List<EventInteraction> _cachedInteractions = [];
-  DateTime? _initialSyncTime;
   RealtimeChannel? _realtimeChannel;
 
   Stream<List<EventInteraction>> get interactionsStream =>
@@ -24,7 +25,6 @@ class EventInteractionRepository {
 
   Future<void> _fetchAndSync() async {
     try {
-      _initialSyncTime = DateTime.now().toUtc();
       final userId = ConfigService.instance.currentUserId;
 
       final response = await _supabaseService.client
@@ -32,9 +32,14 @@ class EventInteractionRepository {
           .select('*')
           .eq('user_id', userId);
 
-      _cachedInteractions = (response as List)
+      final list = (response as List);
+      _cachedInteractions = list
           .map((json) => EventInteraction.fromJson(json))
           .toList();
+
+      _rt.setServerSyncTsFromResponse(
+        rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+      );
     } catch (e) {
       print('Error fetching interactions: $e');
     }
@@ -59,18 +64,15 @@ class EventInteractionRepository {
   }
 
   void _handleInteractionChange(PostgresChangePayload payload) {
-    final eventTime = DateTime.tryParse(payload.commitTimestamp.toString());
-    if (eventTime != null &&
-        _initialSyncTime != null &&
-        eventTime.isBefore(_initialSyncTime!)) {
-      return;
-    }
+    final ct = DateTime.tryParse(payload.commitTimestamp?.toString() ?? '');
 
     if (payload.eventType == PostgresChangeEvent.insert) {
+      if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
       final interaction = EventInteraction.fromJson(payload.newRecord);
       _cachedInteractions.add(interaction);
       _emitCurrentInteractions();
     } else if (payload.eventType == PostgresChangeEvent.update) {
+      if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
       final updatedInteraction = EventInteraction.fromJson(payload.newRecord);
       final index = _cachedInteractions.indexWhere(
         (i) =>
@@ -82,6 +84,7 @@ class EventInteractionRepository {
         _emitCurrentInteractions();
       }
     } else if (payload.eventType == PostgresChangeEvent.delete) {
+      if (!_rt.shouldProcessDelete()) return;
       final userId = payload.oldRecord['user_id'];
       final eventId = payload.oldRecord['event_id'];
       if (userId != null && eventId != null) {

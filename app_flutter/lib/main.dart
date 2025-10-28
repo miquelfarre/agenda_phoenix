@@ -83,6 +83,10 @@ void main() async {
 
     await _validateTestModeConfiguration();
 
+  // When running in test mode (debug), apply a generated JWT as Supabase auth
+  // so Realtime (RLS) connections use a user token instead of the anon key.
+  await SupabaseService.instance.applyTestAuthIfNeeded();
+
     await GroupService().initialize();
 
     await CalendarService().initialize();

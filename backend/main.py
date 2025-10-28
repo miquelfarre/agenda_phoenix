@@ -8,7 +8,8 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from fastapi import FastAPI
+import uvicorn
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from init_db import init_database
@@ -20,6 +21,9 @@ from routers import app_bans, calendar_memberships, calendars, contacts, event_b
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Global flag to track database initialization
+_db_initialized = False
+
 
 # Lifespan event handler
 @asynccontextmanager
@@ -28,10 +32,12 @@ async def lifespan(app: FastAPI):
     Execute on application startup and shutdown.
     Initialize database: drop all tables, recreate them, and insert sample data.
     """
+    global _db_initialized
     # Startup
     logger.info("🚀 FastAPI application starting up...")
     try:
         init_database()
+        _db_initialized = True
         logger.info("✅ Database initialization completed")
     except Exception as e:
         logger.error(f"❌ Failed to initialize database: {e}")
@@ -103,11 +109,15 @@ async def root():
 # Health check endpoint
 @app.get("/health")
 async def health():
-    """Health check endpoint"""
+    """
+    Health check endpoint.
+    Returns 200 only after database initialization is complete.
+    This ensures PostgREST waits for all tables and views to be created.
+    """
+    if not _db_initialized:
+        raise HTTPException(status_code=503, detail="Database initialization in progress")
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8001)

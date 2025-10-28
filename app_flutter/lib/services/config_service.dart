@@ -78,7 +78,9 @@ class ConfigService with SingletonMixin, ErrorHandlingMixin {
     }
 
     _isTestMode = true;
-    _generateTestCredentials();
+    // Don't generate test credentials - let Supabase use anonymous auth
+    // _generateTestCredentials();
+    print('🔧 [TestMode] Test mode enabled - using anonymous Supabase auth');
     TestModeValidator.logTestModeStatus(isEnabled: true);
   }
 

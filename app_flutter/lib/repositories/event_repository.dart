@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/realtime_sync.dart';
 import '../models/event.dart';
 import '../models/event_hive.dart';
 import '../services/supabase_service.dart';
@@ -10,6 +11,7 @@ import '../services/api_client.dart';
 class EventRepository {
   static const String _boxName = 'events';
   final SupabaseService _supabaseService = SupabaseService.instance;
+  final RealtimeSync _rt = RealtimeSync();
 
   Box<EventHive>? _box;
   RealtimeChannel? _realtimeChannel;
@@ -72,8 +74,7 @@ class EventRepository {
 
       await _updateLocalCache(_cachedEvents);
 
-      // Extract the most recent updated_at timestamp from server data
-      // This ensures we use server time, not client time
+      // Extract the most recent updated_at timestamp from server data (server time reference)
       if (_cachedEvents.isNotEmpty) {
         final updatedAtTimestamps = _cachedEvents
             .map((e) => e.updatedAt)
@@ -86,17 +87,20 @@ class EventRepository {
             (a, b) => a.isAfter(b) ? a : b,
           );
           _initialSyncCompletedAt = latestUpdate.toUtc();
+          _rt.setServerSyncTs(_initialSyncCompletedAt!);
           print(
             '✅ Sync timestamp set to: ${_initialSyncCompletedAt!.toIso8601String()} (server time)',
           );
         } else {
           // Fallback to client time if no timestamps available
           _initialSyncCompletedAt = DateTime.now().toUtc();
+          _rt.setServerSyncTs(_initialSyncCompletedAt!);
           print('⚠️ No event timestamps found, using client time');
         }
       } else {
-        _initialSyncCompletedAt = DateTime.now().toUtc();
-        print('ℹ️ No events cached, using client time');
+  _initialSyncCompletedAt = DateTime.now().toUtc();
+  _rt.setServerSyncTs(_initialSyncCompletedAt!);
+  print('ℹ️ No events cached, using client time');
       }
 
       _emitCurrentEvents();
@@ -144,33 +148,29 @@ class EventRepository {
   }
 
   Future<void> _startRealtimeSubscription() async {
-    _realtimeChannel = _supabaseService.realtimeChannel('events_channel');
-
-    _realtimeChannel!
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'events',
-          callback: _handleRealtimeEvent,
-        )
-        .subscribe();
+    _realtimeChannel = RealtimeUtils.subscribeTable(
+      client: _supabaseService.client,
+      schema: 'public',
+      table: 'events',
+      onChange: _handleRealtimeEvent,
+    );
 
     print('✅ Realtime subscription started for events table');
   }
 
   Future<void> _startInteractionsSubscription() async {
-    _interactionsChannel = _supabaseService.realtimeChannel(
-      'interactions_channel',
+    final userId = ConfigService.instance.currentUserId;
+    _interactionsChannel = RealtimeUtils.subscribeTable(
+      client: _supabaseService.client,
+      schema: 'public',
+      table: 'event_interactions',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'user_id',
+        value: userId.toString(),
+      ),
+      onChange: _handleInteractionChange,
     );
-
-    _interactionsChannel!
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'event_interactions',
-          callback: _handleInteractionChange,
-        )
-        .subscribe();
 
     print('✅ Realtime subscription started for event_interactions table');
   }
@@ -180,76 +180,17 @@ class EventRepository {
   bool _shouldProcessEvent(PostgresChangePayload payload, String eventType) {
     print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
 
-    // DELETE events should ALWAYS be processed, regardless of timestamp
-    // because they are current actions, not historical data
     if (payload.eventType == PostgresChangeEvent.delete) {
-      print(
-        '✅ [FILTER] DELETE event - processing immediately (skip timestamp check)',
-      );
-      return true;
+      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
+      return _rt.shouldProcessDelete();
     }
 
-    // Try to extract updated_at from newRecord or oldRecord
-    final updatedAtStr =
-        payload.newRecord['updated_at'] as String? ??
-        payload.oldRecord['updated_at'] as String?;
-
-    print('🔍 [FILTER] updated_at from payload: $updatedAtStr');
-
-    if (updatedAtStr == null) {
-      print('⚠️ [FILTER] $eventType has no updated_at - processing by default');
-      return true; // Better to process than to ignore if we can't determine
+    final ct = DateTime.tryParse(payload.commitTimestamp?.toString() ?? '');
+    final ok = _rt.shouldProcessInsertOrUpdate(ct);
+    if (!ok) {
+      print('🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate');
     }
-
-    try {
-      final eventUpdatedAt = DateTime.parse(updatedAtStr).toUtc();
-      print(
-        '🔍 [FILTER] Parsed updated_at: ${eventUpdatedAt.toIso8601String()}',
-      );
-
-      if (_initialSyncCompletedAt == null) {
-        print(
-          '⚠️ [FILTER] No sync timestamp set - processing $eventType by default',
-        );
-        return true; // No reference point, process everything
-      }
-
-      print(
-        '🔍 [FILTER] Sync timestamp: ${_initialSyncCompletedAt!.toIso8601String()}',
-      );
-
-      // Add 1 second margin to avoid race conditions
-      // (events updated exactly at sync time should be processed)
-      final syncWithMargin = _initialSyncCompletedAt!.subtract(
-        const Duration(seconds: 1),
-      );
-
-      print(
-        '🔍 [FILTER] Sync with margin: ${syncWithMargin.toIso8601String()}',
-      );
-      print(
-        '🔍 [FILTER] Is before margin? ${eventUpdatedAt.isBefore(syncWithMargin)}',
-      );
-
-      if (eventUpdatedAt.isBefore(syncWithMargin)) {
-        print(
-          '🚫 [FILTER] Ignoring historical $eventType: '
-          'event=${eventUpdatedAt.toIso8601String()}, '
-          'sync=${syncWithMargin.toIso8601String()}',
-        );
-        return false; // Historical event, ignore
-      }
-
-      print(
-        '✅ [FILTER] Processing new $eventType: '
-        'event=${eventUpdatedAt.toIso8601String()}, '
-        'sync=${syncWithMargin.toIso8601String()}',
-      );
-      return true; // New event, process
-    } catch (e) {
-      print('❌ [FILTER] Error parsing timestamp for $eventType: $e');
-      return true; // In case of error, process by default
-    }
+    return ok;
   }
 
   void _handleInteractionChange(PostgresChangePayload payload) {

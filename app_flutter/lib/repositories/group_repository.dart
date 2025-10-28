@@ -3,14 +3,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/group.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
+import '../core/realtime_sync.dart';
 
 class GroupRepository {
   final _supabaseService = SupabaseService.instance;
+  final RealtimeSync _rt = RealtimeSync();
 
   final StreamController<List<Group>> _groupsController =
       StreamController<List<Group>>.broadcast();
   List<Group> _cachedGroups = [];
-  DateTime? _initialSyncTime;
   RealtimeChannel? _realtimeChannel;
 
   Stream<List<Group>> get groupsStream => _groupsController.stream;
@@ -23,7 +24,6 @@ class GroupRepository {
 
   Future<void> _fetchAndSync() async {
     try {
-      _initialSyncTime = DateTime.now().toUtc();
       final userId = ConfigService.instance.currentUserId;
 
       // Fetch groups where user is a member
@@ -32,9 +32,15 @@ class GroupRepository {
           .select('*')
           .contains('member_ids', [userId]);
 
-      _cachedGroups = (response as List)
+      final list = (response as List);
+      _cachedGroups = list
           .map((json) => Group.fromJson(json))
           .toList();
+
+      // Set server sync time from rows
+      _rt.setServerSyncTsFromResponse(
+        rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+      );
     } catch (e) {
       print('Error fetching groups: $e');
     }
@@ -54,17 +60,13 @@ class GroupRepository {
   }
 
   void _handleGroupChange(PostgresChangePayload payload) {
-    final eventTime = DateTime.tryParse(payload.commitTimestamp.toString());
-    if (eventTime != null &&
-        _initialSyncTime != null &&
-        eventTime.isBefore(_initialSyncTime!)) {
-      return;
-    }
+    final ct = DateTime.tryParse(payload.commitTimestamp?.toString() ?? '');
 
     final userId = ConfigService.instance.currentUserId;
 
     if (payload.eventType == PostgresChangeEvent.insert ||
         payload.eventType == PostgresChangeEvent.update) {
+      if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
       final groupData = payload.newRecord;
       final memberIds = (groupData['member_ids'] as List?)?.cast<int>() ?? [];
       final isUserMember = memberIds.contains(userId);
@@ -87,6 +89,7 @@ class GroupRepository {
         }
       }
     } else if (payload.eventType == PostgresChangeEvent.delete) {
+      if (!_rt.shouldProcessDelete()) return;
       final groupId = payload.oldRecord['id'] as int?;
       if (groupId != null) {
         _cachedGroups.removeWhere((g) => g.id == groupId);

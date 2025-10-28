@@ -3,14 +3,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/calendar.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
+import '../core/realtime_sync.dart';
 
 class CalendarRepository {
   final _supabaseService = SupabaseService.instance;
+  final RealtimeSync _rt = RealtimeSync();
 
   final StreamController<List<Calendar>> _calendarsController =
       StreamController<List<Calendar>>.broadcast();
   List<Calendar> _cachedCalendars = [];
-  DateTime? _initialSyncTime;
   RealtimeChannel? _realtimeChannel;
 
   Stream<List<Calendar>> get calendarsStream => _calendarsController.stream;
@@ -23,7 +24,6 @@ class CalendarRepository {
 
   Future<void> _fetchAndSync() async {
     try {
-      _initialSyncTime = DateTime.now().toUtc();
       final userId = ConfigService.instance.currentUserId;
 
       final response = await _supabaseService.client
@@ -31,9 +31,15 @@ class CalendarRepository {
           .select('*')
           .eq('owner_id', userId);
 
-      _cachedCalendars = (response as List)
+      final list = (response as List);
+      _cachedCalendars = list
           .map((json) => Calendar.fromJson(json))
           .toList();
+
+      // Set server sync time from rows (serverTime not available here)
+      _rt.setServerSyncTsFromResponse(
+        rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+      );
     } catch (e) {
       print('Error fetching calendars: $e');
     }
@@ -58,18 +64,15 @@ class CalendarRepository {
   }
 
   void _handleCalendarChange(PostgresChangePayload payload) {
-    final eventTime = DateTime.tryParse(payload.commitTimestamp.toString());
-    if (eventTime != null &&
-        _initialSyncTime != null &&
-        eventTime.isBefore(_initialSyncTime!)) {
-      return;
-    }
+    final ct = DateTime.tryParse(payload.commitTimestamp?.toString() ?? '');
 
     if (payload.eventType == PostgresChangeEvent.insert) {
+      if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
       final calendar = Calendar.fromJson(payload.newRecord);
       _cachedCalendars.add(calendar);
       _emitCurrentCalendars();
     } else if (payload.eventType == PostgresChangeEvent.update) {
+      if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
       final updatedCalendar = Calendar.fromJson(payload.newRecord);
       final index = _cachedCalendars.indexWhere(
         (c) => c.id == updatedCalendar.id,
@@ -79,6 +82,7 @@ class CalendarRepository {
         _emitCurrentCalendars();
       }
     } else if (payload.eventType == PostgresChangeEvent.delete) {
+      if (!_rt.shouldProcessDelete()) return;
       final calendarId = payload.oldRecord['id']?.toString() ?? '';
       _cachedCalendars.removeWhere((c) => c.id == calendarId);
       _emitCurrentCalendars();

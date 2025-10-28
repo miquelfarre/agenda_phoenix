@@ -30,10 +30,17 @@ services:
     environment:
       SUPABASE_URL: http://kong:8000
       STUDIO_PG_META_URL: http://meta:8080
-      SUPABASE_ANON_KEY: ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0}
-      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU}
+      SUPABASE_ANON_KEY: ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIiwiYXVkIjoiYXV0aGVudGljYXRlZCIsImV4cCI6MTk4MzgxMjk5Nn0.VZkz5UpquChN3tfC9v5FyuE7_k6cqyrOXpIpajpGVsw}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxOTgzODEyOTk2fQ.DTZ2kRzUk5A16SC7lPkk396yf5pHeSq1u1rtdhnSiHM}
     depends_on:
       - kong
+    healthcheck:
+      # Use CMD-SHELL so $HOSTNAME is expanded; avoid backticks to keep YAML escaping simple
+      test: ["CMD-SHELL", "node -e \"fetch('http://$${HOSTNAME}:3000').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
 
   # Kong API Gateway
   kong:
@@ -67,36 +74,40 @@ services:
       PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@db:5432/postgres
       PGRST_DB_SCHEMAS: public,storage
       PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
       PGRST_DB_USE_LEGACY_GUCS: "false"
     depends_on:
       db:
         condition: service_healthy
+      backend:
+        condition: service_healthy
 
   # Supabase Realtime Server
   realtime:
-    image: supabase/realtime:v2.51.11
+    image: supabase/realtime:v2.39.0
     container_name: agenda_phoenix_realtime
     restart: unless-stopped
     environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@db:5432/${POSTGRES_DB:-postgres}
+      # Explicit DB_* envs required by older Realtime images during migrations
       DB_HOST: db
       DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-postgres}
       DB_USER: postgres
       DB_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
-      DB_NAME: ${POSTGRES_DB:-postgres}
-      DB_SSL: "false"
       PORT: 4000
       APP_NAME: realtime
-      JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
-      SECRET_KEY_BASE: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
-      REPLICATION_MODE: RLS
+      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      # Phoenix requires a secret_key_base of at least 64 bytes; generate a long default if not provided
+      SECRET_KEY_BASE: "${SECRET_KEY_BASE:-b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1b9fba8f3e2bd04f6c3f1a4e7d9c0b2a1}"
+      # Symmetric encryption key used by Realtime.Crypto for encrypting secrets (16 bytes for AES-128)
+      REPLICATION_MODE: STREAM
       REPLICATION_POLL_INTERVAL: 100
+      # Enable secure channels for proper WebSocket authentication
       SECURE_CHANNELS: "true"
       SLOT_NAME: supabase_realtime_rls
       TEMPORARY_SLOT: "true"
       RLIMIT_NOFILE: 1048576
-    command: >
-      bash -c "sleep 10 && /app/bin/realtime eval 'Realtime.Release.migrate' && /app/bin/realtime start"
     depends_on:
       db:
         condition: service_healthy
@@ -122,7 +133,7 @@ services:
       GOTRUE_JWT_AUD: authenticated
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
-      GOTRUE_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      GOTRUE_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
 
       GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP:-true}
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-true}
@@ -137,9 +148,9 @@ services:
     restart: unless-stopped
     environment:
       ANON_KEY: ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0}
-      SERVICE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxOTgzODEyOTk2fQ.DTZ2kRzUk5A16SC7lPkk396yf5pHeSq1u1rtdhnSiHM}
       POSTGREST_URL: http://rest:3000
-      PGRST_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@db:5432/postgres
       FILE_SIZE_LIMIT: 52428800
       STORAGE_BACKEND: file
@@ -182,11 +193,26 @@ services:
       - "8001:8001"
     environment:
       SUPABASE_URL: http://kong:8000
-      SUPABASE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU}
+      SUPABASE_KEY: ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxOTgzODEyOTk2fQ.DTZ2kRzUk5A16SC7lPkk396yf5pHeSq1u1rtdhnSiHM}
+      # Explicit service role key for Supabase Admin API calls (signed with JWT_SECRET)
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY_OVERRIDE:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxOTgzODEyOTk2fQ.DTZ2kRzUk5A16SC7lPkk396yf5pHeSq1u1rtdhnSiHM}
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@db:5432/postgres
+      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      DB_ENC_KEY: ${DB_ENC_KEY:-0123456789abcdef}
+      # Control how init_db.py stores tenants.jwt_secret to match the running Realtime image.
+      # Options: 'plaintext' or 'encrypted'. Default to plaintext for this stack to avoid drift.
+      REALTIME_TENANT_SECRET_MODE: ${REALTIME_TENANT_SECRET_MODE:-plaintext}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
     depends_on:
-      - db
-      - kong
+      db:
+        condition: service_healthy
+      realtime:
+        condition: service_started
 
 volumes:
   db_data:

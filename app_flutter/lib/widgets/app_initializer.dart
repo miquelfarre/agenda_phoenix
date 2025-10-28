@@ -4,6 +4,7 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 import '../ui/styles/app_styles.dart';
 import '../services/calendar_service.dart';
+import '../core/state/app_state.dart';
 
 class AppInitializer extends ConsumerStatefulWidget {
   final Widget child;
@@ -29,11 +30,22 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     try {
       await _ensureBirthdayCalendar();
 
+      // Initialize SubscriptionRepository (loads data but doesn't start Realtime yet)
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
       }
+
+      // Start Realtime after the app is fully initialized and rendered
+      // This delay ensures the auth token is properly propagated
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          subscriptionRepo.startRealtime();
+        }
+      });
     } catch (e) {
       if (mounted) {
         setState(() {
