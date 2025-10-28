@@ -6,7 +6,8 @@ class TestModeValidator {
 
   // JWT secret must match the one in .env and docker-compose.yml
   // MUST match the unified JWT secret used by backend/compose/Realtime
-  static const String _jwtSecret = 'super-secret-jwt-token-with-at-least-32-characters-long';
+  static const String _jwtSecret =
+      'super-secret-jwt-token-with-at-least-32-characters-long';
 
   static bool canEnableTestMode() {
     final violations = getSafetyViolations();
@@ -46,13 +47,19 @@ class TestModeValidator {
       'email': 'test-user-$userId@eventypop.test',
       'iss': 'supabase',
       'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      'exp': DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch ~/ 1000,
+      'exp':
+          DateTime.now()
+              .add(const Duration(hours: 24))
+              .millisecondsSinceEpoch ~/
+          1000,
     });
 
     final token = jwt.sign(SecretKey(_jwtSecret));
     if (kDebugMode) {
       print('🔐 [TestMode] Generated JWT token for user $userId');
-      print('🔐 [TestMode] Token (first 50 chars): ${token.substring(0, 50)}...');
+      print(
+        '🔐 [TestMode] Token (first 50 chars): ${token.substring(0, 50)}...',
+      );
     }
     return token;
   }
@@ -67,7 +74,8 @@ class TestModeValidator {
       'emailVerified': true,
       'isAnonymous': false,
       'photoURL': null,
-      'phoneNumber': '+1555${userId.toString().padLeft(7, '0').substring(0, 7)}',
+      'phoneNumber':
+          '+1555${userId.toString().padLeft(7, '0').substring(0, 7)}',
       'instagramName': 'testuser$userId',
       'isPublic': true,
       'isTestUser': true,
@@ -83,11 +91,16 @@ class TestModeValidator {
     final violations = getSafetyViolations();
 
     if (violations.isNotEmpty) {
-      return TestModeValidationResult.failure('Test mode not allowed', violations);
+      return TestModeValidationResult.failure(
+        'Test mode not allowed',
+        violations,
+      );
     }
 
     if (userId != null && !isValidTestUserId(userId)) {
-      return TestModeValidationResult.failure('Invalid test user ID', ['User ID must be between 1 and 999999, got $userId']);
+      return TestModeValidationResult.failure('Invalid test user ID', [
+        'User ID must be between 1 and 999999, got $userId',
+      ]);
     }
 
     return TestModeValidationResult.success();
@@ -105,7 +118,10 @@ class TestModeValidationResult {
     return TestModeValidationResult._(true, null, []);
   }
 
-  factory TestModeValidationResult.failure(String message, List<String> violations) {
+  factory TestModeValidationResult.failure(
+    String message,
+    List<String> violations,
+  ) {
     return TestModeValidationResult._(false, message, violations);
   }
 

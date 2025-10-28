@@ -87,7 +87,10 @@ void main() async {
 
     await CalendarService().initialize();
 
-    const env = String.fromEnvironment('FLUTTER_ENV', defaultValue: 'development');
+    const env = String.fromEnvironment(
+      'FLUTTER_ENV',
+      defaultValue: 'development',
+    );
 
     runApp(ProviderScope(child: MyApp(env: env)));
   } catch (e, _) {
@@ -97,7 +100,10 @@ void main() async {
 
 Future<void> _initializeSupabase() async {
   try {
-    await SupabaseService.initialize(supabaseUrl: AppConfig.supabaseUrl, supabaseAnonKey: AppConfig.supabaseAnonKey);
+    await SupabaseService.initialize(
+      supabaseUrl: AppConfig.supabaseUrl,
+      supabaseAnonKey: AppConfig.supabaseAnonKey,
+    );
   } catch (e) {
     rethrow;
   }

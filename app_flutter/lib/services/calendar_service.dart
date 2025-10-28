@@ -19,8 +19,12 @@ class CalendarService {
 
   Future<void> initialize() async {
     try {
-      _calendarsBox = Hive.isBoxOpen(_calendarsBoxName) ? Hive.box<CalendarHive>(_calendarsBoxName) : await Hive.openBox<CalendarHive>(_calendarsBoxName);
-      _sharesBox = Hive.isBoxOpen(_sharesBoxName) ? Hive.box<CalendarShareHive>(_sharesBoxName) : await Hive.openBox<CalendarShareHive>(_sharesBoxName);
+      _calendarsBox = Hive.isBoxOpen(_calendarsBoxName)
+          ? Hive.box<CalendarHive>(_calendarsBoxName)
+          : await Hive.openBox<CalendarHive>(_calendarsBoxName);
+      _sharesBox = Hive.isBoxOpen(_sharesBoxName)
+          ? Hive.box<CalendarShareHive>(_sharesBoxName)
+          : await Hive.openBox<CalendarShareHive>(_sharesBoxName);
     } catch (e) {
       rethrow;
     }
@@ -32,11 +36,12 @@ class CalendarService {
     }
 
     try {
-      return _calendarsBox!.values.map((hive) => hive.toCalendar()).toList()..sort((a, b) {
-        if (a.isDefault && !b.isDefault) return -1;
-        if (!a.isDefault && b.isDefault) return 1;
-        return a.name.compareTo(b.name);
-      });
+      return _calendarsBox!.values.map((hive) => hive.toCalendar()).toList()
+        ..sort((a, b) {
+          if (a.isDefault && !b.isDefault) return -1;
+          if (!a.isDefault && b.isDefault) return 1;
+          return a.name.compareTo(b.name);
+        });
     } catch (e) {
       return [];
     }
@@ -76,11 +81,26 @@ class CalendarService {
     }
   }
 
-  Future<Calendar> createCalendar({required String name, String? description, String color = '#2196F3', bool isPublic = false, bool isShareable = true}) async {
+  Future<Calendar> createCalendar({
+    required String name,
+    String? description,
+    String color = '#2196F3',
+    bool isPublic = false,
+    bool isShareable = true,
+  }) async {
     try {
-      final data = {'name': name, 'description': description, 'color': color, 'is_public': isPublic, 'is_shareable': isShareable};
+      final data = {
+        'name': name,
+        'description': description,
+        'color': color,
+        'is_public': isPublic,
+        'is_shareable': isShareable,
+      };
 
-      final response = await ApiClientFactory.instance.post('/api/v1/calendars', body: data);
+      final response = await ApiClientFactory.instance.post(
+        '/api/v1/calendars',
+        body: data,
+      );
       final calendar = Calendar.fromJson(response);
 
       await _storeCalendarLocally(calendar);
@@ -92,7 +112,13 @@ class CalendarService {
     }
   }
 
-  Future<Calendar> updateCalendar(String id, {String? name, String? description, String? color, bool? isDefault}) async {
+  Future<Calendar> updateCalendar(
+    String id, {
+    String? name,
+    String? description,
+    String? color,
+    bool? isDefault,
+  }) async {
     try {
       final data = <String, dynamic>{};
       if (name != null) data['name'] = name;
@@ -100,7 +126,10 @@ class CalendarService {
       if (color != null) data['color'] = color;
       if (isDefault != null) data['is_default'] = isDefault;
 
-      final response = await ApiClientFactory.instance.put('/api/v1/calendars/$id', body: data);
+      final response = await ApiClientFactory.instance.put(
+        '/api/v1/calendars/$id',
+        body: data,
+      );
       final calendar = Calendar.fromJson(response);
 
       await _storeCalendarLocally(calendar);
@@ -128,12 +157,19 @@ class CalendarService {
     }
   }
 
-  Future<CalendarShare> shareCalendar({required String calendarId, required String userId, required CalendarPermission permission}) async {
+  Future<CalendarShare> shareCalendar({
+    required String calendarId,
+    required String userId,
+    required CalendarPermission permission,
+  }) async {
     try {
       String role = permission == CalendarPermission.admin ? 'admin' : 'member';
       final data = {'user_id': userId, 'role': role};
 
-      final response = await ApiClientFactory.instance.post('/api/v1/calendars/$calendarId/memberships', body: data);
+      final response = await ApiClientFactory.instance.post(
+        '/api/v1/calendars/$calendarId/memberships',
+        body: data,
+      );
       final share = CalendarShare.fromJson(response);
 
       await _storeShareLocally(share);
@@ -149,20 +185,29 @@ class CalendarService {
     if (_sharesBox == null) return [];
 
     try {
-      return _sharesBox!.values.where((share) => share.calendarId == calendarId).map((hive) => hive.toCalendarShare()).toList();
+      return _sharesBox!.values
+          .where((share) => share.calendarId == calendarId)
+          .map((hive) => hive.toCalendarShare())
+          .toList();
     } catch (e) {
       return [];
     }
   }
 
-  bool hasPermission(String calendarId, String userId, CalendarPermission requiredPermission) {
+  bool hasPermission(
+    String calendarId,
+    String userId,
+    CalendarPermission requiredPermission,
+  ) {
     final calendar = getLocalCalendar(calendarId);
     if (calendar == null) return false;
 
     if (calendar.isOwnedBy(userId)) return true;
 
     final shares = getCalendarShares(calendarId);
-    final userShare = shares.where((share) => share.sharedWithUserId == userId).firstOrNull;
+    final userShare = shares
+        .where((share) => share.sharedWithUserId == userId)
+        .firstOrNull;
 
     if (userShare == null) return false;
 
@@ -200,7 +245,10 @@ class CalendarService {
       final queryParams = <String, String>{'is_public': 'true'};
       if (search != null) queryParams['search'] = search;
 
-      final response = await ApiClientFactory.instance.get('/api/v1/calendars', queryParams: queryParams);
+      final response = await ApiClientFactory.instance.get(
+        '/api/v1/calendars',
+        queryParams: queryParams,
+      );
 
       final calendars = <Calendar>[];
       for (final item in response as List) {
@@ -229,13 +277,17 @@ class CalendarService {
       return calendars;
     } catch (e) {
       if (e is ApiException) rethrow;
-      throw ApiException('Failed to fetch available calendars: ${e.toString()}');
+      throw ApiException(
+        'Failed to fetch available calendars: ${e.toString()}',
+      );
     }
   }
 
   Future<void> subscribeToCalendar(int calendarId) async {
     try {
-      await ApiClientFactory.instance.post('/api/v1/calendars/$calendarId/memberships');
+      await ApiClientFactory.instance.post(
+        '/api/v1/calendars/$calendarId/memberships',
+      );
 
       await fetchAvailableCalendars();
     } catch (e) {
@@ -247,7 +299,9 @@ class CalendarService {
   Future<void> unsubscribeFromCalendar(int calendarId) async {
     try {
       // Get memberships for this calendar
-      final memberships = await ApiClientFactory.instance.get('/api/v1/calendars/$calendarId/memberships');
+      final memberships = await ApiClientFactory.instance.get(
+        '/api/v1/calendars/$calendarId/memberships',
+      );
 
       if (memberships is! List || memberships.isEmpty) {
         throw ApiException('No membership found for calendar $calendarId');
@@ -258,12 +312,16 @@ class CalendarService {
       // For now, delete the first one (likely the user's own membership)
       final membershipId = memberships[0]['id'];
 
-      await ApiClientFactory.instance.delete('/api/v1/calendars/$calendarId/memberships/$membershipId');
+      await ApiClientFactory.instance.delete(
+        '/api/v1/calendars/$calendarId/memberships/$membershipId',
+      );
 
       await _calendarsBox?.delete(calendarId.toString());
     } catch (e) {
       if (e is ApiException) rethrow;
-      throw ApiException('Failed to unsubscribe from calendar: ${e.toString()}');
+      throw ApiException(
+        'Failed to unsubscribe from calendar: ${e.toString()}',
+      );
     }
   }
 

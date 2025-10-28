@@ -3,7 +3,8 @@ import 'package:eventypop/l10n/app_localizations.dart';
 import 'package:eventypop/l10n/app_localizations_en.dart';
 
 extension BuildContextL10n on BuildContext {
-  AppLocalizations get l10n => AppLocalizations.of(this) ?? AppLocalizationsEn();
+  AppLocalizations get l10n =>
+      AppLocalizations.of(this) ?? AppLocalizationsEn();
 }
 
 extension AppLocalizationsHelpers on AppLocalizations {

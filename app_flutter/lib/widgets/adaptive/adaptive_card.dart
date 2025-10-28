@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'platform_theme.dart';
 
-class AdaptiveCard extends StatelessWidget implements IAdaptiveWidget, ICardWidget {
+class AdaptiveCard extends StatelessWidget
+    implements IAdaptiveWidget, ICardWidget {
   @override
   final AdaptiveCardConfig config;
   @override
@@ -17,7 +18,16 @@ class AdaptiveCard extends StatelessWidget implements IAdaptiveWidget, ICardWidg
   @override
   final bool enabled;
 
-  const AdaptiveCard({super.key, required this.config, required this.child, this.onTap, this.selectable = false, this.selected = false, this.onSelectionChanged, this.enabled = true});
+  const AdaptiveCard({
+    super.key,
+    required this.config,
+    required this.child,
+    this.onTap,
+    this.selectable = false,
+    this.selected = false,
+    this.onSelectionChanged,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +35,12 @@ class AdaptiveCard extends StatelessWidget implements IAdaptiveWidget, ICardWidg
 
     return GestureDetector(
       onTap: enabled ? _handleTap : null,
-      child: AnimatedContainer(duration: const Duration(milliseconds: 200), margin: config.margin, decoration: _buildDecoration(theme), child: _buildContent()),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: config.margin,
+        decoration: _buildDecoration(theme),
+        child: _buildContent(),
+      ),
     );
   }
 
@@ -37,7 +52,12 @@ class AdaptiveCard extends StatelessWidget implements IAdaptiveWidget, ICardWidg
   }
 
   BoxDecoration _buildDecoration(PlatformTheme theme) {
-    return BoxDecoration(color: _getBackgroundColor(theme), borderRadius: config.borderRadius, boxShadow: config.showShadow ? _buildShadow() : null, border: _buildBorder(theme));
+    return BoxDecoration(
+      color: _getBackgroundColor(theme),
+      borderRadius: config.borderRadius,
+      boxShadow: config.showShadow ? _buildShadow() : null,
+      border: _buildBorder(theme),
+    );
   }
 
   Color _getBackgroundColor(PlatformTheme theme) {
@@ -53,7 +73,13 @@ class AdaptiveCard extends StatelessWidget implements IAdaptiveWidget, ICardWidg
   List<BoxShadow>? _buildShadow() {
     if (!config.showShadow) return null;
 
-    return [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: config.elevation ?? 2.0, offset: Offset(0, config.elevation ?? 2.0))];
+    return [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.1),
+        blurRadius: config.elevation ?? 2.0,
+        offset: Offset(0, config.elevation ?? 2.0),
+      ),
+    ];
   }
 
   Border? _buildBorder(PlatformTheme theme) {
@@ -79,7 +105,11 @@ class AdaptiveCard extends StatelessWidget implements IAdaptiveWidget, ICardWidg
   Widget _buildSelectionIndicator() {
     return Padding(
       padding: const EdgeInsets.only(right: 12.0),
-      child: Icon(selected ? Icons.check_circle : Icons.radio_button_unchecked, color: selected ? Colors.green : Colors.grey, size: 20),
+      child: Icon(
+        selected ? Icons.check_circle : Icons.radio_button_unchecked,
+        color: selected ? Colors.green : Colors.grey,
+        size: 20,
+      ),
     );
   }
 
@@ -90,15 +120,39 @@ class AdaptiveCard extends StatelessWidget implements IAdaptiveWidget, ICardWidg
   ValidationResult validate() {
     final issues = <ValidationIssue>[];
 
-    if (config.margin.left < 0 || config.margin.top < 0 || config.margin.right < 0 || config.margin.bottom < 0) {
-      issues.add(const ValidationIssue(message: 'Margin values should not be negative', severity: ValidationSeverity.warning));
+    if (config.margin.left < 0 ||
+        config.margin.top < 0 ||
+        config.margin.right < 0 ||
+        config.margin.bottom < 0) {
+      issues.add(
+        const ValidationIssue(
+          message: 'Margin values should not be negative',
+          severity: ValidationSeverity.warning,
+        ),
+      );
     }
 
     if (selectable && onSelectionChanged == null) {
-      issues.add(const ValidationIssue(message: 'Selectable cards should have onSelectionChanged handler', severity: ValidationSeverity.error, suggestion: 'Add onSelectionChanged callback'));
+      issues.add(
+        const ValidationIssue(
+          message: 'Selectable cards should have onSelectionChanged handler',
+          severity: ValidationSeverity.error,
+          suggestion: 'Add onSelectionChanged callback',
+        ),
+      );
     }
 
-    return ValidationResult(isValid: issues.where((i) => i.severity == ValidationSeverity.error).isEmpty, issues: issues, severity: issues.isEmpty ? ValidationSeverity.none : issues.map((i) => i.severity).reduce((a, b) => a.index > b.index ? a : b));
+    return ValidationResult(
+      isValid: issues
+          .where((i) => i.severity == ValidationSeverity.error)
+          .isEmpty,
+      issues: issues,
+      severity: issues.isEmpty
+          ? ValidationSeverity.none
+          : issues
+                .map((i) => i.severity)
+                .reduce((a, b) => a.index > b.index ? a : b),
+    );
   }
 }
 
@@ -111,19 +165,67 @@ class AdaptiveCardConfig {
   final bool selectable;
   final double? elevation;
 
-  const AdaptiveCardConfig({required this.variant, required this.margin, required this.borderRadius, this.backgroundColor, required this.showShadow, required this.selectable, this.elevation});
+  const AdaptiveCardConfig({
+    required this.variant,
+    required this.margin,
+    required this.borderRadius,
+    this.backgroundColor,
+    required this.showShadow,
+    required this.selectable,
+    this.elevation,
+  });
 
-  factory AdaptiveCardConfig.simple() => const AdaptiveCardConfig(variant: CardVariant.simple, margin: EdgeInsets.all(8.0), borderRadius: BorderRadius.all(Radius.circular(8.0)), showShadow: false, selectable: false);
+  factory AdaptiveCardConfig.simple() => const AdaptiveCardConfig(
+    variant: CardVariant.simple,
+    margin: EdgeInsets.all(8.0),
+    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+    showShadow: false,
+    selectable: false,
+  );
 
-  factory AdaptiveCardConfig.listItem() => const AdaptiveCardConfig(variant: CardVariant.listItem, margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), borderRadius: BorderRadius.all(Radius.circular(8.0)), showShadow: true, selectable: false, elevation: 1.0);
+  factory AdaptiveCardConfig.listItem() => const AdaptiveCardConfig(
+    variant: CardVariant.listItem,
+    margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+    showShadow: true,
+    selectable: false,
+    elevation: 1.0,
+  );
 
-  factory AdaptiveCardConfig.selectable() => const AdaptiveCardConfig(variant: CardVariant.selectable, margin: EdgeInsets.all(8.0), borderRadius: BorderRadius.all(Radius.circular(8.0)), showShadow: false, selectable: true);
+  factory AdaptiveCardConfig.selectable() => const AdaptiveCardConfig(
+    variant: CardVariant.selectable,
+    margin: EdgeInsets.all(8.0),
+    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+    showShadow: false,
+    selectable: true,
+  );
 
-  factory AdaptiveCardConfig.elevated() => const AdaptiveCardConfig(variant: CardVariant.elevated, margin: EdgeInsets.all(12.0), borderRadius: BorderRadius.all(Radius.circular(12.0)), showShadow: true, selectable: false, elevation: 4.0);
+  factory AdaptiveCardConfig.elevated() => const AdaptiveCardConfig(
+    variant: CardVariant.elevated,
+    margin: EdgeInsets.all(12.0),
+    borderRadius: BorderRadius.all(Radius.circular(12.0)),
+    showShadow: true,
+    selectable: false,
+    elevation: 4.0,
+  );
 
-  factory AdaptiveCardConfig.contact() => const AdaptiveCardConfig(variant: CardVariant.contact, margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0), borderRadius: BorderRadius.all(Radius.circular(10.0)), showShadow: true, selectable: false, elevation: 2.0);
+  factory AdaptiveCardConfig.contact() => const AdaptiveCardConfig(
+    variant: CardVariant.contact,
+    margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+    showShadow: true,
+    selectable: false,
+    elevation: 2.0,
+  );
 
-  factory AdaptiveCardConfig.event() => const AdaptiveCardConfig(variant: CardVariant.event, margin: EdgeInsets.all(8.0), borderRadius: BorderRadius.all(Radius.circular(12.0)), showShadow: true, selectable: false, elevation: 3.0);
+  factory AdaptiveCardConfig.event() => const AdaptiveCardConfig(
+    variant: CardVariant.event,
+    margin: EdgeInsets.all(8.0),
+    borderRadius: BorderRadius.all(Radius.circular(12.0)),
+    showShadow: true,
+    selectable: false,
+    elevation: 3.0,
+  );
 }
 
 enum CardVariant { simple, listItem, selectable, elevated, contact, event }
@@ -149,11 +251,24 @@ class ValidationResult {
   final List<ValidationIssue> issues;
   final ValidationSeverity severity;
 
-  const ValidationResult({required this.isValid, required this.issues, required this.severity});
+  const ValidationResult({
+    required this.isValid,
+    required this.issues,
+    required this.severity,
+  });
 
-  factory ValidationResult.valid() => const ValidationResult(isValid: true, issues: [], severity: ValidationSeverity.none);
+  factory ValidationResult.valid() => const ValidationResult(
+    isValid: true,
+    issues: [],
+    severity: ValidationSeverity.none,
+  );
 
-  factory ValidationResult.invalid(List<ValidationIssue> issues) => ValidationResult(isValid: false, issues: issues, severity: ValidationSeverity.error);
+  factory ValidationResult.invalid(List<ValidationIssue> issues) =>
+      ValidationResult(
+        isValid: false,
+        issues: issues,
+        severity: ValidationSeverity.error,
+      );
 }
 
 class ValidationIssue {
@@ -161,7 +276,11 @@ class ValidationIssue {
   final ValidationSeverity severity;
   final String? suggestion;
 
-  const ValidationIssue({required this.message, required this.severity, this.suggestion});
+  const ValidationIssue({
+    required this.message,
+    required this.severity,
+    this.suggestion,
+  });
 }
 
 enum ValidationSeverity { none, info, warning, error }

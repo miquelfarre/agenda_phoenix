@@ -17,7 +17,13 @@ class RecurrencePatternList extends StatefulWidget {
   final bool enabled;
   final int eventId;
 
-  const RecurrencePatternList({super.key, required this.patterns, required this.onPatternsChanged, this.enabled = true, required this.eventId});
+  const RecurrencePatternList({
+    super.key,
+    required this.patterns,
+    required this.onPatternsChanged,
+    this.enabled = true,
+    required this.eventId,
+  });
 
   @override
   State<RecurrencePatternList> createState() => _RecurrencePatternListState();
@@ -41,11 +47,19 @@ class _RecurrencePatternListState extends State<RecurrencePatternList> {
             final pattern = entry.value;
             return Padding(
               padding: const EdgeInsets.only(bottom: AppConstants.smallPadding),
-              child: PatternCard(pattern: pattern, enabled: widget.enabled, onEdit: widget.enabled ? () => _editPattern(index) : null, onDelete: widget.enabled ? () => _deletePattern(index) : null),
+              child: PatternCard(
+                pattern: pattern,
+                enabled: widget.enabled,
+                onEdit: widget.enabled ? () => _editPattern(index) : null,
+                onDelete: widget.enabled ? () => _deletePattern(index) : null,
+              ),
             );
           }),
 
-        if (widget.enabled) ...[const SizedBox(height: AppConstants.smallPadding), _buildAddPatternButton(context)],
+        if (widget.enabled) ...[
+          const SizedBox(height: AppConstants.smallPadding),
+          _buildAddPatternButton(context),
+        ],
       ],
     );
   }
@@ -54,18 +68,27 @@ class _RecurrencePatternListState extends State<RecurrencePatternList> {
     final l10n = context.l10n;
 
     final isIOS = PlatformDetection.isIOS;
-    final primaryColor = isIOS ? CupertinoColors.activeBlue.resolveFrom(context) : AppStyles.primary600;
+    final primaryColor = isIOS
+        ? CupertinoColors.activeBlue.resolveFrom(context)
+        : AppStyles.primary600;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        PlatformWidgets.platformIcon(isIOS ? CupertinoIcons.repeat : CupertinoIcons.repeat, color: primaryColor, size: 20),
+        PlatformWidgets.platformIcon(
+          isIOS ? CupertinoIcons.repeat : CupertinoIcons.repeat,
+          color: primaryColor,
+          size: 20,
+        ),
         const SizedBox(width: 8),
 
         Expanded(
           child: Text(
             l10n.recurrencePatterns,
-            style: AppStyles.cardTitle.copyWith(fontWeight: FontWeight.w600, color: primaryColor),
+            style: AppStyles.cardTitle.copyWith(
+              fontWeight: FontWeight.w600,
+              color: primaryColor,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -77,10 +100,16 @@ class _RecurrencePatternListState extends State<RecurrencePatternList> {
             flex: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(color: AppStyles.colorWithOpacity(primaryColor, 0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: AppStyles.colorWithOpacity(primaryColor, 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Text(
                 l10n.patternsConfigured(widget.patterns.length),
-                style: AppStyles.bodyTextSmall.copyWith(color: primaryColor, fontWeight: FontWeight.w600),
+                style: AppStyles.bodyTextSmall.copyWith(
+                  color: primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -98,7 +127,11 @@ class _RecurrencePatternListState extends State<RecurrencePatternList> {
     return BaseCard(
       child: Column(
         children: [
-          PlatformWidgets.platformIcon(isIOS ? CupertinoIcons.calendar : CupertinoIcons.calendar, color: AppStyles.grey400, size: 48),
+          PlatformWidgets.platformIcon(
+            isIOS ? CupertinoIcons.calendar : CupertinoIcons.calendar,
+            color: AppStyles.grey400,
+            size: 48,
+          ),
           const SizedBox(height: 12),
           Text(
             l10n.noRecurrencePatterns,
@@ -129,13 +162,20 @@ class _RecurrencePatternListState extends State<RecurrencePatternList> {
 
   void _addPattern() {
     Future<void> handleAddPattern() async {
-      final pattern = await PlatformNavigation.presentModal<RecurrencePattern>(context, PatternEditDialog(eventId: widget.eventId));
+      final pattern = await PlatformNavigation.presentModal<RecurrencePattern>(
+        context,
+        PatternEditDialog(eventId: widget.eventId),
+      );
       if (!mounted) return;
       if (pattern != null) {
         final l10n = context.l10n;
-        final updatedPatterns = List<RecurrencePattern>.from(widget.patterns)..add(pattern);
+        final updatedPatterns = List<RecurrencePattern>.from(widget.patterns)
+          ..add(pattern);
         widget.onPatternsChanged(updatedPatterns);
-        PlatformDialogHelpers.showSnackBar(context: context, message: l10n.onePatternAdded);
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: l10n.onePatternAdded,
+        );
       }
     }
 
@@ -145,14 +185,21 @@ class _RecurrencePatternListState extends State<RecurrencePatternList> {
   void _editPattern(int index) {
     final pattern = widget.patterns[index];
     Future<void> handleEditPattern() async {
-      final updatedPattern = await PlatformNavigation.presentModal<RecurrencePattern>(context, PatternEditDialog(pattern: pattern, eventId: widget.eventId));
+      final updatedPattern =
+          await PlatformNavigation.presentModal<RecurrencePattern>(
+            context,
+            PatternEditDialog(pattern: pattern, eventId: widget.eventId),
+          );
       if (!mounted) return;
       if (updatedPattern != null) {
         final l10n = context.l10n;
         final updatedPatterns = List<RecurrencePattern>.from(widget.patterns);
         updatedPatterns[index] = updatedPattern;
         widget.onPatternsChanged(updatedPatterns);
-        PlatformDialogHelpers.showSnackBar(context: context, message: l10n.patternsConfigured(1));
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: l10n.patternsConfigured(1),
+        );
       }
     }
 
@@ -163,7 +210,14 @@ class _RecurrencePatternListState extends State<RecurrencePatternList> {
     final l10n = context.l10n;
     final dialogContext = context;
     Future<void> handleDeletePattern() async {
-      final confirmed = await PlatformDialogHelpers.showPlatformConfirmDialog(dialogContext, title: l10n.deletePattern, message: l10n.confirmDeletePattern, confirmText: l10n.delete, cancelText: l10n.cancel, isDestructive: true);
+      final confirmed = await PlatformDialogHelpers.showPlatformConfirmDialog(
+        dialogContext,
+        title: l10n.deletePattern,
+        message: l10n.confirmDeletePattern,
+        confirmText: l10n.delete,
+        cancelText: l10n.cancel,
+        isDestructive: true,
+      );
       if (!mounted) return;
       if (confirmed == true) {
         _performDelete(index);

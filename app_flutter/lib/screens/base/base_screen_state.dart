@@ -52,7 +52,12 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     setLoading(false);
   }
 
-  Future<R?> handleAsyncOperation<R>(Future<R> Function() operation, {String? errorPrefix, bool showLoading = true, bool clearErrorFirst = true}) async {
+  Future<R?> handleAsyncOperation<R>(
+    Future<R> Function() operation, {
+    String? errorPrefix,
+    bool showLoading = true,
+    bool clearErrorFirst = true,
+  }) async {
     if (clearErrorFirst) clearError();
     if (showLoading) this.showLoading();
 
@@ -76,9 +81,16 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     navigationService.showAlert(message, title: context.l10n.success);
   }
 
-  Future<R?> navigateToScreen<R extends Object?>(String routeName, {Object? arguments, bool replace = false}) async {
+  Future<R?> navigateToScreen<R extends Object?>(
+    String routeName, {
+    Object? arguments,
+    bool replace = false,
+  }) async {
     if (replace) {
-      return navigationService.pushReplacementNamed<R, void>(routeName, arguments: arguments);
+      return navigationService.pushReplacementNamed<R, void>(
+        routeName,
+        arguments: arguments,
+      );
     } else {
       return navigationService.pushNamed<R>(routeName, arguments: arguments);
     }
@@ -95,7 +107,10 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }
 
   Future<void> refreshScreen() async {
-    await handleAsyncOperation(() => onRefresh(), errorPrefix: context.l10n.failedToRefresh);
+    await handleAsyncOperation(
+      () => onRefresh(),
+      errorPrefix: context.l10n.failedToRefresh,
+    );
   }
 
   Future<void> onRefresh() async {}
@@ -104,7 +119,11 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     await refreshScreen();
   }
 
-  Widget buildErrorWidget({String? message, VoidCallback? onRetry, bool showRetry = true}) {
+  Widget buildErrorWidget({
+    String? message,
+    VoidCallback? onRetry,
+    bool showRetry = true,
+  }) {
     final errorMsg = message ?? errorMessage ?? context.l10n.anErrorOccurred;
 
     return Center(
@@ -113,14 +132,27 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(CupertinoIcons.exclamationmark_triangle, size: 64, color: CupertinoColors.systemRed),
+            const Icon(
+              CupertinoIcons.exclamationmark_triangle,
+              size: 64,
+              color: CupertinoColors.systemRed,
+            ),
             const SizedBox(height: 16),
             Text(
               errorMsg,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: CupertinoColors.secondaryLabel),
+              style: const TextStyle(
+                fontSize: 16,
+                color: CupertinoColors.secondaryLabel,
+              ),
             ),
-            if (showRetry && onRetry != null) ...[const SizedBox(height: 24), CupertinoButton.filled(onPressed: onRetry, child: Text(context.l10n.retry))],
+            if (showRetry && onRetry != null) ...[
+              const SizedBox(height: 24),
+              CupertinoButton.filled(
+                onPressed: onRetry,
+                child: Text(context.l10n.retry),
+              ),
+            ],
           ],
         ),
       ),
@@ -133,27 +165,54 @@ mixin BaseScreenState<T extends ConsumerStatefulWidget> on ConsumerState<T> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CupertinoActivityIndicator(radius: 16),
-          if (message != null) ...[const SizedBox(height: 16), Text(message, style: const TextStyle(fontSize: 16, color: CupertinoColors.secondaryLabel))],
+          if (message != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: const TextStyle(
+                fontSize: 16,
+                color: CupertinoColors.secondaryLabel,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget buildEmptyWidget({required String message, String? actionText, VoidCallback? onAction, IconData? icon}) {
+  Widget buildEmptyWidget({
+    required String message,
+    String? actionText,
+    VoidCallback? onAction,
+    IconData? icon,
+  }) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon ?? CupertinoIcons.square_stack_3d_up, size: 64, color: CupertinoColors.secondaryLabel),
+            Icon(
+              icon ?? CupertinoIcons.square_stack_3d_up,
+              size: 64,
+              color: CupertinoColors.secondaryLabel,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: CupertinoColors.secondaryLabel),
+              style: const TextStyle(
+                fontSize: 16,
+                color: CupertinoColors.secondaryLabel,
+              ),
             ),
-            if (actionText != null && onAction != null) ...[const SizedBox(height: 24), CupertinoButton.filled(onPressed: onAction, child: Text(actionText))],
+            if (actionText != null && onAction != null) ...[
+              const SizedBox(height: 24),
+              CupertinoButton.filled(
+                onPressed: onAction,
+                child: Text(actionText),
+              ),
+            ],
           ],
         ),
       ),

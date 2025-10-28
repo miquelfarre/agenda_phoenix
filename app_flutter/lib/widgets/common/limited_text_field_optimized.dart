@@ -98,8 +98,12 @@ class _LimitedTextFieldState extends State<LimitedTextField> {
           enabled: widget.enabled,
           prefixIcon: widget.prefixIcon,
           suffixIcon: widget.suffixIcon,
-          inputFormatters: [LengthLimitingTextInputFormatter(widget.maxLength + 50)],
-          border: Border.all(color: isOverLimit ? AppStyles.errorColor : AppStyles.grey300),
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(widget.maxLength + 50),
+          ],
+          border: Border.all(
+            color: isOverLimit ? AppStyles.errorColor : AppStyles.grey300,
+          ),
         ),
 
         if (widget.showCounter) ...[
@@ -111,7 +115,14 @@ class _LimitedTextFieldState extends State<LimitedTextField> {
               children: [
                 Text(
                   '$currentLength/${widget.maxLength}',
-                  style: AppStyles.bodyTextSmall.copyWith(color: isOverLimit ? AppStyles.errorColor : AppStyles.grey500, fontWeight: isOverLimit ? FontWeight.w600 : FontWeight.normal),
+                  style: AppStyles.bodyTextSmall.copyWith(
+                    color: isOverLimit
+                        ? AppStyles.errorColor
+                        : AppStyles.grey500,
+                    fontWeight: isOverLimit
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
                 ),
               ],
             ),
@@ -133,10 +144,31 @@ class LimitedTextArea extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final bool enabled;
 
-  const LimitedTextArea({super.key, required this.controller, required this.maxLength, this.labelText, this.hintText, this.minLines = 3, this.maxLines = 6, this.validator, this.onChanged, this.enabled = true});
+  const LimitedTextArea({
+    super.key,
+    required this.controller,
+    required this.maxLength,
+    this.labelText,
+    this.hintText,
+    this.minLines = 3,
+    this.maxLines = 6,
+    this.validator,
+    this.onChanged,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return LimitedTextField(controller: controller, labelText: labelText, hintText: hintText, maxLength: maxLength, maxLines: maxLines, validator: validator, onChanged: onChanged, enabled: enabled, keyboardType: TextInputType.multiline);
+    return LimitedTextField(
+      controller: controller,
+      labelText: labelText,
+      hintText: hintText,
+      maxLength: maxLength,
+      maxLines: maxLines,
+      validator: validator,
+      onChanged: onChanged,
+      enabled: enabled,
+      keyboardType: TextInputType.multiline,
+    );
   }
 }

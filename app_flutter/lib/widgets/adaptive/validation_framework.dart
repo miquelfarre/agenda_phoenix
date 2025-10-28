@@ -8,12 +8,24 @@ class EmailValidator extends TextFieldValidator {
   @override
   ValidationResult validate(String text) {
     if (text.isEmpty) {
-      return ValidationResult.invalid([const ValidationIssue(message: 'Email is required', severity: ValidationSeverity.error)]);
+      return ValidationResult.invalid([
+        const ValidationIssue(
+          message: 'Email is required',
+          severity: ValidationSeverity.error,
+        ),
+      ]);
     }
 
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
     if (!emailRegex.hasMatch(text)) {
-      return ValidationResult.invalid([const ValidationIssue(message: 'Please enter a valid email address', severity: ValidationSeverity.error)]);
+      return ValidationResult.invalid([
+        const ValidationIssue(
+          message: 'Please enter a valid email address',
+          severity: ValidationSeverity.error,
+        ),
+      ]);
     }
 
     return ValidationResult.valid();
@@ -31,7 +43,12 @@ class RequiredValidator extends TextFieldValidator {
   @override
   ValidationResult validate(String text) {
     if (text.trim().isEmpty) {
-      return ValidationResult.invalid([ValidationIssue(message: customMessage ?? 'This field is required', severity: ValidationSeverity.error)]);
+      return ValidationResult.invalid([
+        ValidationIssue(
+          message: customMessage ?? 'This field is required',
+          severity: ValidationSeverity.error,
+        ),
+      ]);
     }
 
     return ValidationResult.valid();
@@ -50,7 +67,12 @@ class MinLengthValidator extends TextFieldValidator {
   @override
   ValidationResult validate(String text) {
     if (text.length < minLength) {
-      return ValidationResult.invalid([ValidationIssue(message: customMessage ?? 'Minimum length is $minLength characters', severity: ValidationSeverity.error)]);
+      return ValidationResult.invalid([
+        ValidationIssue(
+          message: customMessage ?? 'Minimum length is $minLength characters',
+          severity: ValidationSeverity.error,
+        ),
+      ]);
     }
 
     return ValidationResult.valid();
@@ -69,7 +91,12 @@ class MaxLengthValidator extends TextFieldValidator {
   @override
   ValidationResult validate(String text) {
     if (text.length > maxLength) {
-      return ValidationResult.invalid([ValidationIssue(message: customMessage ?? 'Maximum length is $maxLength characters', severity: ValidationSeverity.error)]);
+      return ValidationResult.invalid([
+        ValidationIssue(
+          message: customMessage ?? 'Maximum length is $maxLength characters',
+          severity: ValidationSeverity.error,
+        ),
+      ]);
     }
 
     return ValidationResult.valid();
@@ -83,13 +110,23 @@ class PhoneValidator extends TextFieldValidator {
   @override
   ValidationResult validate(String text) {
     if (text.isEmpty) {
-      return ValidationResult.invalid([const ValidationIssue(message: 'Phone number is required', severity: ValidationSeverity.error)]);
+      return ValidationResult.invalid([
+        const ValidationIssue(
+          message: 'Phone number is required',
+          severity: ValidationSeverity.error,
+        ),
+      ]);
     }
 
     final digitsOnly = text.replaceAll(RegExp(r'\D'), '');
 
     if (digitsOnly.length < 10) {
-      return ValidationResult.invalid([const ValidationIssue(message: 'Phone number must have at least 10 digits', severity: ValidationSeverity.error)]);
+      return ValidationResult.invalid([
+        const ValidationIssue(
+          message: 'Phone number must have at least 10 digits',
+          severity: ValidationSeverity.error,
+        ),
+      ]);
     }
 
     return ValidationResult.valid();
@@ -103,7 +140,13 @@ class PasswordValidator extends TextFieldValidator {
   final bool requireNumbers;
   final bool requireSpecialChars;
 
-  PasswordValidator({this.minLength = 8, this.requireUppercase = true, this.requireLowercase = true, this.requireNumbers = true, this.requireSpecialChars = false});
+  PasswordValidator({
+    this.minLength = 8,
+    this.requireUppercase = true,
+    this.requireLowercase = true,
+    this.requireNumbers = true,
+    this.requireSpecialChars = false,
+  });
 
   @override
   String get name => 'password';
@@ -113,23 +156,49 @@ class PasswordValidator extends TextFieldValidator {
     final issues = <ValidationIssue>[];
 
     if (text.length < minLength) {
-      issues.add(ValidationIssue(message: 'Password must be at least $minLength characters', severity: ValidationSeverity.error));
+      issues.add(
+        ValidationIssue(
+          message: 'Password must be at least $minLength characters',
+          severity: ValidationSeverity.error,
+        ),
+      );
     }
 
     if (requireUppercase && !text.contains(RegExp(r'[A-Z]'))) {
-      issues.add(const ValidationIssue(message: 'Password must contain uppercase letters', severity: ValidationSeverity.error));
+      issues.add(
+        const ValidationIssue(
+          message: 'Password must contain uppercase letters',
+          severity: ValidationSeverity.error,
+        ),
+      );
     }
 
     if (requireLowercase && !text.contains(RegExp(r'[a-z]'))) {
-      issues.add(const ValidationIssue(message: 'Password must contain lowercase letters', severity: ValidationSeverity.error));
+      issues.add(
+        const ValidationIssue(
+          message: 'Password must contain lowercase letters',
+          severity: ValidationSeverity.error,
+        ),
+      );
     }
 
     if (requireNumbers && !text.contains(RegExp(r'[0-9]'))) {
-      issues.add(const ValidationIssue(message: 'Password must contain numbers', severity: ValidationSeverity.error));
+      issues.add(
+        const ValidationIssue(
+          message: 'Password must contain numbers',
+          severity: ValidationSeverity.error,
+        ),
+      );
     }
 
-    if (requireSpecialChars && !text.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      issues.add(const ValidationIssue(message: 'Password must contain special characters', severity: ValidationSeverity.error));
+    if (requireSpecialChars &&
+        !text.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      issues.add(
+        const ValidationIssue(
+          message: 'Password must contain special characters',
+          severity: ValidationSeverity.error,
+        ),
+      );
     }
 
     if (issues.isNotEmpty) {
@@ -145,7 +214,11 @@ class RegexValidator extends TextFieldValidator {
   final String message;
   final String validatorName;
 
-  RegexValidator({required this.regex, required this.message, required this.validatorName});
+  RegexValidator({
+    required this.regex,
+    required this.message,
+    required this.validatorName,
+  });
 
   @override
   String get name => validatorName;
@@ -153,7 +226,9 @@ class RegexValidator extends TextFieldValidator {
   @override
   ValidationResult validate(String text) {
     if (!regex.hasMatch(text)) {
-      return ValidationResult.invalid([ValidationIssue(message: message, severity: ValidationSeverity.error)]);
+      return ValidationResult.invalid([
+        ValidationIssue(message: message, severity: ValidationSeverity.error),
+      ]);
     }
 
     return ValidationResult.valid();
@@ -192,15 +267,30 @@ class CompositeValidator extends TextFieldValidator {
 }
 
 class ValidationUtils {
-  static List<TextFieldValidator> forEmail() => [RequiredValidator(), EmailValidator()];
+  static List<TextFieldValidator> forEmail() => [
+    RequiredValidator(),
+    EmailValidator(),
+  ];
 
-  static List<TextFieldValidator> forPassword() => [RequiredValidator(), PasswordValidator()];
+  static List<TextFieldValidator> forPassword() => [
+    RequiredValidator(),
+    PasswordValidator(),
+  ];
 
-  static List<TextFieldValidator> forPhone() => [RequiredValidator(), PhoneValidator()];
+  static List<TextFieldValidator> forPhone() => [
+    RequiredValidator(),
+    PhoneValidator(),
+  ];
 
-  static List<TextFieldValidator> forName() => [RequiredValidator(), MinLengthValidator(2, customMessage: 'Name must be at least 2 characters')];
+  static List<TextFieldValidator> forName() => [
+    RequiredValidator(),
+    MinLengthValidator(2, customMessage: 'Name must be at least 2 characters'),
+  ];
 
-  static Map<String, ValidationResult> validateFields(Map<String, String> fieldValues, Map<String, List<TextFieldValidator>> fieldValidators) {
+  static Map<String, ValidationResult> validateFields(
+    Map<String, String> fieldValues,
+    Map<String, List<TextFieldValidator>> fieldValidators,
+  ) {
     final results = <String, ValidationResult>{};
 
     for (final entry in fieldValues.entries) {
@@ -223,7 +313,9 @@ class ValidationUtils {
     return results.values.every((result) => result.isValid);
   }
 
-  static List<String> getAllErrorMessages(Map<String, ValidationResult> results) {
+  static List<String> getAllErrorMessages(
+    Map<String, ValidationResult> results,
+  ) {
     final messages = <String>[];
     for (final result in results.values) {
       if (!result.isValid) {

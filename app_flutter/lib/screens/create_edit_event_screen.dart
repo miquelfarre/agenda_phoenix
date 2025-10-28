@@ -24,13 +24,18 @@ class CreateEditEventScreen extends BaseFormScreen {
   final Event? eventToEdit;
   final bool isRecurring;
 
-  const CreateEditEventScreen({super.key, this.eventToEdit, this.isRecurring = false});
+  const CreateEditEventScreen({
+    super.key,
+    this.eventToEdit,
+    this.isRecurring = false,
+  });
 
   @override
   CreateEditEventScreenState createState() => CreateEditEventScreenState();
 }
 
-class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScreen> {
+class CreateEditEventScreenState
+    extends BaseFormScreenState<CreateEditEventScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -44,15 +49,24 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
 
   bool _useCustomCalendar = false;
 
-  DateTime get _selectedDate => getFieldValue<DateTime>('startDate') ?? _normalizeToFiveMinutes(DateTime.now());
+  DateTime get _selectedDate =>
+      getFieldValue<DateTime>('startDate') ??
+      _normalizeToFiveMinutes(DateTime.now());
   bool get _isRecurringEvent => getFieldValue<bool>('isRecurring') ?? false;
-  List<RecurrencePattern> get _patterns => getFieldValue<List<RecurrencePattern>>('patterns') ?? [];
+  List<RecurrencePattern> get _patterns =>
+      getFieldValue<List<RecurrencePattern>>('patterns') ?? [];
   bool get _isBirthday => getFieldValue<bool>('isBirthday') ?? false;
   String? get _selectedCalendarId => getFieldValue<String?>('calendarId');
 
   static DateTime _normalizeToFiveMinutes(DateTime dateTime) {
     final normalizedMinute = (dateTime.minute / 5).round() * 5;
-    return DateTime(dateTime.year, dateTime.month, dateTime.day, dateTime.hour, normalizedMinute);
+    return DateTime(
+      dateTime.year,
+      dateTime.month,
+      dateTime.day,
+      dateTime.hour,
+      normalizedMinute,
+    );
   }
 
   @override
@@ -69,7 +83,9 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
         _defaultCity = settings.defaultCity;
         _customCity = settings.defaultCity;
 
-        _selectedCountry = CountryService.getCountryByCode(settings.defaultCountryCode);
+        _selectedCountry = CountryService.getCountryByCode(
+          settings.defaultCountryCode,
+        );
       });
     });
   }
@@ -102,10 +118,13 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
   }
 
   @override
-  String get screenTitle => widget.eventToEdit == null ? context.l10n.createEvent : context.l10n.editEvent;
+  String get screenTitle => widget.eventToEdit == null
+      ? context.l10n.createEvent
+      : context.l10n.editEvent;
 
   @override
-  String get submitButtonText => widget.eventToEdit == null ? context.l10n.createEvent : context.l10n.save;
+  String get submitButtonText =>
+      widget.eventToEdit == null ? context.l10n.createEvent : context.l10n.save;
 
   @override
   bool get showSaveInNavBar => false;
@@ -160,8 +179,14 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
               eventId: widget.eventToEdit!.id!,
               name: eventData['title'],
               description: eventData['description'],
-              startDate: eventData['start_date'] is DateTime ? eventData['start_date'] : (eventData['start_date'] != null ? DateTime.parse(eventData['start_date'].toString()) : null),
-              eventType: eventData['is_recurring'] == true ? 'recurring' : 'regular',
+              startDate: eventData['start_date'] is DateTime
+                  ? eventData['start_date']
+                  : (eventData['start_date'] != null
+                        ? DateTime.parse(eventData['start_date'].toString())
+                        : null),
+              eventType: eventData['is_recurring'] == true
+                  ? 'recurring'
+                  : 'regular',
               calendarId: eventData['calendar_id'],
             );
         // Realtime handles refresh automatically via EventRepository
@@ -171,8 +196,12 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
             .createEvent(
               name: eventData['title'] ?? '',
               description: eventData['description'],
-              startDate: eventData['start_date'] is DateTime ? eventData['start_date'] : DateTime.parse(eventData['start_date'].toString()),
-              eventType: eventData['is_recurring'] == true ? 'recurring' : 'regular',
+              startDate: eventData['start_date'] is DateTime
+                  ? eventData['start_date']
+                  : DateTime.parse(eventData['start_date'].toString()),
+              eventType: eventData['is_recurring'] == true
+                  ? 'recurring'
+                  : 'regular',
               calendarId: eventData['calendar_id'],
             );
         // Realtime handles refresh automatically via EventRepository
@@ -191,7 +220,11 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
   @override
   void onFormSubmitSuccess() {
     final l10n = context.l10n;
-    PlatformDialogHelpers.showSnackBar(message: widget.eventToEdit != null ? l10n.eventUpdated : l10n.eventCreated);
+    PlatformDialogHelpers.showSnackBar(
+      message: widget.eventToEdit != null
+          ? l10n.eventUpdated
+          : l10n.eventCreated,
+    );
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -222,11 +255,21 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (!_isRecurringEvent && !_isBirthday) ? CupertinoColors.activeBlue : CupertinoColors.systemGrey6,
+                color: (!_isRecurringEvent && !_isBirthday)
+                    ? CupertinoColors.activeBlue
+                    : CupertinoColors.systemGrey6,
                 borderRadius: BorderRadius.circular(12),
-                border: (_isRecurringEvent || _isBirthday) ? Border.all(color: CupertinoColors.systemGrey4, width: 1.5) : null,
+                border: (_isRecurringEvent || _isBirthday)
+                    ? Border.all(color: CupertinoColors.systemGrey4, width: 1.5)
+                    : null,
               ),
-              child: Icon(CupertinoIcons.calendar, size: 28, color: (!_isRecurringEvent && !_isBirthday) ? CupertinoColors.white : CupertinoColors.systemGrey2),
+              child: Icon(
+                CupertinoIcons.calendar,
+                size: 28,
+                color: (!_isRecurringEvent && !_isBirthday)
+                    ? CupertinoColors.white
+                    : CupertinoColors.systemGrey2,
+              ),
             ),
           ),
 
@@ -252,8 +295,19 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
             },
             child: Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: _isRecurringEvent ? CupertinoColors.activeBlue : CupertinoColors.systemGrey5, borderRadius: BorderRadius.circular(12)),
-              child: Icon(CupertinoIcons.repeat, size: 28, color: _isRecurringEvent ? CupertinoColors.white : CupertinoColors.systemGrey),
+              decoration: BoxDecoration(
+                color: _isRecurringEvent
+                    ? CupertinoColors.activeBlue
+                    : CupertinoColors.systemGrey5,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                CupertinoIcons.repeat,
+                size: 28,
+                color: _isRecurringEvent
+                    ? CupertinoColors.white
+                    : CupertinoColors.systemGrey,
+              ),
             ),
           ),
 
@@ -272,7 +326,11 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                     setFieldValue('patterns', <RecurrencePattern>[]);
                   }
 
-                  final dateOnly = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+                  final dateOnly = DateTime(
+                    _selectedDate.year,
+                    _selectedDate.month,
+                    _selectedDate.day,
+                  );
                   setFieldValue('startDate', dateOnly);
 
                   _useCustomCalendar = true;
@@ -280,7 +338,10 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                   final calendarsAsync = ref.read(calendarsStreamProvider);
                   calendarsAsync.whenData((calendars) {
                     try {
-                      final birthdayCalendar = calendars.firstWhere((cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays');
+                      final birthdayCalendar = calendars.firstWhere(
+                        (cal) =>
+                            cal.name == 'Cumpleaños' || cal.name == 'Birthdays',
+                      );
                       setFieldValue('calendarId', birthdayCalendar.id);
                     } catch (e) {
                       if (calendars.isNotEmpty) {
@@ -296,8 +357,21 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
             },
             child: Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: _isBirthday ? CupertinoColors.activeBlue : CupertinoColors.systemGrey5, borderRadius: BorderRadius.circular(12)),
-              child: Text('🎂', style: TextStyle(fontSize: 28, color: _isBirthday ? CupertinoColors.white : CupertinoColors.systemGrey)),
+              decoration: BoxDecoration(
+                color: _isBirthday
+                    ? CupertinoColors.activeBlue
+                    : CupertinoColors.systemGrey5,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '🎂',
+                style: TextStyle(
+                  fontSize: 28,
+                  color: _isBirthday
+                      ? CupertinoColors.white
+                      : CupertinoColors.systemGrey,
+                ),
+              ),
             ),
           ),
         ],
@@ -305,9 +379,24 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
 
       const SizedBox(height: 24),
 
-      buildTextField(fieldName: 'title', label: l10n.title, placeholder: l10n.eventNamePlaceholder, controller: _titleController, required: true),
+      buildTextField(
+        fieldName: 'title',
+        label: l10n.title,
+        placeholder: l10n.eventNamePlaceholder,
+        controller: _titleController,
+        required: true,
+      ),
 
-      if (!_isBirthday) ...[const SizedBox(height: 16), buildTextField(fieldName: 'description', label: l10n.description, placeholder: l10n.addDetailsPlaceholder, controller: _descriptionController, maxLines: 3)],
+      if (!_isBirthday) ...[
+        const SizedBox(height: 16),
+        buildTextField(
+          fieldName: 'description',
+          label: l10n.description,
+          placeholder: l10n.addDetailsPlaceholder,
+          controller: _descriptionController,
+          maxLines: 3,
+        ),
+      ],
 
       if (!_isBirthday) ...[
         const SizedBox(height: 24),
@@ -326,7 +415,10 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
               },
             ),
             const SizedBox(width: 12),
-            Text('Usar zona horaria personalizada', style: AppStyles.bodyText.copyWith(fontSize: 16)),
+            Text(
+              'Usar zona horaria personalizada',
+              style: AppStyles.bodyText.copyWith(fontSize: 16),
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -360,15 +452,31 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_defaultCity, style: AppStyles.bodyText.copyWith(fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(
+                        _defaultCity,
+                        style: AppStyles.bodyText.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(_selectedTimezone, style: AppStyles.bodyText.copyWith(fontSize: 14, color: CupertinoColors.systemGrey)),
+                      Text(
+                        _selectedTimezone,
+                        style: AppStyles.bodyText.copyWith(
+                          fontSize: 14,
+                          color: CupertinoColors.systemGrey,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Text(
                   TimezoneService.getCurrentOffset(_selectedTimezone),
-                  style: AppStyles.bodyText.copyWith(fontSize: 14, color: CupertinoColors.systemGrey, fontWeight: FontWeight.w500),
+                  style: AppStyles.bodyText.copyWith(
+                    fontSize: 14,
+                    color: CupertinoColors.systemGrey,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -396,12 +504,21 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                     children: [
                       const Icon(CupertinoIcons.calendar, size: 20),
                       const SizedBox(width: 8),
-                      Text('Fecha de inicio', style: AppStyles.bodyText.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Text(
+                        'Fecha de inicio',
+                        style: AppStyles.bodyText.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
 
                   CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     minimumSize: Size.zero,
                     onPressed: () {
                       final state = _startDateKey.currentState as dynamic;
@@ -437,19 +554,30 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
         ),
       ),
 
-      if (_isRecurringEvent) ...[const SizedBox(height: 24), _buildPatternsSection()],
+      if (_isRecurringEvent) ...[
+        const SizedBox(height: 24),
+        _buildPatternsSection(),
+      ],
 
-      if (!_isBirthday) ...[const SizedBox(height: 24), _buildCalendarSection()],
+      if (!_isBirthday) ...[
+        const SizedBox(height: 24),
+        _buildCalendarSection(),
+      ],
 
-      if (getFieldError('title') != null) _buildErrorText(getFieldError('title')!),
-      if (getFieldError('patterns') != null) _buildErrorText(getFieldError('patterns')!),
+      if (getFieldError('title') != null)
+        _buildErrorText(getFieldError('title')!),
+      if (getFieldError('patterns') != null)
+        _buildErrorText(getFieldError('patterns')!),
     ];
   }
 
   Widget _buildErrorText(String error) {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
-      child: Text(error, style: const TextStyle(fontSize: 14, color: CupertinoColors.systemRed)),
+      child: Text(
+        error,
+        style: const TextStyle(fontSize: 14, color: CupertinoColors.systemRed),
+      ),
     );
   }
 
@@ -459,7 +587,12 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.recurrencePatterns, style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          l10n.recurrencePatterns,
+          style: CupertinoTheme.of(
+            context,
+          ).textTheme.textStyle.copyWith(fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 8),
 
         Container(
@@ -474,11 +607,21 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(CupertinoIcons.add, color: CupertinoColors.white, size: 18),
+                const Icon(
+                  CupertinoIcons.add,
+                  color: CupertinoColors.white,
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Text(
-                  _patterns.isEmpty ? l10n.addFirstPattern : l10n.addAnotherPattern,
-                  style: const TextStyle(color: CupertinoColors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  _patterns.isEmpty
+                      ? l10n.addFirstPattern
+                      : l10n.addAnotherPattern,
+                  style: const TextStyle(
+                    color: CupertinoColors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -491,21 +634,34 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
             decoration: BoxDecoration(
               color: CupertinoColors.systemGrey6.resolveFrom(context),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: CupertinoColors.systemGrey4.resolveFrom(context), width: 1),
+              border: Border.all(
+                color: CupertinoColors.systemGrey4.resolveFrom(context),
+                width: 1,
+              ),
             ),
             child: Column(
               children: [
-                Icon(CupertinoIcons.calendar_badge_plus, size: 32, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+                Icon(
+                  CupertinoIcons.calendar_badge_plus,
+                  size: 32,
+                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.noRecurrencePatterns,
-                  style: TextStyle(color: CupertinoColors.secondaryLabel.resolveFrom(context), fontSize: 16),
+                  style: TextStyle(
+                    color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                    fontSize: 16,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.tapAddPatternToStart,
-                  style: TextStyle(color: CupertinoColors.tertiaryLabel.resolveFrom(context), fontSize: 14),
+                  style: TextStyle(
+                    color: CupertinoColors.tertiaryLabel.resolveFrom(context),
+                    fontSize: 14,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -520,30 +676,69 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
               decoration: BoxDecoration(
                 color: CupertinoColors.systemBackground.resolveFrom(context),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: CupertinoColors.systemGrey4.resolveFrom(context), width: 1),
-                boxShadow: [BoxShadow(color: CupertinoColors.systemGrey.resolveFrom(context).withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
+                border: Border.all(
+                  color: CupertinoColors.systemGrey4.resolveFrom(context),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: CupertinoColors.systemGrey
+                        .resolveFrom(context)
+                        .withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: AppStyles.colorWithOpacity(AppStyles.primaryColor, 0.1), borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(CupertinoIcons.repeat, color: AppStyles.primaryColor, size: 16),
+                    decoration: BoxDecoration(
+                      color: AppStyles.colorWithOpacity(
+                        AppStyles.primaryColor,
+                        0.1,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.repeat,
+                      color: AppStyles.primaryColor,
+                      size: 16,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(_formatPatternDisplay(pattern), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                    child: Text(
+                      _formatPatternDisplay(pattern),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                   CupertinoButton(
-                    key: Key('remove_pattern_${pattern.dayOfWeek}_${pattern.time}'),
+                    key: Key(
+                      'remove_pattern_${pattern.dayOfWeek}_${pattern.time}',
+                    ),
                     padding: EdgeInsets.zero,
                     onPressed: () {
                       _removePattern(index);
                     },
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(color: AppStyles.colorWithOpacity(AppStyles.errorColor, 0.1), borderRadius: BorderRadius.circular(6)),
-                      child: const Icon(CupertinoIcons.delete, color: AppStyles.errorColor, size: 16),
+                      decoration: BoxDecoration(
+                        color: AppStyles.colorWithOpacity(
+                          AppStyles.errorColor,
+                          0.1,
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(
+                        CupertinoIcons.delete,
+                        color: AppStyles.errorColor,
+                        size: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -583,7 +778,11 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: CupertinoColors.separator.resolveFrom(context))),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: CupertinoColors.separator.resolveFrom(context),
+                        ),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -596,16 +795,28 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                           },
                           child: Text(l10n.cancel),
                         ),
-                        Text(l10n.addFirstPattern, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                        Text(
+                          l10n.addFirstPattern,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         CupertinoButton(
                           key: const Key('pattern_picker_add_button'),
                           padding: EdgeInsets.zero,
                           onPressed: () {
-                            final timeString = "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00";
+                            final timeString =
+                                "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00";
 
-                            final newPattern = RecurrencePattern(eventId: widget.eventToEdit?.id ?? -1, dayOfWeek: selectedDay, time: timeString);
+                            final newPattern = RecurrencePattern(
+                              eventId: widget.eventToEdit?.id ?? -1,
+                              dayOfWeek: selectedDay,
+                              time: timeString,
+                            );
 
-                            final currentPatterns = List<RecurrencePattern>.from(_patterns);
+                            final currentPatterns =
+                                List<RecurrencePattern>.from(_patterns);
                             currentPatterns.add(newPattern);
                             setFieldValue('patterns', currentPatterns);
 
@@ -622,7 +833,13 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(16),
-                          child: Text(l10n.selectDayOfWeek, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                          child: Text(
+                            l10n.selectDayOfWeek,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
                         Expanded(
                           child: CupertinoPicker(
@@ -633,7 +850,15 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                                 selectedDay = index;
                               });
                             },
-                            children: [Text(l10n.monday), Text(l10n.tuesday), Text(l10n.wednesday), Text(l10n.thursday), Text(l10n.friday), Text(l10n.saturday), Text(l10n.sunday)],
+                            children: [
+                              Text(l10n.monday),
+                              Text(l10n.tuesday),
+                              Text(l10n.wednesday),
+                              Text(l10n.thursday),
+                              Text(l10n.friday),
+                              Text(l10n.saturday),
+                              Text(l10n.sunday),
+                            ],
                           ),
                         ),
 
@@ -666,16 +891,29 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
 
   String _formatPatternDisplay(RecurrencePattern pattern) {
     final l10n = context.l10n;
-    final dayNames = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
+    final dayNames = [
+      l10n.monday,
+      l10n.tuesday,
+      l10n.wednesday,
+      l10n.thursday,
+      l10n.friday,
+      l10n.saturday,
+      l10n.sunday,
+    ];
 
-    final dayName = pattern.isValidDayOfWeek ? dayNames[pattern.dayOfWeek] : l10n.unknownError;
+    final dayName = pattern.isValidDayOfWeek
+        ? dayNames[pattern.dayOfWeek]
+        : l10n.unknownError;
     return '$dayName @ ${pattern.time}';
   }
 
   Widget _buildCalendarSection() {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildCalendarWidget(calendarsAsync)]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [_buildCalendarWidget(calendarsAsync)],
+    );
   }
 
   Widget _buildCalendarWidget(AsyncValue<List<dynamic>> calendarsAsync) {
@@ -684,7 +922,10 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
     }
 
     if (calendarsAsync.hasError) {
-      return Text('Error loading calendars: ${calendarsAsync.error}', style: const TextStyle(color: CupertinoColors.systemRed));
+      return Text(
+        'Error loading calendars: ${calendarsAsync.error}',
+        style: const TextStyle(color: CupertinoColors.systemRed),
+      );
     }
 
     if (!calendarsAsync.hasValue) {
@@ -715,7 +956,10 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                 },
               ),
               const SizedBox(width: 12),
-              Text('Asociar con calendario', style: AppStyles.bodyText.copyWith(fontSize: 16)),
+              Text(
+                'Asociar con calendario',
+                style: AppStyles.bodyText.copyWith(fontSize: 16),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -756,7 +1000,11 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: CupertinoColors.systemGrey4),
                       ),
-                      child: const Icon(CupertinoIcons.add_circled, size: 24, color: CupertinoColors.activeBlue),
+                      child: const Icon(
+                        CupertinoIcons.add_circled,
+                        size: 24,
+                        color: CupertinoColors.activeBlue,
+                      ),
                     ),
                   ),
                 ),

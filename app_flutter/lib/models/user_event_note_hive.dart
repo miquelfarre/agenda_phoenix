@@ -19,14 +19,32 @@ class UserEventNoteHive extends HiveObject {
   @HiveField(4)
   DateTime updatedAt;
 
-  UserEventNoteHive({required this.userId, required this.eventId, required this.note, required this.createdAt, required this.updatedAt});
+  UserEventNoteHive({
+    required this.userId,
+    required this.eventId,
+    required this.note,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
   factory UserEventNoteHive.fromJson(Map<String, dynamic> json) {
-    return UserEventNoteHive(userId: json['user_id'], eventId: json['event_id'], note: json['note'], createdAt: DateTime.parse(json['created_at']), updatedAt: DateTime.parse(json['updated_at']));
+    return UserEventNoteHive(
+      userId: json['user_id'],
+      eventId: json['event_id'],
+      note: json['note'],
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
+    );
   }
 
   Map<String, dynamic> toJson() {
-    return {'user_id': userId, 'event_id': eventId, 'note': note, 'created_at': createdAt.toIso8601String(), 'updated_at': updatedAt.toIso8601String()};
+    return {
+      'user_id': userId,
+      'event_id': eventId,
+      'note': note,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
   }
 
   String get hiveKey => '${userId}_$eventId';

@@ -1491,10 +1491,11 @@ def create_database_views():
     try:
         with engine.connect() as conn:
             # Create user_subscriptions_with_stats view
-            # This view provides subscription statistics with 3 calculated fields:
-            # 1. new_events_count: Events created in last 7 days
-            # 2. total_events_count: Total events owned by user
-            # 3. subscribers_count: Unique subscribers to user's events
+            # This view provides subscription statistics from the user_subscription_stats table:
+            # 1. new_events_count: Events created in last 7 days (pre-calculated by triggers)
+            # 2. total_events_count: Total events owned by user (pre-calculated by triggers)
+            # 3. subscribers_count: Unique subscribers to user's events (pre-calculated by triggers)
+            # Performance: Uses LEFT JOIN with user_subscription_stats instead of 3 subqueries
             conn.execute(text("""
                 CREATE OR REPLACE VIEW user_subscriptions_with_stats AS
                 SELECT DISTINCT
@@ -1510,30 +1511,14 @@ def create_database_views():
                     u.last_login AS last_seen,
                     u.created_at,
                     u.updated_at,
-                    -- Calculate new events count (last 7 days)
-                    (
-                        SELECT COUNT(*)
-                        FROM events e
-                        WHERE e.owner_id = u.id
-                        AND e.created_at >= NOW() - INTERVAL '7 days'
-                    ) AS new_events_count,
-                    -- Calculate total events count
-                    (
-                        SELECT COUNT(*)
-                        FROM events e
-                        WHERE e.owner_id = u.id
-                    ) AS total_events_count,
-                    -- Calculate subscribers count (distinct users subscribed to any event owned by this user)
-                    (
-                        SELECT COUNT(DISTINCT ei2.user_id)
-                        FROM event_interactions ei2
-                        JOIN events e2 ON e2.id = ei2.event_id
-                        WHERE e2.owner_id = u.id
-                        AND ei2.interaction_type = 'subscribed'
-                    ) AS subscribers_count
+                    -- Use pre-calculated stats from user_subscription_stats table (maintained by triggers)
+                    COALESCE(uss.new_events_count, 0) AS new_events_count,
+                    COALESCE(uss.total_events_count, 0) AS total_events_count,
+                    COALESCE(uss.subscribers_count, 0) AS subscribers_count
                 FROM event_interactions ei
                 JOIN events e ON e.id = ei.event_id
                 JOIN users u ON u.id = e.owner_id
+                LEFT JOIN user_subscription_stats uss ON uss.user_id = u.id
                 WHERE ei.interaction_type = 'subscribed'
                 AND u.is_public = TRUE
             """))
@@ -1826,14 +1811,29 @@ def setup_realtime_tenant():
                 extensions_table_exists = result.scalar()
 
                 if extensions_table_exists:
-                    # Idempotent upsert for postgres_cdc_rls settings (plaintext expected by SubscriptionManager)
+                    # Realtime decrypts db_host, db_port, db_name, db_user, and db_password
+                    # Encrypt these fields if secret_mode is 'encrypted', else keep plaintext
+                    db_host = os.getenv("DB_HOST", "db")
+                    db_name = os.getenv("POSTGRES_DB", "postgres")
+                    db_user = os.getenv("POSTGRES_USER", "postgres")
+                    db_password = os.getenv("POSTGRES_PASSWORD", "your-super-secret-and-long-postgres-password")
+                    db_port = int(os.getenv("DB_PORT", "5432"))
+
+                    if secret_mode == "encrypted":
+                        db_host = _aes128_ecb_encrypt_b64(db_host, db_enc_key)
+                        db_name = _aes128_ecb_encrypt_b64(db_name, db_enc_key)
+                        db_user = _aes128_ecb_encrypt_b64(db_user, db_enc_key)
+                        db_password = _aes128_ecb_encrypt_b64(db_password, db_enc_key)
+                        # db_port as string for encryption
+                        db_port = _aes128_ecb_encrypt_b64(str(db_port), db_enc_key)
+
                     settings = {
-                        "db_host": os.getenv("DB_HOST", "db"),
-                        "db_ip": os.getenv("DB_HOST", "db"),
-                        "db_name": os.getenv("POSTGRES_DB", "postgres"),
-                        "db_user": os.getenv("POSTGRES_USER", "postgres"),
-                        "db_password": os.getenv("POSTGRES_PASSWORD", "your-super-secret-and-long-postgres-password"),
-                        "db_port": int(os.getenv("DB_PORT", "5432")),
+                        "db_host": db_host,
+                        "db_ip": os.getenv("DB_HOST", "db"),  # db_ip is not decrypted by Realtime
+                        "db_name": db_name,
+                        "db_user": db_user,
+                        "db_password": db_password,
+                        "db_port": db_port,
                         "db_ssl": False,
                         "ssl_enforced": False,
                         "ip_version": "IPv4",
@@ -1888,7 +1888,7 @@ def setup_realtime_tenant():
                                 VALUES (gen_random_uuid(), :type, CAST(:settings AS jsonb), NOW(), NOW())
                                 """
                             ), {"type": "postgres_cdc_rls", "settings": json.dumps(settings)})
-                    logger.info("  ✓ Ensured extension 'postgres_cdc_rls' settings (plaintext)")
+                    logger.info(f"  ✓ Ensured extension 'postgres_cdc_rls' settings (password: {secret_mode})")
                 else:
                     logger.info("  ℹ️  Extensions table doesn't exist yet - will be created by Realtime migrations")
 

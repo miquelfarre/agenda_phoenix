@@ -9,7 +9,8 @@ class CalendarRepository {
   final _supabaseService = SupabaseService.instance;
   final RealtimeSync _rt = RealtimeSync();
 
-  final StreamController<List<Calendar>> _calendarsController = StreamController<List<Calendar>>.broadcast();
+  final StreamController<List<Calendar>> _calendarsController =
+      StreamController<List<Calendar>>.broadcast();
   List<Calendar> _cachedCalendars = [];
   RealtimeChannel? _realtimeChannel;
 
@@ -25,13 +26,18 @@ class CalendarRepository {
     try {
       final userId = ConfigService.instance.currentUserId;
 
-      final response = await _supabaseService.client.from('calendars').select('*').eq('owner_id', userId);
+      final response = await _supabaseService.client
+          .from('calendars')
+          .select('*')
+          .eq('owner_id', userId);
 
       final list = (response as List);
       _cachedCalendars = list.map((json) => Calendar.fromJson(json)).toList();
 
       // Set server sync time from rows (serverTime not available here)
-      _rt.setServerSyncTsFromResponse(rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)));
+      _rt.setServerSyncTsFromResponse(
+        rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+      );
     } catch (e) {
       print('Error fetching calendars: $e');
     }
@@ -45,7 +51,11 @@ class CalendarRepository {
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'calendars',
-          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'owner_id', value: userId.toString()),
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'owner_id',
+            value: userId.toString(),
+          ),
           callback: _handleCalendarChange,
         )
         .subscribe();
@@ -62,7 +72,9 @@ class CalendarRepository {
     } else if (payload.eventType == PostgresChangeEvent.update) {
       if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
       final updatedCalendar = Calendar.fromJson(payload.newRecord);
-      final index = _cachedCalendars.indexWhere((c) => c.id == updatedCalendar.id);
+      final index = _cachedCalendars.indexWhere(
+        (c) => c.id == updatedCalendar.id,
+      );
       if (index != -1) {
         _cachedCalendars[index] = updatedCalendar;
         _emitCurrentCalendars();

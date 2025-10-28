@@ -9,7 +9,8 @@ class GroupRepository {
   final _supabaseService = SupabaseService.instance;
   final RealtimeSync _rt = RealtimeSync();
 
-  final StreamController<List<Group>> _groupsController = StreamController<List<Group>>.broadcast();
+  final StreamController<List<Group>> _groupsController =
+      StreamController<List<Group>>.broadcast();
   List<Group> _cachedGroups = [];
   RealtimeChannel? _realtimeChannel;
 
@@ -26,13 +27,18 @@ class GroupRepository {
       final userId = ConfigService.instance.currentUserId;
 
       // Fetch groups where user is a member
-      final response = await _supabaseService.client.from('groups').select('*').contains('member_ids', [userId]);
+      final response = await _supabaseService.client
+          .from('groups')
+          .select('*')
+          .contains('member_ids', [userId]);
 
       final list = (response as List);
       _cachedGroups = list.map((json) => Group.fromJson(json)).toList();
 
       // Set server sync time from rows
-      _rt.setServerSyncTsFromResponse(rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)));
+      _rt.setServerSyncTsFromResponse(
+        rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+      );
     } catch (e) {
       print('Error fetching groups: $e');
     }
@@ -40,7 +46,15 @@ class GroupRepository {
 
   Future<void> _startRealtimeSubscription() async {
     // Listen to ALL group changes and filter client-side
-    _realtimeChannel = _supabaseService.client.channel('groups_realtime').onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'groups', callback: _handleGroupChange).subscribe();
+    _realtimeChannel = _supabaseService.client
+        .channel('groups_realtime')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'groups',
+          callback: _handleGroupChange,
+        )
+        .subscribe();
   }
 
   void _handleGroupChange(PostgresChangePayload payload) {
@@ -48,7 +62,8 @@ class GroupRepository {
 
     final userId = ConfigService.instance.currentUserId;
 
-    if (payload.eventType == PostgresChangeEvent.insert || payload.eventType == PostgresChangeEvent.update) {
+    if (payload.eventType == PostgresChangeEvent.insert ||
+        payload.eventType == PostgresChangeEvent.update) {
       if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
       final groupData = payload.newRecord;
       final memberIds = (groupData['member_ids'] as List?)?.cast<int>() ?? [];

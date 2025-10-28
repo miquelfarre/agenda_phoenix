@@ -35,7 +35,9 @@ class SyncService {
 
     try {
       final userId = ConfigService.instance.currentUserId;
-      final compositeData = await ApiClientFactory.instance.get('/api/v1/users/$userId/events');
+      final compositeData = await ApiClientFactory.instance.get(
+        '/api/v1/users/$userId/events',
+      );
 
       await _storeCompositeData(compositeData);
 
@@ -47,7 +49,13 @@ class SyncService {
     }
   }
 
-  static Future<Map<String, dynamic>> syncEventsComposite({DateTime? fromDate, DateTime? toDate, String? search, String? filterType, bool futureOnly = true}) async {
+  static Future<Map<String, dynamic>> syncEventsComposite({
+    DateTime? fromDate,
+    DateTime? toDate,
+    String? search,
+    String? filterType,
+    bool futureOnly = true,
+  }) async {
     print('🔵 [SyncService] syncEventsComposite START');
     if (!_isAuthenticated) {
       print('🔴 [SyncService] Not authenticated, returning empty map');
@@ -71,15 +79,23 @@ class SyncService {
       }
 
       if (!futureOnly) {
-        queryParams['include_past'] = 'true'; // Changed from 'future_only' to 'include_past'
+        queryParams['include_past'] =
+            'true'; // Changed from 'future_only' to 'include_past'
       }
 
       print('🔵 [SyncService] Fetching from API...');
 
-      final compositeData = await ApiClientFactory.instance.get('/api/v1/users/$userId/events', queryParams: queryParams.isNotEmpty ? queryParams : null);
+      final compositeData = await ApiClientFactory.instance.get(
+        '/api/v1/users/$userId/events',
+        queryParams: queryParams.isNotEmpty ? queryParams : null,
+      );
 
-      print('🔵 [SyncService] Got compositeData type: ${compositeData.runtimeType}');
-      print('🔵 [SyncService] compositeData keys: ${compositeData is Map ? compositeData.keys : 'NOT A MAP'}');
+      print(
+        '🔵 [SyncService] Got compositeData type: ${compositeData.runtimeType}',
+      );
+      print(
+        '🔵 [SyncService] compositeData keys: ${compositeData is Map ? compositeData.keys : 'NOT A MAP'}',
+      );
 
       print('🔵 [SyncService] Storing composite data in Hive...');
 
@@ -98,8 +114,12 @@ class SyncService {
     }
   }
 
-  static Future<void> _storeCompositeData(Map<String, dynamic> compositeData) async {
-    final eventItems = (compositeData['events'] as List).map((item) => item as Map<String, dynamic>).toList();
+  static Future<void> _storeCompositeData(
+    Map<String, dynamic> compositeData,
+  ) async {
+    final eventItems = (compositeData['events'] as List)
+        .map((item) => item as Map<String, dynamic>)
+        .toList();
 
     final eventsBox = Hive.box<EventHive>('events');
     await eventsBox.clear();
@@ -139,7 +159,13 @@ class SyncService {
       final personalNote = item['personal_note'] as String?;
       if (personalNote != null && personalNote.isNotEmpty) {
         final noteHiveKey = UserEventNoteHive.createHiveKey(userId, eventId);
-        final noteHive = UserEventNoteHive(userId: userId, eventId: eventId, note: personalNote, createdAt: DateTime.now(), updatedAt: DateTime.now());
+        final noteHive = UserEventNoteHive(
+          userId: userId,
+          eventId: eventId,
+          note: personalNote,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
         await notesBox.put(noteHiveKey, noteHive);
       }
 
@@ -154,7 +180,9 @@ class SyncService {
 
   static Future<void> syncUserProfile(int userId) async {
     try {
-      final response = await ApiClientFactory.instance.get('/api/v1/users/$userId');
+      final response = await ApiClientFactory.instance.get(
+        '/api/v1/users/$userId',
+      );
       final user = User.fromJson(response);
       final box = Hive.box<UserHive>('users');
       await box.put(user.id, user.toUserHive());
@@ -203,7 +231,10 @@ class SyncService {
       }
 
       for (final subscription in subscriptions) {
-        await box.put(subscription.id, SubscriptionHive.fromSubscription(subscription));
+        await box.put(
+          subscription.id,
+          SubscriptionHive.fromSubscription(subscription),
+        );
       }
 
       return subscriptions;
@@ -226,21 +257,44 @@ class SyncService {
       final userId = ConfigService.instance.currentUserId;
 
       // Subscriptions are now EventInteractions with type='subscribed'
-      final interactions = await ApiClientFactory.instance.get('/api/v1/interactions', queryParams: {'user_id': userId.toString(), 'interaction_type': 'subscribed', 'enriched': 'true'});
+      final interactions = await ApiClientFactory.instance.get(
+        '/api/v1/interactions',
+        queryParams: {
+          'user_id': userId.toString(),
+          'interaction_type': 'subscribed',
+          'enriched': 'true',
+        },
+      );
 
-      print('🔵 [SyncService] Got interactions type: ${interactions.runtimeType}');
+      print(
+        '🔵 [SyncService] Got interactions type: ${interactions.runtimeType}',
+      );
 
       // Transform interactions to subscription format
-      final subscriptionItems = (interactions as List).where((interaction) => interaction['event'] != null && interaction['event']['owner_id'] != null).map((interaction) {
-        return {'id': interaction['id'], 'user_id': interaction['user_id'], 'subscribed_to_id': interaction['event']['owner_id'], 'subscribed_to': interaction['event']['owner']};
-      }).toList();
+      final subscriptionItems = (interactions as List)
+          .where(
+            (interaction) =>
+                interaction['event'] != null &&
+                interaction['event']['owner_id'] != null,
+          )
+          .map((interaction) {
+            return {
+              'id': interaction['id'],
+              'user_id': interaction['user_id'],
+              'subscribed_to_id': interaction['event']['owner_id'],
+              'subscribed_to': interaction['event']['owner'],
+            };
+          })
+          .toList();
 
       final compositeData = {'subscriptions': subscriptionItems};
 
       print('🔵 [SyncService] Storing subscriptions composite data in Hive...');
 
       await _storeSubscriptionsCompositeData(compositeData);
-      print('🔵 [SyncService] Successfully stored subscriptions composite data');
+      print(
+        '🔵 [SyncService] Successfully stored subscriptions composite data',
+      );
 
       print('🔵 [SyncService] Returning compositeData');
       return compositeData;
@@ -254,29 +308,46 @@ class SyncService {
     }
   }
 
-  static Future<void> _storeSubscriptionsCompositeData(Map<String, dynamic> compositeData) async {
-    final subscriptionItems = (compositeData['subscriptions'] as List).map((item) => item as Map<String, dynamic>).toList();
+  static Future<void> _storeSubscriptionsCompositeData(
+    Map<String, dynamic> compositeData,
+  ) async {
+    final subscriptionItems = (compositeData['subscriptions'] as List)
+        .map((item) => item as Map<String, dynamic>)
+        .toList();
 
     final subscriptionsBox = Hive.box<SubscriptionHive>('subscriptions');
     await subscriptionsBox.clear();
 
     for (final item in subscriptionItems) {
-      final subscriptionJson = {'id': item['id'], 'user_id': item['user_id'], 'subscribed_to_id': item['subscribed_to_id'], 'subscribed': item['subscribed_to']};
+      final subscriptionJson = {
+        'id': item['id'],
+        'user_id': item['user_id'],
+        'subscribed_to_id': item['subscribed_to_id'],
+        'subscribed': item['subscribed_to'],
+      };
 
       final subscription = Subscription.fromJson(subscriptionJson);
-      await subscriptionsBox.put(subscription.id, SubscriptionHive.fromSubscription(subscription));
+      await subscriptionsBox.put(
+        subscription.id,
+        SubscriptionHive.fromSubscription(subscription),
+      );
     }
   }
 
-  static Future<List<EventInteraction>> syncEventInteractions(int userId) async {
+  static Future<List<EventInteraction>> syncEventInteractions(
+    int userId,
+  ) async {
     if (!_isAuthenticated) {
       return getLocalEventInteractions(userId);
     }
 
     try {
-      final interactionsData = await ApiClientFactory.instance.fetchUserInteractions();
+      final interactionsData = await ApiClientFactory.instance
+          .fetchUserInteractions();
 
-      final interactions = interactionsData.map((data) => EventInteraction.fromJson(data)).toList();
+      final interactions = interactionsData
+          .map((data) => EventInteraction.fromJson(data))
+          .toList();
 
       final box = Hive.box<EventInteractionHive>('event_interactions');
       final usersBox = Hive.box<UserHive>('users');
@@ -292,10 +363,16 @@ class SyncService {
 
       for (final interaction in interactions) {
         if (interaction.inviterId != null && interaction.inviter != null) {
-          await usersBox.put(interaction.inviterId!, interaction.inviter!.toUserHive());
+          await usersBox.put(
+            interaction.inviterId!,
+            interaction.inviter!.toUserHive(),
+          );
         }
 
-        final hiveKey = EventInteractionHive.createHiveKey(interaction.userId, interaction.eventId);
+        final hiveKey = EventInteractionHive.createHiveKey(
+          interaction.userId,
+          interaction.eventId,
+        );
         await box.put(hiveKey, EventInteractionHive.fromDomain(interaction));
       }
 
@@ -352,14 +429,31 @@ class SyncService {
   }
 
   static Future<void> syncAll(int userId) async {
-    await Future.wait([syncEvents(), syncGroups(userId), syncSubscriptions(userId), syncEventInteractions(userId)]);
+    await Future.wait([
+      syncEvents(),
+      syncGroups(userId),
+      syncSubscriptions(userId),
+      syncEventInteractions(userId),
+    ]);
   }
 
-  static Future<Map<String, dynamic>> syncAllUserData(int userId, {bool force = false, List<String>? resources}) async {
+  static Future<Map<String, dynamic>> syncAllUserData(
+    int userId, {
+    bool force = false,
+    List<String>? resources,
+  }) async {
     await syncAll(userId);
     return {
       'success': true,
-      'synced_resources': resources ?? ['events', 'notifications', 'groups', 'subscriptions', 'event_interactions'],
+      'synced_resources':
+          resources ??
+          [
+            'events',
+            'notifications',
+            'groups',
+            'subscriptions',
+            'event_interactions',
+          ],
       'timestamp': DateTime.now().toIso8601String(),
     };
   }
@@ -400,7 +494,10 @@ class SyncService {
       }
 
       final subscriptionsBox = Hive.box<SubscriptionHive>('subscriptions');
-      return subscriptionsBox.values.where((subscriptionHive) => subscriptionHive.userId == userId).map((subscriptionHive) => subscriptionHive.toSubscription()).toList();
+      return subscriptionsBox.values
+          .where((subscriptionHive) => subscriptionHive.userId == userId)
+          .map((subscriptionHive) => subscriptionHive.toSubscription())
+          .toList();
     } catch (e) {
       return [];
     }
@@ -409,7 +506,10 @@ class SyncService {
   static List<Group> getLocalGroups(int userId) {
     try {
       final groupsBox = Hive.box<GroupHive>('groups');
-      return groupsBox.values.where((groupHive) => groupHive.memberIds.contains(userId)).map((groupHive) => groupHive.toGroup()).toList();
+      return groupsBox.values
+          .where((groupHive) => groupHive.memberIds.contains(userId))
+          .map((groupHive) => groupHive.toGroup())
+          .toList();
     } catch (e) {
       return [];
     }

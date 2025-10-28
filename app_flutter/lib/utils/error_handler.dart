@@ -4,7 +4,12 @@ import '../utils/app_exceptions.dart';
 class ErrorHandler {
   static final Map<String, int> _errorCounts = <String, int>{};
 
-  static AppException handleServiceError(Object error, {required String operation, required String tag, int defaultCode = 2000}) {
+  static AppException handleServiceError(
+    Object error, {
+    required String operation,
+    required String tag,
+    int defaultCode = 2000,
+  }) {
     final errorMessage = error.toString();
     final errorKey = '$tag:$operation';
 
@@ -29,8 +34,18 @@ class ErrorHandler {
     return AppException(code: defaultCode, message: errorMessage, tag: tag);
   }
 
-  static void handleProviderError(Object error, {required String operation, required String tag, required Function(String) setErrorCallback, String? fallbackMessage}) {
-    final appException = handleServiceError(error, operation: operation, tag: tag);
+  static void handleProviderError(
+    Object error, {
+    required String operation,
+    required String tag,
+    required Function(String) setErrorCallback,
+    String? fallbackMessage,
+  }) {
+    final appException = handleServiceError(
+      error,
+      operation: operation,
+      tag: tag,
+    );
 
     final userMessage = fallbackMessage ?? appException.message;
     setErrorCallback(userMessage);
@@ -51,10 +66,16 @@ class ErrorHandler {
     }
   }
 
-  static void logDebugInfo(String operation, {required String tag, Map<String, dynamic>? context}) {
+  static void logDebugInfo(
+    String operation, {
+    required String tag,
+    Map<String, dynamic>? context,
+  }) {
     if (!DebugConfig.enabled) return;
 
-    context != null ? context.entries.map((e) => '${e.key}: ${e.value}').join(', ') : 'no context';
+    context != null
+        ? context.entries.map((e) => '${e.key}: ${e.value}').join(', ')
+        : 'no context';
   }
 
   static Map<String, int> getErrorStatistics() {

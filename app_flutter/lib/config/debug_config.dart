@@ -57,53 +57,105 @@ class DebugConfig {
 
   static const String _appName = 'EventyPop';
 
-  static void debug(String message, {String? tag, Object? error, StackTrace? stackTrace}) {
+  static void debug(
+    String message, {
+    String? tag,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     if (!DebugConfig.enabled) return;
     if (kDebugMode) {
       final formattedMessage = _formatMessage(message, tag ?? 'DEBUG');
-      developer.log(formattedMessage, name: _appName, level: 500, error: error, stackTrace: stackTrace);
+      developer.log(
+        formattedMessage,
+        name: _appName,
+        level: 500,
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
-  static void info(String message, {String? tag, Object? error, StackTrace? stackTrace}) {
+  static void info(
+    String message, {
+    String? tag,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     if (!DebugConfig.enabled) return;
     final formattedMessage = _formatMessage(message, tag ?? 'INFO');
 
     print(formattedMessage);
-    developer.log(formattedMessage, name: _appName, level: 800, error: error, stackTrace: stackTrace);
+    developer.log(
+      formattedMessage,
+      name: _appName,
+      level: 800,
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 
-  static void warn(String message, {String? tag, Object? error, StackTrace? stackTrace}) {
+  static void warn(
+    String message, {
+    String? tag,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     if (!DebugConfig.enabled) return;
     final formattedMessage = _formatMessage(message, tag ?? 'WARNING');
 
-    developer.log(formattedMessage, name: _appName, level: 900, error: error, stackTrace: stackTrace);
+    developer.log(
+      formattedMessage,
+      name: _appName,
+      level: 900,
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 
-  static void error(String message, {String? tag, Object? error, StackTrace? stackTrace}) {
+  static void error(
+    String message, {
+    String? tag,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     if (!DebugConfig.enabled) return;
     final formattedMessage = _formatMessage(message, tag ?? 'ERROR');
 
     print(formattedMessage);
-    developer.log(formattedMessage, name: _appName, level: 1000, error: error, stackTrace: stackTrace);
+    developer.log(
+      formattedMessage,
+      name: _appName,
+      level: 1000,
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 
   static void network(String message, {Object? error, StackTrace? stackTrace}) {
-    if (DebugConfig.httpOnlySlow && !message.contains('SLOW') && !message.contains('slow')) {
+    if (DebugConfig.httpOnlySlow &&
+        !message.contains('SLOW') &&
+        !message.contains('slow')) {
       return;
     }
-    if (!DebugConfig.samplingEnabled || DebugConfig.shouldEmit('network', _deriveKey(message))) {
+    if (!DebugConfig.samplingEnabled ||
+        DebugConfig.shouldEmit('network', _deriveKey(message))) {
       debug(message, tag: 'NETWORK', error: error, stackTrace: stackTrace);
     }
   }
 
   static void syncLog(String message, {Object? error, StackTrace? stackTrace}) {
-    if (!DebugConfig.samplingEnabled || DebugConfig.shouldEmit('sync', _deriveKey(message))) {
+    if (!DebugConfig.samplingEnabled ||
+        DebugConfig.shouldEmit('sync', _deriveKey(message))) {
       debug(message, tag: 'SYNC', error: error, stackTrace: stackTrace);
     }
   }
 
-  static void database(String message, {Object? error, StackTrace? stackTrace}) {
+  static void database(
+    String message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     debug(message, tag: 'DATABASE', error: error, stackTrace: stackTrace);
   }
 
@@ -127,12 +179,18 @@ class DebugConfig {
     info('TRACK SUCCESS $event$meta');
   }
 
-  static void trackFailure(String event, Object error, [Map<String, dynamic>? payload]) {
+  static void trackFailure(
+    String event,
+    Object error, [
+    Map<String, dynamic>? payload,
+  ]) {
     if (!DebugConfig.enabled) return;
     final meta = payload == null ? '' : ' ${payload.toString()}';
 
     final errorString = error.toString();
-    if (errorString.contains('Authentication token required') || errorString.contains('401') || errorString.contains('Unauthorized')) {
+    if (errorString.contains('Authentication token required') ||
+        errorString.contains('401') ||
+        errorString.contains('Unauthorized')) {
     } else {
       if (error is Exception) {
         DebugConfig.error('TRACK FAILURE $event$meta', error: error);
@@ -144,7 +202,8 @@ class DebugConfig {
 
   static String _formatMessage(String message, String tag) {
     final now = DateTime.now();
-    final timestamp = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+    final timestamp =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
     final emoji = _getEmojiForTag(tag);
 
     final testModeIndicator = _getTestModeIndicator();
@@ -200,10 +259,20 @@ extension LoggerExtension on Object {
   void logDebug(String message, {Object? error, StackTrace? stackTrace}) {}
   void logInfo(String message, {Object? error, StackTrace? stackTrace}) {}
   void logWarning(String message, {Object? error, StackTrace? stackTrace}) {
-    DebugConfig.warn(message, tag: runtimeType.toString(), error: error, stackTrace: stackTrace);
+    DebugConfig.warn(
+      message,
+      tag: runtimeType.toString(),
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 
   void logError(String message, {Object? error, StackTrace? stackTrace}) {
-    DebugConfig.error(message, tag: runtimeType.toString(), error: error, stackTrace: stackTrace);
+    DebugConfig.error(
+      message,
+      tag: runtimeType.toString(),
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 }

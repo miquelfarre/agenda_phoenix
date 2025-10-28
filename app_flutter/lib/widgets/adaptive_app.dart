@@ -15,24 +15,74 @@ class AdaptiveApp extends StatelessWidget {
   final GoRouter? routerConfig;
   final bool debugShowCheckedModeBanner;
 
-  const AdaptiveApp({super.key, this.appKey, required this.title, required this.localizationsDelegates, required this.supportedLocales, this.locale, this.home, this.routes, this.debugShowCheckedModeBanner = false}) : routerConfig = null;
+  const AdaptiveApp({
+    super.key,
+    this.appKey,
+    required this.title,
+    required this.localizationsDelegates,
+    required this.supportedLocales,
+    this.locale,
+    this.home,
+    this.routes,
+    this.debugShowCheckedModeBanner = false,
+  }) : routerConfig = null;
 
-  const AdaptiveApp.router({super.key, this.appKey, required this.title, required this.localizationsDelegates, required this.supportedLocales, this.locale, required this.routerConfig, this.debugShowCheckedModeBanner = false}) : home = null, routes = null;
+  const AdaptiveApp.router({
+    super.key,
+    this.appKey,
+    required this.title,
+    required this.localizationsDelegates,
+    required this.supportedLocales,
+    this.locale,
+    required this.routerConfig,
+    this.debugShowCheckedModeBanner = false,
+  }) : home = null,
+       routes = null;
 
   @override
   Widget build(BuildContext context) {
-    final delegates = <LocalizationsDelegate<dynamic>>[AppLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate];
+    final delegates = <LocalizationsDelegate<dynamic>>[
+      AppLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ];
 
     if (routerConfig != null) {
       if (PlatformDetection.isIOS) {
-        return CupertinoApp.router(key: appKey, title: title, localizationsDelegates: delegates, supportedLocales: supportedLocales, locale: locale, routerConfig: routerConfig!, debugShowCheckedModeBanner: debugShowCheckedModeBanner);
+        return CupertinoApp.router(
+          key: appKey,
+          title: title,
+          localizationsDelegates: delegates,
+          supportedLocales: supportedLocales,
+          locale: locale,
+          routerConfig: routerConfig!,
+          debugShowCheckedModeBanner: debugShowCheckedModeBanner,
+        );
       }
 
-      return WidgetsApp.router(key: appKey, color: const Color(0xFFFFFFFF), title: title, localizationsDelegates: delegates, supportedLocales: supportedLocales, locale: locale, routerConfig: routerConfig!, debugShowCheckedModeBanner: debugShowCheckedModeBanner);
+      return WidgetsApp.router(
+        key: appKey,
+        color: const Color(0xFFFFFFFF),
+        title: title,
+        localizationsDelegates: delegates,
+        supportedLocales: supportedLocales,
+        locale: locale,
+        routerConfig: routerConfig!,
+        debugShowCheckedModeBanner: debugShowCheckedModeBanner,
+      );
     }
 
     if (PlatformDetection.isIOS) {
-      return CupertinoApp(key: appKey, title: title, localizationsDelegates: delegates, supportedLocales: supportedLocales, locale: locale, home: home!, routes: routes ?? const {}, debugShowCheckedModeBanner: debugShowCheckedModeBanner);
+      return CupertinoApp(
+        key: appKey,
+        title: title,
+        localizationsDelegates: delegates,
+        supportedLocales: supportedLocales,
+        locale: locale,
+        home: home!,
+        routes: routes ?? const {},
+        debugShowCheckedModeBanner: debugShowCheckedModeBanner,
+      );
     }
 
     return WidgetsApp(

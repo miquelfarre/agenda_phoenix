@@ -22,7 +22,17 @@ class EventActions extends StatelessWidget {
   final bool isCompact;
   final bool navigateAfterDelete;
 
-  const EventActions({super.key, required this.event, this.onDelete, this.onEdit, this.onInvite, this.onDeleteSeries, this.onEditSeries, this.isCompact = false, this.navigateAfterDelete = false});
+  const EventActions({
+    super.key,
+    required this.event,
+    this.onDelete,
+    this.onEdit,
+    this.onInvite,
+    this.onDeleteSeries,
+    this.onEditSeries,
+    this.isCompact = false,
+    this.navigateAfterDelete = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +48,25 @@ class EventActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (onInvite != null) ...[_buildCompactActionButton(icon: CupertinoIcons.person_add, color: AppStyles.blue600, onTap: () => onInvite!(event), tooltip: l10n.invite), const SizedBox(width: 8)],
-        if (onEdit != null) ...[event.isRecurringEvent ? _buildRecurringEditAction(context, l10n) : _buildRegularEditAction(context), const SizedBox(width: 8)],
-        if (onDelete != null) event.isRecurringEvent ? _buildRecurringDeleteAction(context, l10n) : _buildRegularDeleteAction(context, l10n),
+        if (onInvite != null) ...[
+          _buildCompactActionButton(
+            icon: CupertinoIcons.person_add,
+            color: AppStyles.blue600,
+            onTap: () => onInvite!(event),
+            tooltip: l10n.invite,
+          ),
+          const SizedBox(width: 8),
+        ],
+        if (onEdit != null) ...[
+          event.isRecurringEvent
+              ? _buildRecurringEditAction(context, l10n)
+              : _buildRegularEditAction(context),
+          const SizedBox(width: 8),
+        ],
+        if (onDelete != null)
+          event.isRecurringEvent
+              ? _buildRecurringDeleteAction(context, l10n)
+              : _buildRegularDeleteAction(context, l10n),
       ],
     );
   }
@@ -49,14 +75,31 @@ class EventActions extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        if (onInvite != null) _buildActionButton(icon: CupertinoIcons.person_add, label: l10n.invite, color: AppStyles.blue600, onTap: () => onInvite!(event)),
-        if (onEdit != null) event.isRecurringEvent ? _buildRecurringEditFullAction(context) : _buildRegularEditFullAction(context),
-        if (onDelete != null) event.isRecurringEvent ? _buildRecurringDeleteFullAction(context, l10n) : _buildRegularDeleteFullAction(context, l10n),
+        if (onInvite != null)
+          _buildActionButton(
+            icon: CupertinoIcons.person_add,
+            label: l10n.invite,
+            color: AppStyles.blue600,
+            onTap: () => onInvite!(event),
+          ),
+        if (onEdit != null)
+          event.isRecurringEvent
+              ? _buildRecurringEditFullAction(context)
+              : _buildRegularEditFullAction(context),
+        if (onDelete != null)
+          event.isRecurringEvent
+              ? _buildRecurringDeleteFullAction(context, l10n)
+              : _buildRegularDeleteFullAction(context, l10n),
       ],
     );
   }
 
-  Widget _buildCompactActionButton({required IconData icon, required Color color, required VoidCallback onTap, required String tooltip}) {
+  Widget _buildCompactActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    required String tooltip,
+  }) {
     return GestureDetector(
       key: Key('compact_action_button_${icon.codePoint}'),
       onTap: onTap,
@@ -65,14 +108,22 @@ class EventActions extends StatelessWidget {
         child: Container(
           width: 32,
           height: 32,
-          decoration: BoxDecoration(color: AppStyles.colorWithOpacity(color, 0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: AppStyles.colorWithOpacity(color, 0.1),
+            shape: BoxShape.circle,
+          ),
           child: PlatformWidgets.platformIcon(icon, size: 16, color: color),
         ),
       ),
     );
   }
 
-  Widget _buildActionButton({required IconData icon, required String label, required Color color, required VoidCallback onTap}) {
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     final isIOS = PlatformDetection.isIOS;
     if (isIOS) {
       return GestureDetector(
@@ -85,7 +136,10 @@ class EventActions extends StatelessWidget {
             children: [
               PlatformWidgets.platformIcon(icon, color: color, size: 24),
               const SizedBox(height: 4),
-              Text(label, style: AppStyles.bodyTextSmall.copyWith(color: color)),
+              Text(
+                label,
+                style: AppStyles.bodyTextSmall.copyWith(color: color),
+              ),
             ],
           ),
         ),
@@ -97,22 +151,35 @@ class EventActions extends StatelessWidget {
           Tooltip(
             message: label,
             child: AdaptiveButton(
-              key: Key('event_action_${label.toLowerCase().replaceAll(' ', '_')}'),
-              config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+              key: Key(
+                'event_action_${label.toLowerCase().replaceAll(' ', '_')}',
+              ),
+              config: const AdaptiveButtonConfig(
+                variant: ButtonVariant.icon,
+                size: ButtonSize.medium,
+                fullWidth: false,
+                iconPosition: IconPosition.only,
+              ),
               icon: icon,
               onPressed: onTap,
             ),
           ),
           Text(
             label,
-            style: AppStyles.bodyTextSmall.copyWith(color: color, fontWeight: FontWeight.w500),
+            style: AppStyles.bodyTextSmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       );
     }
   }
 
-  Widget _buildRecurringDeleteAction(BuildContext context, AppLocalizations l10n) {
+  Widget _buildRecurringDeleteAction(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return GestureDetector(
       onTap: () => _showRecurringDeleteOptions(context, l10n),
       child: Container(
@@ -121,14 +188,24 @@ class EventActions extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppStyles.colorWithOpacity(AppStyles.red600, 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.red600, 0.3), width: 1),
+          border: Border.all(
+            color: AppStyles.colorWithOpacity(AppStyles.red600, 0.3),
+            width: 1,
+          ),
         ),
-        child: PlatformWidgets.platformIcon(CupertinoIcons.delete, size: 16, color: AppStyles.red600),
+        child: PlatformWidgets.platformIcon(
+          CupertinoIcons.delete,
+          size: 16,
+          color: AppStyles.red600,
+        ),
       ),
     );
   }
 
-  Widget _buildRegularDeleteAction(BuildContext context, AppLocalizations l10n) {
+  Widget _buildRegularDeleteAction(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return ConfirmationActionWidget(
       dialogTitle: l10n.confirmDelete,
       dialogMessage: l10n.confirmDeleteEvent(event.title),
@@ -143,14 +220,24 @@ class EventActions extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppStyles.colorWithOpacity(AppStyles.red600, 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.red600, 0.3), width: 1),
+          border: Border.all(
+            color: AppStyles.colorWithOpacity(AppStyles.red600, 0.3),
+            width: 1,
+          ),
         ),
-        child: PlatformWidgets.platformIcon(CupertinoIcons.delete, size: 16, color: AppStyles.red600),
+        child: PlatformWidgets.platformIcon(
+          CupertinoIcons.delete,
+          size: 16,
+          color: AppStyles.red600,
+        ),
       ),
     );
   }
 
-  Widget _buildRecurringDeleteFullAction(BuildContext context, AppLocalizations l10n) {
+  Widget _buildRecurringDeleteFullAction(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return GestureDetector(
       onTap: () => _showRecurringDeleteOptions(context, l10n),
       child: Padding(
@@ -158,11 +245,18 @@ class EventActions extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            PlatformWidgets.platformIcon(CupertinoIcons.delete, color: AppStyles.red600, size: 24),
+            PlatformWidgets.platformIcon(
+              CupertinoIcons.delete,
+              color: AppStyles.red600,
+              size: 24,
+            ),
             const SizedBox(height: 4),
             Text(
               l10n.delete,
-              style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.red600, fontWeight: FontWeight.w500),
+              style: AppStyles.bodyTextSmall.copyWith(
+                color: AppStyles.red600,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -170,7 +264,10 @@ class EventActions extends StatelessWidget {
     );
   }
 
-  Widget _buildRegularDeleteFullAction(BuildContext context, AppLocalizations l10n) {
+  Widget _buildRegularDeleteFullAction(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return ConfirmationActionWidget(
       dialogTitle: l10n.confirmDelete,
       dialogMessage: l10n.confirmDeleteEvent(event.title),
@@ -182,18 +279,28 @@ class EventActions extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PlatformWidgets.platformIcon(CupertinoIcons.delete, color: AppStyles.red600, size: 24),
+          PlatformWidgets.platformIcon(
+            CupertinoIcons.delete,
+            color: AppStyles.red600,
+            size: 24,
+          ),
           const SizedBox(height: 4),
           Text(
             l10n.delete,
-            style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.red600, fontWeight: FontWeight.w500),
+            style: AppStyles.bodyTextSmall.copyWith(
+              color: AppStyles.red600,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showRecurringDeleteOptions(BuildContext context, AppLocalizations l10n) {
+  void _showRecurringDeleteOptions(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     final safeL10n = l10n;
     final safeTitle = safeL10n.deleteRecurringEvent;
     final safeMessage = safeL10n.deleteRecurringEventQuestion(event.title);
@@ -207,8 +314,16 @@ class EventActions extends StatelessWidget {
           title: safeTitle,
           message: safeMessage,
           actions: [
-            PlatformAction(text: safeDeleteOnlyThisInstance, value: AppConstants.actionChoiceThis),
-            if (onDeleteSeries != null) PlatformAction(text: safeDeleteEntireSeries, value: AppConstants.actionChoiceSeries, isDestructive: true),
+            PlatformAction(
+              text: safeDeleteOnlyThisInstance,
+              value: AppConstants.actionChoiceThis,
+            ),
+            if (onDeleteSeries != null)
+              PlatformAction(
+                text: safeDeleteEntireSeries,
+                value: AppConstants.actionChoiceSeries,
+                isDestructive: true,
+              ),
           ],
           cancelText: safeCancel,
         )
@@ -219,52 +334,95 @@ class EventActions extends StatelessWidget {
 
             if (choice == AppConstants.actionChoiceThis) {
               if (!appContext.mounted) return;
-              PlatformDialogHelpers.showPlatformConfirmDialog(appContext, title: safeL10n.confirmDelete, message: safeL10n.confirmDeleteInstance(event.title), confirmText: safeL10n.deleteInstance, cancelText: safeL10n.cancel, isDestructive: true).then((confirmed) {
+              PlatformDialogHelpers.showPlatformConfirmDialog(
+                appContext,
+                title: safeL10n.confirmDelete,
+                message: safeL10n.confirmDeleteInstance(event.title),
+                confirmText: safeL10n.deleteInstance,
+                cancelText: safeL10n.cancel,
+                isDestructive: true,
+              ).then((confirmed) {
                 if (confirmed == true && onDelete != null) {
                   try {
-                    final res = onDelete!(event, shouldNavigate: navigateAfterDelete);
+                    final res = onDelete!(
+                      event,
+                      shouldNavigate: navigateAfterDelete,
+                    );
                     if (res is Future) {
                       res.catchError((e) {
                         if (appContext.mounted) {
-                          PlatformDialogHelpers.showSnackBar(context: appContext, message: '$safeUnexpectedError $e', isError: true);
+                          PlatformDialogHelpers.showSnackBar(
+                            context: appContext,
+                            message: '$safeUnexpectedError $e',
+                            isError: true,
+                          );
                         }
                       });
                     }
                   } catch (e) {
                     if (appContext.mounted) {
-                      PlatformDialogHelpers.showSnackBar(context: appContext, message: '$safeUnexpectedError $e', isError: true);
+                      PlatformDialogHelpers.showSnackBar(
+                        context: appContext,
+                        message: '$safeUnexpectedError $e',
+                        isError: true,
+                      );
                     }
                   }
                 }
               });
             } else if (choice == AppConstants.actionChoiceSeries) {
               if (!appContext.mounted) return;
-              PlatformDialogHelpers.showPlatformConfirmDialog(appContext, title: safeL10n.confirmDeleteSeries, message: safeL10n.confirmDeleteSeriesMessage(event.title), confirmText: safeL10n.deleteCompleteSeries, cancelText: safeL10n.cancel, isDestructive: true).then((confirmed) {
+              PlatformDialogHelpers.showPlatformConfirmDialog(
+                appContext,
+                title: safeL10n.confirmDeleteSeries,
+                message: safeL10n.confirmDeleteSeriesMessage(event.title),
+                confirmText: safeL10n.deleteCompleteSeries,
+                cancelText: safeL10n.cancel,
+                isDestructive: true,
+              ).then((confirmed) {
                 if (confirmed == true && onDeleteSeries != null) {
                   try {
-                    final res = onDeleteSeries!(event, shouldNavigate: navigateAfterDelete);
+                    final res = onDeleteSeries!(
+                      event,
+                      shouldNavigate: navigateAfterDelete,
+                    );
                     if (res is Future) {
                       res.catchError((e) {
                         if (appContext.mounted) {
-                          PlatformDialogHelpers.showSnackBar(context: appContext, message: '$safeUnexpectedError $e', isError: true);
+                          PlatformDialogHelpers.showSnackBar(
+                            context: appContext,
+                            message: '$safeUnexpectedError $e',
+                            isError: true,
+                          );
                         }
                       });
                     }
                   } catch (e) {
                     if (appContext.mounted) {
-                      PlatformDialogHelpers.showSnackBar(context: appContext, message: '$safeUnexpectedError $e', isError: true);
+                      PlatformDialogHelpers.showSnackBar(
+                        context: appContext,
+                        message: '$safeUnexpectedError $e',
+                        isError: true,
+                      );
                     }
                   }
                 }
               });
             }
           } catch (e) {
-            PlatformDialogHelpers.showSnackBar(message: '$safeUnexpectedError $e', isError: true);
+            PlatformDialogHelpers.showSnackBar(
+              message: '$safeUnexpectedError $e',
+              isError: true,
+            );
           }
         })
         .catchError((e) {
           if (context.mounted) {
-            PlatformDialogHelpers.showSnackBar(context: context, message: '$safeUnexpectedError $e', isError: true);
+            PlatformDialogHelpers.showSnackBar(
+              context: context,
+              message: '$safeUnexpectedError $e',
+              isError: true,
+            );
           }
         });
   }
@@ -278,9 +436,16 @@ class EventActions extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppStyles.colorWithOpacity(AppStyles.green600, 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.green600, 0.3), width: 1),
+          border: Border.all(
+            color: AppStyles.colorWithOpacity(AppStyles.green600, 0.3),
+            width: 1,
+          ),
         ),
-        child: PlatformWidgets.platformIcon(CupertinoIcons.pencil, size: 16, color: AppStyles.green600),
+        child: PlatformWidgets.platformIcon(
+          CupertinoIcons.pencil,
+          size: 16,
+          color: AppStyles.green600,
+        ),
       ),
     );
   }
@@ -294,9 +459,16 @@ class EventActions extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppStyles.colorWithOpacity(AppStyles.green600, 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.green600, 0.3), width: 1),
+          border: Border.all(
+            color: AppStyles.colorWithOpacity(AppStyles.green600, 0.3),
+            width: 1,
+          ),
         ),
-        child: PlatformWidgets.platformIcon(CupertinoIcons.pencil, size: 16, color: AppStyles.green600),
+        child: PlatformWidgets.platformIcon(
+          CupertinoIcons.pencil,
+          size: 16,
+          color: AppStyles.green600,
+        ),
       ),
     );
   }
@@ -311,11 +483,18 @@ class EventActions extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            PlatformWidgets.platformIcon(CupertinoIcons.pencil, color: AppStyles.green600, size: 24),
+            PlatformWidgets.platformIcon(
+              CupertinoIcons.pencil,
+              color: AppStyles.green600,
+              size: 24,
+            ),
             const SizedBox(height: 4),
             Text(
               l10n.edit,
-              style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.green600, fontWeight: FontWeight.w500),
+              style: AppStyles.bodyTextSmall.copyWith(
+                color: AppStyles.green600,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -333,11 +512,18 @@ class EventActions extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            PlatformWidgets.platformIcon(CupertinoIcons.pencil, color: AppStyles.green600, size: 24),
+            PlatformWidgets.platformIcon(
+              CupertinoIcons.pencil,
+              color: AppStyles.green600,
+              size: 24,
+            ),
             const SizedBox(height: 4),
             Text(
               l10n.edit,
-              style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.green600, fontWeight: FontWeight.w500),
+              style: AppStyles.bodyTextSmall.copyWith(
+                color: AppStyles.green600,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -358,8 +544,15 @@ class EventActions extends StatelessWidget {
           title: safeTitle,
           message: safeMessage,
           actions: [
-            PlatformAction(text: safeEditThis, value: AppConstants.actionChoiceThis),
-            if (onEditSeries != null) PlatformAction(text: safeEditSeries, value: AppConstants.actionChoiceSeries),
+            PlatformAction(
+              text: safeEditThis,
+              value: AppConstants.actionChoiceThis,
+            ),
+            if (onEditSeries != null)
+              PlatformAction(
+                text: safeEditSeries,
+                value: AppConstants.actionChoiceSeries,
+              ),
           ],
           cancelText: safeCancel,
         )
@@ -368,19 +561,29 @@ class EventActions extends StatelessWidget {
             try {
               onEdit?.call(event);
             } catch (e) {
-              PlatformDialogHelpers.showSnackBar(message: '${safeL10n.unexpectedError} $e', isError: true);
+              PlatformDialogHelpers.showSnackBar(
+                message: '${safeL10n.unexpectedError} $e',
+                isError: true,
+              );
             }
           } else if (choice == AppConstants.actionChoiceSeries) {
             try {
               onEditSeries?.call(event);
             } catch (e) {
-              PlatformDialogHelpers.showSnackBar(message: '${safeL10n.unexpectedError} $e', isError: true);
+              PlatformDialogHelpers.showSnackBar(
+                message: '${safeL10n.unexpectedError} $e',
+                isError: true,
+              );
             }
           }
         })
         .catchError((e) {
           if (context.mounted) {
-            PlatformDialogHelpers.showSnackBar(context: context, message: '${l10n.unexpectedError} $e', isError: true);
+            PlatformDialogHelpers.showSnackBar(
+              context: context,
+              message: '${l10n.unexpectedError} $e',
+              isError: true,
+            );
           }
         });
   }

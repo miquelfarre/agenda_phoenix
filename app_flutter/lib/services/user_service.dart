@@ -53,7 +53,9 @@ class UserService {
       if (configService.isTestMode) {
         configService.currentUserId;
 
-        final response = await ApiClientFactory.instance.get('/api/v1/users/me?enriched=true');
+        final response = await ApiClientFactory.instance.get(
+          '/api/v1/users/me?enriched=true',
+        );
         final user = User.fromJson(response);
 
         await SyncService.syncUserProfile(user.id);
@@ -68,11 +70,17 @@ class UserService {
 
       final idToken = await SupabaseAuthService.getCurrentUserToken();
       if (idToken == null) {
-        throw AppException(message: 'No authentication token available', code: 1001, tag: 'AUTH');
+        throw AppException(
+          message: 'No authentication token available',
+          code: 1001,
+          tag: 'AUTH',
+        );
       }
 
       // Get user data with enriched contact information
-      final response = await ApiClientFactory.instance.get('/api/v1/users/me?enriched=true');
+      final response = await ApiClientFactory.instance.get(
+        '/api/v1/users/me?enriched=true',
+      );
 
       final user = User.fromJson(response);
 
@@ -150,7 +158,10 @@ class UserService {
         return [];
       }
 
-      final response = await ApiClientFactory.instance.post('/api/v1/users/find-by-phones', body: {'phone_numbers': phoneNumbers});
+      final response = await ApiClientFactory.instance.post(
+        '/api/v1/users/find-by-phones',
+        body: {'phone_numbers': phoneNumbers},
+      );
 
       final List<dynamic> usersJson = response is List ? response : [];
       final users = usersJson.map((json) => User.fromJson(json)).toList();
@@ -172,17 +183,17 @@ class UserService {
   static Future<List<User>> searchPublicUsers(String query) async {
     try {
       // Use backend search parameter for server-side filtering
-      final queryParams = {
-        'public': 'true',
-        'limit': '50',
-      };
+      final queryParams = {'public': 'true', 'limit': '50'};
 
       // Add search parameter if query is not empty
       if (query.isNotEmpty) {
         queryParams['search'] = query;
       }
 
-      final response = await ApiClientFactory.instance.get('/api/v1/users', queryParams: queryParams);
+      final response = await ApiClientFactory.instance.get(
+        '/api/v1/users',
+        queryParams: queryParams,
+      );
 
       final List<dynamic> usersJson = response is List ? response : [];
       return usersJson.map((json) => User.fromJson(json)).toList();
@@ -201,7 +212,10 @@ class UserService {
         queryParams['search'] = query;
       }
 
-      final response = await ApiClientFactory.instance.get('/api/v1/users', queryParams: queryParams);
+      final response = await ApiClientFactory.instance.get(
+        '/api/v1/users',
+        queryParams: queryParams,
+      );
 
       final List<dynamic> usersJson = response is List ? response : [];
       return usersJson.map((json) => User.fromJson(json)).toList();
@@ -216,7 +230,10 @@ class UserService {
 
   static Map<String, dynamic> getCacheStats() {
     final hiveBox = Hive.box<UserHive>('users');
-    return {'hive_users_count': hiveBox.length, 'hive_box_open': hiveBox.isOpen};
+    return {
+      'hive_users_count': hiveBox.length,
+      'hive_box_open': hiveBox.isOpen,
+    };
   }
 
   Future<void> logout() async {

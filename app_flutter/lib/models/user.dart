@@ -48,8 +48,10 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    final instagramName = json['instagram_name'] as String? ?? json['username'] as String?;
-    final fullName = json['full_name'] as String? ?? json['contact_name'] as String?;
+    final instagramName =
+        json['instagram_name'] as String? ?? json['username'] as String?;
+    final fullName =
+        json['full_name'] as String? ?? json['contact_name'] as String?;
 
     return User(
       id: json['id'],
@@ -62,12 +64,20 @@ class User {
       isActive: json['is_active'] ?? true,
       profilePicture: json['profile_picture'] ?? json['profile_picture_url'],
       isBanned: json['is_banned'] ?? false,
-      lastSeen: json['last_seen'] != null ? (json['last_seen'] is String ? DateTimeUtils.parseAndNormalize(json['last_seen']) : json['last_seen']) : null,
+      lastSeen: json['last_seen'] != null
+          ? (json['last_seen'] is String
+                ? DateTimeUtils.parseAndNormalize(json['last_seen'])
+                : json['last_seen'])
+          : null,
       isOnline: json['is_online'] ?? false,
       defaultTimezone: json['default_timezone'] ?? 'Europe/Madrid',
       defaultCountryCode: json['default_country_code'] ?? 'ES',
       defaultCity: json['default_city'] ?? 'Madrid',
-      createdAt: json['created_at'] != null ? (json['created_at'] is String ? DateTimeUtils.parseAndNormalize(json['created_at']) : json['created_at']) : null,
+      createdAt: json['created_at'] != null
+          ? (json['created_at'] is String
+                ? DateTimeUtils.parseAndNormalize(json['created_at'])
+                : json['created_at'])
+          : null,
       newEventsCount: json['new_events_count'] as int?,
       totalEventsCount: json['total_events_count'] as int?,
       subscribersCount: json['subscribers_count'] as int?,
@@ -110,6 +120,18 @@ class User {
   }
 
   UserHive toUserHive() {
-    return UserHive(id: id, instagramName: instagramName, fullName: fullName, isPublic: isPublic, phoneNumber: phoneNumber, profilePicture: profilePicture, isBanned: isBanned, lastSeen: lastSeen, isOnline: isOnline, firebaseUid: firebaseUid, registeredAt: createdAt);
+    return UserHive(
+      id: id,
+      instagramName: instagramName,
+      fullName: fullName,
+      isPublic: isPublic,
+      phoneNumber: phoneNumber,
+      profilePicture: profilePicture,
+      isBanned: isBanned,
+      lastSeen: lastSeen,
+      isOnline: isOnline,
+      firebaseUid: firebaseUid,
+      registeredAt: createdAt,
+    );
   }
 }

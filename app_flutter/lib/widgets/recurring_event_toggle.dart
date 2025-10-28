@@ -12,7 +12,14 @@ class RecurringEventToggle extends StatelessWidget {
   final ValueChanged<bool> onChanged;
   final bool enabled;
 
-  const RecurringEventToggle({super.key, this.labelText, this.helperText, required this.value, required this.onChanged, this.enabled = true});
+  const RecurringEventToggle({
+    super.key,
+    this.labelText,
+    this.helperText,
+    required this.value,
+    required this.onChanged,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,17 +44,26 @@ class RecurringEventToggle extends StatelessWidget {
                 children: [
                   Text(
                     labelText ?? context.l10n.recurringEvent,
-                    style: AppStyles.bodyText.copyWith(fontSize: AppConstants.bodyFontSize, fontWeight: FontWeight.w500),
+                    style: AppStyles.bodyText.copyWith(
+                      fontSize: AppConstants.bodyFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     helperText ?? context.l10n.recurringEventHelperText,
-                    style: AppStyles.bodyTextSmall.copyWith(fontSize: AppConstants.captionFontSize, color: AppStyles.grey600),
+                    style: AppStyles.bodyTextSmall.copyWith(
+                      fontSize: AppConstants.captionFontSize,
+                      color: AppStyles.grey600,
+                    ),
                   ),
                 ],
               ),
             ),
-            PlatformWidgets.platformSwitch(value: value, onChanged: enabled ? onChanged : null),
+            PlatformWidgets.platformSwitch(
+              value: value,
+              onChanged: enabled ? onChanged : null,
+            ),
           ],
         ),
       ],
@@ -66,17 +82,31 @@ class RecurringEventToggle extends StatelessWidget {
                 children: [
                   Text(
                     labelText ?? context.l10n.recurringEvent,
-                    style: TextStyle(fontSize: AppConstants.bodyFontSize, fontWeight: FontWeight.w500, color: CupertinoColors.label.resolveFrom(context), decoration: TextDecoration.none),
+                    style: TextStyle(
+                      fontSize: AppConstants.bodyFontSize,
+                      fontWeight: FontWeight.w500,
+                      color: CupertinoColors.label.resolveFrom(context),
+                      decoration: TextDecoration.none,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     helperText ?? context.l10n.recurringEventHelperText,
-                    style: TextStyle(fontSize: AppConstants.captionFontSize, color: CupertinoColors.secondaryLabel.resolveFrom(context), decoration: TextDecoration.none),
+                    style: TextStyle(
+                      fontSize: AppConstants.captionFontSize,
+                      color: CupertinoColors.secondaryLabel.resolveFrom(
+                        context,
+                      ),
+                      decoration: TextDecoration.none,
+                    ),
                   ),
                 ],
               ),
             ),
-            CupertinoSwitch(value: value, onChanged: enabled ? onChanged : null),
+            CupertinoSwitch(
+              value: value,
+              onChanged: enabled ? onChanged : null,
+            ),
           ],
         ),
       ],

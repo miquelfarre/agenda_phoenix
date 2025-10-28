@@ -9,7 +9,8 @@ import '../core/mixins/error_handling_mixin.dart';
 class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
   SettingsRepository._internal();
 
-  factory SettingsRepository() => SingletonMixin.getInstance(() => SettingsRepository._internal());
+  factory SettingsRepository() =>
+      SingletonMixin.getInstance(() => SettingsRepository._internal());
 
   @override
   String get serviceName => 'SettingsRepository';
@@ -43,7 +44,11 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
       final cityInfo = await CityService.getCityInfo(cityName);
 
       if (cityInfo != null) {
-        final settings = AppSettings(defaultCountryCode: cityInfo.countryCode, defaultTimezone: cityInfo.timezone ?? AppSettings.kDefaultTimezone, defaultCity: cityInfo.name);
+        final settings = AppSettings(
+          defaultCountryCode: cityInfo.countryCode,
+          defaultTimezone: cityInfo.timezone ?? AppSettings.kDefaultTimezone,
+          defaultCity: cityInfo.name,
+        );
 
         return settings;
       }
@@ -56,14 +61,20 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
 
   Future<AppSettings> validateAndFixSettings(AppSettings settings) async {
     try {
-      if (settings.defaultCity.isEmpty || settings.defaultCity == AppSettings.kDefaultCity) {
+      if (settings.defaultCity.isEmpty ||
+          settings.defaultCity == AppSettings.kDefaultCity) {
         return settings;
       }
 
       final cityInfo = await CityService.getCityInfo(settings.defaultCity);
 
-      if (cityInfo != null && (cityInfo.timezone != settings.defaultTimezone || cityInfo.countryCode != settings.defaultCountryCode)) {
-        final correctedSettings = settings.copyWith(defaultCountryCode: cityInfo.countryCode, defaultTimezone: cityInfo.timezone ?? settings.defaultTimezone);
+      if (cityInfo != null &&
+          (cityInfo.timezone != settings.defaultTimezone ||
+              cityInfo.countryCode != settings.defaultCountryCode)) {
+        final correctedSettings = settings.copyWith(
+          defaultCountryCode: cityInfo.countryCode,
+          defaultTimezone: cityInfo.timezone ?? settings.defaultTimezone,
+        );
 
         await _saveLocalSettings(correctedSettings);
 
@@ -79,17 +90,29 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
   Future<AppSettings> _loadLocalSettings() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final defaultCountryCode = prefs.getString(_defaultCountryCodeKey) ?? AppSettings.kDefaultCountryCode;
-    final defaultTimezone = prefs.getString(_defaultTimezoneKey) ?? AppSettings.kDefaultTimezone;
-    final defaultCity = prefs.getString(_defaultCityKey) ?? AppSettings.kDefaultCity;
+    final defaultCountryCode =
+        prefs.getString(_defaultCountryCodeKey) ??
+        AppSettings.kDefaultCountryCode;
+    final defaultTimezone =
+        prefs.getString(_defaultTimezoneKey) ?? AppSettings.kDefaultTimezone;
+    final defaultCity =
+        prefs.getString(_defaultCityKey) ?? AppSettings.kDefaultCity;
 
-    return AppSettings(defaultCountryCode: defaultCountryCode, defaultTimezone: defaultTimezone, defaultCity: defaultCity);
+    return AppSettings(
+      defaultCountryCode: defaultCountryCode,
+      defaultTimezone: defaultTimezone,
+      defaultCity: defaultCity,
+    );
   }
 
   Future<void> _saveLocalSettings(AppSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
 
-    await Future.wait([prefs.setString(_defaultCountryCodeKey, settings.defaultCountryCode), prefs.setString(_defaultTimezoneKey, settings.defaultTimezone), prefs.setString(_defaultCityKey, settings.defaultCity)]);
+    await Future.wait([
+      prefs.setString(_defaultCountryCodeKey, settings.defaultCountryCode),
+      prefs.setString(_defaultTimezoneKey, settings.defaultTimezone),
+      prefs.setString(_defaultCityKey, settings.defaultCity),
+    ]);
   }
 
   Future<void> _saveToBackend(AppSettings settings) async {
@@ -120,21 +143,41 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
     }();
   }
 
-  Future<void> saveTimezoneToBackend({required String countryCode, required String timezone, required String city}) async {
+  Future<void> saveTimezoneToBackend({
+    required String countryCode,
+    required String timezone,
+    required String city,
+  }) async {
     try {
-      final settings = AppSettings(defaultCountryCode: countryCode, defaultTimezone: timezone, defaultCity: city);
+      final settings = AppSettings(
+        defaultCountryCode: countryCode,
+        defaultTimezone: timezone,
+        defaultCity: city,
+      );
       await _saveToBackend(settings);
     } catch (e) {
-      throw ErrorHandler.handleServiceError(e, operation: 'Save timezone to backend', tag: 'SettingsRepository');
+      throw ErrorHandler.handleServiceError(
+        e,
+        operation: 'Save timezone to backend',
+        tag: 'SettingsRepository',
+      );
     }
   }
 
   Future<void> clearLocalData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await Future.wait([prefs.remove(_defaultCountryCodeKey), prefs.remove(_defaultTimezoneKey), prefs.remove(_defaultCityKey)]);
+      await Future.wait([
+        prefs.remove(_defaultCountryCodeKey),
+        prefs.remove(_defaultTimezoneKey),
+        prefs.remove(_defaultCityKey),
+      ]);
     } catch (e) {
-      throw ErrorHandler.handleServiceError(e, operation: 'Clear local settings data', tag: 'SettingsRepository');
+      throw ErrorHandler.handleServiceError(
+        e,
+        operation: 'Clear local settings data',
+        tag: 'SettingsRepository',
+      );
     }
   }
 }

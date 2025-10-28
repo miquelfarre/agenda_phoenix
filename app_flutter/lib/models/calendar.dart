@@ -14,7 +14,18 @@ class Calendar {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  const Calendar({required this.id, required this.ownerId, required this.name, this.description, required this.color, this.isDefault = false, this.isShared = false, this.deleteAssociatedEvents = false, required this.createdAt, required this.updatedAt});
+  const Calendar({
+    required this.id,
+    required this.ownerId,
+    required this.name,
+    this.description,
+    required this.color,
+    this.isDefault = false,
+    this.isShared = false,
+    this.deleteAssociatedEvents = false,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
   factory Calendar.fromJson(Map<String, dynamic> json) {
     return Calendar(
@@ -46,7 +57,18 @@ class Calendar {
     };
   }
 
-  Calendar copyWith({String? id, String? ownerId, String? name, String? description, String? color, bool? isDefault, bool? isShared, bool? deleteAssociatedEvents, DateTime? createdAt, DateTime? updatedAt}) {
+  Calendar copyWith({
+    String? id,
+    String? ownerId,
+    String? name,
+    String? description,
+    String? color,
+    bool? isDefault,
+    bool? isShared,
+    bool? deleteAssociatedEvents,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
     return Calendar(
       id: id ?? this.id,
       ownerId: ownerId ?? this.ownerId,
@@ -55,7 +77,8 @@ class Calendar {
       color: color ?? this.color,
       isDefault: isDefault ?? this.isDefault,
       isShared: isShared ?? this.isShared,
-      deleteAssociatedEvents: deleteAssociatedEvents ?? this.deleteAssociatedEvents,
+      deleteAssociatedEvents:
+          deleteAssociatedEvents ?? this.deleteAssociatedEvents,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

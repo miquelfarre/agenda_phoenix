@@ -8,7 +8,13 @@ class PlatformIconButton extends StatelessWidget {
   final String? tooltip;
   final Color? color;
 
-  const PlatformIconButton({super.key, required this.icon, this.onPressed, this.tooltip, this.color});
+  const PlatformIconButton({
+    super.key,
+    required this.icon,
+    this.onPressed,
+    this.tooltip,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {

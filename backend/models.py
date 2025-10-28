@@ -70,6 +70,7 @@ class User(Base):
     interactions = relationship("EventInteraction", foreign_keys="EventInteraction.user_id", back_populates="user", cascade="all, delete-orphan")
     blocked_users = relationship("UserBlock", foreign_keys="UserBlock.blocker_user_id", back_populates="blocker", cascade="all, delete-orphan")
     blocked_by_users = relationship("UserBlock", foreign_keys="UserBlock.blocked_user_id", back_populates="blocked", cascade="all, delete-orphan")
+    subscription_stats = relationship("UserSubscriptionStats", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, auth_provider='{self.auth_provider}', username='{self.username}')>"
@@ -569,4 +570,49 @@ class EventCancellationView(Base):
             "cancellation_id": self.cancellation_id,
             "user_id": self.user_id,
             "viewed_at": self.viewed_at.isoformat() if self.viewed_at else None,
+        }
+
+
+class UserSubscriptionStats(Base):
+    """
+    Statistics table for user subscriptions.
+
+    This table is populated and maintained by database triggers:
+    - event_insert_stats_trigger: Updates when events are created
+    - event_delete_stats_trigger: Updates when events are deleted
+    - subscription_insert_stats_trigger: Updates when users subscribe
+    - subscription_delete_stats_trigger: Updates when users unsubscribe
+
+    Fields:
+        user_id: Foreign key to users table
+        new_events_count: Number of events created in last 7 days
+        total_events_count: Total number of events created by user
+        subscribers_count: Number of unique subscribers to user's events
+        last_event_date: Timestamp of most recent event creation
+        updated_at: Last update timestamp (auto-updated by trigger)
+    """
+
+    __tablename__ = "user_subscription_stats"
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, doc="User ID (FK)")
+    new_events_count = Column(Integer, default=0, nullable=False, doc="Events in last 7 days")
+    total_events_count = Column(Integer, default=0, nullable=False, doc="Total events created")
+    subscribers_count = Column(Integer, default=0, nullable=False, doc="Number of subscribers")
+    last_event_date = Column(TIMESTAMP(timezone=True), nullable=True, doc="Last event creation timestamp")
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, doc="Last stats update")
+
+    # Relationship to User
+    user = relationship("User", back_populates="subscription_stats")
+
+    def __repr__(self):
+        return f"<UserSubscriptionStats(user_id={self.user_id}, events={self.total_events_count}, subscribers={self.subscribers_count})>"
+
+    def to_dict(self):
+        return {
+            "user_id": self.user_id,
+            "new_events_count": self.new_events_count,
+            "total_events_count": self.total_events_count,
+            "subscribers_count": self.subscribers_count,
+            "last_event_date": self.last_event_date.isoformat() if self.last_event_date else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -63,16 +63,29 @@ class AppStyles {
 
   static const Color cardBackgroundColor = Color(0xFFF2F2F7);
 
-  static const LinearGradient splashGradient = LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFEC4899)]);
+  static const LinearGradient splashGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFEC4899)],
+  );
 
   static const EdgeInsets cardPadding = EdgeInsets.all(16);
   static const EdgeInsets smallPadding = EdgeInsets.all(8);
   static const EdgeInsets largePadding = EdgeInsets.all(24);
   static const EdgeInsets screenPadding = EdgeInsets.all(16);
-  static const EdgeInsets listItemPadding = EdgeInsets.symmetric(horizontal: 16, vertical: 8);
-  static const EdgeInsets buttonPadding = EdgeInsets.symmetric(horizontal: 24, vertical: 12);
+  static const EdgeInsets listItemPadding = EdgeInsets.symmetric(
+    horizontal: 16,
+    vertical: 8,
+  );
+  static const EdgeInsets buttonPadding = EdgeInsets.symmetric(
+    horizontal: 24,
+    vertical: 12,
+  );
   static const EdgeInsets dialogPadding = EdgeInsets.all(20);
-  static const EdgeInsets sectionPadding = EdgeInsets.symmetric(vertical: 12, horizontal: 16);
+  static const EdgeInsets sectionPadding = EdgeInsets.symmetric(
+    vertical: 12,
+    horizontal: 16,
+  );
 
   static const double spacingXS = 4.0;
   static const double spacingS = 8.0;
@@ -87,17 +100,43 @@ class AppStyles {
   static const double cardElevation = 2.0;
   static const double dialogElevation = 8.0;
 
-  static const TextStyle headlineSmall = TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor, decoration: TextDecoration.none);
+  static const TextStyle headlineSmall = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: textColor,
+    decoration: TextDecoration.none,
+  );
 
-  static const TextStyle cardTitle = TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor, decoration: TextDecoration.none);
+  static const TextStyle cardTitle = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: textColor,
+    decoration: TextDecoration.none,
+  );
 
-  static const TextStyle cardSubtitle = TextStyle(fontSize: 14, color: secondaryTextColor, decoration: TextDecoration.none);
+  static const TextStyle cardSubtitle = TextStyle(
+    fontSize: 14,
+    color: secondaryTextColor,
+    decoration: TextDecoration.none,
+  );
 
-  static const TextStyle bodyText = TextStyle(fontSize: 16, color: textColor, decoration: TextDecoration.none);
+  static const TextStyle bodyText = TextStyle(
+    fontSize: 16,
+    color: textColor,
+    decoration: TextDecoration.none,
+  );
 
-  static const TextStyle bodyTextSmall = TextStyle(fontSize: 13, color: secondaryTextColor, decoration: TextDecoration.none);
+  static const TextStyle bodyTextSmall = TextStyle(
+    fontSize: 13,
+    color: secondaryTextColor,
+    decoration: TextDecoration.none,
+  );
 
-  static const TextStyle buttonText = TextStyle(fontSize: 16, fontWeight: FontWeight.w600, decoration: TextDecoration.none);
+  static const TextStyle buttonText = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    decoration: TextDecoration.none,
+  );
 
   static Color colorWithOpacity(Color color, double opacity) {
     final int alpha = (opacity * 255).round().clamp(0, 255);
@@ -107,8 +146,15 @@ class AppStyles {
   static BoxDecoration get cardDecoration => BoxDecoration(
     color: AppStyles.white,
     borderRadius: cardRadius,
-    boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black, 0.098), blurRadius: 4, offset: const Offset(0, 2))],
+    boxShadow: [
+      BoxShadow(
+        color: AppStyles.colorWithOpacity(AppStyles.black, 0.098),
+        blurRadius: 4,
+        offset: const Offset(0, 2),
+      ),
+    ],
   );
 
-  static BoxDecoration get iOSCardDecoration => BoxDecoration(color: cardBackgroundColor, borderRadius: cardRadius);
+  static BoxDecoration get iOSCardDecoration =>
+      BoxDecoration(color: cardBackgroundColor, borderRadius: cardRadius);
 }

@@ -24,7 +24,8 @@ class PeopleGroupsScreen extends ConsumerStatefulWidget {
   ConsumerState<PeopleGroupsScreen> createState() => _PeopleGroupsScreenState();
 }
 
-class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with WidgetsBindingObserver {
+class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
+    with WidgetsBindingObserver {
   late PageController _pageController;
   int _tabIndex = 0;
   TextEditingController searchController = TextEditingController();
@@ -75,7 +76,9 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
 
     try {
       // Fetch contacts from backend API (not migrated to Realtime)
-      final contactsData = await ApiClient().fetchContacts(currentUserId: userId);
+      final contactsData = await ApiClient().fetchContacts(
+        currentUserId: userId,
+      );
 
       if (mounted) {
         setState(() {
@@ -97,9 +100,19 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text(AppLocalizations.of(context)?.createGroup ?? 'Create Group'),
-        content: Text(AppLocalizations.of(context)?.seriesEditNotAvailable ?? 'This feature will be available soon'),
-        actions: [CupertinoDialogAction(child: Text(AppLocalizations.of(context)?.ok ?? 'OK'), onPressed: () => Navigator.of(context).pop())],
+        title: Text(
+          AppLocalizations.of(context)?.createGroup ?? 'Create Group',
+        ),
+        content: Text(
+          AppLocalizations.of(context)?.seriesEditNotAvailable ??
+              'This feature will be available soon',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: Text(AppLocalizations.of(context)?.ok ?? 'OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
     );
   }
@@ -125,14 +138,33 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          PlatformWidgets.platformIcon(isPermissionError ? CupertinoIcons.person_2 : CupertinoIcons.exclamationmark_triangle, size: 64, color: isPermissionError ? AppStyles.orange600 : AppStyles.grey500),
+          PlatformWidgets.platformIcon(
+            isPermissionError
+                ? CupertinoIcons.person_2
+                : CupertinoIcons.exclamationmark_triangle,
+            size: 64,
+            color: isPermissionError ? AppStyles.orange600 : AppStyles.grey500,
+          ),
           const SizedBox(height: 16),
-          Text(isPermissionError ? l10n.contactsPermissionRequired : l10n.errorLoadingFriends, style: AppStyles.cardTitle.copyWith(color: AppStyles.black87, fontSize: 18)),
+          Text(
+            isPermissionError
+                ? l10n.contactsPermissionRequired
+                : l10n.errorLoadingFriends,
+            style: AppStyles.cardTitle.copyWith(
+              color: AppStyles.black87,
+              fontSize: 18,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
-            isPermissionError ? l10n.contactsPermissionInstructions : error.toString(),
+            isPermissionError
+                ? l10n.contactsPermissionInstructions
+                : error.toString(),
             textAlign: TextAlign.center,
-            style: AppStyles.bodyText.copyWith(color: AppStyles.grey600, fontSize: 16),
+            style: AppStyles.bodyText.copyWith(
+              color: AppStyles.grey600,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 24),
           if (isPermissionError) ...[
@@ -142,7 +174,9 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
               text: l10n.allowAccess,
               icon: CupertinoIcons.person_2,
               onPressed: () async {
-                final hasPermission = await Permission.contacts.request().isGranted;
+                final hasPermission = await Permission.contacts
+                    .request()
+                    .isGranted;
                 if (hasPermission) {
                   await _loadContacts();
                 } else {
@@ -175,7 +209,10 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
               child: PlatformWidgets.platformTextField(
                 controller: searchController,
                 placeholder: l10n.searchFriends,
-                prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.search, color: AppStyles.grey400),
+                prefixIcon: PlatformWidgets.platformIcon(
+                  CupertinoIcons.search,
+                  color: AppStyles.grey400,
+                ),
               ),
             ),
           ),
@@ -185,9 +222,19 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  PlatformWidgets.platformIcon(CupertinoIcons.search, size: 64, color: AppStyles.grey400),
+                  PlatformWidgets.platformIcon(
+                    CupertinoIcons.search,
+                    size: 64,
+                    color: AppStyles.grey400,
+                  ),
                   const SizedBox(height: 16),
-                  Text(l10n.noContactsMessage, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey600, fontSize: 18)),
+                  Text(
+                    l10n.noContactsMessage,
+                    style: AppStyles.cardTitle.copyWith(
+                      color: AppStyles.grey600,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -201,9 +248,19 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PlatformWidgets.platformIcon(CupertinoIcons.person_2, size: 64, color: AppStyles.grey400),
+            PlatformWidgets.platformIcon(
+              CupertinoIcons.person_2,
+              size: 64,
+              color: AppStyles.grey400,
+            ),
             const SizedBox(height: 16),
-            Text(l10n.noContactsMessage, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey600, fontSize: 18)),
+            Text(
+              l10n.noContactsMessage,
+              style: AppStyles.cardTitle.copyWith(
+                color: AppStyles.grey600,
+                fontSize: 18,
+              ),
+            ),
           ],
         ),
       );
@@ -213,7 +270,11 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
       onRefresh: () async {
         await _loadContacts();
       },
-      padding: EdgeInsets.only(top: PlatformWidgets.isIOS ? 12.0 : 8.0, left: 8.0, right: 8.0),
+      padding: EdgeInsets.only(
+        top: PlatformWidgets.isIOS ? 12.0 : 8.0,
+        left: 8.0,
+        right: 8.0,
+      ),
       itemCount: filteredContacts.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -222,7 +283,10 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
             child: PlatformWidgets.platformTextField(
               controller: searchController,
               placeholder: l10n.searchFriends,
-              prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.search, color: AppStyles.grey400),
+              prefixIcon: PlatformWidgets.platformIcon(
+                CupertinoIcons.search,
+                color: AppStyles.grey400,
+              ),
             ),
           );
         }
@@ -245,17 +309,28 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
 
     return groupsAsync.when(
       data: (groups) {
-        final userGroups = groups.where((group) => group.members.any((member) => member.id == userId)).toList();
+        final userGroups = groups
+            .where(
+              (group) => group.members.any((member) => member.id == userId),
+            )
+            .toList();
 
         if (userGroups.isEmpty) {
-          return EmptyState(message: l10n.noGroupsMessage, icon: CupertinoIcons.group);
+          return EmptyState(
+            message: l10n.noGroupsMessage,
+            icon: CupertinoIcons.group,
+          );
         }
 
         return PlatformListView(
           onRefresh: () async {
             ref.invalidate(groupsStreamProvider);
           },
-          padding: EdgeInsets.only(top: PlatformWidgets.isIOS ? 12.0 : 8.0, left: 8.0, right: 8.0),
+          padding: EdgeInsets.only(
+            top: PlatformWidgets.isIOS ? 12.0 : 8.0,
+            left: 8.0,
+            right: 8.0,
+          ),
           itemCount: userGroups.length,
           itemBuilder: (context, index) {
             final group = userGroups[index];
@@ -291,19 +366,36 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
           leading: Container(
             width: 50,
             height: 50,
-            decoration: BoxDecoration(color: AppStyles.purple600, borderRadius: BorderRadius.circular(25)),
+            decoration: BoxDecoration(
+              color: AppStyles.purple600,
+              borderRadius: BorderRadius.circular(25),
+            ),
             child: Icon(CupertinoIcons.group, color: AppStyles.white, size: 24),
           ),
           title: Text(group.name, style: AppStyles.cardTitle),
-          subtitle: Text(l10n.membersLabel(group.members.length), style: AppStyles.bodyText.copyWith(color: AppStyles.grey600)),
-          trailing: PlatformWidgets.platformIcon(CupertinoIcons.chevron_right, color: AppStyles.grey400),
+          subtitle: Text(
+            l10n.membersLabel(group.members.length),
+            style: AppStyles.bodyText.copyWith(color: AppStyles.grey600),
+          ),
+          trailing: PlatformWidgets.platformIcon(
+            CupertinoIcons.chevron_right,
+            color: AppStyles.grey400,
+          ),
           onTap: () {
             showCupertinoDialog(
               context: context,
               builder: (context) => CupertinoAlertDialog(
                 title: Text(context.l10n.groupDetails),
-                content: Text(AppLocalizations.of(context)?.seriesEditNotAvailable ?? 'This feature will be available soon'),
-                actions: [CupertinoDialogAction(child: Text(AppLocalizations.of(context)?.ok ?? 'OK'), onPressed: () => Navigator.of(context).pop())],
+                content: Text(
+                  AppLocalizations.of(context)?.seriesEditNotAvailable ??
+                      'This feature will be available soon',
+                ),
+                actions: [
+                  CupertinoDialogAction(
+                    child: Text(AppLocalizations.of(context)?.ok ?? 'OK'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
               ),
             );
           },
@@ -331,7 +423,12 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
         children: [
           Container(
             margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: isIOS ? CupertinoColors.systemGroupedBackground.resolveFrom(context) : AppStyles.grey100, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: isIOS
+                  ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
+                  : AppStyles.grey100,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -341,15 +438,29 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
                       setState(() {
                         _tabIndex = 0;
                       });
-                      _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                      _pageController.animateToPage(
+                        0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(color: _tabIndex == 0 ? AppStyles.primary600 : AppStyles.transparent, borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(
+                        color: _tabIndex == 0
+                            ? AppStyles.primary600
+                            : AppStyles.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Text(
                         l10n.contacts,
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: _tabIndex == 0 ? AppStyles.white : AppStyles.grey600, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: _tabIndex == 0
+                              ? AppStyles.white
+                              : AppStyles.grey600,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -361,15 +472,29 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
                       setState(() {
                         _tabIndex = 1;
                       });
-                      _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                      _pageController.animateToPage(
+                        1,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(color: _tabIndex == 1 ? AppStyles.primary600 : AppStyles.transparent, borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(
+                        color: _tabIndex == 1
+                            ? AppStyles.primary600
+                            : AppStyles.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Text(
                         l10n.groups,
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: _tabIndex == 1 ? AppStyles.white : AppStyles.grey600, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: _tabIndex == 1
+                              ? AppStyles.white
+                              : AppStyles.grey600,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

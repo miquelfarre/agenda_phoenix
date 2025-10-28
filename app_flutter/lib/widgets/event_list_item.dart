@@ -4,7 +4,8 @@ import '../widgets/event_card.dart';
 import '../widgets/event_card/event_card_config.dart';
 
 typedef EventTapCallback = void Function(Event event);
-typedef EventActionCallback = Future<void> Function(Event event, {bool shouldNavigate});
+typedef EventActionCallback =
+    Future<void> Function(Event event, {bool shouldNavigate});
 
 class EventListItem extends StatelessWidget {
   final Event event;
@@ -12,7 +13,13 @@ class EventListItem extends StatelessWidget {
   final EventActionCallback onDelete;
   final bool navigateAfterDelete;
 
-  const EventListItem({super.key, required this.event, required this.onTap, required this.onDelete, this.navigateAfterDelete = false});
+  const EventListItem({
+    super.key,
+    required this.event,
+    required this.onTap,
+    required this.onDelete,
+    this.navigateAfterDelete = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +27,11 @@ class EventListItem extends StatelessWidget {
       key: Key('event_list_item_${event.id}'),
       event: event,
       onTap: () => onTap(event),
-      config: EventCardConfig(onDelete: onDelete, navigateAfterDelete: navigateAfterDelete, showNewBadge: true),
+      config: EventCardConfig(
+        onDelete: onDelete,
+        navigateAfterDelete: navigateAfterDelete,
+        showNewBadge: true,
+      ),
     );
   }
 }

@@ -13,10 +13,16 @@ class CalendarEventsScreen extends ConsumerStatefulWidget {
   final String calendarName;
   final String? calendarColor;
 
-  const CalendarEventsScreen({super.key, required this.calendarId, required this.calendarName, this.calendarColor});
+  const CalendarEventsScreen({
+    super.key,
+    required this.calendarId,
+    required this.calendarName,
+    this.calendarColor,
+  });
 
   @override
-  ConsumerState<CalendarEventsScreen> createState() => _CalendarEventsScreenState();
+  ConsumerState<CalendarEventsScreen> createState() =>
+      _CalendarEventsScreenState();
 }
 
 class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
@@ -43,7 +49,8 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
     if (query.isEmpty) return events;
 
     return events.where((event) {
-      return event.title.toLowerCase().contains(query) || (event.description?.toLowerCase().contains(query) ?? false);
+      return event.title.toLowerCase().contains(query) ||
+          (event.description?.toLowerCase().contains(query) ?? false);
     }).toList();
   }
 
@@ -70,7 +77,9 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
       error: (_, __) => <Event>[],
     );
 
-    final calendarEvents = allEvents.where((event) => event.calendarId == widget.calendarId).toList();
+    final calendarEvents = allEvents
+        .where((event) => event.calendarId == widget.calendarId)
+        .toList();
 
     calendarEvents.sort((a, b) => a.startDate.compareTo(b.startDate));
 
@@ -87,11 +96,18 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
             Container(
               width: 12,
               height: 12,
-              decoration: BoxDecoration(color: calendarColor, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: calendarColor,
+                shape: BoxShape.circle,
+              ),
             ),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(widget.calendarName, style: const TextStyle(fontSize: 16), overflow: TextOverflow.ellipsis),
+              child: Text(
+                widget.calendarName,
+                style: const TextStyle(fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -107,7 +123,11 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(controller: _searchController, placeholder: AppLocalizations.of(context)!.searchEvents, backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context)),
+            child: CupertinoSearchTextField(
+              controller: _searchController,
+              placeholder: AppLocalizations.of(context)!.searchEvents,
+              backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context),
+            ),
           ),
         ),
 
@@ -118,7 +138,11 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
               children: [
                 Text(
                   '${eventsToShow.length} ${eventsToShow.length == 1 ? AppLocalizations.of(context)!.event : AppLocalizations.of(context)!.events}',
-                  style: TextStyle(fontSize: 14, color: AppStyles.grey600, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppStyles.grey600,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -133,9 +157,21 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(CupertinoIcons.calendar, size: 64, color: CupertinoColors.systemGrey),
+                  const Icon(
+                    CupertinoIcons.calendar,
+                    size: 64,
+                    color: CupertinoColors.systemGrey,
+                  ),
                   const SizedBox(height: 16),
-                  Text(_searchController.text.isNotEmpty ? AppLocalizations.of(context)!.noEventsFound : AppLocalizations.of(context)!.noEvents, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 16)),
+                  Text(
+                    _searchController.text.isNotEmpty
+                        ? AppLocalizations.of(context)!.noEventsFound
+                        : AppLocalizations.of(context)!.noEvents,
+                    style: const TextStyle(
+                      color: CupertinoColors.systemGrey,
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -146,11 +182,18 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
               final event = eventsToShow[index];
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: EventCard(
                   event: event,
                   onTap: () {
-                    Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => EventDetailScreen(event: event)));
+                    Navigator.of(context).push(
+                      CupertinoPageRoute<void>(
+                        builder: (_) => EventDetailScreen(event: event),
+                      ),
+                    );
                   },
                   config: EventCardConfig.readOnly(),
                 ),

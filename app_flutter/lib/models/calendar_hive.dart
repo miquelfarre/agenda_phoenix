@@ -36,7 +36,18 @@ class CalendarHive extends HiveObject {
   @HiveField(9)
   bool deleteAssociatedEvents;
 
-  CalendarHive({required this.id, required this.ownerId, required this.name, this.description, required this.color, this.isDefault = false, this.isShared = false, required this.createdAt, required this.updatedAt, this.deleteAssociatedEvents = false});
+  CalendarHive({
+    required this.id,
+    required this.ownerId,
+    required this.name,
+    this.description,
+    required this.color,
+    this.isDefault = false,
+    this.isShared = false,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deleteAssociatedEvents = false,
+  });
 
   factory CalendarHive.fromJson(Map<String, dynamic> json) => CalendarHive(
     id: json['id'].toString(),
@@ -65,7 +76,18 @@ class CalendarHive extends HiveObject {
   };
 
   Calendar toCalendar() {
-    return Calendar(id: id, ownerId: ownerId, name: name, description: description, color: color, isDefault: isDefault, isShared: isShared, deleteAssociatedEvents: deleteAssociatedEvents, createdAt: createdAt, updatedAt: updatedAt);
+    return Calendar(
+      id: id,
+      ownerId: ownerId,
+      name: name,
+      description: description,
+      color: color,
+      isDefault: isDefault,
+      isShared: isShared,
+      deleteAssociatedEvents: deleteAssociatedEvents,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
   }
 
   static CalendarHive fromCalendar(Calendar calendar) {

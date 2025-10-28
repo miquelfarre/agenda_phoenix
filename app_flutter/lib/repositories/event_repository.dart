@@ -16,7 +16,8 @@ class EventRepository {
   Box<EventHive>? _box;
   RealtimeChannel? _realtimeChannel;
   RealtimeChannel? _interactionsChannel;
-  final StreamController<List<Event>> _eventsStreamController = StreamController<List<Event>>.broadcast();
+  final StreamController<List<Event>> _eventsStreamController =
+      StreamController<List<Event>>.broadcast();
 
   List<Event> _cachedEvents = [];
   DateTime? _initialSyncCompletedAt;
@@ -45,7 +46,9 @@ class EventRepository {
     if (_box == null) return;
 
     try {
-      _cachedEvents = _box!.values.map((eventHive) => eventHive.toEvent()).toList();
+      _cachedEvents = _box!.values
+          .map((eventHive) => eventHive.toEvent())
+          .toList();
 
       print('✅ Loaded ${_cachedEvents.length} events from Hive cache');
     } catch (e) {
@@ -73,14 +76,21 @@ class EventRepository {
 
       // Extract the most recent updated_at timestamp from server data (server time reference)
       if (_cachedEvents.isNotEmpty) {
-        final updatedAtTimestamps = _cachedEvents.map((e) => e.updatedAt).whereType<DateTime>().toList();
+        final updatedAtTimestamps = _cachedEvents
+            .map((e) => e.updatedAt)
+            .whereType<DateTime>()
+            .toList();
 
         if (updatedAtTimestamps.isNotEmpty) {
           // Find the most recent timestamp
-          final latestUpdate = updatedAtTimestamps.reduce((a, b) => a.isAfter(b) ? a : b);
+          final latestUpdate = updatedAtTimestamps.reduce(
+            (a, b) => a.isAfter(b) ? a : b,
+          );
           _initialSyncCompletedAt = latestUpdate.toUtc();
           _rt.setServerSyncTs(_initialSyncCompletedAt!);
-          print('✅ Sync timestamp set to: ${_initialSyncCompletedAt!.toIso8601String()} (server time)');
+          print(
+            '✅ Sync timestamp set to: ${_initialSyncCompletedAt!.toIso8601String()} (server time)',
+          );
         } else {
           // Fallback to client time if no timestamps available
           _initialSyncCompletedAt = DateTime.now().toUtc();
@@ -114,10 +124,14 @@ class EventRepository {
   /// Manually remove an event from cache
   /// Used when realtime DELETE events don't work properly
   void removeEventFromCache(int eventId) {
-    print('🗑️ [EventRepository] removeEventFromCache START - eventId: $eventId');
+    print(
+      '🗑️ [EventRepository] removeEventFromCache START - eventId: $eventId',
+    );
 
     final eventBefore = _cachedEvents.where((e) => e.id == eventId).firstOrNull;
-    print('🗑️ [EventRepository] Event in cache: ${eventBefore != null ? '"${eventBefore.name}"' : 'NOT FOUND'}');
+    print(
+      '🗑️ [EventRepository] Event in cache: ${eventBefore != null ? '"${eventBefore.name}"' : 'NOT FOUND'}',
+    );
     print('🗑️ [EventRepository] Cache size before: ${_cachedEvents.length}');
 
     _cachedEvents.removeWhere((e) => e.id == eventId);
@@ -128,11 +142,18 @@ class EventRepository {
 
     print('🗑️ [EventRepository] Emitting updated events to stream...');
     _emitCurrentEvents();
-    print('✅ [EventRepository] Event manually removed and stream emitted - ID $eventId');
+    print(
+      '✅ [EventRepository] Event manually removed and stream emitted - ID $eventId',
+    );
   }
 
   Future<void> _startRealtimeSubscription() async {
-    _realtimeChannel = RealtimeUtils.subscribeTable(client: _supabaseService.client, schema: 'public', table: 'events', onChange: _handleRealtimeEvent);
+    _realtimeChannel = RealtimeUtils.subscribeTable(
+      client: _supabaseService.client,
+      schema: 'public',
+      table: 'events',
+      onChange: _handleRealtimeEvent,
+    );
 
     print('✅ Realtime subscription started for events table');
   }
@@ -143,7 +164,11 @@ class EventRepository {
       client: _supabaseService.client,
       schema: 'public',
       table: 'event_interactions',
-      filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'user_id',
+        value: userId.toString(),
+      ),
       onChange: _handleInteractionChange,
     );
 
@@ -156,23 +181,33 @@ class EventRepository {
     print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
 
     if (payload.eventType == PostgresChangeEvent.delete) {
-      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
+      print(
+        '✅ [FILTER] DELETE event - processing immediately (skip timestamp check)',
+      );
       return _rt.shouldProcessDelete();
     }
 
     final ct = DateTime.tryParse(payload.commitTimestamp?.toString() ?? '');
     final ok = _rt.shouldProcessInsertOrUpdate(ct);
     if (!ok) {
-      print('🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate');
+      print(
+        '🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate',
+      );
     }
     return ok;
   }
 
   void _handleInteractionChange(PostgresChangePayload payload) {
     print('📡 [INTERACTION] Realtime event received: ${payload.eventType}');
-    print('📡 [INTERACTION] Event ID: ${payload.newRecord['event_id'] ?? payload.oldRecord['event_id']}');
-    print('📡 [INTERACTION] User ID: ${payload.newRecord['user_id'] ?? payload.oldRecord['user_id']}');
-    print('📡 [INTERACTION] Current user: ${ConfigService.instance.currentUserId}');
+    print(
+      '📡 [INTERACTION] Event ID: ${payload.newRecord['event_id'] ?? payload.oldRecord['event_id']}',
+    );
+    print(
+      '📡 [INTERACTION] User ID: ${payload.newRecord['user_id'] ?? payload.oldRecord['user_id']}',
+    );
+    print(
+      '📡 [INTERACTION] Current user: ${ConfigService.instance.currentUserId}',
+    );
 
     // Filter historical events using timestamp comparison
     if (!_shouldProcessEvent(payload, 'interaction')) {
@@ -183,7 +218,9 @@ class EventRepository {
     print('✅ [INTERACTION] Event passed filter, processing...');
 
     try {
-      final eventId = payload.newRecord['event_id'] as int? ?? payload.oldRecord['event_id'] as int?;
+      final eventId =
+          payload.newRecord['event_id'] as int? ??
+          payload.oldRecord['event_id'] as int?;
       final userId = ConfigService.instance.currentUserId;
 
       print('🔍 [INTERACTION] Processing event_id=$eventId for user=$userId');
@@ -196,11 +233,15 @@ class EventRepository {
         if (payload.eventType == PostgresChangeEvent.delete) {
           print('🗑️ [INTERACTION] Handling DELETE event');
           final deletedUserId = payload.oldRecord['user_id'] as int?;
-          print('🗑️ [INTERACTION] Deleted user_id=$deletedUserId, current user=$userId, match=${deletedUserId == userId}');
+          print(
+            '🗑️ [INTERACTION] Deleted user_id=$deletedUserId, current user=$userId, match=${deletedUserId == userId}',
+          );
 
           if (deletedUserId == userId && index != -1) {
             final event = _cachedEvents[index];
-            print('🗑️ [INTERACTION] Event found: "${event.name}", owner=${event.ownerId}, is_owner=${event.ownerId == userId}');
+            print(
+              '🗑️ [INTERACTION] Event found: "${event.name}", owner=${event.ownerId}, is_owner=${event.ownerId == userId}',
+            );
 
             // Only remove event if user is NOT the owner
             if (event.ownerId != userId) {
@@ -208,7 +249,9 @@ class EventRepository {
               _cachedEvents.removeAt(index);
               _box?.delete(eventId);
               _emitCurrentEvents();
-              print('✅ Event removed from list (interaction deleted): ${event.name}');
+              print(
+                '✅ Event removed from list (interaction deleted): ${event.name}',
+              );
             } else {
               // User is owner, just clear interaction data
               print('🗑️ [INTERACTION] Clearing interaction data (is owner)');
@@ -236,10 +279,14 @@ class EventRepository {
               );
               _cachedEvents[index] = updatedEvent;
               _emitCurrentEvents();
-              print('✅ Event interaction cleared (owner deleted interaction): ${event.name}');
+              print(
+                '✅ Event interaction cleared (owner deleted interaction): ${event.name}',
+              );
             }
           } else {
-            print('ℹ️ [INTERACTION] Ignoring DELETE - user_match=${deletedUserId == userId}, in_cache=${index != -1}');
+            print(
+              'ℹ️ [INTERACTION] Ignoring DELETE - user_match=${deletedUserId == userId}, in_cache=${index != -1}',
+            );
           }
           return;
         }
@@ -249,12 +296,16 @@ class EventRepository {
           final currentEvent = _cachedEvents[index];
 
           if (payload.newRecord['user_id'] == userId) {
-            final updatedInteractionData = Map<String, dynamic>.from(currentEvent.interactionData ?? {});
+            final updatedInteractionData = Map<String, dynamic>.from(
+              currentEvent.interactionData ?? {},
+            );
 
             updatedInteractionData['status'] = payload.newRecord['status'];
-            updatedInteractionData['interaction_type'] = payload.newRecord['interaction_type'];
+            updatedInteractionData['interaction_type'] =
+                payload.newRecord['interaction_type'];
             updatedInteractionData['note'] = payload.newRecord['note'];
-            updatedInteractionData['updated_at'] = payload.newRecord['updated_at'];
+            updatedInteractionData['updated_at'] =
+                payload.newRecord['updated_at'];
 
             final updatedEvent = Event(
               id: currentEvent.id,
@@ -373,11 +424,17 @@ class EventRepository {
     print('🗑️ [EventRepository] _handleDelete START - eventId: $id');
 
     final eventBefore = _cachedEvents.where((e) => e.id == id).firstOrNull;
-    print('🗑️ [EventRepository] Event in cache before delete: ${eventBefore != null ? '"${eventBefore.name}"' : 'NOT FOUND'}');
-    print('🗑️ [EventRepository] Cache size before delete: ${_cachedEvents.length}');
+    print(
+      '🗑️ [EventRepository] Event in cache before delete: ${eventBefore != null ? '"${eventBefore.name}"' : 'NOT FOUND'}',
+    );
+    print(
+      '🗑️ [EventRepository] Cache size before delete: ${_cachedEvents.length}',
+    );
 
     _cachedEvents.removeWhere((e) => e.id == id);
-    print('🗑️ [EventRepository] Cache size after removeWhere: ${_cachedEvents.length}');
+    print(
+      '🗑️ [EventRepository] Cache size after removeWhere: ${_cachedEvents.length}',
+    );
 
     _box?.delete(id);
     print('🗑️ [EventRepository] Deleted from Hive box');
@@ -404,8 +461,12 @@ class EventRepository {
 
   void _emitCurrentEvents() {
     final events = getLocalEvents();
-    print('📤 [EventRepository] _emitCurrentEvents - Emitting ${events.length} events to stream');
-    print('📤 [EventRepository] Event IDs: ${events.map((e) => e.id).take(10).toList()}${events.length > 10 ? '...' : ''}');
+    print(
+      '📤 [EventRepository] _emitCurrentEvents - Emitting ${events.length} events to stream',
+    );
+    print(
+      '📤 [EventRepository] Event IDs: ${events.map((e) => e.id).take(10).toList()}${events.length > 10 ? '...' : ''}',
+    );
     _eventsStreamController.add(events);
   }
 

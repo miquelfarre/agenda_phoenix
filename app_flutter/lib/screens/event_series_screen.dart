@@ -14,14 +14,19 @@ class EventSeriesScreen extends ConsumerWidget {
   final List<Event> events;
   final String seriesName;
 
-  const EventSeriesScreen({super.key, required this.events, required this.seriesName});
+  const EventSeriesScreen({
+    super.key,
+    required this.events,
+    required this.seriesName,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
 
     // Sort events by date
-    final sortedEvents = List<Event>.from(events)..sort((a, b) => a.date.compareTo(b.date));
+    final sortedEvents = List<Event>.from(events)
+      ..sort((a, b) => a.date.compareTo(b.date));
 
     return AdaptivePageScaffold(
       title: l10n.eventSeries,
@@ -36,10 +41,17 @@ class EventSeriesScreen extends ConsumerWidget {
                 children: [
                   Text(
                     seriesName,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppStyles.grey700),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppStyles.grey700,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Text('${sortedEvents.length} ${sortedEvents.length == 1 ? l10n.event : l10n.events}', style: TextStyle(fontSize: 14, color: AppStyles.grey600)),
+                  Text(
+                    '${sortedEvents.length} ${sortedEvents.length == 1 ? l10n.event : l10n.events}',
+                    style: TextStyle(fontSize: 14, color: AppStyles.grey600),
+                  ),
                 ],
               ),
             ),
@@ -47,20 +59,33 @@ class EventSeriesScreen extends ConsumerWidget {
             Expanded(
               child: sortedEvents.isEmpty
                   ? Center(
-                      child: EmptyState(message: l10n.noEventsInSeries, icon: CupertinoIcons.calendar),
+                      child: EmptyState(
+                        message: l10n.noEventsInSeries,
+                        icon: CupertinoIcons.calendar,
+                      ),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(16.0),
                       itemCount: sortedEvents.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final event = sortedEvents[index];
                         return EventCard(
                           event: event,
                           onTap: () {
-                            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => EventDetailScreen(event: event)));
+                            Navigator.of(context).push(
+                              CupertinoPageRoute(
+                                builder: (context) =>
+                                    EventDetailScreen(event: event),
+                              ),
+                            );
                           },
-                          config: EventCardConfig(navigateAfterDelete: false, onDelete: null, onEdit: null),
+                          config: EventCardConfig(
+                            navigateAfterDelete: false,
+                            onDelete: null,
+                            onEdit: null,
+                          ),
                         );
                       },
                     ),

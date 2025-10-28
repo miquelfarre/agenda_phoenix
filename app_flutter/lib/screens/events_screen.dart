@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 
 import 'package:flutter/cupertino.dart';
@@ -15,7 +14,6 @@ import 'event_detail_screen.dart';
 import 'create_edit_event_screen.dart';
 
 import '../services/config_service.dart';
-import '../repositories/event_repository.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +35,13 @@ class EventsData {
   final int subscribedCount;
   final int allCount;
 
-  EventsData({required this.events, required this.myEventsCount, required this.invitationsCount, required this.subscribedCount, required this.allCount});
+  EventsData({
+    required this.events,
+    required this.myEventsCount,
+    required this.invitationsCount,
+    required this.subscribedCount,
+    required this.allCount,
+  });
 }
 
 class EventsScreen extends ConsumerStatefulWidget {
@@ -51,10 +55,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _currentFilter = 'all';
   String _searchQuery = '';
-  EventsData? _eventsData;
-  bool _isLoading = true;
-  EventRepository? _eventRepository;
-  StreamSubscription<List<Event>>? _eventsSubscription;
 
   @override
   void initState() {
@@ -65,115 +65,66 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         _searchQuery = _searchController.text;
       });
     });
-
-    _initializeRepository();
   }
 
-  Future<void> _initializeRepository() async {
-    try {
-      _eventRepository = ref.read(eventRepositoryProvider);
+  // Build EventsData from event list (pure function)
+  static EventsData _buildEventsData(List<Event> events) {
+    final userId = ConfigService.instance.currentUserId;
 
-      _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
-        print('📥 [EventsScreen] Stream received ${events.length} events');
-        print('📥 [EventsScreen] Event IDs: ${events.map((e) => e.id).take(10).toList()}${events.length > 10 ? '...' : ''}');
-        _buildEventsDataFromRepository(events);
-      });
+    final eventItems = <EventWithInteraction>[];
+    for (final event in events) {
+      final eventOwnerId = event.ownerId;
+      final isOwner = eventOwnerId == userId;
 
-      final events = _eventRepository?.getLocalEvents() ?? [];
-      _buildEventsDataFromRepository(events);
-    } catch (e) {
-      print('🔴 [EventsScreen] Error initializing repository: $e');
-      setState(() => _isLoading = false);
+      String? interactionType;
+      String? invitationStatus;
+
+      if (!isOwner && event.interactionData != null) {
+        interactionType = event.interactionData!['interaction_type'] as String?;
+        invitationStatus = event.interactionData!['status'] as String?;
+      }
+
+      eventItems.add(
+        EventWithInteraction(event, interactionType, invitationStatus),
+      );
     }
-  }
 
-  Future<void> _loadData() async {
-    // Uncomment for debugging:
-    // print('🔵 [EventsScreen] _loadData START');
-    setState(() => _isLoading = true);
-    try {
-      // Uncomment for debugging:
-      // print('🔵 [EventsScreen] Fetching events from EventRepository...');
+    final myEvents = eventItems
+        .where(
+          (e) =>
+              e.event.ownerId == userId ||
+              (e.event.ownerId != userId &&
+                  (e.interactionType == 'invited' ||
+                      e.interactionType == 'joined') &&
+                  e.invitationStatus == 'accepted'),
+        )
+        .length;
+    final invitations = eventItems
+        .where(
+          (e) =>
+              e.event.ownerId != userId &&
+              e.interactionType == 'invited' &&
+              e.invitationStatus == 'pending',
+        )
+        .length;
+    final subscribed = eventItems
+        .where(
+          (e) => e.event.ownerId != userId && e.interactionType == 'subscribed',
+        )
+        .length;
 
-      await _eventRepository?.fetchAndSyncEvents();
-
-      final events = _eventRepository?.getLocalEvents() ?? [];
-      _buildEventsDataFromRepository(events);
-
-      // Uncomment for debugging:
-      // print('🔵 [EventsScreen] _loadData completed');
-    } catch (e) {
-      print('🔴 [EventsScreen] ERROR in _loadData: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _buildEventsDataFromRepository(List<Event> events) {
-    print('🔧 [EventsScreen] _buildEventsDataFromRepository START');
-    print('🔧 [EventsScreen] Received ${events.length} events from repository');
-
-    try {
-      final userId = ConfigService.instance.currentUserId;
-      print('🔧 [EventsScreen] Current userId: $userId');
-
-      final eventItems = <EventWithInteraction>[];
-      for (final event in events) {
-        final eventOwnerId = event.ownerId;
-        final isOwner = eventOwnerId == userId;
-
-        String? interactionType;
-        String? invitationStatus;
-
-        if (!isOwner && event.interactionData != null) {
-          interactionType = event.interactionData!['interaction_type'] as String?;
-          invitationStatus = event.interactionData!['status'] as String?;
-        }
-
-        eventItems.add(EventWithInteraction(event, interactionType, invitationStatus));
-      }
-
-      print('🔧 [EventsScreen] Processed ${eventItems.length} event items');
-
-      final myEvents = eventItems.where((e) => e.event.ownerId == userId || (e.event.ownerId != userId && (e.interactionType == 'invited' || e.interactionType == 'joined') && e.invitationStatus == 'accepted')).length;
-      final invitations = eventItems.where((e) => e.event.ownerId != userId && e.interactionType == 'invited' && e.invitationStatus == 'pending').length;
-      final subscribed = eventItems.where((e) => e.event.ownerId != userId && e.interactionType == 'subscribed').length;
-
-      // Uncomment for debugging:
-      // print('🔍 [EventsScreen] Filter counts:');
-      // print('   userId: $userId');
-      // print('   myEvents: $myEvents');
-      // print('   invitations: $invitations');
-      // print('   subscribed: $subscribed');
-      // print('   total: ${eventItems.length}');
-
-      final data = EventsData(events: eventItems, myEventsCount: myEvents, invitationsCount: invitations, subscribedCount: subscribed, allCount: eventItems.length);
-
-      print('🔧 [EventsScreen] Filter results - myEvents: $myEvents, invitations: $invitations, subscribed: $subscribed, all: ${eventItems.length}');
-
-      if (mounted) {
-        print('🔧 [EventsScreen] Calling setState with new data...');
-        setState(() {
-          _eventsData = data;
-          _isLoading = false;
-        });
-        print('✅ [EventsScreen] setState completed, UI should update now');
-      } else {
-        print('⚠️ [EventsScreen] Widget not mounted, skipping setState');
-      }
-    } catch (e) {
-      print('🔴 [EventsScreen] ERROR in _buildEventsDataFromRepository: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    return EventsData(
+      events: eventItems,
+      myEventsCount: myEvents,
+      invitationsCount: invitations,
+      subscribedCount: subscribed,
+      allCount: eventItems.length,
+    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _eventsSubscription?.cancel();
     super.dispose();
   }
 
@@ -182,7 +133,18 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     final isIOS = PlatformDetection.isIOS;
     final l10n = context.l10n;
 
-    Widget body = _buildBody(context, isIOS: isIOS);
+    // Watch events from StreamProvider
+    final eventsAsync = ref.watch(eventsStreamProvider);
+
+    Widget body = eventsAsync.when(
+      data: (events) => _buildBody(
+        context,
+        eventsData: _buildEventsData(events),
+        isIOS: isIOS,
+      ),
+      loading: () => Center(child: PlatformWidgets.platformLoadingIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+    );
 
     if (isIOS) {
       body = Stack(
@@ -194,7 +156,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             child: Tooltip(
               message: l10n.createEvent,
               child: AdaptiveButton(
-                config: const AdaptiveButtonConfig(variant: ButtonVariant.fab, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+                config: const AdaptiveButtonConfig(
+                  variant: ButtonVariant.fab,
+                  size: ButtonSize.medium,
+                  fullWidth: false,
+                  iconPosition: IconPosition.only,
+                ),
                 icon: CupertinoIcons.add,
                 onPressed: _showCreateEventOptions,
               ),
@@ -212,7 +179,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           ? Tooltip(
               message: l10n.createEvent,
               child: AdaptiveButton(
-                config: const AdaptiveButtonConfig(variant: ButtonVariant.fab, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+                config: const AdaptiveButtonConfig(
+                  variant: ButtonVariant.fab,
+                  size: ButtonSize.medium,
+                  fullWidth: false,
+                  iconPosition: IconPosition.only,
+                ),
                 icon: CupertinoIcons.add,
                 onPressed: _showCreateEventOptions,
               ),
@@ -221,22 +193,23 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, {required bool isIOS}) {
-    return SafeArea(child: _buildContent(isIOS));
+  Widget _buildBody(
+    BuildContext context, {
+    required EventsData eventsData,
+    required bool isIOS,
+  }) {
+    return SafeArea(child: _buildContent(eventsData, isIOS));
   }
 
-  Widget _buildContent(bool isIOS) {
-    if (_isLoading || _eventsData == null) {
-      return Center(child: PlatformWidgets.platformLoadingIndicator());
-    }
-
+  Widget _buildContent(EventsData eventsData, bool isIOS) {
     final bool isFiltered = _currentFilter != 'all' || _searchQuery.isNotEmpty;
 
     // Get all events for filter chips
-    final allEvents = _eventsData!.events.map((item) => item.event).toList();
+    final allEvents = eventsData.events.map((item) => item.event).toList();
 
     // Filter with interaction data first
-    List<EventWithInteraction> filteredItems = _applyEventTypeFilterWithInteraction(_eventsData!.events, _currentFilter);
+    List<EventWithInteraction> filteredItems =
+        _applyEventTypeFilterWithInteraction(eventsData.events, _currentFilter);
 
     // Then extract events and apply search
     List<Event> events = filteredItems.map((item) => item.event).toList();
@@ -252,12 +225,18 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Consumer(
               builder: (context, ref, _) {
-                final authAsync = ref.watch(authProvider.select((state) => state.whenData((s) => s.currentUser)));
+                final authAsync = ref.watch(
+                  authProvider.select(
+                    (state) => state.whenData((s) => s.currentUser),
+                  ),
+                );
                 final l10n = context.l10n;
                 String greeting = authAsync.maybeWhen(
                   data: (user) {
                     final name = user?.displayName.trim();
-                    return name != null && name.isNotEmpty ? l10n.helloWithName(name) : l10n.hello;
+                    return name != null && name.isNotEmpty
+                        ? l10n.helloWithName(name)
+                        : l10n.hello;
                   },
                   loading: () {
                     return l10n.hello;
@@ -271,7 +250,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     greeting,
-                    style: AppStyles.headlineSmall.copyWith(color: AppStyles.grey700, fontWeight: FontWeight.bold),
+                    style: AppStyles.headlineSmall.copyWith(
+                      color: AppStyles.grey700,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 );
               },
@@ -280,10 +262,20 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         ),
 
         SliverToBoxAdapter(
-          child: Padding(padding: const EdgeInsets.all(16.0), child: _buildSearchField(isIOS)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildSearchField(isIOS),
+          ),
         ),
 
-        SliverToBoxAdapter(child: _buildEventTypeFilters(context, allEvents, isFiltered)),
+        SliverToBoxAdapter(
+          child: _buildEventTypeFilters(
+            context,
+            eventsData,
+            allEvents,
+            isFiltered,
+          ),
+        ),
 
         _buildSliverContent(events, isFiltered, isIOS),
       ],
@@ -292,9 +284,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   Widget _buildSliverContent(List<Event> events, bool isFiltered, bool isIOS) {
     if (events.isEmpty && isFiltered) {
-      return SliverFillRemaining(hasScrollBody: false, child: _buildNoSearchResults(isIOS));
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildNoSearchResults(isIOS),
+      );
     } else if (events.isEmpty) {
-      return SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState(isIOS));
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildEmptyState(isIOS),
+      );
     } else {
       return _buildSliverEventsList(events);
     }
@@ -316,7 +314,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     for (final event in events) {
       final eventDate = event.date;
-      final dateKey = '${eventDate.year}-${eventDate.month.toString().padLeft(2, '0')}-${eventDate.day.toString().padLeft(2, '0')}';
+      final dateKey =
+          '${eventDate.year}-${eventDate.month.toString().padLeft(2, '0')}-${eventDate.day.toString().padLeft(2, '0')}';
 
       if (!groupedMap.containsKey(dateKey)) {
         groupedMap[dateKey] = [];
@@ -339,7 +338,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       return {'date': entry.key, 'events': entry.value};
     }).toList();
 
-    groupedList.sort((a, b) => (a['date'] as String).compareTo(b['date'] as String));
+    groupedList.sort(
+      (a, b) => (a['date'] as String).compareTo(b['date'] as String),
+    );
 
     return groupedList;
   }
@@ -367,11 +368,19 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
               formattedDate,
-              style: AppStyles.bodyText.copyWith(fontWeight: FontWeight.bold, color: AppStyles.grey700),
+              style: AppStyles.bodyText.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppStyles.grey700,
+              ),
             ),
           ),
           ...events.map((event) {
-            return EventListItem(event: event, onTap: _navigateToEventDetail, onDelete: _deleteEvent, navigateAfterDelete: false);
+            return EventListItem(
+              event: event,
+              onTap: _navigateToEventDetail,
+              onDelete: _deleteEvent,
+              navigateAfterDelete: false,
+            );
           }),
           const SizedBox(height: 16),
         ],
@@ -392,8 +401,29 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     } else if (eventDate == today.subtract(const Duration(days: 1))) {
       return l10n.yesterday;
     } else {
-      final weekdays = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
-      final months = [l10n.january, l10n.february, l10n.march, l10n.april, l10n.may, l10n.june, l10n.july, l10n.august, l10n.september, l10n.october, l10n.november, l10n.december];
+      final weekdays = [
+        l10n.monday,
+        l10n.tuesday,
+        l10n.wednesday,
+        l10n.thursday,
+        l10n.friday,
+        l10n.saturday,
+        l10n.sunday,
+      ];
+      final months = [
+        l10n.january,
+        l10n.february,
+        l10n.march,
+        l10n.april,
+        l10n.may,
+        l10n.june,
+        l10n.july,
+        l10n.august,
+        l10n.september,
+        l10n.october,
+        l10n.november,
+        l10n.december,
+      ];
 
       final weekday = weekdays[date.weekday - 1];
       final month = months[date.month - 1];
@@ -402,7 +432,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     }
   }
 
-  Widget _buildEventTypeFilters(BuildContext context, List<Event> allEvents, bool isFiltered) {
+  Widget _buildEventTypeFilters(
+    BuildContext context,
+    EventsData eventsData,
+    List<Event> allEvents,
+    bool isFiltered,
+  ) {
     final l10n = context.l10n;
     final currentFilter = _currentFilter;
 
@@ -410,29 +445,74 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
       child: Row(
         children: [
-          _buildFilterChip('all', l10n.allEvents, _eventsData?.allCount ?? allEvents.length, currentFilter == 'all'),
+          _buildFilterChip(
+            'all',
+            l10n.allEvents,
+            eventsData.allCount,
+            currentFilter == 'all',
+          ),
           const SizedBox(width: 8),
-          _buildFilterChip('my', l10n.myEventsFilter, _eventsData?.myEventsCount ?? 0, currentFilter == 'my'),
+          _buildFilterChip(
+            'my',
+            l10n.myEventsFilter,
+            eventsData.myEventsCount,
+            currentFilter == 'my',
+          ),
           const SizedBox(width: 8),
-          _buildFilterChip('subscribed', l10n.subscribedEvents, _eventsData?.subscribedCount ?? 0, currentFilter == 'subscribed'),
+          _buildFilterChip(
+            'subscribed',
+            l10n.subscribedEvents,
+            eventsData.subscribedCount,
+            currentFilter == 'subscribed',
+          ),
           const SizedBox(width: 8),
-          _buildFilterChip('invitations', l10n.invitationEvents, _eventsData?.invitationsCount ?? 0, currentFilter == 'invitations'),
+          _buildFilterChip(
+            'invitations',
+            l10n.invitationEvents,
+            eventsData.invitationsCount,
+            currentFilter == 'invitations',
+          ),
         ],
       ),
     );
   }
 
-  List<EventWithInteraction> _applyEventTypeFilterWithInteraction(List<EventWithInteraction> items, String filter) {
+  List<EventWithInteraction> _applyEventTypeFilterWithInteraction(
+    List<EventWithInteraction> items,
+    String filter,
+  ) {
     final userId = ConfigService.instance.currentUserId;
 
     switch (filter) {
       case 'my':
         // My Events: events I own + events I'm participating in (invited/joined + accepted)
-        return items.where((item) => item.event.ownerId == userId || (item.event.ownerId != userId && (item.interactionType == 'invited' || item.interactionType == 'joined') && item.invitationStatus == 'accepted')).toList();
+        return items
+            .where(
+              (item) =>
+                  item.event.ownerId == userId ||
+                  (item.event.ownerId != userId &&
+                      (item.interactionType == 'invited' ||
+                          item.interactionType == 'joined') &&
+                      item.invitationStatus == 'accepted'),
+            )
+            .toList();
       case 'subscribed':
-        return items.where((item) => item.event.ownerId != userId && item.interactionType == 'subscribed').toList();
+        return items
+            .where(
+              (item) =>
+                  item.event.ownerId != userId &&
+                  item.interactionType == 'subscribed',
+            )
+            .toList();
       case 'invitations':
-        return items.where((item) => item.event.ownerId != userId && item.interactionType == 'invited' && item.invitationStatus == 'pending').toList();
+        return items
+            .where(
+              (item) =>
+                  item.event.ownerId != userId &&
+                  item.interactionType == 'invited' &&
+                  item.invitationStatus == 'pending',
+            )
+            .toList();
       case 'all':
       default:
         return items;
@@ -444,11 +524,17 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     final lowerQuery = query.toLowerCase();
     return events.where((event) {
-      return event.title.toLowerCase().contains(lowerQuery) || (event.description?.toLowerCase().contains(lowerQuery) ?? false);
+      return event.title.toLowerCase().contains(lowerQuery) ||
+          (event.description?.toLowerCase().contains(lowerQuery) ?? false);
     }).toList();
   }
 
-  Widget _buildFilterChip(String value, String label, int? count, bool isSelected) {
+  Widget _buildFilterChip(
+    String value,
+    String label,
+    int? count,
+    bool isSelected,
+  ) {
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -461,21 +547,31 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           decoration: BoxDecoration(
             color: isSelected ? AppStyles.blue600 : AppStyles.grey100,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isSelected ? AppStyles.blue600 : AppStyles.grey300, width: 1),
+            border: Border.all(
+              color: isSelected ? AppStyles.blue600 : AppStyles.grey300,
+              width: 1,
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 label,
-                style: AppStyles.bodyTextSmall.copyWith(color: isSelected ? AppStyles.white : AppStyles.grey700, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
+                style: AppStyles.bodyTextSmall.copyWith(
+                  color: isSelected ? AppStyles.white : AppStyles.grey700,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
                 textAlign: TextAlign.center,
               ),
               if (count != null) ...[
                 const SizedBox(height: 2),
                 Text(
                   count.toString(),
-                  style: AppStyles.bodyTextSmall.copyWith(color: isSelected ? AppStyles.white : AppStyles.grey600, fontWeight: FontWeight.bold, fontSize: 12),
+                  style: AppStyles.bodyTextSmall.copyWith(
+                    color: isSelected ? AppStyles.white : AppStyles.grey600,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -491,11 +587,19 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     return PlatformWidgets.platformTextField(
       controller: _searchController,
       placeholder: l10n.searchEvents,
-      prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.search, color: AppStyles.grey600),
+      prefixIcon: PlatformWidgets.platformIcon(
+        CupertinoIcons.search,
+        color: AppStyles.grey600,
+      ),
       suffixIcon: _searchQuery.isNotEmpty
           ? AdaptiveButton(
               key: const Key('events_search_clear_button'),
-              config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.small, fullWidth: false, iconPosition: IconPosition.only),
+              config: const AdaptiveButtonConfig(
+                variant: ButtonVariant.icon,
+                size: ButtonSize.small,
+                fullWidth: false,
+                iconPosition: IconPosition.only,
+              ),
               icon: CupertinoIcons.clear,
               onPressed: () {
                 _searchController.clear();
@@ -519,7 +623,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   void _navigateToEventDetail(Event event) async {
-    await Navigator.of(context).push(PlatformNavigation.platformPageRoute(builder: (context) => EventDetailScreen(event: event)));
+    await Navigator.of(context).push(
+      PlatformNavigation.platformPageRoute(
+        builder: (context) => EventDetailScreen(event: event),
+      ),
+    );
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
@@ -534,7 +642,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       if (isOwner) {
         await ref.read(eventServiceProvider).deleteEvent(event.id!);
       } else {
-        await ref.read(apiClientProvider).delete('/events/${event.id}/interaction');
+        await ref
+            .read(apiClientProvider)
+            .delete('/events/${event.id}/interaction');
       }
 
       if (shouldNavigate && mounted) {
@@ -548,7 +658,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   void _navigateToCreateEvent() async {
-    await Navigator.of(context).push(PlatformNavigation.platformPageRoute(builder: (context) => const CreateEditEventScreen()));
+    await Navigator.of(context).push(
+      PlatformNavigation.platformPageRoute(
+        builder: (context) => const CreateEditEventScreen(),
+      ),
+    );
   }
 
   void _showCreateEventOptions() {

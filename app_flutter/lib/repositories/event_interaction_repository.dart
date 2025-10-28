@@ -9,11 +9,13 @@ class EventInteractionRepository {
   final _supabaseService = SupabaseService.instance;
   final RealtimeSync _rt = RealtimeSync();
 
-  final StreamController<List<EventInteraction>> _interactionsController = StreamController<List<EventInteraction>>.broadcast();
+  final StreamController<List<EventInteraction>> _interactionsController =
+      StreamController<List<EventInteraction>>.broadcast();
   List<EventInteraction> _cachedInteractions = [];
   RealtimeChannel? _realtimeChannel;
 
-  Stream<List<EventInteraction>> get interactionsStream => _interactionsController.stream;
+  Stream<List<EventInteraction>> get interactionsStream =>
+      _interactionsController.stream;
 
   Future<void> initialize() async {
     await _fetchAndSync();
@@ -25,12 +27,19 @@ class EventInteractionRepository {
     try {
       final userId = ConfigService.instance.currentUserId;
 
-      final response = await _supabaseService.client.from('event_interactions').select('*').eq('user_id', userId);
+      final response = await _supabaseService.client
+          .from('event_interactions')
+          .select('*')
+          .eq('user_id', userId);
 
       final list = (response as List);
-      _cachedInteractions = list.map((json) => EventInteraction.fromJson(json)).toList();
+      _cachedInteractions = list
+          .map((json) => EventInteraction.fromJson(json))
+          .toList();
 
-      _rt.setServerSyncTsFromResponse(rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)));
+      _rt.setServerSyncTsFromResponse(
+        rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+      );
     } catch (e) {
       print('Error fetching interactions: $e');
     }
@@ -44,7 +53,11 @@ class EventInteractionRepository {
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'event_interactions',
-          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId.toString(),
+          ),
           callback: _handleInteractionChange,
         )
         .subscribe();
@@ -61,7 +74,11 @@ class EventInteractionRepository {
     } else if (payload.eventType == PostgresChangeEvent.update) {
       if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
       final updatedInteraction = EventInteraction.fromJson(payload.newRecord);
-      final index = _cachedInteractions.indexWhere((i) => i.userId == updatedInteraction.userId && i.eventId == updatedInteraction.eventId);
+      final index = _cachedInteractions.indexWhere(
+        (i) =>
+            i.userId == updatedInteraction.userId &&
+            i.eventId == updatedInteraction.eventId,
+      );
       if (index != -1) {
         _cachedInteractions[index] = updatedInteraction;
         _emitCurrentInteractions();
@@ -71,7 +88,9 @@ class EventInteractionRepository {
       final userId = payload.oldRecord['user_id'];
       final eventId = payload.oldRecord['event_id'];
       if (userId != null && eventId != null) {
-        _cachedInteractions.removeWhere((i) => i.userId == userId && i.eventId == eventId);
+        _cachedInteractions.removeWhere(
+          (i) => i.userId == userId && i.eventId == eventId,
+        );
         _emitCurrentInteractions();
       }
     }

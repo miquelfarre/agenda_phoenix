@@ -22,7 +22,11 @@ class EventService {
 
   Future<List<Event>> fetchEvents({int? ownerId, int? calendarId}) async {
     try {
-      final apiData = await _client.fetchEvents(ownerId: ownerId, calendarId: calendarId, currentUserId: currentUserId);
+      final apiData = await _client.fetchEvents(
+        ownerId: ownerId,
+        calendarId: calendarId,
+        currentUserId: currentUserId,
+      );
 
       final events = apiData.map((data) => Event.fromJson(data)).toList();
 
@@ -49,9 +53,22 @@ class EventService {
     }
   }
 
-  Future<Event> createEvent({required String name, String? description, required DateTime startDate, String eventType = 'regular', int? calendarId}) async {
+  Future<Event> createEvent({
+    required String name,
+    String? description,
+    required DateTime startDate,
+    String eventType = 'regular',
+    int? calendarId,
+  }) async {
     try {
-      final response = await _client.createEvent({'name': name, if (description != null) 'description': description, 'start_date': startDate.toIso8601String(), 'event_type': eventType, 'owner_id': currentUserId, if (calendarId != null) 'calendar_id': calendarId});
+      final response = await _client.createEvent({
+        'name': name,
+        if (description != null) 'description': description,
+        'start_date': startDate.toIso8601String(),
+        'event_type': eventType,
+        'owner_id': currentUserId,
+        if (calendarId != null) 'calendar_id': calendarId,
+      });
 
       final createdEvent = Event.fromJson(response);
 
@@ -65,7 +82,14 @@ class EventService {
     }
   }
 
-  Future<Event> updateEvent({required int eventId, String? name, String? description, DateTime? startDate, String? eventType, int? calendarId}) async {
+  Future<Event> updateEvent({
+    required int eventId,
+    String? name,
+    String? description,
+    DateTime? startDate,
+    String? eventType,
+    int? calendarId,
+  }) async {
     try {
       final updateData = <String, dynamic>{};
       if (name != null) {
@@ -128,7 +152,10 @@ class EventService {
 
   Future<List<Event>> getUserEvents(int userId) async {
     try {
-      final apiData = await _client.fetchUserEvents(userId, currentUserId: currentUserId);
+      final apiData = await _client.fetchUserEvents(
+        userId,
+        currentUserId: currentUserId,
+      );
       final events = apiData.map((data) => Event.fromJson(data)).toList();
       return events;
     } catch (e) {
@@ -176,7 +203,14 @@ class EventService {
         userCounts[value.ownerId] = (userCounts[value.ownerId] ?? 0) + 1;
       }
 
-      return {'total_entries': totalEntries, 'cache_size_bytes': cacheSize, 'users_with_data': userCounts.length, 'user_counts': userCounts, 'service_name': serviceName, 'box_name': hiveBoxName};
+      return {
+        'total_entries': totalEntries,
+        'cache_size_bytes': cacheSize,
+        'users_with_data': userCounts.length,
+        'user_counts': userCounts,
+        'service_name': serviceName,
+        'box_name': hiveBoxName,
+      };
     } catch (e) {
       rethrow;
     }

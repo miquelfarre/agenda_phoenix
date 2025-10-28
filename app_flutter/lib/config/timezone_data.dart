@@ -27,12 +27,18 @@ class TimezoneData {
   static List<Map<String, String>> getTimezoneList() => commonTimezones;
 
   static String? getCityFromTimezone(String timezone) {
-    final entry = commonTimezones.firstWhere((tz) => tz['timezone'] == timezone, orElse: () => {});
+    final entry = commonTimezones.firstWhere(
+      (tz) => tz['timezone'] == timezone,
+      orElse: () => {},
+    );
     return entry['city'];
   }
 
   static String? getTimezoneFromCity(String city) {
-    final entry = commonTimezones.firstWhere((tz) => tz['city'] == city, orElse: () => {});
+    final entry = commonTimezones.firstWhere(
+      (tz) => tz['city'] == city,
+      orElse: () => {},
+    );
     return entry['timezone'];
   }
 }

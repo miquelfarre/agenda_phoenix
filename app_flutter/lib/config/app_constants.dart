@@ -79,7 +79,8 @@ class AppConstants {
   static const double eventImageMaxHeight = 600.0;
 
   static const String phoneRegex = r'^\+?[1-9]\d{1,14}$';
-  static const String emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+  static const String emailRegex =
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
   static const String instagramUsernameRegex = r'^[a-zA-Z0-9._]{1,30}$';
 
   static const bool enableDebugLogs = true;
@@ -124,9 +125,12 @@ class AppConfig {
     }
   }
 
-  static bool get enableDebugLogs => currentEnvironment != Environment.production;
-  static bool get enableCrashReporting => currentEnvironment == Environment.production;
-  static bool get enableAnalytics => currentEnvironment == Environment.production;
+  static bool get enableDebugLogs =>
+      currentEnvironment != Environment.production;
+  static bool get enableCrashReporting =>
+      currentEnvironment == Environment.production;
+  static bool get enableAnalytics =>
+      currentEnvironment == Environment.production;
 
   static Duration get apiTimeout {
     switch (currentEnvironment) {

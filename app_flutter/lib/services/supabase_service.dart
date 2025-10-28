@@ -12,14 +12,20 @@ class SupabaseService {
     return _instance!;
   }
 
-  static Future<void> initialize({required String supabaseUrl, required String supabaseAnonKey}) async {
+  static Future<void> initialize({
+    required String supabaseUrl,
+    required String supabaseAnonKey,
+  }) async {
     print('🔵 [SupabaseService] Initializing Supabase client...');
     print('🔵 [SupabaseService] URL: $supabaseUrl');
 
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
-      realtimeClientOptions: const RealtimeClientOptions(eventsPerSecond: 10, logLevel: RealtimeLogLevel.info),
+      realtimeClientOptions: const RealtimeClientOptions(
+        eventsPerSecond: 10,
+        logLevel: RealtimeLogLevel.info,
+      ),
     );
     _client = Supabase.instance.client;
 
@@ -27,7 +33,9 @@ class SupabaseService {
     _client!.auth.onAuthStateChange.listen((data) {
       print('🔵 [SupabaseService] Auth state changed: ${data.event}');
       if (data.session != null) {
-        print('🔵 [SupabaseService] Session active, token (first 50): ${data.session!.accessToken.substring(0, 50)}...');
+        print(
+          '🔵 [SupabaseService] Session active, token (first 50): ${data.session!.accessToken.substring(0, 50)}...',
+        );
       }
     });
 
@@ -36,7 +44,9 @@ class SupabaseService {
 
   SupabaseClient get client {
     if (_client == null) {
-      throw Exception('SupabaseService not initialized. Call initialize() first.');
+      throw Exception(
+        'SupabaseService not initialized. Call initialize() first.',
+      );
     }
     return _client!;
   }
@@ -96,7 +106,8 @@ class SupabaseService {
           .eq('user_id', userId);
 
       // Extract events from the nested structure and combine with owned events
-      final List<Map<String, dynamic>> allEvents = List<Map<String, dynamic>>.from(ownedEvents as List);
+      final List<Map<String, dynamic>> allEvents =
+          List<Map<String, dynamic>>.from(ownedEvents as List);
 
       for (final interaction in (invitedEvents as List)) {
         final event = interaction['event'] as Map<String, dynamic>?;
@@ -176,7 +187,9 @@ class SupabaseService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchPublicUserEvents(int publicUserId) async {
+  Future<List<Map<String, dynamic>>> fetchPublicUserEvents(
+    int publicUserId,
+  ) async {
     try {
       final events = await client
           .from('events')
@@ -199,9 +212,18 @@ class SupabaseService {
 
   Future<bool> isSubscribedToUser(int currentUserId, int publicUserId) async {
     try {
-      final subscriptions = await client.from('event_interactions').select('id').eq('user_id', currentUserId).eq('interaction_type', 'subscribed').limit(1);
+      final subscriptions = await client
+          .from('event_interactions')
+          .select('id')
+          .eq('user_id', currentUserId)
+          .eq('interaction_type', 'subscribed')
+          .limit(1);
       if ((subscriptions as List).isEmpty) return false;
-      final eventOwnerId = await client.from('events').select('owner_id').eq('id', subscriptions[0]['id']).single();
+      final eventOwnerId = await client
+          .from('events')
+          .select('owner_id')
+          .eq('id', subscriptions[0]['id'])
+          .single();
       return eventOwnerId['owner_id'] == publicUserId;
     } catch (e) {
       return false;
@@ -218,11 +240,26 @@ class SupabaseService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchAvailableInvitees(int eventId, int currentUserId) async {
+  Future<List<Map<String, dynamic>>> fetchAvailableInvitees(
+    int eventId,
+    int currentUserId,
+  ) async {
     try {
-      final allUsers = await client.from('users').select('*').neq('id', currentUserId);
-      final invitedUserIds = await client.from('event_interactions').select('user_id').eq('event_id', eventId).then((data) => (data as List).map((row) => row['user_id'] as int).toSet());
-      final availableUsers = (allUsers as List).where((userData) => !invitedUserIds.contains(userData['id'])).toList();
+      final allUsers = await client
+          .from('users')
+          .select('*')
+          .neq('id', currentUserId);
+      final invitedUserIds = await client
+          .from('event_interactions')
+          .select('user_id')
+          .eq('event_id', eventId)
+          .then(
+            (data) =>
+                (data as List).map((row) => row['user_id'] as int).toSet(),
+          );
+      final availableUsers = (allUsers as List)
+          .where((userData) => !invitedUserIds.contains(userData['id']))
+          .toList();
       return availableUsers.cast<Map<String, dynamic>>();
     } catch (e) {
       print('Error fetching available invitees: $e');
@@ -232,7 +269,11 @@ class SupabaseService {
 
   Future<Map<String, dynamic>> fetchContactDetail(int contactId) async {
     try {
-      final user = await client.from('users').select('*').eq('id', contactId).single();
+      final user = await client
+          .from('users')
+          .select('*')
+          .eq('id', contactId)
+          .single();
       return user;
     } catch (e) {
       print('Error fetching contact detail: $e');

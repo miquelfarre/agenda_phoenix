@@ -52,10 +52,18 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       final calendarService = CalendarService();
 
       final calendars = calendarService.getLocalCalendars();
-      final hasBirthdayCalendar = calendars.any((cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays');
+      final hasBirthdayCalendar = calendars.any(
+        (cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays',
+      );
 
       if (!hasBirthdayCalendar) {
-        await calendarService.createCalendar(name: 'Cumpleaños', description: 'Calendario para cumpleaños', color: '#FF5733', isPublic: false, isShareable: false);
+        await calendarService.createCalendar(
+          name: 'Cumpleaños',
+          description: 'Calendario para cumpleaños',
+          color: '#FF5733',
+          isPublic: false,
+          isShareable: false,
+        );
       }
     } catch (e) {
       // Ignore errors
@@ -68,15 +76,22 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       if (PlatformDetection.isIOS) {
         return CupertinoApp(
           debugShowCheckedModeBanner: false,
-          home: CupertinoPageScaffold(child: Center(child: PlatformWidgets.platformLoadingIndicator())),
+          home: CupertinoPageScaffold(
+            child: Center(child: PlatformWidgets.platformLoadingIndicator()),
+          ),
         );
       }
 
       return WidgetsApp(
         color: AppStyles.white,
-        builder: (context, child) => Center(child: PlatformWidgets.platformLoadingIndicator()),
+        builder: (context, child) =>
+            Center(child: PlatformWidgets.platformLoadingIndicator()),
         debugShowCheckedModeBanner: false,
-        pageRouteBuilder: <T>(RouteSettings settings, WidgetBuilder builder) => PageRouteBuilder<T>(pageBuilder: (context, animation, secondaryAnimation) => builder(context)),
+        pageRouteBuilder: <T>(RouteSettings settings, WidgetBuilder builder) =>
+            PageRouteBuilder<T>(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  builder(context),
+            ),
       );
     }
 

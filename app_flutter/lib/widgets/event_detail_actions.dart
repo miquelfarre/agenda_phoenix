@@ -8,7 +8,13 @@ class EventDetailActions extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onInvite;
 
-  const EventDetailActions({super.key, required this.isEventOwner, this.canInvite, this.onEdit, this.onInvite});
+  const EventDetailActions({
+    super.key,
+    required this.isEventOwner,
+    this.canInvite,
+    this.onEdit,
+    this.onInvite,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +41,13 @@ class EventDetailActions extends StatelessWidget {
         if (isEventOwner) ...[
           SizedBox(
             width: double.infinity,
-            child: AdaptiveButton(key: const Key('event_detail_edit_button'), config: AdaptiveButtonConfig.primary(), text: l10n.editEvent, icon: CupertinoIcons.pencil, onPressed: onEdit),
+            child: AdaptiveButton(
+              key: const Key('event_detail_edit_button'),
+              config: AdaptiveButtonConfig.primary(),
+              text: l10n.editEvent,
+              icon: CupertinoIcons.pencil,
+              onPressed: onEdit,
+            ),
           ),
         ],
       ],

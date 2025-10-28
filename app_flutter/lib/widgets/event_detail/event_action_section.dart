@@ -15,7 +15,12 @@ class EventActionSection extends ConsumerStatefulWidget {
   final VoidCallback? onEventUpdated;
   final VoidCallback? onEventDeleted;
 
-  const EventActionSection({super.key, required this.event, this.onEventUpdated, this.onEventDeleted});
+  const EventActionSection({
+    super.key,
+    required this.event,
+    this.onEventUpdated,
+    this.onEventDeleted,
+  });
 
   @override
   ConsumerState<EventActionSection> createState() => _EventActionSectionState();
@@ -23,7 +28,8 @@ class EventActionSection extends ConsumerStatefulWidget {
 
 class _EventActionSectionState extends ConsumerState<EventActionSection> {
   bool _sendCancellationNotification = false;
-  final TextEditingController _cancellationNotificationController = TextEditingController();
+  final TextEditingController _cancellationNotificationController =
+      TextEditingController();
 
   int get currentUserId => ConfigService.instance.currentUserId;
   bool get isEventOwner => widget.event.ownerId == currentUserId;
@@ -40,7 +46,13 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
     return Column(
       children: [
         _buildActionButtons(),
-        if (isEventOwner) ...[const SizedBox(height: 24), _buildCancellationNotificationSection()] else ...[const SizedBox(height: 24), _buildRemoveFromListButton()],
+        if (isEventOwner) ...[
+          const SizedBox(height: 24),
+          _buildCancellationNotificationSection(),
+        ] else ...[
+          const SizedBox(height: 24),
+          _buildRemoveFromListButton(),
+        ],
       ],
     );
   }
@@ -59,14 +71,23 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
         children: [
           Text(context.l10n.eventActions, style: AppStyles.cardTitle),
           const SizedBox(height: 16),
-          EventDetailActions(isEventOwner: isEventOwner, canInvite: canInviteUsers, onInvite: () => _navigateToInviteScreen(), onEdit: widget.onEventUpdated),
+          EventDetailActions(
+            isEventOwner: isEventOwner,
+            canInvite: canInviteUsers,
+            onInvite: () => _navigateToInviteScreen(),
+            onEdit: widget.onEventUpdated,
+          ),
         ],
       ),
     );
   }
 
   void _navigateToInviteScreen() {
-    Navigator.of(context).push(CupertinoPageRoute(builder: (context) => InviteUsersScreen(event: widget.event)));
+    Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (context) => InviteUsersScreen(event: widget.event),
+      ),
+    );
   }
 
   Widget _buildCancellationNotificationSection() {
@@ -89,14 +110,28 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
                 },
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text(context.l10n.sendCancellationNotification, style: const TextStyle(fontSize: 16))),
+              Expanded(
+                child: Text(
+                  context.l10n.sendCancellationNotification,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
             ],
           ),
           if (_sendCancellationNotification) ...[
             const SizedBox(height: 16),
-            PlatformWidgets.platformTextField(controller: _cancellationNotificationController, placeholder: context.l10n.cancellationMessage, maxLines: 3, keyboardType: TextInputType.multiline),
+            PlatformWidgets.platformTextField(
+              controller: _cancellationNotificationController,
+              placeholder: context.l10n.cancellationMessage,
+              maxLines: 3,
+              keyboardType: TextInputType.multiline,
+            ),
             const SizedBox(height: 16),
-            PlatformWidgets.platformButton(onPressed: () => _handleCancelEvent(), child: Text(context.l10n.cancelEventWithNotification), color: AppStyles.errorColor),
+            PlatformWidgets.platformButton(
+              onPressed: () => _handleCancelEvent(),
+              child: Text(context.l10n.cancelEventWithNotification),
+              color: AppStyles.errorColor,
+            ),
           ],
         ],
       ),
@@ -112,14 +147,26 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
         children: [
           Text(context.l10n.eventOptions, style: AppStyles.cardTitle),
           const SizedBox(height: 16),
-          PlatformWidgets.platformButton(onPressed: () => _handleRemoveFromList(), child: Text(context.l10n.removeFromMyList), color: AppStyles.errorColor, filled: false),
+          PlatformWidgets.platformButton(
+            onPressed: () => _handleRemoveFromList(),
+            child: Text(context.l10n.removeFromMyList),
+            color: AppStyles.errorColor,
+            filled: false,
+          ),
         ],
       ),
     );
   }
 
   Future<void> _handleCancelEvent() async {
-    final confirmed = await PlatformDialogHelpers.showPlatformConfirmDialog(context, title: context.l10n.cancelEvent, message: context.l10n.confirmCancelEvent, confirmText: context.l10n.cancel, cancelText: context.l10n.doNotCancel, isDestructive: true);
+    final confirmed = await PlatformDialogHelpers.showPlatformConfirmDialog(
+      context,
+      title: context.l10n.cancelEvent,
+      message: context.l10n.confirmCancelEvent,
+      confirmText: context.l10n.cancel,
+      cancelText: context.l10n.doNotCancel,
+      isDestructive: true,
+    );
 
     if (confirmed != true) return;
 
@@ -131,19 +178,33 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
       // Realtime handles refresh automatically via EventRepository
 
       if (mounted) {
-        PlatformDialogHelpers.showGlobalPlatformMessage(context: context, message: context.l10n.eventCancelledSuccessfully);
+        PlatformDialogHelpers.showGlobalPlatformMessage(
+          context: context,
+          message: context.l10n.eventCancelledSuccessfully,
+        );
 
         widget.onEventDeleted?.call();
       }
     } catch (error) {
       if (mounted) {
-        PlatformDialogHelpers.showGlobalPlatformMessage(context: context, message: context.l10n.failedToCancelEvent, isError: true);
+        PlatformDialogHelpers.showGlobalPlatformMessage(
+          context: context,
+          message: context.l10n.failedToCancelEvent,
+          isError: true,
+        );
       }
     }
   }
 
   Future<void> _handleRemoveFromList() async {
-    final confirmed = await PlatformDialogHelpers.showPlatformConfirmDialog(context, title: context.l10n.removeFromList, message: context.l10n.confirmRemoveFromList, confirmText: context.l10n.remove, cancelText: context.l10n.cancel, isDestructive: true);
+    final confirmed = await PlatformDialogHelpers.showPlatformConfirmDialog(
+      context,
+      title: context.l10n.removeFromList,
+      message: context.l10n.confirmRemoveFromList,
+      confirmText: context.l10n.remove,
+      cancelText: context.l10n.cancel,
+      isDestructive: true,
+    );
 
     if (confirmed != true) return;
 
@@ -155,13 +216,20 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
       // Realtime handles refresh automatically via EventRepository
 
       if (mounted) {
-        PlatformDialogHelpers.showGlobalPlatformMessage(context: context, message: context.l10n.eventRemovedFromList);
+        PlatformDialogHelpers.showGlobalPlatformMessage(
+          context: context,
+          message: context.l10n.eventRemovedFromList,
+        );
 
         widget.onEventDeleted?.call();
       }
     } catch (error) {
       if (mounted) {
-        PlatformDialogHelpers.showGlobalPlatformMessage(context: context, message: context.l10n.failedToRemoveFromList, isError: true);
+        PlatformDialogHelpers.showGlobalPlatformMessage(
+          context: context,
+          message: context.l10n.failedToRemoveFromList,
+          isError: true,
+        );
       }
     }
   }

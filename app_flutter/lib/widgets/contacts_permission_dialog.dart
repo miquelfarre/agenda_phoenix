@@ -10,10 +10,15 @@ class ContactsPermissionDialog extends StatefulWidget {
   final VoidCallback? onPermissionGranted;
   final VoidCallback? onPermissionDenied;
 
-  const ContactsPermissionDialog({super.key, this.onPermissionGranted, this.onPermissionDenied});
+  const ContactsPermissionDialog({
+    super.key,
+    this.onPermissionGranted,
+    this.onPermissionDenied,
+  });
 
   @override
-  State<ContactsPermissionDialog> createState() => _ContactsPermissionDialogState();
+  State<ContactsPermissionDialog> createState() =>
+      _ContactsPermissionDialogState();
 }
 
 class _ContactsPermissionDialogState extends State<ContactsPermissionDialog> {
@@ -61,7 +66,13 @@ class _ContactsPermissionDialogState extends State<ContactsPermissionDialog> {
     final safeContext = context;
     final safeL10n = l10n;
 
-    PlatformDialogHelpers.showPlatformConfirmDialog(safeContext, title: safeL10n.permissionsNeeded, message: safeL10n.contactsPermissionSettingsMessage, confirmText: safeL10n.goToSettings, cancelText: safeL10n.notNow)
+    PlatformDialogHelpers.showPlatformConfirmDialog(
+          safeContext,
+          title: safeL10n.permissionsNeeded,
+          message: safeL10n.contactsPermissionSettingsMessage,
+          confirmText: safeL10n.goToSettings,
+          cancelText: safeL10n.notNow,
+        )
         .then((confirmed) async {
           if (confirmed == true) {
             try {
@@ -104,7 +115,13 @@ class _ContactsPermissionDialogState extends State<ContactsPermissionDialog> {
     return CupertinoAlertDialog(
       title: Column(
         children: [
-          PlatformWidgets.platformIcon(CupertinoIcons.person_2, color: PlatformDetection.isIOS ? CupertinoColors.activeBlue.resolveFrom(context) : AppStyles.primary600, size: 32),
+          PlatformWidgets.platformIcon(
+            CupertinoIcons.person_2,
+            color: PlatformDetection.isIOS
+                ? CupertinoColors.activeBlue.resolveFrom(context)
+                : AppStyles.primary600,
+            size: 32,
+          ),
           const SizedBox(height: 8),
           Text(l10n.findYourFriends),
         ],
@@ -116,23 +133,49 @@ class _ContactsPermissionDialogState extends State<ContactsPermissionDialog> {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: AppStyles.colorWithOpacity(PlatformDetection.isIOS ? CupertinoColors.systemBlue.resolveFrom(context) : AppStyles.primary600, 0.1), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: AppStyles.colorWithOpacity(
+                PlatformDetection.isIOS
+                    ? CupertinoColors.systemBlue.resolveFrom(context)
+                    : AppStyles.primary600,
+                0.1,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    PlatformWidgets.platformIcon(CupertinoIcons.check_mark_circled, color: CupertinoColors.systemGreen.resolveFrom(context), size: 16),
+                    PlatformWidgets.platformIcon(
+                      CupertinoIcons.check_mark_circled,
+                      color: CupertinoColors.systemGreen.resolveFrom(context),
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(l10n.yourContactsStayPrivate, style: AppStyles.cardSubtitle.copyWith(fontSize: 14))),
+                    Expanded(
+                      child: Text(
+                        l10n.yourContactsStayPrivate,
+                        style: AppStyles.cardSubtitle.copyWith(fontSize: 14),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    PlatformWidgets.platformIcon(CupertinoIcons.check_mark_circled, color: CupertinoColors.systemGreen.resolveFrom(context), size: 16),
+                    PlatformWidgets.platformIcon(
+                      CupertinoIcons.check_mark_circled,
+                      color: CupertinoColors.systemGreen.resolveFrom(context),
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(l10n.onlyShowMutualFriends, style: AppStyles.cardSubtitle.copyWith(fontSize: 14))),
+                    Expanded(
+                      child: Text(
+                        l10n.onlyShowMutualFriends,
+                        style: AppStyles.cardSubtitle.copyWith(fontSize: 14),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -141,8 +184,19 @@ class _ContactsPermissionDialogState extends State<ContactsPermissionDialog> {
         ],
       ),
       actions: [
-        CupertinoDialogAction(key: const Key('contacts_permission_not_now_button'), onPressed: _isRequesting ? null : _skipPermission, child: Text(l10n.notNow)),
-        CupertinoDialogAction(key: const Key('contacts_permission_allow_button'), onPressed: _isRequesting ? null : _requestPermission, isDefaultAction: true, child: _isRequesting ? PlatformWidgets.platformLoadingIndicator(radius: 8) : Text(l10n.allowAccess)),
+        CupertinoDialogAction(
+          key: const Key('contacts_permission_not_now_button'),
+          onPressed: _isRequesting ? null : _skipPermission,
+          child: Text(l10n.notNow),
+        ),
+        CupertinoDialogAction(
+          key: const Key('contacts_permission_allow_button'),
+          onPressed: _isRequesting ? null : _requestPermission,
+          isDefaultAction: true,
+          child: _isRequesting
+              ? PlatformWidgets.platformLoadingIndicator(radius: 8)
+              : Text(l10n.allowAccess),
+        ),
       ],
     );
   }
