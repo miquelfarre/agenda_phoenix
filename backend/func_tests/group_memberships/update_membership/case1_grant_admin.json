@@ -1,0 +1,13 @@
+{
+  "method": "PUT",
+  "path": "/api/v1/group_memberships/{membership_id}",
+  "description": "Grant admin role to a group member (creator only)",
+  "body": {
+    "role": "admin"
+  },
+  "expected_status": 200,
+  "expected_body_schema": {
+    "type": "object",
+    "required": ["id", "group_id", "user_id"]
+  }
+}

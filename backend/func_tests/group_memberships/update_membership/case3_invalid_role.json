@@ -1,0 +1,12 @@
+{
+  "method": "PUT",
+  "path": "/api/v1/group_memberships/{membership_id}",
+  "description": "Reject invalid role value",
+  "body": {
+    "role": "superadmin"
+  },
+  "expected_status": 400,
+  "expected_body_contains": {
+    "detail": "Role must be 'admin' or 'member'"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "method": "GET",
+  "path": "/api/v1/users?search=john&public=true",
+  "description": "Search users by username (case-insensitive)",
+  "expected_status": 200,
+  "expected_body_schema": {
+    "type": "array"
+  },
+  "assertions": [
+    {
+      "type": "array_contains",
+      "path": "$[*].username",
+      "value_pattern": "(?i)john",
+      "description": "At least one user should match 'john' in username"
+    }
+  ]
+}

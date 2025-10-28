@@ -25,12 +25,13 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 @router.get("", response_model=List[Union[UserResponse, UserEnrichedResponse]])
-async def get_users(public: Optional[bool] = None, enriched: bool = False, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
-    """Get all users, optionally filtered by public status, optionally enriched with contact info"""
+async def get_users(public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
+    """Get all users, optionally filtered by public status, with optional search by username/contact name, optionally enriched with contact info"""
     return user.get_multi_with_optional_enrichment(
         db,
         public=public,
         enriched=enriched,
+        search=search,
         skip=offset,
         limit=limit,
         order_by=order_by or "id",

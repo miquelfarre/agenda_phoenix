@@ -4,7 +4,6 @@ import 'package:eventypop/models/calendar_hive.dart';
 import 'package:eventypop/models/calendar_share_hive.dart';
 import 'package:eventypop/models/event_hive.dart';
 import 'package:eventypop/models/event_interaction_hive.dart';
-import 'package:eventypop/models/event_note_hive.dart';
 import 'package:eventypop/models/group_hive.dart';
 import 'package:eventypop/models/subscription_hive.dart';
 import 'package:eventypop/models/user_event_note_hive.dart';
@@ -41,8 +40,6 @@ void main() async {
     Hive.registerAdapter(EventHiveAdapter());
     Hive.registerAdapter(SubscriptionHiveAdapter());
     Hive.registerAdapter(GroupHiveAdapter());
-    Hive.registerAdapter(EventNoteHiveAdapter());
-    Hive.registerAdapter(UserEventNoteHiveAdapter());
     Hive.registerAdapter(UserHiveAdapter());
 
     Hive.registerAdapter(CalendarHiveAdapter());
@@ -65,7 +62,6 @@ void main() async {
     }
 
     await Hive.openBox<GroupHive>('groups');
-    await Hive.openBox<EventNoteHive>('event_notes');
     await Hive.openBox<UserEventNoteHive>('user_event_note');
     await Hive.openBox<UserHive>('users');
 

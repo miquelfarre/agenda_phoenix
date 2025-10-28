@@ -171,22 +171,21 @@ class UserService {
 
   static Future<List<User>> searchPublicUsers(String query) async {
     try {
-      // Get all public users and filter client-side
-      // TODO: Backend should implement search parameter in GET /users
-      final response = await ApiClientFactory.instance.get('/api/v1/users', queryParams: {'public': 'true', 'limit': '100'});
+      // Use backend search parameter for server-side filtering
+      final queryParams = {
+        'public': 'true',
+        'limit': '50',
+      };
+
+      // Add search parameter if query is not empty
+      if (query.isNotEmpty) {
+        queryParams['search'] = query;
+      }
+
+      final response = await ApiClientFactory.instance.get('/api/v1/users', queryParams: queryParams);
 
       final List<dynamic> usersJson = response is List ? response : [];
-      final allUsers = usersJson.map((json) => User.fromJson(json)).toList();
-
-      // Filter by query (username or full name)
-      if (query.isEmpty) return allUsers;
-
-      final lowerQuery = query.toLowerCase();
-      return allUsers.where((user) {
-        final username = user.instagramName?.toLowerCase() ?? '';
-        final fullName = user.fullName?.toLowerCase() ?? '';
-        return username.contains(lowerQuery) || fullName.contains(lowerQuery);
-      }).toList();
+      return usersJson.map((json) => User.fromJson(json)).toList();
     } catch (e) {
       return [];
     }
@@ -194,22 +193,18 @@ class UserService {
 
   Future<List<User>> searchUsers(String query, {int limit = 20}) async {
     try {
-      // Get all users and filter client-side
-      // TODO: Backend should implement search parameter in GET /users
-      final response = await ApiClientFactory.instance.get('/api/v1/users', queryParams: {'limit': limit.toString()});
+      // Use backend search parameter for server-side filtering
+      final queryParams = {'limit': limit.toString()};
+
+      // Add search parameter if query is not empty
+      if (query.isNotEmpty) {
+        queryParams['search'] = query;
+      }
+
+      final response = await ApiClientFactory.instance.get('/api/v1/users', queryParams: queryParams);
 
       final List<dynamic> usersJson = response is List ? response : [];
-      final allUsers = usersJson.map((json) => User.fromJson(json)).toList();
-
-      // Filter by query (username or full name)
-      if (query.isEmpty) return allUsers;
-
-      final lowerQuery = query.toLowerCase();
-      return allUsers.where((user) {
-        final username = user.instagramName?.toLowerCase() ?? '';
-        final fullName = user.fullName?.toLowerCase() ?? '';
-        return username.contains(lowerQuery) || fullName.contains(lowerQuery);
-      }).toList();
+      return usersJson.map((json) => User.fromJson(json)).toList();
     } catch (e) {
       return [];
     }

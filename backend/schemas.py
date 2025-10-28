@@ -374,6 +374,11 @@ class GroupMembershipCreate(GroupMembershipBase):
     user_id: int
 
 
+class GroupMembershipUpdate(BaseModel):
+    """Schema for updating group membership (currently only role)"""
+    role: Optional[str] = None  # "admin" or "member"
+
+
 class GroupMembershipResponse(GroupMembershipBase):
     id: int
     group_id: int

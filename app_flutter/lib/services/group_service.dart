@@ -287,8 +287,7 @@ class GroupService {
 
   Future<void> grantAdminPermission({required int groupId, required int userId, required int grantedById}) async {
     try {
-      // TODO: Backend needs PUT /group_memberships/{id} endpoint to update role
-      // For now, we need to delete and recreate the membership
+      // Get membership to update
       final memberships = await ApiClientFactory.instance.get('/api/v1/group_memberships', queryParams: {'group_id': groupId.toString(), 'user_id': userId.toString()});
 
       if (memberships is! List || memberships.isEmpty) {
@@ -297,9 +296,8 @@ class GroupService {
 
       final membershipId = memberships[0]['id'];
 
-      await ApiClientFactory.instance.delete('/api/v1/group_memberships/$membershipId');
-
-      await ApiClientFactory.instance.post('/api/v1/group_memberships', body: {'group_id': groupId, 'user_id': userId});
+      // Update role using PUT endpoint
+      await ApiClientFactory.instance.put('/api/v1/group_memberships/$membershipId', body: {'role': 'admin'});
 
       try {
         await SyncService.syncGroups(userId);
@@ -323,8 +321,7 @@ class GroupService {
 
   Future<void> removeAdminPermission({required int groupId, required int userId, required int revokedById}) async {
     try {
-      // TODO: Backend needs PUT /group_memberships/{id} endpoint to update role
-      // For now, we need to delete and recreate the membership
+      // Get membership to update
       final memberships = await ApiClientFactory.instance.get('/api/v1/group_memberships', queryParams: {'group_id': groupId.toString(), 'user_id': userId.toString()});
 
       if (memberships is! List || memberships.isEmpty) {
@@ -333,9 +330,8 @@ class GroupService {
 
       final membershipId = memberships[0]['id'];
 
-      await ApiClientFactory.instance.delete('/api/v1/group_memberships/$membershipId');
-
-      await ApiClientFactory.instance.post('/api/v1/group_memberships', body: {'group_id': groupId, 'user_id': userId});
+      // Update role using PUT endpoint
+      await ApiClientFactory.instance.put('/api/v1/group_memberships/$membershipId', body: {'role': 'member'});
 
       try {
         await SyncService.syncGroups(userId);

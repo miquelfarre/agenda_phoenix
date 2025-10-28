@@ -13,7 +13,7 @@ from auth import get_current_user_id
 from crud import group_membership
 from dependencies import check_user_not_public, get_db
 from models import Group
-from schemas import GroupMembershipCreate, GroupMembershipResponse
+from schemas import GroupMembershipCreate, GroupMembershipResponse, GroupMembershipUpdate
 
 router = APIRouter(prefix="/api/v1/group_memberships", tags=["group_memberships"])
 
@@ -70,6 +70,48 @@ async def create_group_membership(membership_data: GroupMembershipCreate, db: Se
             raise HTTPException(status_code=400, detail=error)
 
     return db_membership
+
+
+@router.put("/{membership_id}", response_model=GroupMembershipResponse)
+async def update_group_membership(
+    membership_id: int,
+    membership_data: GroupMembershipUpdate,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Update a group membership (currently only role can be updated).
+
+    Requires JWT authentication - provide token in Authorization header.
+    Only the group creator can update memberships.
+
+    Valid roles: 'admin', 'member'
+    """
+    db_membership = group_membership.get(db, id=membership_id)
+    if not db_membership:
+        raise HTTPException(status_code=404, detail="Group membership not found")
+
+    # Get group to check creator
+    group = db.query(Group).filter(Group.id == db_membership.group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    # Only group creator can update memberships
+    if group.created_by != current_user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the group creator can update memberships"
+        )
+
+    # Validate role if provided
+    if membership_data.role and membership_data.role not in ["admin", "member"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Role must be 'admin' or 'member'"
+        )
+
+    updated = group_membership.update(db, db_obj=db_membership, obj_in=membership_data)
+    return updated
 
 
 @router.delete("/{membership_id}")

@@ -1,0 +1,15 @@
+{
+  "method": "GET",
+  "path": "/api/v1/users?search=test&enriched=true",
+  "description": "Search users by contact name with enriched results",
+  "expected_status": 200,
+  "expected_body_schema": {
+    "type": "array"
+  },
+  "assertions": [
+    {
+      "type": "response_is_array",
+      "description": "Response should be an array"
+    }
+  ]
+}

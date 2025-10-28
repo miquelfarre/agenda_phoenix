@@ -1,0 +1,13 @@
+{
+  "method": "PUT",
+  "path": "/api/v1/group_memberships/{membership_id}",
+  "description": "Remove admin role from a group member (change to member)",
+  "body": {
+    "role": "member"
+  },
+  "expected_status": 200,
+  "expected_body_schema": {
+    "type": "object",
+    "required": ["id", "group_id", "user_id"]
+  }
+}
