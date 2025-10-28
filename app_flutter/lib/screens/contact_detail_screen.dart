@@ -230,7 +230,12 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> with 
                 );
               }
 
-              final allEvents = ref.watch(eventStateProvider);
+              final allEventsAsync = ref.watch(eventsStreamProvider);
+              final allEvents = allEventsAsync.when(
+                data: (events) => events,
+                loading: () => <Event>[],
+                error: (_, __) => <Event>[],
+              );
               final contactEvents = allEvents.where((e) => e.attendees.any((a) => (a is User && a.id == widget.contact.id) || (a is Map && a['id'] == widget.contact.id))).toList();
               final availableEvents = _filterAvailableEvents(contactEvents);
 

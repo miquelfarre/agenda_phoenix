@@ -669,7 +669,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
 
     return Consumer(
       builder: (context, ref, child) {
-        final allEvents = ref.watch(eventStateProvider);
+        final allEventsAsync = ref.watch(eventsStreamProvider);
+        final allEvents = allEventsAsync.when(
+          data: (events) => events,
+          loading: () => <Event>[],
+          error: (_, __) => <Event>[],
+        );
 
         final now = DateTime.now();
         final futureEvents = allEvents.where((e) => e.date.isAfter(now) && e.id != event.id && (e.owner?.id == publicUserId)).toList();

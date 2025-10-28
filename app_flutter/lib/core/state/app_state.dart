@@ -1,7 +1,6 @@
 import 'dart:ui' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:gotrue/gotrue.dart' as gotrue;
 import '../../models/event.dart';
 import '../../models/subscription.dart';
 import '../../models/event_interaction.dart';
@@ -87,6 +86,12 @@ final eventRepositoryProvider = Provider<EventRepository>((ref) {
   return repository;
 });
 
+// Stream provider that exposes events from EventRepository
+final eventsStreamProvider = StreamProvider<List<Event>>((ref) {
+  final repository = ref.watch(eventRepositoryProvider);
+  return repository.eventsStream;
+});
+
 final calendarRepositoryProvider = Provider((ref) {
   final repository = CalendarRepository();
   repository.initialize();
@@ -147,70 +152,8 @@ final logoPathProvider = FutureProvider.family<String?, int>((ref, userId) {
   return LogoService.instance.getLogoPath(userId);
 });
 
-final eventStateProvider = NotifierProvider<EventStateNotifier, List<Event>>(EventStateNotifier.new);
-
-class EventStateNotifier extends Notifier<List<Event>> {
-  EventService get _eventService => ref.read(eventServiceProvider);
-
-  @override
-  List<Event> build() {
-    Future.microtask(() => refresh());
-
-    return [];
-  }
-
-  Future<void> refresh() async {
-    try {
-      final userId = ConfigService.instance.currentUserId;
-
-      if (userId > 0) {
-        await SyncService.syncEvents();
-      } else {}
-
-      final events = SyncService.getLocalEvents();
-
-      events.sort((a, b) => a.startDate.compareTo(b.startDate));
-
-      state = events;
-    } catch (error) {
-      final errorString = error.toString();
-      if (errorString.contains('Authentication token required') || errorString.contains('401') || errorString.contains('Unauthorized')) {
-      } else {}
-
-      state = [];
-    }
-  }
-
-  Map<DateTime, List<Event>> aggregated() {
-    final grouped = <DateTime, List<Event>>{};
-
-    for (final event in state) {
-      final date = DateTime(event.startDate.year, event.startDate.month, event.startDate.day);
-      grouped.putIfAbsent(date, () => []).add(event);
-    }
-
-    return grouped;
-  }
-
-  Future<void> createEvent(Event event) async {
-    await _eventService.createEvent(name: event.name, description: event.description, startDate: event.startDate, eventType: event.eventType, calendarId: event.calendarId);
-    await refresh();
-  }
-
-  Future<void> updateEvent(Event event) async {
-    await _eventService.updateEvent(eventId: event.id!, name: event.name, description: event.description, startDate: event.startDate, eventType: event.eventType, calendarId: event.calendarId);
-    await refresh();
-  }
-
-  Future<void> deleteEvent(int eventId) async {
-    await _eventService.deleteEvent(eventId);
-    await refresh();
-  }
-
-  Future<void> refreshIfNeeded() async {
-    await refresh();
-  }
-}
+// EventStateNotifier removed - using EventRepository with Realtime instead
+// All event management now handled by EventRepository + Realtime subscriptions
 
 final subscriptionsProvider = NotifierProvider<SubscriptionsNotifier, AsyncValue<List<Subscription>>>(SubscriptionsNotifier.new);
 
@@ -333,7 +276,7 @@ class EventInteractionsNotifier extends Notifier<AsyncValue<List<EventInteractio
     try {
       await _interactionService.updateParticipationStatus(eventId, status, decisionMessage: decisionMessage, isAttending: isAttending);
       await refresh();
-      ref.read(eventStateProvider.notifier).refresh();
+      // EventRepository handles updates via Realtime - no manual refresh needed
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
       rethrow;
@@ -460,7 +403,8 @@ class AppState {
 }
 
 final appStateProvider = Provider<AppState>((ref) {
-  return AppState(events: AsyncValue.data(ref.watch(eventStateProvider)), subscriptions: ref.watch(subscriptionsProvider));
+  final eventsAsync = ref.watch(eventsStreamProvider);
+  return AppState(events: eventsAsync, subscriptions: ref.watch(subscriptionsProvider));
 });
 
 final localeProvider = NotifierProvider<LocaleNotifier, Locale>(LocaleNotifier.new);
@@ -517,10 +461,13 @@ class AggregatedEventsNotifier extends Notifier<AsyncValue<List<Event>>> {
   AsyncValue<List<Event>> build() {
     _loadEvents();
 
-    ref.listen<List<Event>>(eventStateProvider, (previous, next) {
-      if (previous?.length != next.length) {
-        refresh();
-      }
+    // Listen to EventRepository stream instead of eventStateProvider
+    ref.listen<AsyncValue<List<Event>>>(eventsStreamProvider, (previous, next) {
+      next.whenData((events) {
+        if (previous?.value?.length != events.length) {
+          refresh();
+        }
+      });
     });
 
     return const AsyncValue.loading();
@@ -585,10 +532,11 @@ final serverFilteredEventsProvider = FutureProvider.family.autoDispose<List<Even
 });
 
 final subscribedUserEventsProvider = Provider.family<AsyncValue<List<Event>>, int>((ref, subscribedUserId) {
-  final events = ref.watch(eventStateProvider);
+  final eventsAsync = ref.watch(eventsStreamProvider);
 
-  final filtered = events.where((e) => e.ownerId == subscribedUserId).toList();
-
-  filtered.sort((a, b) => a.date.compareTo(b.date));
-  return AsyncValue.data(filtered);
+  return eventsAsync.whenData((events) {
+    final filtered = events.where((e) => e.ownerId == subscribedUserId).toList();
+    filtered.sort((a, b) => a.date.compareTo(b.date));
+    return filtered;
+  });
 });

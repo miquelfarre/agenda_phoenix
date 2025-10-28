@@ -63,7 +63,12 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allEvents = ref.watch(eventStateProvider);
+    final allEventsAsync = ref.watch(eventsStreamProvider);
+    final allEvents = allEventsAsync.when(
+      data: (events) => events,
+      loading: () => <Event>[],
+      error: (_, __) => <Event>[],
+    );
 
     final calendarEvents = allEvents.where((event) => event.calendarId == widget.calendarId).toList();
 

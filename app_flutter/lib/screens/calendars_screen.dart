@@ -55,8 +55,12 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   }
 
   int _getEventCountForCalendar(int calendarId) {
-    final allEvents = ref.watch(eventStateProvider);
-    return allEvents.where((event) => event.calendarId == calendarId).length;
+    final allEventsAsync = ref.watch(eventsStreamProvider);
+    return allEventsAsync.when(
+      data: (events) => events.where((event) => event.calendarId == calendarId).length,
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
   }
 
   @override

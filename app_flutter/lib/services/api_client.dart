@@ -52,6 +52,40 @@ class ApiClient implements IApiClient {
     return uri;
   }
 
+  /// Extract caller information from stack trace for logging
+  String _getCallerInfo() {
+    try {
+      final stackTrace = StackTrace.current.toString();
+      final lines = stackTrace.split('\n');
+
+      // Skip the first lines (this method, get/post/put/delete/patch methods)
+      // and find the first external caller
+      for (var i = 3; i < lines.length && i < 8; i++) {
+        final line = lines[i].trim();
+
+        // Look for file path in the stack frame
+        final match = RegExp(r'package:eventypop/(.+?\.dart):(\d+)').firstMatch(line);
+        if (match != null) {
+          final filePath = match.group(1)!;
+          final lineNumber = match.group(2)!;
+
+          // Extract file name without path
+          final fileName = filePath.split('/').last;
+
+          // Try to extract method/function name
+          final methodMatch = RegExp(r'([a-zA-Z_][a-zA-Z0-9_]*)\s*\(').firstMatch(line);
+          final methodName = methodMatch?.group(1) ?? '?';
+
+          return '[$fileName:$lineNumber → $methodName()]';
+        }
+      }
+
+      return '[unknown caller]';
+    } catch (e) {
+      return '[trace error]';
+    }
+  }
+
   dynamic _handleResponse(http.Response response) {
     final rawBody = utf8.decode(response.bodyBytes);
     dynamic body;
@@ -105,7 +139,8 @@ class ApiClient implements IApiClient {
     final uri = _buildUri(path, queryParams: queryParams);
     final headers = await _getHeaders();
 
-    DebugConfig.info('GET: $uri', tag: 'API');
+    final caller = _getCallerInfo();
+    DebugConfig.info('GET: $uri $caller', tag: 'API');
 
     try {
       final response = await _client.get(uri, headers: headers);
@@ -124,7 +159,8 @@ class ApiClient implements IApiClient {
     final uri = _buildUri(path);
     final headers = await _getHeaders();
 
-    DebugConfig.info('POST: $uri', tag: 'API');
+    final caller = _getCallerInfo();
+    DebugConfig.info('POST: $uri $caller', tag: 'API');
 
     try {
       final response = await _client.post(uri, headers: headers, body: body != null ? jsonEncode(body) : null);
@@ -143,7 +179,8 @@ class ApiClient implements IApiClient {
     final uri = _buildUri(path);
     final headers = await _getHeaders();
 
-    DebugConfig.info('PUT: $uri', tag: 'API');
+    final caller = _getCallerInfo();
+    DebugConfig.info('PUT: $uri $caller', tag: 'API');
 
     try {
       final response = await _client.put(uri, headers: headers, body: body != null ? jsonEncode(body) : null);
@@ -162,7 +199,8 @@ class ApiClient implements IApiClient {
     final uri = _buildUri(path, queryParams: queryParams);
     final headers = await _getHeaders();
 
-    DebugConfig.info('DELETE: $uri', tag: 'API');
+    final caller = _getCallerInfo();
+    DebugConfig.info('DELETE: $uri $caller', tag: 'API');
 
     try {
       final response = await _client.delete(uri, headers: headers);
@@ -181,7 +219,8 @@ class ApiClient implements IApiClient {
     final uri = _buildUri(path);
     final headers = await _getHeaders();
 
-    DebugConfig.info('PATCH: $uri', tag: 'API');
+    final caller = _getCallerInfo();
+    DebugConfig.info('PATCH: $uri $caller', tag: 'API');
 
     try {
       final response = await _client.patch(uri, headers: headers, body: body != null ? jsonEncode(body) : null);
