@@ -2,17 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'platform_detection.dart';
 
 class PlatformNavigation {
-  static PageRoute<T> platformPageRoute<T>({
-    required WidgetBuilder builder,
-    RouteSettings? settings,
-    bool fullscreenDialog = false,
-  }) {
+  static PageRoute<T> platformPageRoute<T>({required WidgetBuilder builder, RouteSettings? settings, bool fullscreenDialog = false}) {
     if (PlatformDetection.isIOS) {
-      return CupertinoPageRoute<T>(
-        builder: builder,
-        settings: settings,
-        fullscreenDialog: fullscreenDialog,
-      );
+      return CupertinoPageRoute<T>(builder: builder, settings: settings, fullscreenDialog: fullscreenDialog);
     }
 
     return PageRouteBuilder<T>(
@@ -25,19 +17,9 @@ class PlatformNavigation {
     );
   }
 
-  static Future<T?> presentModal<T>(
-    BuildContext context,
-    Widget screen, {
-    bool isDismissible = true,
-    bool enableDrag = true,
-    bool isScrollControlled = true,
-    Object? shape,
-  }) {
+  static Future<T?> presentModal<T>(BuildContext context, Widget screen, {bool isDismissible = true, bool enableDrag = true, bool isScrollControlled = true, Object? shape}) {
     if (PlatformDetection.isIOS) {
-      final result = showCupertinoModalPopup<T>(
-        context: context,
-        builder: (ctx) => screen,
-      );
+      final result = showCupertinoModalPopup<T>(context: context, builder: (ctx) => screen);
       result.then((value) {});
       return result;
     }
@@ -57,10 +39,7 @@ class PlatformNavigation {
         );
       },
       transitionsBuilder: (ctx, animation, secondary, child) {
-        final offset = Tween(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(animation);
+        final offset = Tween(begin: const Offset(0, 1), end: Offset.zero).animate(animation);
         return SlideTransition(position: offset, child: child);
       },
     );

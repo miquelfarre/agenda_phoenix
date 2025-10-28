@@ -18,12 +18,10 @@ import 'public_user_events_screen.dart';
 class SubscriptionsScreen extends ConsumerStatefulWidget {
   const SubscriptionsScreen({super.key});
   @override
-  ConsumerState<SubscriptionsScreen> createState() =>
-      _SubscriptionsScreenState();
+  ConsumerState<SubscriptionsScreen> createState() => _SubscriptionsScreenState();
 }
 
-class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
-    with WidgetsBindingObserver {
+class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -48,10 +46,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       child: PlatformWidgets.platformTextField(
         controller: _searchController,
         placeholder: l10n.searchSubscriptions,
-        prefixIcon: PlatformWidgets.platformIcon(
-          CupertinoIcons.search,
-          color: AppStyles.grey600,
-        ),
+        prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.search, color: AppStyles.grey600),
         suffixIcon: _searchController.text.isNotEmpty
             ? CupertinoButton(
                 key: const Key('subscriptions_search_clear_button'),
@@ -62,23 +57,14 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
                     _searchQuery = '';
                   });
                 },
-                child: PlatformWidgets.platformIcon(
-                  CupertinoIcons.clear_circled_solid,
-                  color: AppStyles.grey600,
-                  size: 18,
-                ),
+                child: PlatformWidgets.platformIcon(CupertinoIcons.clear_circled_solid, color: AppStyles.grey600, size: 18),
               )
             : null,
       ),
     );
   }
 
-  Widget _buildScrollableContent(
-    List<User> users,
-    bool isIOS,
-    AppLocalizations l10n,
-    WidgetRef ref,
-  ) {
+  Widget _buildScrollableContent(List<User> users, bool isIOS, AppLocalizations l10n, WidgetRef ref) {
     if (users.isEmpty) {
       return CustomScrollView(
         physics: const ClampingScrollPhysics(),
@@ -86,10 +72,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
           SliverToBoxAdapter(child: _buildSearchField(isIOS)),
           SliverFillRemaining(
             hasScrollBody: false,
-            child: EmptyState(
-              message: l10n.noSubscriptions,
-              icon: isIOS ? CupertinoIcons.person_2 : CupertinoIcons.person_2,
-            ),
+            child: EmptyState(message: l10n.noSubscriptions, icon: isIOS ? CupertinoIcons.person_2 : CupertinoIcons.person_2),
           ),
         ],
       );
@@ -114,19 +97,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     );
   }
 
-  Widget _buildUserItem(
-    User user,
-    bool isIOS,
-    AppLocalizations l10n,
-    WidgetRef ref,
-  ) {
+  Widget _buildUserItem(User user, bool isIOS, AppLocalizations l10n, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: SubscriptionCard(
-        user: user,
-        onTap: () => _showUserDetails(user),
-        onDelete: () => _removeUser(user, ref),
-      ),
+      child: SubscriptionCard(user: user, onTap: () => _showUserDetails(user), onDelete: () => _removeUser(user, ref)),
     );
   }
 
@@ -174,10 +148,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
               onPressed: () {
                 ref.read(subscriptionRepositoryProvider).refresh();
               },
-              child: PlatformWidgets.platformIcon(
-                CupertinoIcons.refresh,
-                size: 20,
-              ),
+              child: PlatformWidgets.platformIcon(CupertinoIcons.refresh, size: 20),
             ),
           ),
       ],
@@ -187,8 +158,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             final filteredUsers = users.where((user) {
               if (_searchQuery.isEmpty) return true;
               final query = _searchQuery.toLowerCase();
-              return (user.fullName?.toLowerCase().contains(query) ?? false) ||
-                  (user.instagramName?.toLowerCase().contains(query) ?? false);
+              return (user.fullName?.toLowerCase().contains(query) ?? false) || (user.instagramName?.toLowerCase().contains(query) ?? false);
             }).toList();
 
             return _buildScrollableContent(filteredUsers, isIOS, l10n, ref);
@@ -198,10 +168,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  '${l10n.error}: $error',
-                  style: const TextStyle(fontSize: 16),
-                ),
+                Text('${l10n.error}: $error', style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 16),
                 CupertinoButton(
                   onPressed: () {
@@ -218,11 +185,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   }
 
   void _showUserDetails(User user) {
-    Navigator.of(context).push(
-      CupertinoPageRoute(
-        builder: (_) => PublicUserEventsScreen(publicUser: user),
-      ),
-    );
+    Navigator.of(context).push(CupertinoPageRoute(builder: (_) => PublicUserEventsScreen(publicUser: user)));
   }
 
   Future<void> _removeUser(User user, WidgetRef ref) async {

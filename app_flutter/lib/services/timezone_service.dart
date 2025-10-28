@@ -14,9 +14,7 @@ class TimezoneService {
 
   static DateTime convertFromUtc(DateTime utcDateTime, String timezoneName) {
     if (!_initialized) {
-      throw const InitializationException(
-        message: 'TimezoneService not initialized. Call initialize() first.',
-      );
+      throw const InitializationException(message: 'TimezoneService not initialized. Call initialize() first.');
     }
 
     final location = tz.getLocation(timezoneName);
@@ -26,30 +24,18 @@ class TimezoneService {
 
   static DateTime convertToUtc(DateTime localDateTime, String timezoneName) {
     if (!_initialized) {
-      throw const InitializationException(
-        message: 'TimezoneService not initialized. Call initialize() first.',
-      );
+      throw const InitializationException(message: 'TimezoneService not initialized. Call initialize() first.');
     }
 
     final location = tz.getLocation(timezoneName);
-    final localTzDateTime = tz.TZDateTime(
-      location,
-      localDateTime.year,
-      localDateTime.month,
-      localDateTime.day,
-      localDateTime.hour,
-      localDateTime.minute,
-      localDateTime.second,
-    );
+    final localTzDateTime = tz.TZDateTime(location, localDateTime.year, localDateTime.month, localDateTime.day, localDateTime.hour, localDateTime.minute, localDateTime.second);
 
     return localTzDateTime.toUtc();
   }
 
   static String getCurrentOffset(String timezoneName) {
     if (!_initialized) {
-      throw const InitializationException(
-        message: 'TimezoneService not initialized. Call initialize() first.',
-      );
+      throw const InitializationException(message: 'TimezoneService not initialized. Call initialize() first.');
     }
 
     try {
@@ -66,14 +52,9 @@ class TimezoneService {
     }
   }
 
-  static Map<String, dynamic> getTimezoneInfo(
-    String timezoneName,
-    DateTime? dateTime,
-  ) {
+  static Map<String, dynamic> getTimezoneInfo(String timezoneName, DateTime? dateTime) {
     if (!_initialized) {
-      throw const InitializationException(
-        message: 'TimezoneService not initialized. Call initialize() first.',
-      );
+      throw const InitializationException(message: 'TimezoneService not initialized. Call initialize() first.');
     }
 
     try {
@@ -81,19 +62,9 @@ class TimezoneService {
       final targetDate = dateTime ?? DateTime.now();
       final tzDateTime = tz.TZDateTime.from(targetDate, location);
 
-      return {
-        'timezone': timezoneName,
-        'offset': getCurrentOffset(timezoneName),
-        'abbreviation': tzDateTime.timeZoneName,
-        'isDst': _isDstActive(location, targetDate),
-      };
+      return {'timezone': timezoneName, 'offset': getCurrentOffset(timezoneName), 'abbreviation': tzDateTime.timeZoneName, 'isDst': _isDstActive(location, targetDate)};
     } catch (e) {
-      return {
-        'timezone': timezoneName,
-        'offset': 'GMT+0',
-        'abbreviation': 'UTC',
-        'isDst': false,
-      };
+      return {'timezone': timezoneName, 'offset': 'GMT+0', 'abbreviation': 'UTC', 'isDst': false};
     }
   }
 

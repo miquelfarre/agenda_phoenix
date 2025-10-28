@@ -5,20 +5,12 @@ class PlatformRefresh extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final Widget? sliverChild;
 
-  const PlatformRefresh({
-    super.key,
-    required this.child,
-    required this.onRefresh,
-    this.sliverChild,
-  });
+  const PlatformRefresh({super.key, required this.child, required this.onRefresh, this.sliverChild});
 
   @override
   Widget build(BuildContext context) {
     if (sliverChild != null) {
-      return CustomScrollView(
-        physics: const ClampingScrollPhysics(),
-        slivers: [sliverChild!],
-      );
+      return CustomScrollView(physics: const ClampingScrollPhysics(), slivers: [sliverChild!]);
     } else {
       if (child is ScrollView) {
         return child;
@@ -36,18 +28,11 @@ class PlatformRefreshSlivers extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final List<Widget> slivers;
 
-  const PlatformRefreshSlivers({
-    super.key,
-    required this.onRefresh,
-    required this.slivers,
-  });
+  const PlatformRefreshSlivers({super.key, required this.onRefresh, required this.slivers});
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      physics: const ClampingScrollPhysics(),
-      slivers: [...slivers],
-    );
+    return CustomScrollView(physics: const ClampingScrollPhysics(), slivers: [...slivers]);
   }
 }
 
@@ -57,13 +42,7 @@ class PlatformScrollView extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final ScrollController? controller;
 
-  const PlatformScrollView({
-    super.key,
-    required this.children,
-    required this.onRefresh,
-    this.padding,
-    this.controller,
-  });
+  const PlatformScrollView({super.key, required this.children, required this.onRefresh, this.padding, this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -87,14 +66,7 @@ class PlatformListView extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final ScrollController? controller;
 
-  const PlatformListView({
-    super.key,
-    required this.itemCount,
-    required this.itemBuilder,
-    required this.onRefresh,
-    this.padding,
-    this.controller,
-  });
+  const PlatformListView({super.key, required this.itemCount, required this.itemBuilder, required this.onRefresh, this.padding, this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -104,12 +76,7 @@ class PlatformListView extends StatelessWidget {
       slivers: [
         SliverPadding(
           padding: padding ?? EdgeInsets.zero,
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              itemBuilder,
-              childCount: itemCount,
-            ),
-          ),
+          sliver: SliverList(delegate: SliverChildBuilderDelegate(itemBuilder, childCount: itemCount)),
         ),
       ],
     );
@@ -120,18 +87,13 @@ class _NonMaterialRefreshWrapper extends StatefulWidget {
   final Widget child;
   final Future<void> Function() onRefresh;
 
-  const _NonMaterialRefreshWrapper({
-    required this.child,
-    required this.onRefresh,
-  });
+  const _NonMaterialRefreshWrapper({required this.child, required this.onRefresh});
 
   @override
-  State<_NonMaterialRefreshWrapper> createState() =>
-      _NonMaterialRefreshWrapperState();
+  State<_NonMaterialRefreshWrapper> createState() => _NonMaterialRefreshWrapperState();
 }
 
-class _NonMaterialRefreshWrapperState
-    extends State<_NonMaterialRefreshWrapper> {
+class _NonMaterialRefreshWrapperState extends State<_NonMaterialRefreshWrapper> {
   bool _refreshing = false;
   DateTime _lastTrigger = DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -154,31 +116,20 @@ class _NonMaterialRefreshWrapperState
   Widget build(BuildContext context) {
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification is OverscrollNotification &&
-            notification.overscroll < 0 &&
-            notification.metrics.pixels <= 0) {
+        if (notification is OverscrollNotification && notification.overscroll < 0 && notification.metrics.pixels <= 0) {
           _maybeTrigger();
         }
         return false;
       },
       child: Stack(
         children: [
-          ScrollConfiguration(
-            behavior: const CupertinoScrollBehavior(),
-            child: widget.child,
-          ),
+          ScrollConfiguration(behavior: const CupertinoScrollBehavior(), child: widget.child),
           if (_refreshing)
             Positioned(
               top: 8,
               left: 0,
               right: 0,
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: const CupertinoActivityIndicator(radius: 9),
-                ),
-              ),
+              child: Center(child: SizedBox(width: 18, height: 18, child: const CupertinoActivityIndicator(radius: 9))),
             ),
         ],
       ),

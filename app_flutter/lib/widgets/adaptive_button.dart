@@ -7,12 +7,7 @@ class AdaptivePrimaryButton extends StatelessWidget {
   final String text;
   final bool isDestructive;
 
-  const AdaptivePrimaryButton({
-    super.key,
-    required this.onPressed,
-    required this.text,
-    this.isDestructive = false,
-  });
+  const AdaptivePrimaryButton({super.key, required this.onPressed, required this.text, this.isDestructive = false});
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +16,7 @@ class AdaptivePrimaryButton extends StatelessWidget {
     }
     return ElevatedButton(
       onPressed: onPressed,
-      style: isDestructive
-          ? ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            )
-          : null,
+      style: isDestructive ? ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white) : null,
       child: Text(text),
     );
   }
@@ -36,11 +26,7 @@ class AdaptiveTextButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final String text;
 
-  const AdaptiveTextButton({
-    super.key,
-    required this.onPressed,
-    required this.text,
-  });
+  const AdaptiveTextButton({super.key, required this.onPressed, required this.text});
 
   @override
   Widget build(BuildContext context) {

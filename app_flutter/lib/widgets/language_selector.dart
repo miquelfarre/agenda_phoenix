@@ -25,10 +25,7 @@ class LanguageSelector extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Text(
             l10n.language,
-            style: AppStyles.cardTitle.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppStyles.grey700,
-            ),
+            style: AppStyles.cardTitle.copyWith(fontWeight: FontWeight.bold, color: AppStyles.grey700),
           ),
         ),
         ...availableLanguages.map((lang) {
@@ -38,26 +35,12 @@ class LanguageSelector extends ConsumerWidget {
           final isSelected = ref.watch(localeProvider) == locale;
 
           return PlatformWidgets.platformListTile(
-            leading: Text(
-              flag,
-              style: AppStyles.headlineSmall.copyWith(fontSize: 24),
-            ),
+            leading: Text(flag, style: AppStyles.headlineSmall.copyWith(fontSize: 24)),
             title: Text(
               name,
-              style: AppStyles.cardTitle.copyWith(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: AppStyles.black87,
-              ),
+              style: AppStyles.cardTitle.copyWith(fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal, color: AppStyles.black87),
             ),
-            trailing: isSelected
-                ? PlatformWidgets.platformIcon(
-                    CupertinoIcons.check_mark,
-                    color: isIOS
-                        ? CupertinoColors.activeBlue.resolveFrom(context)
-                        : AppStyles.blue600,
-                    size: 20,
-                  )
-                : null,
+            trailing: isSelected ? PlatformWidgets.platformIcon(CupertinoIcons.check_mark, color: isIOS ? CupertinoColors.activeBlue.resolveFrom(context) : AppStyles.blue600, size: 20) : null,
             onTap: () => _changeLanguage(context, ref, locale),
           );
         }),
@@ -66,19 +49,12 @@ class LanguageSelector extends ConsumerWidget {
     );
   }
 
-  void _changeLanguage(
-    BuildContext context,
-    WidgetRef ref,
-    Locale locale,
-  ) async {
+  void _changeLanguage(BuildContext context, WidgetRef ref, Locale locale) async {
     final localeNotifier = ref.read(localeProvider.notifier);
     final l10n = context.l10n;
 
     try {
-      PlatformDialogHelpers.showPlatformLoadingDialog(
-        context,
-        message: l10n.updating,
-      );
+      PlatformDialogHelpers.showPlatformLoadingDialog(context, message: l10n.updating);
     } catch (e) {
       return;
     }
@@ -93,10 +69,7 @@ class LanguageSelector extends ConsumerWidget {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) {
               final newL10n = context.l10n;
-              PlatformDialogHelpers.showSnackBar(
-                context: context,
-                message: newL10n.settingsUpdated,
-              );
+              PlatformDialogHelpers.showSnackBar(context: context, message: newL10n.settingsUpdated);
             } else {}
           });
         } catch (_) {}
@@ -107,11 +80,7 @@ class LanguageSelector extends ConsumerWidget {
           Navigator.of(context, rootNavigator: true).pop();
 
           final errL10n = context.l10n;
-          PlatformDialogHelpers.showSnackBar(
-            context: context,
-            message: errL10n.errorUpdatingSettings,
-            isError: true,
-          );
+          PlatformDialogHelpers.showSnackBar(context: context, message: errL10n.errorUpdatingSettings, isError: true);
         } catch (_) {}
       } else {}
     }

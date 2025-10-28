@@ -14,19 +14,10 @@ class ConfirmationActionWidget extends StatefulWidget {
 
   final bool isDestructive;
 
-  const ConfirmationActionWidget({
-    super.key,
-    required this.dialogTitle,
-    required this.dialogMessage,
-    required this.actionText,
-    required this.child,
-    required this.onAction,
-    this.isDestructive = false,
-  });
+  const ConfirmationActionWidget({super.key, required this.dialogTitle, required this.dialogMessage, required this.actionText, required this.child, required this.onAction, this.isDestructive = false});
 
   @override
-  State<ConfirmationActionWidget> createState() =>
-      _ConfirmationActionWidgetState();
+  State<ConfirmationActionWidget> createState() => _ConfirmationActionWidgetState();
 }
 
 class _ConfirmationActionWidgetState extends State<ConfirmationActionWidget> {
@@ -45,13 +36,6 @@ class _ConfirmationActionWidgetState extends State<ConfirmationActionWidget> {
   }
 
   Future<bool> _showDialog() async {
-    return await PlatformDialogHelpers.showPlatformConfirmDialog(
-          context,
-          title: widget.dialogTitle,
-          message: widget.dialogMessage,
-          confirmText: widget.actionText,
-          isDestructive: widget.isDestructive,
-        ) ??
-        false;
+    return await PlatformDialogHelpers.showPlatformConfirmDialog(context, title: widget.dialogTitle, message: widget.dialogMessage, confirmText: widget.actionText, isDestructive: widget.isDestructive) ?? false;
   }
 }

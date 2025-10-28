@@ -78,32 +78,16 @@ class BaseTextField extends StatelessWidget {
       textCapitalization: textCapitalization,
       autofocus: autofocus,
       placeholder: hintText,
-      placeholderStyle: TextStyle(
-        fontSize: 16,
-        color: CupertinoColors.systemGrey,
-      ),
-      style:
-          textStyle ??
-          const TextStyle(fontSize: 16, color: AppStyles.textColor),
+      placeholderStyle: TextStyle(fontSize: 16, color: CupertinoColors.systemGrey),
+      style: textStyle ?? const TextStyle(fontSize: 16, color: AppStyles.textColor),
       padding: contentPadding ?? AppStyles.buttonPadding,
       decoration: BoxDecoration(
-        border:
-            border ??
-            Border.all(
-              color: errorText != null
-                  ? AppStyles.errorColor
-                  : AppStyles.grey300,
-              width: errorText != null ? 2 : 1,
-            ),
+        border: border ?? Border.all(color: errorText != null ? AppStyles.errorColor : AppStyles.grey300, width: errorText != null ? 2 : 1),
         borderRadius: AppStyles.smallRadius,
         color: enabled ? CupertinoColors.white : AppStyles.grey100,
       ),
-      prefix: prefixIcon != null
-          ? Padding(padding: const EdgeInsets.only(left: 8), child: prefixIcon)
-          : null,
-      suffix: suffixIcon != null
-          ? Padding(padding: const EdgeInsets.only(right: 8), child: suffixIcon)
-          : null,
+      prefix: prefixIcon != null ? Padding(padding: const EdgeInsets.only(left: 8), child: prefixIcon) : null,
+      suffix: suffixIcon != null ? Padding(padding: const EdgeInsets.only(right: 8), child: suffixIcon) : null,
     );
 
     if (labelText != null || helperText != null || errorText != null) {
@@ -113,27 +97,12 @@ class BaseTextField extends StatelessWidget {
           if (labelText != null) ...[
             Text(
               labelText!,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppStyles.textColor,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppStyles.textColor),
             ),
             const SizedBox(height: 4),
           ],
           textField,
-          if (helperText != null || errorText != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              errorText ?? helperText!,
-              style: TextStyle(
-                fontSize: 12,
-                color: errorText != null
-                    ? AppStyles.errorColor
-                    : AppStyles.grey600,
-              ),
-            ),
-          ],
+          if (helperText != null || errorText != null) ...[const SizedBox(height: 4), Text(errorText ?? helperText!, style: TextStyle(fontSize: 12, color: errorText != null ? AppStyles.errorColor : AppStyles.grey600))],
         ],
       );
     }
@@ -148,13 +117,7 @@ class SearchTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onClear;
 
-  const SearchTextField({
-    super.key,
-    this.controller,
-    this.hintText,
-    this.onChanged,
-    this.onClear,
-  });
+  const SearchTextField({super.key, this.controller, this.hintText, this.onChanged, this.onClear});
 
   @override
   Widget build(BuildContext context) {
@@ -165,20 +128,9 @@ class SearchTextField extends StatelessWidget {
       onChanged: onChanged,
       onSuffixTap: onClear,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppStyles.grey100,
-        borderRadius: AppStyles.smallRadius,
-      ),
-      prefixIcon: const Icon(
-        CupertinoIcons.search,
-        color: AppStyles.grey600,
-        size: 20,
-      ),
-      suffixIcon: const Icon(
-        CupertinoIcons.clear_circled_solid,
-        color: AppStyles.grey600,
-        size: 18,
-      ),
+      decoration: BoxDecoration(color: AppStyles.grey100, borderRadius: AppStyles.smallRadius),
+      prefixIcon: const Icon(CupertinoIcons.search, color: AppStyles.grey600, size: 20),
+      suffixIcon: const Icon(CupertinoIcons.clear_circled_solid, color: AppStyles.grey600, size: 18),
       style: const TextStyle(fontSize: 16),
     );
   }

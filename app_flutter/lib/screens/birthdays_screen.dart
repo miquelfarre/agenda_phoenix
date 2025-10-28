@@ -40,8 +40,7 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
     if (query.isEmpty) return birthdays;
 
     return birthdays.where((event) {
-      return event.title.toLowerCase().contains(query) ||
-          (event.description?.toLowerCase().contains(query) ?? false);
+      return event.title.toLowerCase().contains(query) || (event.description?.toLowerCase().contains(query) ?? false);
     }).toList();
   }
 
@@ -51,18 +50,8 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
     final currentDay = now.day;
 
     return birthdays.toList()..sort((a, b) {
-      int daysUntilA = _daysUntilNextBirthday(
-        a.startDate.month,
-        a.startDate.day,
-        currentMonth,
-        currentDay,
-      );
-      int daysUntilB = _daysUntilNextBirthday(
-        b.startDate.month,
-        b.startDate.day,
-        currentMonth,
-        currentDay,
-      );
+      int daysUntilA = _daysUntilNextBirthday(a.startDate.month, a.startDate.day, currentMonth, currentDay);
+      int daysUntilB = _daysUntilNextBirthday(b.startDate.month, b.startDate.day, currentMonth, currentDay);
 
       int comparison = daysUntilA.compareTo(daysUntilB);
       if (comparison != 0) return comparison;
@@ -71,38 +60,21 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
     });
   }
 
-  int _daysUntilNextBirthday(
-    int birthdayMonth,
-    int birthdayDay,
-    int currentMonth,
-    int currentDay,
-  ) {
+  int _daysUntilNextBirthday(int birthdayMonth, int birthdayDay, int currentMonth, int currentDay) {
     final now = DateTime.now();
     final thisYearBirthday = DateTime(now.year, birthdayMonth, birthdayDay);
 
-    if (thisYearBirthday.isAfter(now) ||
-        (thisYearBirthday.year == now.year &&
-            thisYearBirthday.month == now.month &&
-            thisYearBirthday.day == now.day)) {
+    if (thisYearBirthday.isAfter(now) || (thisYearBirthday.year == now.year && thisYearBirthday.month == now.month && thisYearBirthday.day == now.day)) {
       return thisYearBirthday.difference(now).inDays;
     } else {
-      final nextYearBirthday = DateTime(
-        now.year + 1,
-        birthdayMonth,
-        birthdayDay,
-      );
+      final nextYearBirthday = DateTime(now.year + 1, birthdayMonth, birthdayDay);
       return nextYearBirthday.difference(now).inDays;
     }
   }
 
   String _getBirthdayLabel(Event event) {
     final now = DateTime.now();
-    final daysUntil = _daysUntilNextBirthday(
-      event.startDate.month,
-      event.startDate.day,
-      now.month,
-      now.day,
-    );
+    final daysUntil = _daysUntilNextBirthday(event.startDate.month, event.startDate.day, now.month, now.day);
 
     if (daysUntil == 0) {
       return AppLocalizations.of(context)!.today;
@@ -112,14 +84,10 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
       return AppLocalizations.of(context)!.inDays(daysUntil);
     } else if (daysUntil < 30) {
       final weeks = (daysUntil / 7).floor();
-      return weeks == 1
-          ? AppLocalizations.of(context)!.inOneWeek
-          : AppLocalizations.of(context)!.inWeeks(weeks);
+      return weeks == 1 ? AppLocalizations.of(context)!.inOneWeek : AppLocalizations.of(context)!.inWeeks(weeks);
     } else if (daysUntil < 365) {
       final months = (daysUntil / 30).floor();
-      return months == 1
-          ? AppLocalizations.of(context)!.inOneMonth
-          : AppLocalizations.of(context)!.inMonths(months);
+      return months == 1 ? AppLocalizations.of(context)!.inOneMonth : AppLocalizations.of(context)!.inMonths(months);
     } else {
       return AppLocalizations.of(context)!.inOneYear;
     }
@@ -129,9 +97,7 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
   Widget build(BuildContext context) {
     final allEvents = ref.watch(eventStateProvider);
 
-    final birthdayEvents = allEvents
-        .where((event) => event.isBirthday)
-        .toList();
+    final birthdayEvents = allEvents.where((event) => event.isBirthday).toList();
 
     final sortedBirthdays = _sortByUpcomingBirthdays(birthdayEvents);
 
@@ -140,10 +106,7 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
-        middle: Text(
-          AppLocalizations.of(context)!.birthdays,
-          style: const TextStyle(fontSize: 16),
-        ),
+        middle: Text(AppLocalizations.of(context)!.birthdays, style: const TextStyle(fontSize: 16)),
       ),
       child: SafeArea(child: _buildContent(eventsToShow)),
     );
@@ -156,11 +119,7 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(
-              controller: _searchController,
-              placeholder: AppLocalizations.of(context)!.searchBirthdays,
-              backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context),
-            ),
+            child: CupertinoSearchTextField(controller: _searchController, placeholder: AppLocalizations.of(context)!.searchBirthdays, backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context)),
           ),
         ),
 
@@ -171,11 +130,7 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
               children: [
                 Text(
                   '${eventsToShow.length} ${eventsToShow.length == 1 ? AppLocalizations.of(context)!.birthday : AppLocalizations.of(context)!.birthdays}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppStyles.grey600,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppStyles.grey600, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -190,21 +145,9 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    CupertinoIcons.gift,
-                    size: 64,
-                    color: CupertinoColors.systemGrey,
-                  ),
+                  const Icon(CupertinoIcons.gift, size: 64, color: CupertinoColors.systemGrey),
                   const SizedBox(height: 16),
-                  Text(
-                    _searchController.text.isNotEmpty
-                        ? AppLocalizations.of(context)!.noBirthdaysFound
-                        : AppLocalizations.of(context)!.noBirthdays,
-                    style: const TextStyle(
-                      color: CupertinoColors.systemGrey,
-                      fontSize: 16,
-                    ),
-                  ),
+                  Text(_searchController.text.isNotEmpty ? AppLocalizations.of(context)!.noBirthdaysFound : AppLocalizations.of(context)!.noBirthdays, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 16)),
                 ],
               ),
             ),
@@ -216,10 +159,7 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
               final birthdayLabel = _getBirthdayLabel(event);
 
               return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -227,29 +167,16 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
                       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
                       child: Text(
                         birthdayLabel,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppStyles.grey600,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: TextStyle(fontSize: 12, color: AppStyles.grey600, fontWeight: FontWeight.w600),
                       ),
                     ),
 
                     EventCard(
                       event: event,
                       onTap: () {
-                        Navigator.of(context).push(
-                          CupertinoPageRoute<void>(
-                            builder: (_) => EventDetailScreen(event: event),
-                          ),
-                        );
+                        Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => EventDetailScreen(event: event)));
                       },
-                      config: EventCardConfig.readOnly().copyWith(
-                        customStatus: DateTimeUtils.formatBirthdayDate(
-                          event.startDate,
-                          Localizations.localeOf(context).languageCode,
-                        ),
-                      ),
+                      config: EventCardConfig.readOnly().copyWith(customStatus: DateTimeUtils.formatBirthdayDate(event.startDate, Localizations.localeOf(context).languageCode)),
                     ),
                   ],
                 ),

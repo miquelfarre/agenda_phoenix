@@ -7,38 +7,14 @@ class Country {
   final List<String> timezones;
   final String primaryTimezone;
 
-  const Country({
-    required this.code,
-    required this.name,
-    required this.nameEn,
-    required this.flag,
-    required this.dialCode,
-    required this.timezones,
-    required this.primaryTimezone,
-  });
+  const Country({required this.code, required this.name, required this.nameEn, required this.flag, required this.dialCode, required this.timezones, required this.primaryTimezone});
 
   factory Country.fromJson(Map<String, dynamic> json) {
-    return Country(
-      code: json['code'],
-      name: json['name'],
-      nameEn: json['nameEn'],
-      flag: json['flag'],
-      dialCode: json['dialCode'] ?? '',
-      timezones: List<String>.from(json['timezones']),
-      primaryTimezone: json['primaryTimezone'],
-    );
+    return Country(code: json['code'], name: json['name'], nameEn: json['nameEn'], flag: json['flag'], dialCode: json['dialCode'] ?? '', timezones: List<String>.from(json['timezones']), primaryTimezone: json['primaryTimezone']);
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'code': code,
-      'name': name,
-      'nameEn': nameEn,
-      'flag': flag,
-      'dialCode': dialCode,
-      'timezones': timezones,
-      'primaryTimezone': primaryTimezone,
-    };
+    return {'code': code, 'name': name, 'nameEn': nameEn, 'flag': flag, 'dialCode': dialCode, 'timezones': timezones, 'primaryTimezone': primaryTimezone};
   }
 
   @override

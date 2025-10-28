@@ -14,17 +14,7 @@ class EventLocationFields extends StatelessWidget {
   final bool enabled;
   final bool isRequired;
 
-  const EventLocationFields({
-    super.key,
-    this.city,
-    this.countryCode,
-    this.timezone,
-    required this.onCityChanged,
-    required this.onCountryChanged,
-    required this.onTimezoneChanged,
-    this.enabled = true,
-    this.isRequired = false,
-  });
+  const EventLocationFields({super.key, this.city, this.countryCode, this.timezone, required this.onCityChanged, required this.onCountryChanged, required this.onTimezoneChanged, this.enabled = true, this.isRequired = false});
 
   @override
   Widget build(BuildContext context) {
@@ -33,19 +23,13 @@ class EventLocationFields extends StatelessWidget {
       children: [
         Text(
           context.l10n.eventLocation,
-          style: TextStyle(
-            fontSize: AppConstants.bodyFontSize,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.none,
-          ),
+          style: TextStyle(fontSize: AppConstants.bodyFontSize, fontWeight: FontWeight.bold, decoration: TextDecoration.none),
         ),
 
         const SizedBox(height: AppConstants.smallPadding),
 
         CountryTimezoneSelector(
-          initialCountry: countryCode != null
-              ? CountryService.getCountryByCode(countryCode!)
-              : null,
+          initialCountry: countryCode != null ? CountryService.getCountryByCode(countryCode!) : null,
           initialTimezone: timezone,
           initialCity: city,
           onChanged: (country, timezone, city) {
@@ -67,9 +51,7 @@ extension EventLocationFieldsExtension on EventLocationFields {
   }
 
   bool get isEmpty {
-    return (city == null || city!.isEmpty) &&
-        (countryCode == null || countryCode!.isEmpty) &&
-        (timezone == null || timezone!.isEmpty);
+    return (city == null || city!.isEmpty) && (countryCode == null || countryCode!.isEmpty) && (timezone == null || timezone!.isEmpty);
   }
 
   bool get isNotEmpty => !isEmpty;

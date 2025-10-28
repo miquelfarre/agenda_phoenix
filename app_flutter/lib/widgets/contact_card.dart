@@ -17,10 +17,7 @@ class ContactCard extends StatelessWidget {
     final isIOS = PlatformDetection.isIOS;
 
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: isIOS ? 16.0 : 8.0,
-        vertical: 4.0,
-      ),
+      margin: EdgeInsets.symmetric(horizontal: isIOS ? 16.0 : 8.0, vertical: 4.0),
       decoration: AppStyles.cardDecoration,
       child: GestureDetector(
         key: Key('contact_card_tap_${contact.id}'),
@@ -31,24 +28,15 @@ class ContactCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              UserAvatar(
-                user: contact,
-                radius: 32.5,
-                showOnlineIndicator: false,
-              ),
+              UserAvatar(user: contact, radius: 32.5, showOnlineIndicator: false),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      contact.displayName.isNotEmpty
-                          ? contact.displayName
-                          : context.l10n.unknownUser,
-                      style: AppStyles.cardTitle.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      contact.displayName.isNotEmpty ? contact.displayName : context.l10n.unknownUser,
+                      style: AppStyles.cardTitle.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -56,9 +44,7 @@ class ContactCard extends StatelessWidget {
                     if (contact.displaySubtitle?.isNotEmpty == true)
                       Text(
                         contact.displaySubtitle ?? '',
-                        style: AppStyles.cardSubtitle.copyWith(
-                          color: AppStyles.grey600,
-                        ),
+                        style: AppStyles.cardSubtitle.copyWith(color: AppStyles.grey600),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -66,10 +52,7 @@ class ContactCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              PlatformWidgets.platformIcon(
-                CupertinoIcons.chevron_right,
-                color: AppStyles.grey400,
-              ),
+              PlatformWidgets.platformIcon(CupertinoIcons.chevron_right, color: AppStyles.grey400),
             ],
           ),
         ),

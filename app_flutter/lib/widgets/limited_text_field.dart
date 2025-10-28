@@ -192,41 +192,20 @@ class _LimitedTextFieldState extends State<LimitedTextField> {
           textAlign: widget.textAlign,
           focusNode: widget.focusNode,
           autofocus: widget.autofocus,
-          style:
-              widget.style ??
-              AppStyles.bodyText.copyWith(fontSize: AppConstants.bodyFontSize),
+          style: widget.style ?? AppStyles.bodyText.copyWith(fontSize: AppConstants.bodyFontSize),
           placeholder: widget.hintText,
-          padding:
-              widget.contentPadding ??
-              const EdgeInsets.symmetric(
-                horizontal: AppConstants.defaultPadding,
-                vertical: AppConstants.smallPadding,
-              ),
+          padding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: AppConstants.defaultPadding, vertical: AppConstants.smallPadding),
           decoration: BoxDecoration(
-            color: widget.filled
-                ? (widget.fillColor ??
-                      CupertinoColors.tertiarySystemFill.resolveFrom(context))
-                : null,
-            borderRadius: BorderRadius.circular(
-              AppConstants.defaultBorderRadius,
-            ),
-            border: _validationError != null
-                ? Border.all(
-                    color: CupertinoColors.destructiveRed.resolveFrom(context),
-                  )
-                : Border.all(
-                    color: CupertinoColors.separator.resolveFrom(context),
-                  ),
+            color: widget.filled ? (widget.fillColor ?? CupertinoColors.tertiarySystemFill.resolveFrom(context)) : null,
+            borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+            border: _validationError != null ? Border.all(color: CupertinoColors.destructiveRed.resolveFrom(context)) : Border.all(color: CupertinoColors.separator.resolveFrom(context)),
           ),
         ),
         if (_validationError != null) ...[
           const SizedBox(height: 4),
           Text(
             _validationError!,
-            style: AppStyles.bodyTextSmall.copyWith(
-              fontSize: AppConstants.captionFontSize,
-              color: CupertinoColors.destructiveRed.resolveFrom(context),
-            ),
+            style: AppStyles.bodyTextSmall.copyWith(fontSize: AppConstants.captionFontSize, color: CupertinoColors.destructiveRed.resolveFrom(context)),
           ),
         ],
         if (widget.showCounter) ...[
@@ -236,10 +215,7 @@ class _LimitedTextFieldState extends State<LimitedTextField> {
             children: [
               Text(
                 _buildCounterText(),
-                style: AppStyles.bodyTextSmall.copyWith(
-                  fontSize: AppConstants.captionFontSize,
-                  color: _getCounterColor(),
-                ),
+                style: AppStyles.bodyTextSmall.copyWith(fontSize: AppConstants.captionFontSize, color: _getCounterColor()),
               ),
             ],
           ),
@@ -255,13 +231,7 @@ class _LimitedTextFieldState extends State<LimitedTextField> {
         if (widget.labelText != null) ...[
           Text(
             widget.labelText!,
-            style:
-                widget.labelStyle?.copyWith(decoration: TextDecoration.none) ??
-                AppStyles.bodyText.copyWith(
-                  fontSize: AppConstants.bodyFontSize,
-                  fontWeight: FontWeight.w500,
-                  color: CupertinoColors.label.resolveFrom(context),
-                ),
+            style: widget.labelStyle?.copyWith(decoration: TextDecoration.none) ?? AppStyles.bodyText.copyWith(fontSize: AppConstants.bodyFontSize, fontWeight: FontWeight.w500, color: CupertinoColors.label.resolveFrom(context)),
           ),
           const SizedBox(height: AppConstants.smallPadding / 2),
         ],
@@ -280,53 +250,29 @@ class _LimitedTextFieldState extends State<LimitedTextField> {
           textAlign: widget.textAlign,
           focusNode: widget.focusNode,
           autofocus: widget.autofocus,
-          style:
-              widget.style ??
-              AppStyles.bodyText.copyWith(fontSize: AppConstants.bodyFontSize),
+          style: widget.style ?? AppStyles.bodyText.copyWith(fontSize: AppConstants.bodyFontSize),
           placeholder: widget.hintText,
           prefix: widget.prefixIcon,
           suffix: widget.suffixIcon,
-          padding:
-              widget.contentPadding ??
-              const EdgeInsets.symmetric(
-                horizontal: AppConstants.defaultPadding,
-                vertical: AppConstants.smallPadding,
-              ),
+          padding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: AppConstants.defaultPadding, vertical: AppConstants.smallPadding),
           decoration: BoxDecoration(
-            color:
-                widget.fillColor ??
-                CupertinoColors.tertiarySystemFill.resolveFrom(context),
-            borderRadius: BorderRadius.circular(
-              AppConstants.defaultBorderRadius,
-            ),
-            border: _validationError != null
-                ? Border.all(
-                    color: CupertinoColors.destructiveRed.resolveFrom(context),
-                    width: 1,
-                  )
-                : Border.all(
-                    color: CupertinoColors.separator.resolveFrom(context),
-                  ),
+            color: widget.fillColor ?? CupertinoColors.tertiarySystemFill.resolveFrom(context),
+            borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+            border: _validationError != null ? Border.all(color: CupertinoColors.destructiveRed.resolveFrom(context), width: 1) : Border.all(color: CupertinoColors.separator.resolveFrom(context)),
           ),
         ),
         if (_validationError != null) ...[
           const SizedBox(height: 4),
           Text(
             _validationError!,
-            style: AppStyles.bodyTextSmall.copyWith(
-              fontSize: AppConstants.captionFontSize,
-              color: CupertinoColors.destructiveRed.resolveFrom(context),
-            ),
+            style: AppStyles.bodyTextSmall.copyWith(fontSize: AppConstants.captionFontSize, color: CupertinoColors.destructiveRed.resolveFrom(context)),
           ),
         ],
         if (widget.helperText != null) ...[
           const SizedBox(height: 4),
           Text(
             widget.helperText!,
-            style: AppStyles.bodyTextSmall.copyWith(
-              fontSize: AppConstants.captionFontSize,
-              color: CupertinoColors.secondaryLabel.resolveFrom(context),
-            ),
+            style: AppStyles.bodyTextSmall.copyWith(fontSize: AppConstants.captionFontSize, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
           ),
         ],
         if (widget.showCounter) ...[
@@ -336,10 +282,7 @@ class _LimitedTextFieldState extends State<LimitedTextField> {
             children: [
               Text(
                 _buildCounterText(),
-                style: AppStyles.bodyTextSmall.copyWith(
-                  fontSize: AppConstants.captionFontSize,
-                  color: _getCounterColor(),
-                ),
+                style: AppStyles.bodyTextSmall.copyWith(fontSize: AppConstants.captionFontSize, color: _getCounterColor()),
               ),
             ],
           ),
@@ -354,25 +297,11 @@ class EventTitleField extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
 
-  const EventTitleField({
-    super.key,
-    required this.controller,
-    this.validator,
-    this.onChanged,
-  });
+  const EventTitleField({super.key, required this.controller, this.validator, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return LimitedTextField(
-      labelText: context.l10n.eventTitle,
-      controller: controller,
-      maxLength: AppConstants.maxEventTitleLength,
-      validator: validator,
-      onChanged: onChanged,
-      isRequired: true,
-      requiredFieldName: context.l10n.eventTitle,
-      textInputAction: TextInputAction.next,
-    );
+    return LimitedTextField(labelText: context.l10n.eventTitle, controller: controller, maxLength: AppConstants.maxEventTitleLength, validator: validator, onChanged: onChanged, isRequired: true, requiredFieldName: context.l10n.eventTitle, textInputAction: TextInputAction.next);
   }
 }
 
@@ -381,25 +310,11 @@ class EventDescriptionField extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
 
-  const EventDescriptionField({
-    super.key,
-    required this.controller,
-    this.validator,
-    this.onChanged,
-  });
+  const EventDescriptionField({super.key, required this.controller, this.validator, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return LimitedTextField(
-      labelText: context.l10n.eventDescription,
-      controller: controller,
-      maxLength: AppConstants.maxEventDescriptionLength,
-      maxLines: 3,
-      minLines: 2,
-      validator: validator,
-      onChanged: onChanged,
-      textInputAction: TextInputAction.newline,
-    );
+    return LimitedTextField(labelText: context.l10n.eventDescription, controller: controller, maxLength: AppConstants.maxEventDescriptionLength, maxLines: 3, minLines: 2, validator: validator, onChanged: onChanged, textInputAction: TextInputAction.newline);
   }
 }
 
@@ -408,25 +323,11 @@ class GroupNameField extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
 
-  const GroupNameField({
-    super.key,
-    required this.controller,
-    this.validator,
-    this.onChanged,
-  });
+  const GroupNameField({super.key, required this.controller, this.validator, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return LimitedTextField(
-      labelText: context.l10n.groupName,
-      controller: controller,
-      maxLength: AppConstants.maxGroupNameLength,
-      validator: validator,
-      onChanged: onChanged,
-      isRequired: true,
-      requiredFieldName: context.l10n.groupName,
-      textInputAction: TextInputAction.next,
-    );
+    return LimitedTextField(labelText: context.l10n.groupName, controller: controller, maxLength: AppConstants.maxGroupNameLength, validator: validator, onChanged: onChanged, isRequired: true, requiredFieldName: context.l10n.groupName, textInputAction: TextInputAction.next);
   }
 }
 
@@ -435,12 +336,7 @@ class FullNameField extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
 
-  const FullNameField({
-    super.key,
-    required this.controller,
-    this.validator,
-    this.onChanged,
-  });
+  const FullNameField({super.key, required this.controller, this.validator, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -463,12 +359,7 @@ class NotificationMessageField extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
 
-  const NotificationMessageField({
-    super.key,
-    required this.controller,
-    this.validator,
-    this.onChanged,
-  });
+  const NotificationMessageField({super.key, required this.controller, this.validator, this.onChanged});
 
   @override
   Widget build(BuildContext context) {

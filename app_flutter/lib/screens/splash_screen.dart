@@ -20,8 +20,7 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen>
-    with TickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _scaleController;
   late AnimationController _pulseController;
@@ -49,33 +48,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
     });
 
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
+    _fadeController = AnimationController(duration: const Duration(milliseconds: 1000), vsync: this);
 
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
+    _scaleController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
 
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    );
+    _pulseController = AnimationController(duration: const Duration(milliseconds: 2000), vsync: this);
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
-    );
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut));
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
 
     _fadeController.forward();
     _scaleController.forward();
@@ -130,8 +113,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       try {
         _safetyTimer?.cancel();
         if (mounted) {
-          final shouldShow =
-              await PermissionService.shouldShowContactsPermissionDialog();
+          final shouldShow = await PermissionService.shouldShowContactsPermissionDialog();
           if (shouldShow) {
             await PermissionService.markContactsPermissionAsked();
           }
@@ -180,11 +162,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         context.go('/events');
       } catch (e) {
         if (widget.nextScreen != null) {
-          Navigator.of(context).pushReplacement(
-            PlatformNavigation.platformPageRoute(
-              builder: (_) => widget.nextScreen!,
-            ),
-          );
+          Navigator.of(context).pushReplacement(PlatformNavigation.platformPageRoute(builder: (_) => widget.nextScreen!));
         } else {}
       }
     }
@@ -202,11 +180,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePageScaffold(
-      key: const Key('splash_screen_scaffold'),
-      title: null,
-      body: _buildContent(context),
-    );
+    return AdaptivePageScaffold(key: const Key('splash_screen_scaffold'), title: null, body: _buildContent(context));
   }
 
   Widget _buildContent(BuildContext context) {
@@ -241,47 +215,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                       decoration: BoxDecoration(
                                         gradient: AppStyles.splashGradient,
                                         borderRadius: BorderRadius.circular(24),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppStyles.colorWithOpacity(
-                                              AppStyles.black87,
-                                              0.1,
-                                            ),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 10),
-                                          ),
-                                        ],
+                                        boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black87, 0.1), blurRadius: 20, offset: const Offset(0, 10))],
                                       ),
-                                      child: PlatformWidgets.platformIcon(
-                                        CupertinoIcons.calendar,
-                                        color: AppStyles.white,
-                                        size: 60,
-                                      ),
+                                      child: PlatformWidgets.platformIcon(CupertinoIcons.calendar, color: AppStyles.white, size: 60),
                                     ),
 
                                     const SizedBox(height: 24),
 
                                     Text(
                                       l10n.appTitle,
-                                      style: TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppStyles.black87,
-                                        letterSpacing: -0.5,
-                                        decoration: TextDecoration.none,
-                                      ),
+                                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppStyles.black87, letterSpacing: -0.5, decoration: TextDecoration.none),
                                     ),
 
                                     const SizedBox(height: 8),
 
                                     Text(
                                       l10n.yourEventsAlwaysWithYou,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: AppStyles.grey600,
-                                        fontWeight: FontWeight.w500,
-                                        decoration: TextDecoration.none,
-                                      ),
+                                      style: TextStyle(fontSize: 16, color: AppStyles.grey600, fontWeight: FontWeight.w500, decoration: TextDecoration.none),
                                     ),
                                   ],
                                 ),
@@ -298,58 +248,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               const SizedBox(height: 80),
 
               if (_hasError) ...[
-                PlatformWidgets.platformIcon(
-                  CupertinoIcons.exclamationmark_triangle,
-                  color: AppStyles.grey500,
-                  size: 48,
-                ),
+                PlatformWidgets.platformIcon(CupertinoIcons.exclamationmark_triangle, color: AppStyles.grey500, size: 48),
                 const SizedBox(height: 16),
                 Text(
                   l10n.oopsSomethingWentWrong,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppStyles.grey700,
-                    decoration: TextDecoration.none,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppStyles.grey700, decoration: TextDecoration.none),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   _errorMessage,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppStyles.grey600,
-                    decoration: TextDecoration.none,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppStyles.grey600, decoration: TextDecoration.none),
                 ),
                 const SizedBox(height: 24),
-                AdaptiveButton(
-                  key: const Key('splash_screen_retry_button'),
-                  config: AdaptiveButtonConfigExtended.submit(),
-                  text: l10n.retry,
-                  onPressed: _retry,
-                ),
+                AdaptiveButton(key: const Key('splash_screen_retry_button'), config: AdaptiveButtonConfigExtended.submit(), text: l10n.retry, onPressed: _retry),
               ] else if (_isLoading) ...[
                 Center(child: PlatformWidgets.platformLoadingIndicator()),
                 const SizedBox(height: 24),
                 Text(
                   _statusMessage,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppStyles.grey700,
-                    fontWeight: FontWeight.w500,
-                    decoration: TextDecoration.none,
-                  ),
+                  style: TextStyle(fontSize: 16, color: AppStyles.grey700, fontWeight: FontWeight.w500, decoration: TextDecoration.none),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.pleaseWait,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppStyles.grey500,
-                    decoration: TextDecoration.none,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppStyles.grey500, decoration: TextDecoration.none),
                 ),
               ],
             ],

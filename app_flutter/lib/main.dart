@@ -83,18 +83,15 @@ void main() async {
 
     await _validateTestModeConfiguration();
 
-  // When running in test mode (debug), apply a generated JWT as Supabase auth
-  // so Realtime (RLS) connections use a user token instead of the anon key.
-  await SupabaseService.instance.applyTestAuthIfNeeded();
+    // When running in test mode (debug), apply a generated JWT as Supabase auth
+    // so Realtime (RLS) connections use a user token instead of the anon key.
+    await SupabaseService.instance.applyTestAuthIfNeeded();
 
     await GroupService().initialize();
 
     await CalendarService().initialize();
 
-    const env = String.fromEnvironment(
-      'FLUTTER_ENV',
-      defaultValue: 'development',
-    );
+    const env = String.fromEnvironment('FLUTTER_ENV', defaultValue: 'development');
 
     runApp(ProviderScope(child: MyApp(env: env)));
   } catch (e, _) {
@@ -104,10 +101,7 @@ void main() async {
 
 Future<void> _initializeSupabase() async {
   try {
-    await SupabaseService.initialize(
-      supabaseUrl: AppConfig.supabaseUrl,
-      supabaseAnonKey: AppConfig.supabaseAnonKey,
-    );
+    await SupabaseService.initialize(supabaseUrl: AppConfig.supabaseUrl, supabaseAnonKey: AppConfig.supabaseAnonKey);
   } catch (e) {
     rethrow;
   }

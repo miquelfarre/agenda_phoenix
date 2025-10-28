@@ -14,35 +14,10 @@ class PlatformButton extends StatefulWidget {
   final bool outlined;
   final double? minSize;
 
-  const PlatformButton({
-    super.key,
-    required this.onPressed,
-    required this.child,
-    this.filled = true,
-    this.color,
-    this.padding,
-    this.isDestructive = false,
-    this.fullWidth = false,
-    this.outlined = false,
-    this.minSize,
-  });
+  const PlatformButton({super.key, required this.onPressed, required this.child, this.filled = true, this.color, this.padding, this.isDestructive = false, this.fullWidth = false, this.outlined = false, this.minSize});
 
-  PlatformButton.icon({
-    super.key,
-    required this.onPressed,
-    required Widget icon,
-    required String label,
-    this.filled = true,
-    this.color,
-    this.padding,
-    this.isDestructive = false,
-    this.fullWidth = false,
-    this.outlined = false,
-    this.minSize,
-  }) : child = Row(
-         mainAxisSize: MainAxisSize.min,
-         children: [icon, const SizedBox(width: 8), Text(label)],
-       );
+  PlatformButton.icon({super.key, required this.onPressed, required Widget icon, required String label, this.filled = true, this.color, this.padding, this.isDestructive = false, this.fullWidth = false, this.outlined = false, this.minSize})
+    : child = Row(mainAxisSize: MainAxisSize.min, children: [icon, const SizedBox(width: 8), Text(label)]);
 
   @override
   State<PlatformButton> createState() => _PlatformButtonState();
@@ -56,12 +31,8 @@ class _PlatformButtonState extends State<PlatformButton> {
     Widget built;
 
     if (widget.outlined) {
-      final resolvedColor = widget.isDestructive
-          ? AppStyles.red600
-          : (widget.color ?? AppStyles.primary600);
-      final EdgeInsets effectivePadding = (widget.padding is EdgeInsets)
-          ? widget.padding as EdgeInsets
-          : const EdgeInsets.symmetric(vertical: 12, horizontal: 16);
+      final resolvedColor = widget.isDestructive ? AppStyles.red600 : (widget.color ?? AppStyles.primary600);
+      final EdgeInsets effectivePadding = (widget.padding is EdgeInsets) ? widget.padding as EdgeInsets : const EdgeInsets.symmetric(vertical: 12, horizontal: 16);
       built = Semantics(
         button: true,
         enabled: widget.onPressed != null,
@@ -85,10 +56,7 @@ class _PlatformButtonState extends State<PlatformButton> {
               border: Border.all(color: resolvedColor.withAlpha(70), width: 1),
             ),
             child: DefaultTextStyle(
-              style: AppStyles.buttonText.copyWith(
-                color: resolvedColor,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppStyles.buttonText.copyWith(color: resolvedColor, fontWeight: FontWeight.w600),
               child: widget.child,
             ),
           ),
@@ -101,28 +69,15 @@ class _PlatformButtonState extends State<PlatformButton> {
     }
 
     if (Platform.isIOS) {
-      final Color effectiveTextColor = widget.filled
-          ? AppStyles.white
-          : (widget.isDestructive
-                ? CupertinoColors.destructiveRed.resolveFrom(context)
-                : (widget.color ?? AppStyles.primary600));
-      final textStyle = AppStyles.buttonText.copyWith(
-        color: effectiveTextColor,
-      );
-      final EdgeInsets defaultPadding = const EdgeInsets.symmetric(
-        vertical: 12,
-        horizontal: 16,
-      );
-      final EdgeInsets effectivePadding = (widget.padding is EdgeInsets)
-          ? widget.padding as EdgeInsets
-          : defaultPadding;
+      final Color effectiveTextColor = widget.filled ? AppStyles.white : (widget.isDestructive ? CupertinoColors.destructiveRed.resolveFrom(context) : (widget.color ?? AppStyles.primary600));
+      final textStyle = AppStyles.buttonText.copyWith(color: effectiveTextColor);
+      final EdgeInsets defaultPadding = const EdgeInsets.symmetric(vertical: 12, horizontal: 16);
+      final EdgeInsets effectivePadding = (widget.padding is EdgeInsets) ? widget.padding as EdgeInsets : defaultPadding;
 
       if (widget.filled) {
         built = CupertinoButton.filled(
           onPressed: widget.onPressed,
-          color: widget.isDestructive
-              ? CupertinoColors.destructiveRed.resolveFrom(context)
-              : (widget.color ?? AppStyles.primary600),
+          color: widget.isDestructive ? CupertinoColors.destructiveRed.resolveFrom(context) : (widget.color ?? AppStyles.primary600),
           padding: effectivePadding,
           child: DefaultTextStyle(style: textStyle, child: widget.child),
         );
@@ -133,35 +88,21 @@ class _PlatformButtonState extends State<PlatformButton> {
           child: DefaultTextStyle(style: textStyle, child: widget.child),
         );
       }
-      return widget.fullWidth
-          ? SizedBox(width: double.infinity, child: built)
-          : built;
+      return widget.fullWidth ? SizedBox(width: double.infinity, child: built) : built;
     }
 
-    final resolvedColor = widget.isDestructive
-        ? AppStyles.red600
-        : (widget.color ?? AppStyles.primary600);
-    final EdgeInsets effectivePadding = (widget.padding is EdgeInsets)
-        ? widget.padding as EdgeInsets
-        : const EdgeInsets.symmetric(vertical: 12, horizontal: 16);
+    final resolvedColor = widget.isDestructive ? AppStyles.red600 : (widget.color ?? AppStyles.primary600);
+    final EdgeInsets effectivePadding = (widget.padding is EdgeInsets) ? widget.padding as EdgeInsets : const EdgeInsets.symmetric(vertical: 12, horizontal: 16);
 
     final decoration = widget.filled
-        ? BoxDecoration(
-            color: resolvedColor,
-            borderRadius: BorderRadius.circular(8),
-          )
+        ? BoxDecoration(color: resolvedColor, borderRadius: BorderRadius.circular(8))
         : BoxDecoration(
             color: AppStyles.transparent,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: resolvedColor.withAlpha((0.12 * 255).round()),
-              width: 1.0,
-            ),
+            border: Border.all(color: resolvedColor.withAlpha((0.12 * 255).round()), width: 1.0),
           );
 
-    final textStyle = widget.filled
-        ? AppStyles.buttonText.copyWith(color: AppStyles.white)
-        : AppStyles.buttonText.copyWith(color: resolvedColor);
+    final textStyle = widget.filled ? AppStyles.buttonText.copyWith(color: AppStyles.white) : AppStyles.buttonText.copyWith(color: resolvedColor);
 
     built = Semantics(
       button: true,
@@ -184,11 +125,7 @@ class _PlatformButtonState extends State<PlatformButton> {
           curve: Curves.easeOut,
           padding: effectivePadding,
           constraints: const BoxConstraints(minHeight: 44, minWidth: 64),
-          decoration: decoration.copyWith(
-            color: decoration.color?.withAlpha(
-              ((_pressed ? 0.85 : 1.0) * 255).round(),
-            ),
-          ),
+          decoration: decoration.copyWith(color: decoration.color?.withAlpha(((_pressed ? 0.85 : 1.0) * 255).round())),
           child: DefaultTextStyle(style: textStyle, child: widget.child),
         ),
       ),

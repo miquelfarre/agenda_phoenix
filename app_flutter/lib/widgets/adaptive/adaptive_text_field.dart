@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 import 'platform_theme.dart';
 import 'adaptive_card.dart';
 
-class AdaptiveTextField extends StatefulWidget
-    implements IAdaptiveWidget, ITextFieldWidget {
+class AdaptiveTextField extends StatefulWidget implements IAdaptiveWidget, ITextFieldWidget {
   @override
   final AdaptiveTextFieldConfig config;
   @override
@@ -22,20 +21,7 @@ class AdaptiveTextField extends StatefulWidget
   @override
   final bool enabled;
 
-  const AdaptiveTextField({
-    super.key,
-    required this.config,
-    this.controller,
-    this.placeholder,
-    this.validators = const [],
-    this.validationState = const ValidationState(
-      isValid: true,
-      characterCount: 0,
-    ),
-    this.onValidationChanged,
-    this.onTextChanged,
-    this.enabled = true,
-  });
+  const AdaptiveTextField({super.key, required this.config, this.controller, this.placeholder, this.validators = const [], this.validationState = const ValidationState(isValid: true, characterCount: 0), this.onValidationChanged, this.onTextChanged, this.enabled = true});
 
   @override
   State<AdaptiveTextField> createState() => _AdaptiveTextFieldState();
@@ -53,45 +39,21 @@ class AdaptiveTextField extends StatefulWidget
     final issues = <ValidationIssue>[];
 
     if (config.maxLength != null && config.maxLength! <= 0) {
-      issues.add(
-        const ValidationIssue(
-          message: 'Max length should be positive',
-          severity: ValidationSeverity.error,
-        ),
-      );
+      issues.add(const ValidationIssue(message: 'Max length should be positive', severity: ValidationSeverity.error));
     }
 
     if (config.variant == TextFieldVariant.email && validators.isEmpty) {
-      issues.add(
-        const ValidationIssue(
-          message: 'Email fields should have email validation',
-          severity: ValidationSeverity.warning,
-          suggestion: 'Add email validator',
-        ),
-      );
+      issues.add(const ValidationIssue(message: 'Email fields should have email validation', severity: ValidationSeverity.warning, suggestion: 'Add email validator'));
     }
 
-    return ValidationResult(
-      isValid: issues
-          .where((i) => i.severity == ValidationSeverity.error)
-          .isEmpty,
-      issues: issues,
-      severity: issues.isEmpty
-          ? ValidationSeverity.none
-          : issues
-                .map((i) => i.severity)
-                .reduce((a, b) => a.index > b.index ? a : b),
-    );
+    return ValidationResult(isValid: issues.where((i) => i.severity == ValidationSeverity.error).isEmpty, issues: issues, severity: issues.isEmpty ? ValidationSeverity.none : issues.map((i) => i.severity).reduce((a, b) => a.index > b.index ? a : b));
   }
 }
 
 class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
   late TextEditingController _controller;
   bool _obscureText = false;
-  ValidationState _currentValidationState = const ValidationState(
-    isValid: true,
-    characterCount: 0,
-  );
+  ValidationState _currentValidationState = const ValidationState(isValid: true, characterCount: 0);
 
   @override
   void initState() {
@@ -124,29 +86,21 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
     bool isValid = true;
     String? errorMessage;
 
-    if (widget.config.maxLength != null &&
-        characterCount > widget.config.maxLength!) {
+    if (widget.config.maxLength != null && characterCount > widget.config.maxLength!) {
       isValid = false;
-      errorMessage =
-          'Text exceeds maximum length of ${widget.config.maxLength}';
+      errorMessage = 'Text exceeds maximum length of ${widget.config.maxLength}';
     }
 
     for (final validator in widget.validators) {
       final result = validator.validate(text);
       if (!result.isValid) {
         isValid = false;
-        errorMessage = result.issues.isNotEmpty
-            ? result.issues.first.message
-            : 'Validation failed';
+        errorMessage = result.issues.isNotEmpty ? result.issues.first.message : 'Validation failed';
         break;
       }
     }
 
-    final newState = ValidationState(
-      isValid: isValid,
-      errorMessage: errorMessage,
-      characterCount: characterCount,
-    );
+    final newState = ValidationState(isValid: isValid, errorMessage: errorMessage, characterCount: characterCount);
 
     if (newState != _currentValidationState) {
       setState(() {
@@ -193,51 +147,22 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
-          controller: _controller,
-          enabled: widget.enabled,
-          decoration: _buildInputDecoration(theme),
-          keyboardType: widget.config.inputType,
-          maxLength: widget.config.maxLength,
-          inputFormatters: _buildInputFormatters(),
-        ),
+        TextFormField(controller: _controller, enabled: widget.enabled, decoration: _buildInputDecoration(theme), keyboardType: widget.config.inputType, maxLength: widget.config.maxLength, inputFormatters: _buildInputFormatters()),
         if (widget.config.showCounter) _buildCharacterCounter(theme),
       ],
     );
   }
 
   Widget _buildMultilineTextField(PlatformTheme theme) {
-    return TextFormField(
-      controller: _controller,
-      enabled: widget.enabled,
-      decoration: _buildInputDecoration(theme),
-      keyboardType: TextInputType.multiline,
-      maxLines: null,
-      minLines: 3,
-      inputFormatters: _buildInputFormatters(),
-    );
+    return TextFormField(controller: _controller, enabled: widget.enabled, decoration: _buildInputDecoration(theme), keyboardType: TextInputType.multiline, maxLines: null, minLines: 3, inputFormatters: _buildInputFormatters());
   }
 
   Widget _buildEmailTextField(PlatformTheme theme) {
-    return TextFormField(
-      controller: _controller,
-      enabled: widget.enabled,
-      decoration: _buildInputDecoration(theme),
-      keyboardType: TextInputType.emailAddress,
-      autocorrect: false,
-      enableSuggestions: false,
-      inputFormatters: _buildInputFormatters(),
-    );
+    return TextFormField(controller: _controller, enabled: widget.enabled, decoration: _buildInputDecoration(theme), keyboardType: TextInputType.emailAddress, autocorrect: false, enableSuggestions: false, inputFormatters: _buildInputFormatters());
   }
 
   Widget _buildPhoneTextField(PlatformTheme theme) {
-    return TextFormField(
-      controller: _controller,
-      enabled: widget.enabled,
-      decoration: _buildInputDecoration(theme),
-      keyboardType: TextInputType.phone,
-      inputFormatters: _buildInputFormatters(),
-    );
+    return TextFormField(controller: _controller, enabled: widget.enabled, decoration: _buildInputDecoration(theme), keyboardType: TextInputType.phone, inputFormatters: _buildInputFormatters());
   }
 
   Widget _buildPasswordTextField(PlatformTheme theme) {
@@ -286,13 +211,7 @@ class _AdaptiveTextFieldState extends State<AdaptiveTextField> {
   Widget _buildCharacterCounter(PlatformTheme theme) {
     return Padding(
       padding: const EdgeInsets.only(top: 4.0),
-      child: Text(
-        '${_currentValidationState.characterCount}${widget.config.maxLength != null ? '/${widget.config.maxLength}' : ''}',
-        style: theme.textStyle.copyWith(
-          fontSize: 12,
-          color: theme.secondaryColor,
-        ),
-      ),
+      child: Text('${_currentValidationState.characterCount}${widget.config.maxLength != null ? '/${widget.config.maxLength}' : ''}', style: theme.textStyle.copyWith(fontSize: 12, color: theme.secondaryColor)),
     );
   }
 
@@ -328,58 +247,15 @@ class AdaptiveTextFieldConfig {
   final bool autocorrect;
   final bool enableSuggestions;
 
-  const AdaptiveTextFieldConfig({
-    required this.variant,
-    required this.validationMode,
-    required this.showCounter,
-    this.maxLength,
-    required this.inputType,
-    required this.obscureText,
-    required this.autocorrect,
-    required this.enableSuggestions,
-  });
+  const AdaptiveTextFieldConfig({required this.variant, required this.validationMode, required this.showCounter, this.maxLength, required this.inputType, required this.obscureText, required this.autocorrect, required this.enableSuggestions});
 
-  factory AdaptiveTextFieldConfig.standard() => const AdaptiveTextFieldConfig(
-    variant: TextFieldVariant.standard,
-    validationMode: ValidationMode.onChanged,
-    showCounter: false,
-    inputType: TextInputType.text,
-    obscureText: false,
-    autocorrect: true,
-    enableSuggestions: true,
-  );
+  factory AdaptiveTextFieldConfig.standard() => const AdaptiveTextFieldConfig(variant: TextFieldVariant.standard, validationMode: ValidationMode.onChanged, showCounter: false, inputType: TextInputType.text, obscureText: false, autocorrect: true, enableSuggestions: true);
 
-  factory AdaptiveTextFieldConfig.limited(int maxLength) =>
-      AdaptiveTextFieldConfig(
-        variant: TextFieldVariant.limited,
-        validationMode: ValidationMode.onChanged,
-        showCounter: true,
-        maxLength: maxLength,
-        inputType: TextInputType.text,
-        obscureText: false,
-        autocorrect: true,
-        enableSuggestions: true,
-      );
+  factory AdaptiveTextFieldConfig.limited(int maxLength) => AdaptiveTextFieldConfig(variant: TextFieldVariant.limited, validationMode: ValidationMode.onChanged, showCounter: true, maxLength: maxLength, inputType: TextInputType.text, obscureText: false, autocorrect: true, enableSuggestions: true);
 
-  factory AdaptiveTextFieldConfig.email() => const AdaptiveTextFieldConfig(
-    variant: TextFieldVariant.email,
-    validationMode: ValidationMode.onSubmitted,
-    showCounter: false,
-    inputType: TextInputType.emailAddress,
-    obscureText: false,
-    autocorrect: false,
-    enableSuggestions: false,
-  );
+  factory AdaptiveTextFieldConfig.email() => const AdaptiveTextFieldConfig(variant: TextFieldVariant.email, validationMode: ValidationMode.onSubmitted, showCounter: false, inputType: TextInputType.emailAddress, obscureText: false, autocorrect: false, enableSuggestions: false);
 
-  factory AdaptiveTextFieldConfig.password() => const AdaptiveTextFieldConfig(
-    variant: TextFieldVariant.password,
-    validationMode: ValidationMode.onChanged,
-    showCounter: false,
-    inputType: TextInputType.visiblePassword,
-    obscureText: true,
-    autocorrect: false,
-    enableSuggestions: false,
-  );
+  factory AdaptiveTextFieldConfig.password() => const AdaptiveTextFieldConfig(variant: TextFieldVariant.password, validationMode: ValidationMode.onChanged, showCounter: false, inputType: TextInputType.visiblePassword, obscureText: true, autocorrect: false, enableSuggestions: false);
 }
 
 enum TextFieldVariant { standard, limited, multiline, email, phone, password }
@@ -392,42 +268,22 @@ class ValidationState {
   final int characterCount;
   final bool isValidating;
 
-  const ValidationState({
-    required this.isValid,
-    this.errorMessage,
-    required this.characterCount,
-    this.isValidating = false,
-  });
+  const ValidationState({required this.isValid, this.errorMessage, required this.characterCount, this.isValidating = false});
 
-  factory ValidationState.valid(int characterCount) =>
-      ValidationState(isValid: true, characterCount: characterCount);
+  factory ValidationState.valid(int characterCount) => ValidationState(isValid: true, characterCount: characterCount);
 
-  factory ValidationState.invalid(String errorMessage, int characterCount) =>
-      ValidationState(
-        isValid: false,
-        errorMessage: errorMessage,
-        characterCount: characterCount,
-      );
+  factory ValidationState.invalid(String errorMessage, int characterCount) => ValidationState(isValid: false, errorMessage: errorMessage, characterCount: characterCount);
 
-  factory ValidationState.validating(int characterCount) => ValidationState(
-    isValid: true,
-    characterCount: characterCount,
-    isValidating: true,
-  );
+  factory ValidationState.validating(int characterCount) => ValidationState(isValid: true, characterCount: characterCount, isValidating: true);
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is ValidationState &&
-        other.isValid == isValid &&
-        other.errorMessage == errorMessage &&
-        other.characterCount == characterCount &&
-        other.isValidating == isValidating;
+    return other is ValidationState && other.isValid == isValid && other.errorMessage == errorMessage && other.characterCount == characterCount && other.isValidating == isValidating;
   }
 
   @override
-  int get hashCode =>
-      Object.hash(isValid, errorMessage, characterCount, isValidating);
+  int get hashCode => Object.hash(isValid, errorMessage, characterCount, isValidating);
 }
 
 abstract class TextFieldValidator {

@@ -44,21 +44,7 @@ class EventHive extends HiveObject {
   @HiveField(13)
   String? personalNote;
 
-  EventHive({
-    required this.id,
-    required this.name,
-    this.description,
-    required this.startDate,
-    this.eventType = 'regular',
-    required this.ownerId,
-    this.calendarId,
-    this.parentRecurringEventId,
-    this.createdAt,
-    this.updatedAt,
-    this.ownerName,
-    this.calendarName,
-    this.personalNote,
-  });
+  EventHive({required this.id, required this.name, this.description, required this.startDate, this.eventType = 'regular', required this.ownerId, this.calendarId, this.parentRecurringEventId, this.createdAt, this.updatedAt, this.ownerName, this.calendarName, this.personalNote});
 
   factory EventHive.fromEvent(Event event) {
     return EventHive(

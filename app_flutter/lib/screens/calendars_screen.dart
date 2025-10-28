@@ -38,8 +38,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     if (query.isEmpty) return calendars;
 
     return calendars.where((calendar) {
-      return calendar.name.toLowerCase().contains(query) ||
-          (calendar.description?.toLowerCase().contains(query) ?? false);
+      return calendar.name.toLowerCase().contains(query) || (calendar.description?.toLowerCase().contains(query) ?? false);
     }).toList();
   }
 
@@ -67,18 +66,11 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
-        middle: Text(
-          AppLocalizations.of(context)!.calendars,
-          style: const TextStyle(fontSize: 16),
-        ),
+        middle: Text(AppLocalizations.of(context)!.calendars, style: const TextStyle(fontSize: 16)),
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () {
-            Navigator.of(context).push(
-              CupertinoPageRoute<void>(
-                builder: (_) => const CreateCalendarScreen(),
-              ),
-            );
+            Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => const CreateCalendarScreen()));
           },
           child: const Icon(CupertinoIcons.add, size: 28),
         ),
@@ -91,19 +83,9 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  CupertinoIcons.exclamationmark_triangle,
-                  size: 64,
-                  color: CupertinoColors.systemRed,
-                ),
+                const Icon(CupertinoIcons.exclamationmark_triangle, size: 64, color: CupertinoColors.systemRed),
                 const SizedBox(height: 16),
-                Text(
-                  AppLocalizations.of(context)!.errorLoadingData,
-                  style: const TextStyle(
-                    color: CupertinoColors.systemGrey,
-                    fontSize: 16,
-                  ),
-                ),
+                Text(AppLocalizations.of(context)!.errorLoadingData, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 16)),
               ],
             ),
           ),
@@ -121,11 +103,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(
-              controller: _searchController,
-              placeholder: AppLocalizations.of(context)!.searchCalendars,
-              backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context),
-            ),
+            child: CupertinoSearchTextField(controller: _searchController, placeholder: AppLocalizations.of(context)!.searchCalendars, backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context)),
           ),
         ),
 
@@ -136,11 +114,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
               children: [
                 Text(
                   '${calendarsToShow.length} ${calendarsToShow.length == 1 ? AppLocalizations.of(context)!.calendar : AppLocalizations.of(context)!.calendars}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppStyles.grey600,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppStyles.grey600, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -155,21 +129,9 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    CupertinoIcons.calendar,
-                    size: 64,
-                    color: CupertinoColors.systemGrey,
-                  ),
+                  const Icon(CupertinoIcons.calendar, size: 64, color: CupertinoColors.systemGrey),
                   const SizedBox(height: 16),
-                  Text(
-                    _searchController.text.isNotEmpty
-                        ? AppLocalizations.of(context)!.noCalendarsFound
-                        : AppLocalizations.of(context)!.noCalendars,
-                    style: const TextStyle(
-                      color: CupertinoColors.systemGrey,
-                      fontSize: 16,
-                    ),
-                  ),
+                  Text(_searchController.text.isNotEmpty ? AppLocalizations.of(context)!.noCalendarsFound : AppLocalizations.of(context)!.noCalendars, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 16)),
                 ],
               ),
             ),
@@ -178,57 +140,38 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final calendar = calendarsToShow[index];
-              final eventCount = _getEventCountForCalendar(
-                int.parse(calendar.id),
-              );
+              final eventCount = _getEventCountForCalendar(int.parse(calendar.id));
               final calendarColor = _parseCalendarColor(calendar.color);
 
               return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: () {
                     Navigator.of(context).push(
                       CupertinoPageRoute<void>(
-                        builder: (_) => CalendarEventsScreen(
-                          calendarId: int.parse(calendar.id),
-                          calendarName: calendar.name,
-                          calendarColor: calendar.color,
-                        ),
+                        builder: (_) => CalendarEventsScreen(calendarId: int.parse(calendar.id), calendarName: calendar.name, calendarColor: calendar.color),
                       ),
                     );
                   },
                   child: Container(
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
-                      color: CupertinoColors.systemBackground.resolveFrom(
-                        context,
-                      ),
+                      color: CupertinoColors.systemBackground.resolveFrom(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: CupertinoColors.systemGrey5.resolveFrom(context),
-                      ),
+                      border: Border.all(color: CupertinoColors.systemGrey5.resolveFrom(context)),
                     ),
                     child: Row(
                       children: [
                         Container(
                           width: 40,
                           height: 40,
-                          decoration: BoxDecoration(
-                            color: calendarColor.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                          ),
+                          decoration: BoxDecoration(color: calendarColor.withValues(alpha: 0.2), shape: BoxShape.circle),
                           child: Center(
                             child: Container(
                               width: 16,
                               height: 16,
-                              decoration: BoxDecoration(
-                                color: calendarColor,
-                                shape: BoxShape.circle,
-                              ),
+                              decoration: BoxDecoration(color: calendarColor, shape: BoxShape.circle),
                             ),
                           ),
                         ),
@@ -243,58 +186,30 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
                                   Flexible(
                                     child: Text(
                                       calendar.name,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: CupertinoColors.label,
-                                      ),
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: CupertinoColors.label),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   if (calendar.isDefault) ...[
                                     const SizedBox(width: 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppStyles.blue600.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(color: AppStyles.blue600.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
                                       child: Text(
-                                        AppLocalizations.of(
-                                          context,
-                                        )!.defaultCalendar,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: AppStyles.blue600,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        AppLocalizations.of(context)!.defaultCalendar,
+                                        style: TextStyle(fontSize: 10, color: AppStyles.blue600, fontWeight: FontWeight.w600),
                                       ),
                                     ),
                                   ],
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                '$eventCount ${eventCount == 1 ? AppLocalizations.of(context)!.event : AppLocalizations.of(context)!.events}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppStyles.grey600,
-                                ),
-                              ),
+                              Text('$eventCount ${eventCount == 1 ? AppLocalizations.of(context)!.event : AppLocalizations.of(context)!.events}', style: TextStyle(fontSize: 14, color: AppStyles.grey600)),
                             ],
                           ),
                         ),
 
-                        const Icon(
-                          CupertinoIcons.chevron_right,
-                          color: CupertinoColors.systemGrey,
-                          size: 20,
-                        ),
+                        const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 20),
                       ],
                     ),
                   ),

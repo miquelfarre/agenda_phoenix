@@ -10,15 +10,7 @@ class PlatformFab extends StatefulWidget {
   final Color? backgroundColor;
   final bool mini;
 
-  const PlatformFab({
-    super.key,
-    required this.onPressed,
-    required this.child,
-    this.heroTag,
-    this.tooltip,
-    this.backgroundColor,
-    this.mini = false,
-  });
+  const PlatformFab({super.key, required this.onPressed, required this.child, this.heroTag, this.tooltip, this.backgroundColor, this.mini = false});
 
   @override
   State<PlatformFab> createState() => _PlatformFabState();
@@ -37,13 +29,7 @@ class _PlatformFabState extends State<PlatformFab> {
         child: DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppStyles.colorWithOpacity(AppStyles.black87, 0.24),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black87, 0.24), blurRadius: 8, offset: const Offset(0, 4))],
           ),
           child: PlatformButton(
             padding: const EdgeInsets.all(0),

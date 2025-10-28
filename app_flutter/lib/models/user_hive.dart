@@ -31,20 +31,7 @@ class UserHive extends HiveObject {
   @HiveField(11)
   DateTime? updatedAt;
 
-  UserHive({
-    required this.id,
-    this.instagramName,
-    this.fullName,
-    required this.isPublic,
-    this.phoneNumber,
-    this.profilePicture,
-    this.isBanned = false,
-    this.lastSeen,
-    this.isOnline = false,
-    this.firebaseUid,
-    this.registeredAt,
-    DateTime? updatedAt,
-  }) : updatedAt = updatedAt ?? DateTime.now();
+  UserHive({required this.id, this.instagramName, this.fullName, required this.isPublic, this.phoneNumber, this.profilePicture, this.isBanned = false, this.lastSeen, this.isOnline = false, this.firebaseUid, this.registeredAt, DateTime? updatedAt}) : updatedAt = updatedAt ?? DateTime.now();
 
   factory UserHive.fromJson(Map<String, dynamic> json) => UserHive(
     id: json['id'],
@@ -54,18 +41,10 @@ class UserHive extends HiveObject {
     phoneNumber: json['phone_number'],
     profilePicture: json['profile_picture'],
     isBanned: json['is_banned'] ?? false,
-    lastSeen: json['last_seen'] != null
-        ? (json['last_seen'] is String
-              ? DateTimeUtils.parseAndNormalize(json['last_seen'])
-              : json['last_seen'])
-        : null,
+    lastSeen: json['last_seen'] != null ? (json['last_seen'] is String ? DateTimeUtils.parseAndNormalize(json['last_seen']) : json['last_seen']) : null,
     isOnline: json['is_online'] ?? false,
     firebaseUid: json['firebase_uid'],
-    registeredAt: json['registered_at'] != null
-        ? (json['registered_at'] is String
-              ? DateTimeUtils.parseAndNormalize(json['registered_at'])
-              : json['registered_at'])
-        : null,
+    registeredAt: json['registered_at'] != null ? (json['registered_at'] is String ? DateTimeUtils.parseAndNormalize(json['registered_at']) : json['registered_at']) : null,
   );
 
   Map<String, dynamic> toUserJson() => {

@@ -9,8 +9,7 @@ class SubscriptionRepository {
   final _supabaseService = SupabaseService.instance;
   final RealtimeSync _rt = RealtimeSync();
 
-  final StreamController<List<models.User>> _subscriptionsController =
-      StreamController<List<models.User>>.broadcast();
+  final StreamController<List<models.User>> _subscriptionsController = StreamController<List<models.User>>.broadcast();
   List<models.User> _cachedUsers = [];
   RealtimeChannel? _realtimeChannel;
 
@@ -52,20 +51,13 @@ class SubscriptionRepository {
       // - new_events_count: Events created in last 7 days
       // - total_events_count: Total events owned by user
       // - subscribers_count: Unique subscribers to user's events
-      final response = await _supabaseService.client
-          .from('user_subscriptions_with_stats')
-          .select('*')
-          .eq('subscriber_id', userId);
+      final response = await _supabaseService.client.from('user_subscriptions_with_stats').select('*').eq('subscriber_id', userId);
 
       final List dataList = (response as List);
       print('🔵 [SubscriptionRepository] Received ${dataList.length} subscriptions from view');
 
       // Standardize: set server sync ts from rows (serverTime not available from Supabase here)
-      _rt.setServerSyncTsFromResponse(
-        rows: dataList
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e)),
-      );
+      _rt.setServerSyncTsFromResponse(rows: dataList.whereType<Map>().map((e) => Map<String, dynamic>.from(e)));
 
       _cachedUsers = dataList
           .map(
@@ -115,11 +107,7 @@ class SubscriptionRepository {
       client: _supabaseService.client,
       schema: 'public',
       table: 'event_interactions',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'user_id',
-        value: userId.toString(),
-      ),
+      filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
       onChange: _handleSubscriptionChange,
     );
 
@@ -130,8 +118,7 @@ class SubscriptionRepository {
     final userId = ConfigService.instance.currentUserId;
     print('🟢 [SubscriptionRepository] Realtime event received! type=${payload.eventType} ct=${payload.commitTimestamp}');
 
-    bool isSubscribed(Map<String, dynamic> rec) =>
-        rec['user_id'] == userId && rec['interaction_type'] == 'subscribed';
+    bool isSubscribed(Map<String, dynamic> rec) => rec['user_id'] == userId && rec['interaction_type'] == 'subscribed';
 
     // commitTimestamp can be String or DateTime depending on sdk; normalize to DateTime?
     DateTime? ct;
@@ -144,7 +131,7 @@ class SubscriptionRepository {
 
     if (payload.eventType == PostgresChangeEvent.delete) {
       final oldRec = Map<String, dynamic>.from(payload.oldRecord);
-      print('🗑️ [SubscriptionRepository] DELETE oldRecord: '+oldRec.toString());
+      print('🗑️ [SubscriptionRepository] DELETE oldRecord: ' + oldRec.toString());
       if (isSubscribed(oldRec) && _rt.shouldProcessDelete()) {
         print('🟢 [SubscriptionRepository] DELETE subscribed -> refetch');
         _fetchAndSync().then((_) => _emitCurrentSubscriptions());
@@ -154,8 +141,8 @@ class SubscriptionRepository {
       return;
     }
 
-  final newRec = Map<String, dynamic>.from(payload.newRecord);
-  print('📝 [SubscriptionRepository] UPSERT newRecord: '+newRec.toString());
+    final newRec = Map<String, dynamic>.from(payload.newRecord);
+    print('📝 [SubscriptionRepository] UPSERT newRecord: ' + newRec.toString());
     if (isSubscribed(newRec)) {
       if (_rt.shouldProcessInsertOrUpdate(ct)) {
         print('🟢 [SubscriptionRepository] ${payload.eventType.name.toUpperCase()} subscribed (after gate) -> refetch');

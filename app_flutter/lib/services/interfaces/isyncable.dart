@@ -29,15 +29,7 @@ class SyncEvent {
   final dynamic error;
   final Map<String, dynamic>? metadata;
 
-  const SyncEvent({
-    required this.type,
-    required this.serviceName,
-    required this.timestamp,
-    this.progress,
-    this.message,
-    this.error,
-    this.metadata,
-  });
+  const SyncEvent({required this.type, required this.serviceName, required this.timestamp, this.progress, this.message, this.error, this.metadata});
 
   @override
   String toString() {
@@ -45,15 +37,7 @@ class SyncEvent {
   }
 }
 
-enum SyncEventType {
-  started,
-  progress,
-  completed,
-  failed,
-  conflict,
-  retrying,
-  cancelled,
-}
+enum SyncEventType { started, progress, completed, failed, conflict, retrying, cancelled }
 
 abstract class ICacheManager {
   Future<void> clearCache();

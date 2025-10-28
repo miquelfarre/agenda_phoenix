@@ -12,16 +12,7 @@ class EmptyState extends StatelessWidget {
   final VoidCallback? onAction;
   final String? actionLabel;
 
-  const EmptyState({
-    super.key,
-    this.message,
-    this.subtitle,
-    this.imagePath,
-    this.icon,
-    this.imageSize = 120,
-    this.onAction,
-    this.actionLabel,
-  });
+  const EmptyState({super.key, this.message, this.subtitle, this.imagePath, this.icon, this.imageSize = 120, this.onAction, this.actionLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -38,50 +29,28 @@ class EmptyState extends StatelessWidget {
                 height: imageSize,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  return PlatformWidgets.platformIcon(
-                    icon ?? CupertinoIcons.square_stack,
-                    size: 64,
-                    color: AppStyles.grey400,
-                  );
+                  return PlatformWidgets.platformIcon(icon ?? CupertinoIcons.square_stack, size: 64, color: AppStyles.grey400);
                 },
               ),
               const SizedBox(height: 24),
             ] else if (icon != null) ...[
-              PlatformWidgets.platformIcon(
-                icon,
-                size: 64,
-                color: AppStyles.grey400,
-              ),
+              PlatformWidgets.platformIcon(icon, size: 64, color: AppStyles.grey400),
               const SizedBox(height: 24),
             ],
             Text(
               message ?? context.l10n.noData,
-              style: AppStyles.bodyText.copyWith(
-                color: AppStyles.grey600,
-                fontWeight: FontWeight.w600,
-                fontSize: 18,
-              ),
+              style: AppStyles.bodyText.copyWith(color: AppStyles.grey600, fontWeight: FontWeight.w600, fontSize: 18),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: AppStyles.bodyText.copyWith(
-                  color: AppStyles.grey500,
-                  fontWeight: FontWeight.normal,
-                  fontSize: 14,
-                ),
+                style: AppStyles.bodyText.copyWith(color: AppStyles.grey500, fontWeight: FontWeight.normal, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ],
-            if (onAction != null && actionLabel != null) ...[
-              const SizedBox(height: 24),
-              CupertinoButton.filled(
-                onPressed: onAction,
-                child: Text(actionLabel!),
-              ),
-            ],
+            if (onAction != null && actionLabel != null) ...[const SizedBox(height: 24), CupertinoButton.filled(onPressed: onAction, child: Text(actionLabel!))],
           ],
         ),
       ),

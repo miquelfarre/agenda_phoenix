@@ -11,10 +11,7 @@ class EventDateHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Text(
         text,
-        style: AppStyles.headlineSmall.copyWith(
-          color: AppStyles.grey700,
-          fontWeight: FontWeight.bold,
-        ),
+        style: AppStyles.headlineSmall.copyWith(color: AppStyles.grey700, fontWeight: FontWeight.bold),
       ),
     );
   }

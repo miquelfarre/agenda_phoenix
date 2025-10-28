@@ -15,14 +15,7 @@ class PatternCard extends StatelessWidget {
   final bool enabled;
   final bool showActions;
 
-  const PatternCard({
-    super.key,
-    required this.pattern,
-    this.onEdit,
-    this.onDelete,
-    this.enabled = true,
-    this.showActions = true,
-  });
+  const PatternCard({super.key, required this.pattern, this.onEdit, this.onDelete, this.enabled = true, this.showActions = true});
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +31,7 @@ class PatternCard extends StatelessWidget {
 
           Expanded(child: _buildPatternInfo(context, colon)),
 
-          if (showActions && enabled) ...[
-            const SizedBox(width: AppConstants.smallPadding),
-            _buildActions(context),
-          ],
+          if (showActions && enabled) ...[const SizedBox(width: AppConstants.smallPadding), _buildActions(context)],
         ],
       ),
     );
@@ -51,15 +41,8 @@ class PatternCard extends StatelessWidget {
     return Container(
       width: 40,
       height: 40,
-      decoration: BoxDecoration(
-        color: AppStyles.colorWithOpacity(AppStyles.primary600, 0.1),
-        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
-      ),
-      child: PlatformWidgets.platformIcon(
-        CupertinoIcons.repeat,
-        color: AppStyles.primary600,
-        size: 20,
-      ),
+      decoration: BoxDecoration(color: AppStyles.colorWithOpacity(AppStyles.primary600, 0.1), borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius)),
+      child: PlatformWidgets.platformIcon(CupertinoIcons.repeat, color: AppStyles.primary600, size: 20),
     );
   }
 
@@ -68,17 +51,11 @@ class PatternCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          _getDayName(context, pattern),
-          style: AppStyles.cardTitle.copyWith(fontWeight: FontWeight.w600),
-        ),
+        Text(_getDayName(context, pattern), style: AppStyles.cardTitle.copyWith(fontWeight: FontWeight.w600)),
 
         const SizedBox(height: 4),
 
-        Text(
-          _formatTime(context, pattern.time, colon),
-          style: AppStyles.bodyText.copyWith(color: AppStyles.grey600),
-        ),
+        Text(_formatTime(context, pattern.time, colon), style: AppStyles.bodyText.copyWith(color: AppStyles.grey600)),
       ],
     );
   }
@@ -86,9 +63,7 @@ class PatternCard extends StatelessWidget {
   Widget _buildActions(BuildContext context) {
     final l10n = context.l10n;
 
-    final stableKey = pattern.id != null
-        ? pattern.id.toString()
-        : '${pattern.eventId}_${pattern.dayOfWeek}_${pattern.time}';
+    final stableKey = pattern.id != null ? pattern.id.toString() : '${pattern.eventId}_${pattern.dayOfWeek}_${pattern.time}';
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -97,12 +72,7 @@ class PatternCard extends StatelessWidget {
             message: l10n.edit,
             child: AdaptiveButton(
               key: Key('pattern_edit_$stableKey'),
-              config: const AdaptiveButtonConfig(
-                variant: ButtonVariant.icon,
-                size: ButtonSize.small,
-                fullWidth: false,
-                iconPosition: IconPosition.only,
-              ),
+              config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.small, fullWidth: false, iconPosition: IconPosition.only),
               icon: CupertinoIcons.pencil,
               onPressed: enabled ? onEdit : null,
             ),
@@ -113,12 +83,7 @@ class PatternCard extends StatelessWidget {
             message: l10n.delete,
             child: AdaptiveButton(
               key: Key('pattern_delete_$stableKey'),
-              config: const AdaptiveButtonConfig(
-                variant: ButtonVariant.icon,
-                size: ButtonSize.small,
-                fullWidth: false,
-                iconPosition: IconPosition.only,
-              ),
+              config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.small, fullWidth: false, iconPosition: IconPosition.only),
               icon: CupertinoIcons.trash,
               onPressed: enabled ? onDelete : null,
             ),
@@ -143,15 +108,7 @@ class PatternCard extends StatelessWidget {
 
   String _getDayName(BuildContext context, RecurrencePattern pattern) {
     final l10n = context.l10n;
-    final dayNames = [
-      l10n.monday,
-      l10n.tuesday,
-      l10n.wednesday,
-      l10n.thursday,
-      l10n.friday,
-      l10n.saturday,
-      l10n.sunday,
-    ];
+    final dayNames = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
 
     if (!pattern.isValidDayOfWeek) {
       return l10n.unknownError;

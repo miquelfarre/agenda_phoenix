@@ -6,15 +6,10 @@ class TimezoneSelectorWidget extends StatelessWidget {
   final String selectedTimezone;
   final Function(String timezone, String city) onTimezoneChanged;
 
-  const TimezoneSelectorWidget({
-    super.key,
-    required this.selectedTimezone,
-    required this.onTimezoneChanged,
-  });
+  const TimezoneSelectorWidget({super.key, required this.selectedTimezone, required this.onTimezoneChanged});
 
   String _formatDisplay() {
-    final city =
-        TimezoneData.getCityFromTimezone(selectedTimezone) ?? selectedTimezone;
+    final city = TimezoneData.getCityFromTimezone(selectedTimezone) ?? selectedTimezone;
     final offset = TimezoneService.getCurrentOffset(selectedTimezone);
     return '$city ($offset)';
   }
@@ -33,10 +28,7 @@ class TimezoneSelectorWidget extends StatelessWidget {
         ),
         child: Column(
           children: [
-            const Text(
-              'Seleccionar Zona Horaria',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('Seleccionar Zona Horaria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Expanded(
               child: ListView.builder(
@@ -55,44 +47,20 @@ class TimezoneSelectorWidget extends StatelessWidget {
                       Navigator.pop(context);
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? CupertinoColors.systemGrey5 : null,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(color: isSelected ? CupertinoColors.systemGrey5 : null, borderRadius: BorderRadius.circular(8)),
                       child: Row(
                         children: [
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  city,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                                Text(
-                                  offset,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: CupertinoColors.systemGrey,
-                                  ),
-                                ),
+                                Text(city, style: TextStyle(fontSize: 16, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                                Text(offset, style: const TextStyle(fontSize: 14, color: CupertinoColors.systemGrey)),
                               ],
                             ),
                           ),
-                          if (isSelected)
-                            const Icon(
-                              CupertinoIcons.check_mark,
-                              color: CupertinoColors.activeBlue,
-                            ),
+                          if (isSelected) const Icon(CupertinoIcons.check_mark, color: CupertinoColors.activeBlue),
                         ],
                       ),
                     ),
@@ -120,12 +88,7 @@ class TimezoneSelectorWidget extends StatelessWidget {
           children: [
             const Icon(CupertinoIcons.globe, size: 20),
             const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _formatDisplay(),
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
+            Expanded(child: Text(_formatDisplay(), style: const TextStyle(fontSize: 16))),
             const Icon(CupertinoIcons.chevron_down, size: 20),
           ],
         ),

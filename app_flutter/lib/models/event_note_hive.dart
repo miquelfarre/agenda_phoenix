@@ -25,34 +25,10 @@ class EventNoteHive extends HiveObject {
   @HiveField(6)
   bool isPending;
 
-  EventNoteHive({
-    this.id,
-    required this.userId,
-    required this.eventId,
-    this.note,
-    this.createdAt,
-    this.updatedAt,
-    this.isPending = false,
-  });
+  EventNoteHive({this.id, required this.userId, required this.eventId, this.note, this.createdAt, this.updatedAt, this.isPending = false});
 
-  EventNoteHive copyWith({
-    int? id,
-    int? userId,
-    int? eventId,
-    String? note,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    bool? isPending,
-  }) {
-    return EventNoteHive(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      eventId: eventId ?? this.eventId,
-      note: note ?? this.note,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isPending: isPending ?? this.isPending,
-    );
+  EventNoteHive copyWith({int? id, int? userId, int? eventId, String? note, DateTime? createdAt, DateTime? updatedAt, bool? isPending}) {
+    return EventNoteHive(id: id ?? this.id, userId: userId ?? this.userId, eventId: eventId ?? this.eventId, note: note ?? this.note, createdAt: createdAt ?? this.createdAt, updatedAt: updatedAt ?? this.updatedAt, isPending: isPending ?? this.isPending);
   }
 
   @override

@@ -132,38 +132,22 @@ class EventInteractionHive extends HiveObject {
       eventId: json['event_id'],
       inviterId: json['inviter_id'],
       invitationMessage: json['invitation_message'],
-      invitedAt: json['invited_at'] != null
-          ? DateTime.parse(json['invited_at'])
-          : null,
+      invitedAt: json['invited_at'] != null ? DateTime.parse(json['invited_at']) : null,
       participationStatus: json['participation_status'],
-      participationDecidedAt: json['participation_decided_at'] != null
-          ? DateTime.parse(json['participation_decided_at'])
-          : null,
+      participationDecidedAt: json['participation_decided_at'] != null ? DateTime.parse(json['participation_decided_at']) : null,
       decisionMessage: json['decision_message'],
-      postponeUntil: json['postpone_until'] != null
-          ? DateTime.parse(json['postpone_until'])
-          : null,
+      postponeUntil: json['postpone_until'] != null ? DateTime.parse(json['postpone_until']) : null,
       isAttending: json['is_attending'] ?? false,
       isEventAdmin: json['is_event_admin'] ?? false,
       viewed: json['viewed'] ?? false,
-      firstViewedAt: json['first_viewed_at'] != null
-          ? DateTime.parse(json['first_viewed_at'])
-          : null,
-      lastViewedAt: json['last_viewed_at'] != null
-          ? DateTime.parse(json['last_viewed_at'])
-          : null,
+      firstViewedAt: json['first_viewed_at'] != null ? DateTime.parse(json['first_viewed_at']) : null,
+      lastViewedAt: json['last_viewed_at'] != null ? DateTime.parse(json['last_viewed_at']) : null,
       personalNote: json['personal_note'],
-      noteUpdatedAt: json['note_updated_at'] != null
-          ? DateTime.parse(json['note_updated_at'])
-          : null,
+      noteUpdatedAt: json['note_updated_at'] != null ? DateTime.parse(json['note_updated_at']) : null,
       favorited: json['favorited'] ?? false,
-      favoritedAt: json['favorited_at'] != null
-          ? DateTime.parse(json['favorited_at'])
-          : null,
+      favoritedAt: json['favorited_at'] != null ? DateTime.parse(json['favorited_at']) : null,
       hidden: json['hidden'] ?? false,
-      hiddenAt: json['hidden_at'] != null
-          ? DateTime.parse(json['hidden_at'])
-          : null,
+      hiddenAt: json['hidden_at'] != null ? DateTime.parse(json['hidden_at']) : null,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );

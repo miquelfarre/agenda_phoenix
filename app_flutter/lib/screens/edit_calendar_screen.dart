@@ -25,16 +25,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
   bool _isLoading = true;
   Calendar? _calendar;
 
-  final List<String> _colors = [
-    '#2196F3',
-    '#4CAF50',
-    '#FF5722',
-    '#FFC107',
-    '#9C27B0',
-    '#00BCD4',
-    '#FF9800',
-    '#795548',
-  ];
+  final List<String> _colors = ['#2196F3', '#4CAF50', '#FF5722', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548'];
 
   @override
   void initState() {
@@ -101,14 +92,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      await ref
-          .read(calendarServiceProvider)
-          .updateCalendar(
-            widget.calendarId,
-            name: name,
-            description: description.isEmpty ? null : description,
-            color: _selectedColor,
-          );
+      await ref.read(calendarServiceProvider).updateCalendar(widget.calendarId, name: name, description: description.isEmpty ? null : description, color: _selectedColor);
 
       // Realtime handles refresh automatically via CalendarRepository
 
@@ -162,21 +146,10 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       context: context,
       builder: (context) => CupertinoAlertDialog(
         title: Text(context.l10n.deleteCalendar),
-        content: Text(
-          _deleteAssociatedEvents
-              ? context.l10n.confirmDeleteCalendarWithEvents
-              : context.l10n.confirmDeleteCalendarKeepEvents,
-        ),
+        content: Text(_deleteAssociatedEvents ? context.l10n.confirmDeleteCalendarWithEvents : context.l10n.confirmDeleteCalendarKeepEvents),
         actions: [
-          CupertinoDialogAction(
-            child: Text(context.l10n.cancel),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(context.l10n.delete),
-          ),
+          CupertinoDialogAction(child: Text(context.l10n.cancel), onPressed: () => Navigator.of(context).pop(false)),
+          CupertinoDialogAction(isDestructiveAction: true, onPressed: () => Navigator.of(context).pop(true), child: Text(context.l10n.delete)),
         ],
       ),
     );
@@ -187,9 +160,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     final errorStr = error.toString().toLowerCase();
     final l10n = context.l10n;
 
-    if (errorStr.contains('socket') ||
-        errorStr.contains('network') ||
-        errorStr.contains('connection')) {
+    if (errorStr.contains('socket') || errorStr.contains('network') || errorStr.contains('connection')) {
       return l10n.noInternetCheckNetwork;
     }
 
@@ -227,26 +198,13 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       builder: (context) => CupertinoAlertDialog(
         title: Row(
           children: [
-            const Icon(
-              CupertinoIcons.exclamationmark_triangle,
-              color: CupertinoColors.systemRed,
-              size: 20,
-            ),
+            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
             const SizedBox(width: 8),
             Text(context.l10n.error),
           ],
         ),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(message),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: Text(context.l10n.ok),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [CupertinoDialogAction(isDefaultAction: true, child: Text(context.l10n.ok), onPressed: () => Navigator.of(context).pop())],
       ),
     );
   }
@@ -264,44 +222,18 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
     return AdaptivePageScaffold(
       title: l10n.editCalendar,
-      leading: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: () => context.pop(),
-        child: Text(l10n.cancel),
-      ),
-      actions: [
-        CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _isLoading ? null : _updateCalendar,
-          child: _isLoading
-              ? const CupertinoActivityIndicator()
-              : Text(l10n.save),
-        ),
-      ],
+      leading: CupertinoButton(padding: EdgeInsets.zero, onPressed: () => context.pop(), child: Text(l10n.cancel)),
+      actions: [CupertinoButton(padding: EdgeInsets.zero, onPressed: _isLoading ? null : _updateCalendar, child: _isLoading ? const CupertinoActivityIndicator() : Text(l10n.save))],
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          CupertinoTextField(
-            controller: _nameController,
-            placeholder: l10n.calendarName,
-            maxLength: 100,
-            enabled: !_isLoading,
-          ),
+          CupertinoTextField(controller: _nameController, placeholder: l10n.calendarName, maxLength: 100, enabled: !_isLoading),
           const SizedBox(height: 16),
 
-          CupertinoTextField(
-            controller: _descriptionController,
-            placeholder: l10n.calendarDescription,
-            maxLines: 3,
-            maxLength: 500,
-            enabled: !_isLoading,
-          ),
+          CupertinoTextField(controller: _descriptionController, placeholder: l10n.calendarDescription, maxLines: 3, maxLength: 500, enabled: !_isLoading),
           const SizedBox(height: 24),
 
-          Text(
-            l10n.calendarColor,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+          Text(l10n.calendarColor, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -322,12 +254,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
                   decoration: BoxDecoration(
                     color: _parseColor(color),
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected
-                          ? CupertinoColors.activeBlue
-                          : CupertinoColors.systemGrey,
-                      width: isSelected ? 3 : 1,
-                    ),
+                    border: Border.all(color: isSelected ? CupertinoColors.activeBlue : CupertinoColors.systemGrey, width: isSelected ? 3 : 1),
                   ),
                 ),
               );
@@ -343,23 +270,13 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
           CupertinoListTile(
             title: Text(l10n.deleteAssociatedEvents),
-            subtitle: Text(
-              _deleteAssociatedEvents
-                  ? l10n.eventsWillBeDeleted
-                  : l10n.eventsWillBeKept,
-            ),
-            trailing: CupertinoSwitch(
-              value: _deleteAssociatedEvents,
-              onChanged: null,
-            ),
+            subtitle: Text(_deleteAssociatedEvents ? l10n.eventsWillBeDeleted : l10n.eventsWillBeKept),
+            trailing: CupertinoSwitch(value: _deleteAssociatedEvents, onChanged: null),
           ),
 
           const SizedBox(height: 32),
 
-          CupertinoButton.filled(
-            onPressed: _isLoading ? null : _deleteCalendar,
-            child: Text(l10n.deleteCalendar),
-          ),
+          CupertinoButton.filled(onPressed: _isLoading ? null : _deleteCalendar, child: Text(l10n.deleteCalendar)),
         ],
       ),
     );

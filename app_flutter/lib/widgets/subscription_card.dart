@@ -14,15 +14,7 @@ class SubscriptionCard extends ConsumerWidget {
   final String? customTitle;
   final String? customSubtitle;
 
-  const SubscriptionCard({
-    super.key,
-    required this.user,
-    required this.onTap,
-    this.onDelete,
-    this.customAvatar,
-    this.customTitle,
-    this.customSubtitle,
-  });
+  const SubscriptionCard({super.key, required this.user, required this.onTap, this.onDelete, this.customAvatar, this.customTitle, this.customSubtitle});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,13 +27,7 @@ class SubscriptionCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppStyles.colorWithOpacity(AppStyles.white, 1.0),
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: AppStyles.colorWithOpacity(AppStyles.black87, 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black87, 0.03), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -57,20 +43,14 @@ class SubscriptionCard extends ConsumerWidget {
                 children: [
                   Text(
                     customTitle ?? user.displayName,
-                    style: AppStyles.cardTitle.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppStyles.cardTitle.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     customSubtitle ?? _buildDefaultSubtitle(l10n),
-                    style: AppStyles.cardSubtitle.copyWith(
-                      fontSize: 13,
-                      color: AppStyles.grey600,
-                    ),
+                    style: AppStyles.cardSubtitle.copyWith(fontSize: 13, color: AppStyles.grey600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -98,8 +78,7 @@ class SubscriptionCard extends ConsumerWidget {
     if (user.fullName?.isNotEmpty == true) {
       final nameParts = user.fullName!.trim().split(' ');
       if (nameParts.length >= 2) {
-        initials =
-            nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
+        initials = nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
       } else {
         initials = nameParts[0][0].toUpperCase();
       }
@@ -115,29 +94,19 @@ class SubscriptionCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.3),
-          width: 1.5,
-        ),
+        border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.3), width: 1.5),
       ),
       child: Center(
         child: Text(
           initials,
-          style: AppStyles.cardTitle.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppStyles.blue600,
-            letterSpacing: 0.5,
-          ),
+          style: AppStyles.cardTitle.copyWith(fontSize: 18, fontWeight: FontWeight.bold, color: AppStyles.blue600, letterSpacing: 0.5),
         ),
       ),
     );
   }
 
   String _buildDefaultSubtitle(AppLocalizations l10n) {
-    if (user.newEventsCount != null &&
-        user.totalEventsCount != null &&
-        user.subscribersCount != null) {
+    if (user.newEventsCount != null && user.totalEventsCount != null && user.subscribersCount != null) {
       final newEvents = user.newEventsCount!;
       final totalEvents = user.totalEventsCount!;
       final subscribers = user.subscribersCount!;
@@ -164,26 +133,12 @@ class SubscriptionCard extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: AppStyles.colorWithOpacity(AppStyles.red600, 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppStyles.colorWithOpacity(AppStyles.red600, 0.25),
-                  width: 1,
-                ),
+                border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.red600, 0.25), width: 1),
               ),
-              child: Center(
-                child: PlatformWidgets.platformIcon(
-                  CupertinoIcons.delete,
-                  color: AppStyles.red600,
-                  size: 16,
-                ),
-              ),
+              child: Center(child: PlatformWidgets.platformIcon(CupertinoIcons.delete, color: AppStyles.red600, size: 16)),
             ),
           ),
-        if (onDelete == null)
-          PlatformWidgets.platformIcon(
-            CupertinoIcons.chevron_right,
-            color: AppStyles.grey400,
-            size: 20,
-          ),
+        if (onDelete == null) PlatformWidgets.platformIcon(CupertinoIcons.chevron_right, color: AppStyles.grey400, size: 20),
       ],
     );
   }

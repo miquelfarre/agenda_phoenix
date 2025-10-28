@@ -53,9 +53,7 @@ class UserService {
       if (configService.isTestMode) {
         configService.currentUserId;
 
-        final response = await ApiClientFactory.instance.get(
-          '/api/v1/users/me?enriched=true',
-        );
+        final response = await ApiClientFactory.instance.get('/api/v1/users/me?enriched=true');
         final user = User.fromJson(response);
 
         await SyncService.syncUserProfile(user.id);
@@ -70,17 +68,11 @@ class UserService {
 
       final idToken = await SupabaseAuthService.getCurrentUserToken();
       if (idToken == null) {
-        throw AppException(
-          message: 'No authentication token available',
-          code: 1001,
-          tag: 'AUTH',
-        );
+        throw AppException(message: 'No authentication token available', code: 1001, tag: 'AUTH');
       }
 
       // Get user data with enriched contact information
-      final response = await ApiClientFactory.instance.get(
-        '/api/v1/users/me?enriched=true',
-      );
+      final response = await ApiClientFactory.instance.get('/api/v1/users/me?enriched=true');
 
       final user = User.fromJson(response);
 
@@ -158,10 +150,7 @@ class UserService {
         return [];
       }
 
-      final response = await ApiClientFactory.instance.post(
-        '/api/v1/users/find-by-phones',
-        body: {'phone_numbers': phoneNumbers},
-      );
+      final response = await ApiClientFactory.instance.post('/api/v1/users/find-by-phones', body: {'phone_numbers': phoneNumbers});
 
       final List<dynamic> usersJson = response is List ? response : [];
       final users = usersJson.map((json) => User.fromJson(json)).toList();
@@ -184,10 +173,7 @@ class UserService {
     try {
       // Get all public users and filter client-side
       // TODO: Backend should implement search parameter in GET /users
-      final response = await ApiClientFactory.instance.get(
-        '/api/v1/users',
-        queryParams: {'public': 'true', 'limit': '100'},
-      );
+      final response = await ApiClientFactory.instance.get('/api/v1/users', queryParams: {'public': 'true', 'limit': '100'});
 
       final List<dynamic> usersJson = response is List ? response : [];
       final allUsers = usersJson.map((json) => User.fromJson(json)).toList();
@@ -210,10 +196,7 @@ class UserService {
     try {
       // Get all users and filter client-side
       // TODO: Backend should implement search parameter in GET /users
-      final response = await ApiClientFactory.instance.get(
-        '/api/v1/users',
-        queryParams: {'limit': limit.toString()},
-      );
+      final response = await ApiClientFactory.instance.get('/api/v1/users', queryParams: {'limit': limit.toString()});
 
       final List<dynamic> usersJson = response is List ? response : [];
       final allUsers = usersJson.map((json) => User.fromJson(json)).toList();
@@ -238,10 +221,7 @@ class UserService {
 
   static Map<String, dynamic> getCacheStats() {
     final hiveBox = Hive.box<UserHive>('users');
-    return {
-      'hive_users_count': hiveBox.length,
-      'hive_box_open': hiveBox.isOpen,
-    };
+    return {'hive_users_count': hiveBox.length, 'hive_box_open': hiveBox.isOpen};
   }
 
   Future<void> logout() async {

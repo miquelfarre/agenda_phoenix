@@ -6,12 +6,7 @@ class CacheEntry<T> {
   final DateTime? expiresAt;
   final Map<String, dynamic> metadata;
 
-  const CacheEntry({
-    required this.data,
-    required this.timestamp,
-    this.expiresAt,
-    this.metadata = const {},
-  });
+  const CacheEntry({required this.data, required this.timestamp, this.expiresAt, this.metadata = const {}});
 
   bool get isExpired {
     if (expiresAt == null) return false;
@@ -20,18 +15,8 @@ class CacheEntry<T> {
 
   Duration get age => DateTime.now().difference(timestamp);
 
-  CacheEntry<T> copyWith({
-    T? data,
-    DateTime? timestamp,
-    DateTime? expiresAt,
-    Map<String, dynamic>? metadata,
-  }) {
-    return CacheEntry<T>(
-      data: data ?? this.data,
-      timestamp: timestamp ?? this.timestamp,
-      expiresAt: expiresAt ?? this.expiresAt,
-      metadata: metadata ?? this.metadata,
-    );
+  CacheEntry<T> copyWith({T? data, DateTime? timestamp, DateTime? expiresAt, Map<String, dynamic>? metadata}) {
+    return CacheEntry<T>(data: data ?? this.data, timestamp: timestamp ?? this.timestamp, expiresAt: expiresAt ?? this.expiresAt, metadata: metadata ?? this.metadata);
   }
 }
 
@@ -44,26 +29,10 @@ class CacheStats {
   final int totalSize;
   final DateTime lastAccess;
 
-  const CacheStats({
-    required this.totalEntries,
-    required this.expiredEntries,
-    required this.hitCount,
-    required this.missCount,
-    required this.hitRate,
-    required this.totalSize,
-    required this.lastAccess,
-  });
+  const CacheStats({required this.totalEntries, required this.expiredEntries, required this.hitCount, required this.missCount, required this.hitRate, required this.totalSize, required this.lastAccess});
 
   factory CacheStats.empty() {
-    return CacheStats(
-      totalEntries: 0,
-      expiredEntries: 0,
-      hitCount: 0,
-      missCount: 0,
-      hitRate: 0.0,
-      totalSize: 0,
-      lastAccess: DateTime.now(),
-    );
+    return CacheStats(totalEntries: 0, expiredEntries: 0, hitCount: 0, missCount: 0, hitRate: 0.0, totalSize: 0, lastAccess: DateTime.now());
   }
 }
 
@@ -116,13 +85,7 @@ class CacheEvent<K, V> {
   final DateTime timestamp;
   final Map<String, dynamic> metadata;
 
-  const CacheEvent({
-    required this.type,
-    this.key,
-    this.value,
-    required this.timestamp,
-    this.metadata = const {},
-  });
+  const CacheEvent({required this.type, this.key, this.value, required this.timestamp, this.metadata = const {}});
 }
 
 abstract class IMemoryAwareCache<K, V> extends ICacheManager<K, V> {
@@ -171,41 +134,17 @@ class CacheConfig {
   final bool distributed;
   final Duration cleanupInterval;
 
-  const CacheConfig({
-    this.maxEntries = 1000,
-    this.defaultTtl = const Duration(hours: 1),
-    this.evictionPolicy = CacheEvictionPolicy.lru,
-    this.maxMemorySize,
-    this.persistent = false,
-    this.storagePath,
-    this.distributed = false,
-    this.cleanupInterval = const Duration(minutes: 5),
-  });
+  const CacheConfig({this.maxEntries = 1000, this.defaultTtl = const Duration(hours: 1), this.evictionPolicy = CacheEvictionPolicy.lru, this.maxMemorySize, this.persistent = false, this.storagePath, this.distributed = false, this.cleanupInterval = const Duration(minutes: 5)});
 
   factory CacheConfig.memory() {
-    return const CacheConfig(
-      maxEntries: 500,
-      defaultTtl: Duration(minutes: 30),
-      evictionPolicy: CacheEvictionPolicy.lru,
-      persistent: false,
-    );
+    return const CacheConfig(maxEntries: 500, defaultTtl: Duration(minutes: 30), evictionPolicy: CacheEvictionPolicy.lru, persistent: false);
   }
 
   factory CacheConfig.persistent() {
-    return const CacheConfig(
-      maxEntries: 2000,
-      defaultTtl: Duration(hours: 24),
-      evictionPolicy: CacheEvictionPolicy.lru,
-      persistent: true,
-    );
+    return const CacheConfig(maxEntries: 2000, defaultTtl: Duration(hours: 24), evictionPolicy: CacheEvictionPolicy.lru, persistent: true);
   }
 
   factory CacheConfig.distributed() {
-    return const CacheConfig(
-      maxEntries: 5000,
-      defaultTtl: Duration(hours: 2),
-      evictionPolicy: CacheEvictionPolicy.lru,
-      distributed: true,
-    );
+    return const CacheConfig(maxEntries: 5000, defaultTtl: Duration(hours: 2), evictionPolicy: CacheEvictionPolicy.lru, distributed: true);
   }
 }

@@ -9,34 +9,13 @@ class ConfigurableStyledContainer extends StatelessWidget {
   final ConfigurableContainerStyle style;
   final VoidCallback? onTap;
 
-  const ConfigurableStyledContainer({
-    super.key,
-    required this.child,
-    this.padding,
-    this.style = ConfigurableContainerStyle.card,
-    this.onTap,
-  });
+  const ConfigurableStyledContainer({super.key, required this.child, this.padding, this.style = ConfigurableContainerStyle.card, this.onTap});
 
-  const ConfigurableStyledContainer.header({
-    super.key,
-    required this.child,
-    this.padding = const EdgeInsets.all(20),
-    this.onTap,
-  }) : style = ConfigurableContainerStyle.header;
+  const ConfigurableStyledContainer.header({super.key, required this.child, this.padding = const EdgeInsets.all(20), this.onTap}) : style = ConfigurableContainerStyle.header;
 
-  const ConfigurableStyledContainer.card({
-    super.key,
-    required this.child,
-    this.padding = const EdgeInsets.all(20),
-    this.onTap,
-  }) : style = ConfigurableContainerStyle.card;
+  const ConfigurableStyledContainer.card({super.key, required this.child, this.padding = const EdgeInsets.all(20), this.onTap}) : style = ConfigurableContainerStyle.card;
 
-  const ConfigurableStyledContainer.info({
-    super.key,
-    required this.child,
-    this.padding = const EdgeInsets.all(20),
-    this.onTap,
-  }) : style = ConfigurableContainerStyle.info;
+  const ConfigurableStyledContainer.info({super.key, required this.child, this.padding = const EdgeInsets.all(20), this.onTap}) : style = ConfigurableContainerStyle.info;
 
   @override
   Widget build(BuildContext context) {
@@ -66,20 +45,10 @@ class ConfigurableStyledContainer extends StatelessWidget {
       padding: (padding ?? const EdgeInsets.all(20)) as EdgeInsets,
       borderRadius: AppStyles.largeRadius,
       color: AppStyles.transparent,
-      boxShadow: [
-        BoxShadow(
-          color: AppStyles.primary200,
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ],
+      boxShadow: [BoxShadow(color: AppStyles.primary200, blurRadius: 12, offset: const Offset(0, 4))],
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppStyles.primary500, AppStyles.primary600],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: LinearGradient(colors: [AppStyles.primary500, AppStyles.primary600], begin: Alignment.topLeft, end: Alignment.bottomRight),
           borderRadius: AppStyles.largeRadius,
         ),
         child: Padding(padding: const EdgeInsets.all(20), child: child),
@@ -115,14 +84,7 @@ class SectionHeader extends StatelessWidget {
   final Color? iconColor;
   final Color? textColor;
 
-  const SectionHeader({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.iconColor,
-    this.textColor,
-  });
+  const SectionHeader({super.key, required this.icon, required this.title, required this.subtitle, this.iconColor, this.textColor});
 
   @override
   Widget build(BuildContext context) {
@@ -133,34 +95,17 @@ class SectionHeader extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppStyles.colorWithOpacity(AppStyles.white, 0.2),
-            borderRadius: AppStyles.cardRadius,
-          ),
-          child: PlatformWidgets.platformIcon(
-            icon,
-            color: effectiveIconColor,
-            size: 24,
-          ),
+          decoration: BoxDecoration(color: AppStyles.colorWithOpacity(AppStyles.white, 0.2), borderRadius: AppStyles.cardRadius),
+          child: PlatformWidgets.platformIcon(icon, color: effectiveIconColor, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: AppStyles.headlineSmall.copyWith(
-                  color: effectiveTextColor,
-                ),
-              ),
+              Text(title, style: AppStyles.headlineSmall.copyWith(color: effectiveTextColor)),
               const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: AppStyles.bodyTextSmall.copyWith(
-                  color: AppStyles.colorWithOpacity(effectiveTextColor, 0.9),
-                ),
-              ),
+              Text(subtitle, style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.colorWithOpacity(effectiveTextColor, 0.9))),
             ],
           ),
         ),

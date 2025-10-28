@@ -15,21 +15,13 @@ class TimezoneHorizontalSelector extends StatefulWidget {
 
   final Function(Country country, String timezone, String? city) onChanged;
 
-  const TimezoneHorizontalSelector({
-    super.key,
-    this.initialCountry,
-    this.initialCity,
-    this.initialTimezone,
-    required this.onChanged,
-  });
+  const TimezoneHorizontalSelector({super.key, this.initialCountry, this.initialCity, this.initialTimezone, required this.onChanged});
 
   @override
-  State<TimezoneHorizontalSelector> createState() =>
-      _TimezoneHorizontalSelectorState();
+  State<TimezoneHorizontalSelector> createState() => _TimezoneHorizontalSelectorState();
 }
 
-class _TimezoneHorizontalSelectorState
-    extends State<TimezoneHorizontalSelector> {
+class _TimezoneHorizontalSelectorState extends State<TimezoneHorizontalSelector> {
   Country? _selectedCountry;
   String? _selectedTimezone;
   List<Country> _allCountries = [];
@@ -48,12 +40,7 @@ class _TimezoneHorizontalSelectorState
 
   List<SelectorOption<Country>> _getCountryOptions() {
     return _allCountries.map((country) {
-      return SelectorOption<Country>(
-        value: country,
-        displayText: '${country.flag} ${country.name}',
-        isSelected: _selectedCountry?.code == country.code,
-        isEnabled: true,
-      );
+      return SelectorOption<Country>(value: country, displayText: '${country.flag} ${country.name}', isSelected: _selectedCountry?.code == country.code, isEnabled: true);
     }).toList();
   }
 
@@ -70,13 +57,7 @@ class _TimezoneHorizontalSelectorState
 
       String cityName = timezone.split('/').last.replaceAll('_', ' ');
 
-      return SelectorOption<String>(
-        value: timezone,
-        displayText: cityName,
-        subtitle: gmtOffset,
-        isSelected: _selectedTimezone == timezone,
-        isEnabled: true,
-      );
+      return SelectorOption<String>(value: timezone, displayText: cityName, subtitle: gmtOffset, isSelected: _selectedTimezone == timezone, isEnabled: true);
     }).toList();
   }
 
@@ -105,25 +86,11 @@ class _TimezoneHorizontalSelectorState
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        HorizontalSelectorWidget<Country>(
-          options: _getCountryOptions(),
-          onSelected: _onCountrySelected,
-          label: context.l10n.country,
-          icon: Icons.flag,
-          emptyMessage: context.l10n.noCountriesAvailable,
-        ),
+        HorizontalSelectorWidget<Country>(options: _getCountryOptions(), onSelected: _onCountrySelected, label: context.l10n.country, icon: Icons.flag, emptyMessage: context.l10n.noCountriesAvailable),
 
         const SizedBox(height: 12),
 
-        if (_selectedCountry != null) ...[
-          HorizontalSelectorWidget<String>(
-            options: _getTimezoneOptions(),
-            onSelected: _onTimezoneSelected,
-            label: context.l10n.cityOrTimezone,
-            icon: Icons.location_city,
-            emptyMessage: context.l10n.noTimezonesAvailable,
-          ),
-        ],
+        if (_selectedCountry != null) ...[HorizontalSelectorWidget<String>(options: _getTimezoneOptions(), onSelected: _onTimezoneSelected, label: context.l10n.cityOrTimezone, icon: Icons.location_city, emptyMessage: context.l10n.noTimezonesAvailable)],
       ],
     );
   }

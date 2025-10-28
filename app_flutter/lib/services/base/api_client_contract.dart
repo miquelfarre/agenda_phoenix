@@ -1,16 +1,7 @@
 abstract class IApiClient {
-  Future<List<Map<String, dynamic>>> fetchMyEvents({
-    int? userId,
-    String? status,
-    DateTime? fromDate,
-    DateTime? toDate,
-  });
+  Future<List<Map<String, dynamic>>> fetchMyEvents({int? userId, String? status, DateTime? fromDate, DateTime? toDate});
 
-  Future<List<Map<String, dynamic>>> fetchPublicEvents({
-    int? userId,
-    int? limit,
-    int? offset,
-  });
+  Future<List<Map<String, dynamic>>> fetchPublicEvents({int? userId, int? limit, int? offset});
 
   Future<List<Map<String, dynamic>>> fetchEvents();
 
@@ -74,9 +65,7 @@ abstract class ApiClientFactory {
 
   static IApiClient get instance {
     if (_instance == null) {
-      throw StateError(
-        'ApiClient not initialized. Call ApiClientFactory.initialize() first.',
-      );
+      throw StateError('ApiClient not initialized. Call ApiClientFactory.initialize() first.');
     }
     return _instance!;
   }
@@ -96,23 +85,14 @@ class ApiResponse<T> {
   final int statusCode;
   final bool isSuccess;
 
-  const ApiResponse._({
-    this.data,
-    this.error,
-    required this.statusCode,
-    required this.isSuccess,
-  });
+  const ApiResponse._({this.data, this.error, required this.statusCode, required this.isSuccess});
 
   factory ApiResponse.success(T data, int statusCode) {
     return ApiResponse._(data: data, statusCode: statusCode, isSuccess: true);
   }
 
   factory ApiResponse.error(String error, int statusCode) {
-    return ApiResponse._(
-      error: error,
-      statusCode: statusCode,
-      isSuccess: false,
-    );
+    return ApiResponse._(error: error, statusCode: statusCode, isSuccess: false);
   }
 }
 
@@ -122,12 +102,7 @@ class ApiException implements Exception {
   final String? endpoint;
   final Map<String, dynamic>? context;
 
-  const ApiException({
-    required this.message,
-    this.statusCode,
-    this.endpoint,
-    this.context,
-  });
+  const ApiException({required this.message, this.statusCode, this.endpoint, this.context});
 
   @override
   String toString() {

@@ -24,11 +24,8 @@ class SubscriptionService {
       for (final key in box.keys) {
         try {
           final subscriptionHive = box.get(key);
-          if (subscriptionHive is SubscriptionHive &&
-              subscriptionHive.userId == currentUserId) {
-            subscriptions.add(
-              _subscriptionHiveToSubscription(subscriptionHive),
-            );
+          if (subscriptionHive is SubscriptionHive && subscriptionHive.userId == currentUserId) {
+            subscriptions.add(_subscriptionHiveToSubscription(subscriptionHive));
           }
         } catch (e) {
           // Ignore sync errors
@@ -41,14 +38,9 @@ class SubscriptionService {
     }
   }
 
-  Future<Subscription> createSubscription({
-    required int targetUserId,
-    User? targetUser,
-  }) async {
+  Future<Subscription> createSubscription({required int targetUserId, User? targetUser}) async {
     try {
-      await ApiClientFactory.instance.post(
-        '/api/v1/users/$targetUserId/subscribe',
-      );
+      await ApiClientFactory.instance.post('/api/v1/users/$targetUserId/subscribe');
 
       // Response is a bulk operation result, need to sync to get actual subscription data
       await SyncService.syncSubscriptions(currentUserId);
@@ -72,9 +64,7 @@ class SubscriptionService {
   Future<void> deleteSubscription({required int subscriptionId}) async {
     try {
       // subscriptionId is now an interaction_id
-      await ApiClientFactory.instance.delete(
-        '/api/v1/interactions/$subscriptionId',
-      );
+      await ApiClientFactory.instance.delete('/api/v1/interactions/$subscriptionId');
 
       await SyncService.syncSubscriptions(currentUserId);
     } on SocketException {
@@ -86,20 +76,9 @@ class SubscriptionService {
 
   Future<List<User>> searchPublicUsers({required String query}) async {
     try {
-      final usersData = await ApiClientFactory.instance.fetchUsers(
-        isPublic: true,
-      );
+      final usersData = await ApiClientFactory.instance.fetchUsers(isPublic: true);
 
-      final users = usersData
-          .map((data) => User.fromJson(data))
-          .where(
-            (user) =>
-                (user.fullName?.toLowerCase().contains(query.toLowerCase()) ??
-                    false) ||
-                (user.email?.toLowerCase().contains(query.toLowerCase()) ??
-                    false),
-          )
-          .toList();
+      final users = usersData.map((data) => User.fromJson(data)).where((user) => (user.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false) || (user.email?.toLowerCase().contains(query.toLowerCase()) ?? false)).toList();
 
       return users;
     } on SocketException {
@@ -121,26 +100,13 @@ class SubscriptionService {
     }
   }
 
-  Subscription _subscriptionHiveToSubscription(
-    SubscriptionHive subscriptionHive,
-  ) {
+  Subscription _subscriptionHiveToSubscription(SubscriptionHive subscriptionHive) {
     User? subscribed;
 
-    if (subscriptionHive.subscribedUserName != null ||
-        subscriptionHive.subscribedUserFullName != null) {
-      subscribed = User(
-        id: subscriptionHive.subscribedToId,
-        instagramName: subscriptionHive.subscribedUserName,
-        fullName: subscriptionHive.subscribedUserFullName,
-        isPublic: subscriptionHive.subscribedUserIsPublic ?? false,
-      );
+    if (subscriptionHive.subscribedUserName != null || subscriptionHive.subscribedUserFullName != null) {
+      subscribed = User(id: subscriptionHive.subscribedToId, instagramName: subscriptionHive.subscribedUserName, fullName: subscriptionHive.subscribedUserFullName, isPublic: subscriptionHive.subscribedUserIsPublic ?? false);
     }
 
-    return Subscription(
-      id: subscriptionHive.id,
-      userId: subscriptionHive.userId,
-      subscribedToId: subscriptionHive.subscribedToId,
-      subscribed: subscribed,
-    );
+    return Subscription(id: subscriptionHive.id, userId: subscriptionHive.userId, subscribedToId: subscriptionHive.subscribedToId, subscribed: subscribed);
   }
 }

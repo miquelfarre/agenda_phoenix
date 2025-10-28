@@ -35,8 +35,7 @@ class EventDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<EventDetailScreen> createState() => _EventDetailScreenState();
 }
 
-class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
-    with WidgetsBindingObserver {
+class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with WidgetsBindingObserver {
   late Event currentEvent;
 
   int get currentUserId => ConfigService.instance.currentUserId;
@@ -44,11 +43,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   bool get isEventOwner => currentEvent.ownerId == currentUserId;
 
   bool _sendCancellationNotification = false;
-  final TextEditingController _cancellationNotificationController =
-      TextEditingController();
+  final TextEditingController _cancellationNotificationController = TextEditingController();
 
-  final TextEditingController _decisionMessageController =
-      TextEditingController();
+  final TextEditingController _decisionMessageController = TextEditingController();
 
   String? _ephemeralMessage;
   Color? _ephemeralMessageColor;
@@ -79,10 +76,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
       EventInteraction? interaction;
       if (!isEventOwner && data['interactions'] != null) {
-        final interactions = (data['interactions'] as List)
-            .map((i) => EventInteraction.fromJson(i))
-            .where((i) => i.userId == currentUserId)
-            .toList();
+        final interactions = (data['interactions'] as List).map((i) => EventInteraction.fromJson(i)).where((i) => i.userId == currentUserId).toList();
         if (interactions.isNotEmpty) {
           interaction = interactions.first;
         }
@@ -90,10 +84,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
       List<EventInteraction>? otherInvitations;
       if (isEventOwner && data['interactions'] != null) {
-        otherInvitations = (data['interactions'] as List)
-            .map((i) => EventInteraction.fromJson(i))
-            .where((i) => i.userId != currentUserId)
-            .toList();
+        otherInvitations = (data['interactions'] as List).map((i) => EventInteraction.fromJson(i)).where((i) => i.userId != currentUserId).toList();
       }
 
       if (mounted) {
@@ -137,14 +128,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
         if (currentEvent.id == null) return;
 
-        final updatedEvent = events
-            .where((e) => e.id == currentEvent.id)
-            .firstOrNull;
+        final updatedEvent = events.where((e) => e.id == currentEvent.id).firstOrNull;
 
         if (updatedEvent != null && mounted) {
-          print(
-            '🔔 [EventDetail] Event ${updatedEvent.name} updated via realtime',
-          );
+          print('🔔 [EventDetail] Event ${updatedEvent.name} updated via realtime');
           setState(() {
             currentEvent = updatedEvent;
             _detailedEvent = updatedEvent;
@@ -193,26 +180,13 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color:
-                      _ephemeralMessageColor ??
-                      AppStyles.colorWithOpacity(AppStyles.blue, 0.1),
+                  color: _ephemeralMessageColor ?? AppStyles.colorWithOpacity(AppStyles.blue, 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppStyles.colorWithOpacity(
-                      (_ephemeralMessageColor ?? AppStyles.blue),
-                      0.4,
-                    ),
-                  ),
+                  border: Border.all(color: AppStyles.colorWithOpacity((_ephemeralMessageColor ?? AppStyles.blue), 0.4)),
                 ),
-                child: Text(
-                  _ephemeralMessage!,
-                  style: TextStyle(color: AppStyles.black87, fontSize: 14),
-                ),
+                child: Text(_ephemeralMessage!, style: TextStyle(color: AppStyles.black87, fontSize: 14)),
               ),
             _buildInfoSection(),
             const SizedBox(height: 16),
@@ -221,10 +195,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
             const SizedBox(height: 24),
 
-            if (!isEventOwner &&
-                _interaction != null &&
-                _interaction!.wasInvited)
-              _buildParticipationStatusButtons(),
+            if (!isEventOwner && _interaction != null && _interaction!.wasInvited) _buildParticipationStatusButtons(),
 
             _buildAdditionalActions(),
 
@@ -241,29 +212,17 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             if (isEventOwner) _buildInvitedUsersList(),
 
             _buildActionButtons(),
-            if ((_detailedEvent ?? currentEvent).owner?.isPublic == true &&
-                !isEventOwner) ...[
+            if ((_detailedEvent ?? currentEvent).owner?.isPublic == true && !isEventOwner) ...[
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: AdaptiveButton(
-                  config: AdaptiveButtonConfig.secondary(),
-                  text: context.l10n.viewOrganizerEvents,
-                  onPressed: () => _viewPublicUserEvents(),
-                ),
+                child: AdaptiveButton(config: AdaptiveButtonConfig.secondary(), text: context.l10n.viewOrganizerEvents, onPressed: () => _viewPublicUserEvents()),
               ),
             ],
 
-            if (isEventOwner) ...[
-              const SizedBox(height: 24),
-              _buildCancellationNotificationSection(),
-            ] else ...[
-              const SizedBox(height: 24),
-              _buildRemoveFromListButton(),
-            ],
+            if (isEventOwner) ...[const SizedBox(height: 24), _buildCancellationNotificationSection()] else ...[const SizedBox(height: 24), _buildRemoveFromListButton()],
 
-            if (widget.event.owner?.isPublic == true &&
-                widget.event.owner?.fullName != null) ...[
+            if (widget.event.owner?.isPublic == true && widget.event.owner?.fullName != null) ...[
               const SizedBox(height: 32),
               Consumer(
                 builder: (context, ref, child) {
@@ -289,42 +248,18 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (event.owner?.isPublic == true &&
-              event.owner?.fullName != null) ...[
-            _buildOrganizerRow(),
-            const SizedBox(height: 8),
-          ],
-          _buildInfoRow(
-            l10n.eventDescription,
-            (event.description == null || event.description!.isEmpty)
-                ? l10n.noDescription
-                : event.description!,
-          ),
+          if (event.owner?.isPublic == true && event.owner?.fullName != null) ...[_buildOrganizerRow(), const SizedBox(height: 8)],
+          _buildInfoRow(l10n.eventDescription, (event.description == null || event.description!.isEmpty) ? l10n.noDescription : event.description!),
 
           _buildEventBadges(),
           const SizedBox(height: 8),
           _buildInfoRow(l10n.eventDate, _formatDateTime(event.date)),
 
-          if (!isEventOwner &&
-              _interaction != null &&
-              _interaction!.wasInvited &&
-              _interaction!.inviter != null) ...[
-            const SizedBox(height: 8),
-            _buildInfoRow('Invited by', _interaction!.inviter!.displayName),
-          ],
+          if (!isEventOwner && _interaction != null && _interaction!.wasInvited && _interaction!.inviter != null) ...[const SizedBox(height: 8), _buildInfoRow('Invited by', _interaction!.inviter!.displayName)],
 
-          if (!isEventOwner &&
-              _interaction != null &&
-              _interaction!.wasInvited &&
-              _interaction!.participationStatus != 'pending') ...[
-            const SizedBox(height: 8),
-            _buildParticipationStatusRow(),
-          ],
+          if (!isEventOwner && _interaction != null && _interaction!.wasInvited && _interaction!.participationStatus != 'pending') ...[const SizedBox(height: 8), _buildParticipationStatusRow()],
 
-          if (event.isRecurringEvent) ...[
-            const SizedBox(height: 8),
-            _buildRecurrenceInfo(),
-          ],
+          if (event.isRecurringEvent) ...[const SizedBox(height: 8), _buildRecurrenceInfo()],
         ],
       ),
     );
@@ -347,11 +282,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             children: [
               Text(
                 l10n.organizer,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppStyles.grey600,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppStyles.grey600),
               ),
               const SizedBox(height: 4),
               Text(
@@ -374,11 +305,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppStyles.grey600,
-            ),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppStyles.grey600),
           ),
           const SizedBox(height: 4),
           Text(value, style: TextStyle(fontSize: 16, color: AppStyles.black87)),
@@ -399,10 +326,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           decoration: BoxDecoration(
             color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.08),
             borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.2),
-              width: 0.5,
-            ),
+            border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.2), width: 0.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -411,19 +335,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                 Container(
                   width: 10,
                   height: 10,
-                  decoration: BoxDecoration(
-                    color: _parseColor(event.calendarColor!),
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: _parseColor(event.calendarColor!), shape: BoxShape.circle),
                 ),
               if (event.calendarColor != null) const SizedBox(width: 6),
               Text(
                 event.calendarName!,
-                style: AppStyles.bodyText.copyWith(
-                  fontSize: 13,
-                  color: AppStyles.blue600,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppStyles.bodyText.copyWith(fontSize: 13, color: AppStyles.blue600, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -438,27 +355,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           decoration: BoxDecoration(
             color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.08),
             borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.2),
-              width: 0.5,
-            ),
+            border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.2), width: 0.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              PlatformWidgets.platformIcon(
-                CupertinoIcons.gift,
-                size: 13,
-                color: AppStyles.orange600,
-              ),
+              PlatformWidgets.platformIcon(CupertinoIcons.gift, size: 13, color: AppStyles.orange600),
               const SizedBox(width: 4),
               Text(
                 l10n.isBirthday,
-                style: AppStyles.bodyText.copyWith(
-                  fontSize: 13,
-                  color: AppStyles.orange600,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppStyles.bodyText.copyWith(fontSize: 13, color: AppStyles.orange600, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -473,27 +379,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           decoration: BoxDecoration(
             color: AppStyles.colorWithOpacity(AppStyles.green600, 0.08),
             borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: AppStyles.colorWithOpacity(AppStyles.green600, 0.2),
-              width: 0.5,
-            ),
+            border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.green600, 0.2), width: 0.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              PlatformWidgets.platformIcon(
-                CupertinoIcons.repeat,
-                size: 13,
-                color: AppStyles.green600,
-              ),
+              PlatformWidgets.platformIcon(CupertinoIcons.repeat, size: 13, color: AppStyles.green600),
               const SizedBox(width: 4),
               Text(
                 l10n.recurring,
-                style: AppStyles.bodyText.copyWith(
-                  fontSize: 13,
-                  color: AppStyles.green600,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppStyles.bodyText.copyWith(fontSize: 13, color: AppStyles.green600, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -526,29 +421,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   String _formatDateTime(DateTime dateTime) {
     final l10n = context.l10n;
     final locale = l10n.localeName;
-    final weekdays = [
-      l10n.monday,
-      l10n.tuesday,
-      l10n.wednesday,
-      l10n.thursday,
-      l10n.friday,
-      l10n.saturday,
-      l10n.sunday,
-    ];
-    final months = [
-      l10n.january,
-      l10n.february,
-      l10n.march,
-      l10n.april,
-      l10n.may,
-      l10n.june,
-      l10n.july,
-      l10n.august,
-      l10n.september,
-      l10n.october,
-      l10n.november,
-      l10n.december,
-    ];
+    final weekdays = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
+    final months = [l10n.january, l10n.february, l10n.march, l10n.april, l10n.may, l10n.june, l10n.july, l10n.august, l10n.september, l10n.october, l10n.november, l10n.december];
     final weekday = weekdays[dateTime.weekday - 1];
     final month = months[dateTime.month - 1];
     final minute = dateTime.minute.toString().padLeft(2, '0');
@@ -595,9 +469,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       }
     }
 
-    final otherAttendees = attendeeUsers
-        .where((u) => u.id != currentUserId)
-        .toList();
+    final otherAttendees = attendeeUsers.where((u) => u.id != currentUserId).toList();
 
     if (otherAttendees.isEmpty) return const SizedBox.shrink();
 
@@ -610,34 +482,19 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         children: [
           Row(
             children: [
-              PlatformWidgets.platformIcon(
-                CupertinoIcons.person_3,
-                color: AppStyles.blue600,
-                size: 20,
-              ),
+              PlatformWidgets.platformIcon(CupertinoIcons.person_3, color: AppStyles.blue600, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Attendees',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppStyles.grey700,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.grey700),
               ),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                decoration: BoxDecoration(color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.1), borderRadius: BorderRadius.circular(12)),
                 child: Text(
                   '${otherAttendees.length}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppStyles.blue600,
-                  ),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppStyles.blue600),
                 ),
               ),
             ],
@@ -647,13 +504,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             spacing: 12,
             runSpacing: 12,
             children: otherAttendees.map((user) {
-              final initials = (user.fullName ?? '').trim().isNotEmpty
-                  ? user.fullName!
-                        .trim()
-                        .split(RegExp(r"\s+"))
-                        .first[0]
-                        .toUpperCase()
-                  : '?';
+              final initials = (user.fullName ?? '').trim().isNotEmpty ? user.fullName!.trim().split(RegExp(r"\s+")).first[0].toUpperCase() : '?';
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -661,18 +512,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                   Container(
                     width: 40,
                     height: 40,
-                    decoration: const BoxDecoration(
-                      color: AppStyles.blue600,
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: const BoxDecoration(color: AppStyles.blue600, shape: BoxShape.circle),
                     child: Center(
                       child: Text(
                         initials,
-                        style: AppStyles.bodyText.copyWith(
-                          color: AppStyles.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
+                        style: AppStyles.bodyText.copyWith(color: AppStyles.white, fontWeight: FontWeight.w700, fontSize: 16),
                       ),
                     ),
                   ),
@@ -681,11 +525,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                     width: 60,
                     child: Text(
                       user.fullName?.split(' ').first ?? 'User',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppStyles.grey600,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 11, color: AppStyles.grey600, fontWeight: FontWeight.w500),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -703,12 +543,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   Widget _buildActionButtons() {
     final event = _detailedEvent ?? currentEvent;
 
-    return EventDetailActions(
-      isEventOwner: isEventOwner,
-      canInvite: event.canInviteUsers,
-      onEdit: () => _editEvent(context),
-      onInvite: () => _navigateToInviteScreen(),
-    );
+    return EventDetailActions(isEventOwner: isEventOwner, canInvite: event.canInviteUsers, onEdit: () => _editEvent(context), onInvite: () => _navigateToInviteScreen());
   }
 
   void _navigateToInviteScreen() {
@@ -717,9 +552,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     print('🔵 [EventDetailScreen] _navigateToInviteScreen called');
     print('🔵 [EventDetailScreen] event.id: ${event.id}');
     print('🔵 [EventDetailScreen] event.title: ${event.title}');
-    print(
-      '🔵 [EventDetailScreen] event.canInviteUsers: ${event.canInviteUsers}',
-    );
+    print('🔵 [EventDetailScreen] event.canInviteUsers: ${event.canInviteUsers}');
 
     Navigator.of(context).push(
       CupertinoPageRoute(
@@ -734,9 +567,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   Future<void> _editEvent(BuildContext context) async {
-    final updatedEvent = await Navigator.of(
-      context,
-    ).pushScreen(context, CreateEditEventScreen(eventToEdit: currentEvent));
+    final updatedEvent = await Navigator.of(context).pushScreen(context, CreateEditEventScreen(eventToEdit: currentEvent));
 
     if (updatedEvent != null) {
       // Realtime handles refresh automatically via EventRepository
@@ -751,9 +582,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     print('🗑️ [EventDetail] Event ID: ${event.id}');
     print('🗑️ [EventDetail] Event Name: "${event.name}"');
     print('🗑️ [EventDetail] Event Owner ID: ${event.ownerId}');
-    print(
-      '🗑️ [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}',
-    );
+    print('🗑️ [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}');
     print('🗑️ [EventDetail] Should Navigate: $shouldNavigate');
 
     if (event.id == null) {
@@ -762,9 +591,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
 
     try {
-      print(
-        '🗑️ [EventDetail] Calling EventService.deleteEvent(${event.id})...',
-      );
+      print('🗑️ [EventDetail] Calling EventService.deleteEvent(${event.id})...');
       await ref.read(eventServiceProvider).deleteEvent(event.id!);
       print('✅ [EventDetail] EventService.deleteEvent completed successfully');
     } catch (e) {
@@ -784,9 +611,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     print('👋 [EventDetail] Event ID: ${event.id}');
     print('👋 [EventDetail] Event Name: "${event.name}"');
     print('👋 [EventDetail] Event Owner ID: ${event.ownerId}');
-    print(
-      '👋 [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}',
-    );
+    print('👋 [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}');
     print('👋 [EventDetail] Should Navigate: $shouldNavigate');
 
     if (event.id == null) {
@@ -795,30 +620,20 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
 
     try {
-      print(
-        '👋 [EventDetail] Calling DELETE /events/${event.id}/interaction...',
-      );
-      await ref
-          .read(apiClientProvider)
-          .delete('/events/${event.id}/interaction');
+      print('👋 [EventDetail] Calling DELETE /events/${event.id}/interaction...');
+      await ref.read(apiClientProvider).delete('/events/${event.id}/interaction');
       print('✅ [EventDetail] DELETE interaction completed successfully');
 
-      print(
-        '👋 [EventDetail] Manually removing event from EventRepository cache...',
-      );
+      print('👋 [EventDetail] Manually removing event from EventRepository cache...');
       final repository = ref.read(eventRepositoryProvider);
       final userId = ConfigService.instance.currentUserId;
 
       // Manually remove the event from cache since realtime DELETE doesn't work
       if (event.ownerId != userId) {
-        print(
-          '👋 [EventDetail] User is not owner, removing event ${event.id} from cache',
-        );
+        print('👋 [EventDetail] User is not owner, removing event ${event.id} from cache');
         repository.removeEventFromCache(event.id!);
       } else {
-        print(
-          '👋 [EventDetail] User is owner, keeping event but clearing interaction data',
-        );
+        print('👋 [EventDetail] User is owner, keeping event but clearing interaction data');
       }
 
       print('👋 [EventDetail] Realtime handles refresh automatically');
@@ -836,10 +651,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     } catch (e) {
       print('❌ [EventDetail] Error leaving event: $e');
       if (mounted) {
-        _showEphemeralMessage(
-          'Error al salir del evento',
-          color: AppStyles.errorColor,
-        );
+        _showEphemeralMessage('Error al salir del evento', color: AppStyles.errorColor);
       }
       rethrow;
     }
@@ -860,38 +672,21 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         final allEvents = ref.watch(eventStateProvider);
 
         final now = DateTime.now();
-        final futureEvents = allEvents
-            .where(
-              (e) =>
-                  e.date.isAfter(now) &&
-                  e.id != event.id &&
-                  (e.owner?.id == publicUserId),
-            )
-            .toList();
+        final futureEvents = allEvents.where((e) => e.date.isAfter(now) && e.id != event.id && (e.owner?.id == publicUserId)).toList();
 
         futureEvents.sort((a, b) => a.date.compareTo(b.date));
-        final limitedEvents = futureEvents.length > 5
-            ? futureEvents.take(5).toList()
-            : futureEvents;
+        final limitedEvents = futureEvents.length > 5 ? futureEvents.take(5).toList() : futureEvents;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               l10n.upcomingEventsOf(event.owner?.fullName ?? ''),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppStyles.grey700,
-                decoration: TextDecoration.none,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppStyles.grey700, decoration: TextDecoration.none),
             ),
             const SizedBox(height: 16),
             if (limitedEvents.isEmpty) ...[
-              EmptyState(
-                message: l10n.noUpcomingEventsScheduled,
-                icon: CupertinoIcons.calendar,
-              ),
+              EmptyState(message: l10n.noUpcomingEventsScheduled, icon: CupertinoIcons.calendar),
             ] else ...[
               ListView.separated(
                 shrinkWrap: true,
@@ -903,16 +698,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                   return EventCard(
                     event: futureEvent,
                     onTap: () {
-                      Navigator.of(context).pushScreen(
-                        context,
-                        EventDetailScreen(event: futureEvent),
-                      );
+                      Navigator.of(context).pushScreen(context, EventDetailScreen(event: futureEvent));
                     },
-                    config: EventCardConfig(
-                      navigateAfterDelete: false,
-                      onDelete: _deleteEvent,
-                      onEdit: null,
-                    ),
+                    config: EventCardConfig(navigateAfterDelete: false, onDelete: _deleteEvent, onEdit: null),
                   );
                 },
               ),
@@ -939,20 +727,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         children: [
           Row(
             children: [
-              PlatformWidgets.platformIcon(
-                CupertinoIcons.bell,
-                color: AppStyles.orange600,
-                size: 20,
-              ),
+              PlatformWidgets.platformIcon(CupertinoIcons.bell, color: AppStyles.orange600, size: 20),
               const SizedBox(width: 8),
               Text(
                 l10n.notifyCancellation,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppStyles.black87,
-                  decoration: TextDecoration.none,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.black87, decoration: TextDecoration.none),
               ),
             ],
           ),
@@ -961,11 +740,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
           Text(
             l10n.sendCancellationNotification,
-            style: TextStyle(
-              fontSize: 14,
-              color: AppStyles.grey600,
-              decoration: TextDecoration.none,
-            ),
+            style: TextStyle(fontSize: 14, color: AppStyles.grey600, decoration: TextDecoration.none),
           ),
 
           const SizedBox(height: 16),
@@ -986,12 +761,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               const SizedBox(width: 12),
               Text(
                 l10n.sendNotification,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppStyles.black87,
-                  decoration: TextDecoration.none,
-                ),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppStyles.black87, decoration: TextDecoration.none),
               ),
             ],
           ),
@@ -1003,26 +773,14 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                 border: Border.all(color: AppStyles.grey300),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: PlatformWidgets.platformTextField(
-                controller: _cancellationNotificationController,
-                placeholder: l10n.customMessageOptional,
-                maxLines: 3,
-              ),
+              child: PlatformWidgets.platformTextField(controller: _cancellationNotificationController, placeholder: l10n.customMessageOptional, maxLines: 3),
             ),
           ],
 
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            child: AdaptiveButton(
-              config: AdaptiveButtonConfigExtended.destructive(),
-              text: l10n.deleteEvent,
-              icon: CupertinoIcons.delete,
-              onPressed: () => _deleteEvent(
-                _detailedEvent ?? currentEvent,
-                shouldNavigate: true,
-              ),
-            ),
+            child: AdaptiveButton(config: AdaptiveButtonConfigExtended.destructive(), text: l10n.deleteEvent, icon: CupertinoIcons.delete, onPressed: () => _deleteEvent(_detailedEvent ?? currentEvent, shouldNavigate: true)),
           ),
         ],
       ),
@@ -1034,21 +792,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
     return SizedBox(
       width: double.infinity,
-      child: AdaptiveButton(
-        config: AdaptiveButtonConfigExtended.destructive(),
-        text: l10n.removeFromMyList,
-        icon: CupertinoIcons.minus_circle,
-        onPressed: () =>
-            _leaveEvent(_detailedEvent ?? currentEvent, shouldNavigate: true),
-      ),
+      child: AdaptiveButton(config: AdaptiveButtonConfigExtended.destructive(), text: l10n.removeFromMyList, icon: CupertinoIcons.minus_circle, onPressed: () => _leaveEvent(_detailedEvent ?? currentEvent, shouldNavigate: true)),
     );
   }
 
-  void _showEphemeralMessage(
-    String message, {
-    Color? color,
-    Duration duration = const Duration(seconds: 3),
-  }) {
+  void _showEphemeralMessage(String message, {Color? color, Duration duration = const Duration(seconds: 3)}) {
     _ephemeralTimer?.cancel();
     setState(() {
       _ephemeralMessage = message;
@@ -1073,36 +821,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       return const SizedBox.shrink();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildInfoRow(l10n.event, l10n.recurringEvent),
-        const SizedBox(height: 8),
-        _buildInfoRow(
-          l10n.recurrencePatterns,
-          _formatRecurrencePatterns(
-            event.recurrencePatterns.whereType<RecurrencePattern>().toList(),
-            locale,
-          ),
-        ),
-      ],
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildInfoRow(l10n.event, l10n.recurringEvent), const SizedBox(height: 8), _buildInfoRow(l10n.recurrencePatterns, _formatRecurrencePatterns(event.recurrencePatterns.whereType<RecurrencePattern>().toList(), locale))]);
   }
 
-  String _formatRecurrencePatterns(
-    List<RecurrencePattern> patterns,
-    String locale,
-  ) {
+  String _formatRecurrencePatterns(List<RecurrencePattern> patterns, String locale) {
     final l10n = context.l10n;
-    final dayNames = [
-      l10n.monday,
-      l10n.tuesday,
-      l10n.wednesday,
-      l10n.thursday,
-      l10n.friday,
-      l10n.saturday,
-      l10n.sunday,
-    ];
+    final dayNames = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
 
     if (patterns.isEmpty) return '';
 
@@ -1184,35 +908,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
     if (actions.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [...actions, const SizedBox(height: 16)],
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [...actions, const SizedBox(height: 16)]);
   }
 
   List<Widget> _buildCalendarEventActions() {
-    return [
-      AdaptiveButton(
-        config: AdaptiveButtonConfig.secondary(),
-        text: context.l10n.viewCalendarEvents,
-        icon: CupertinoIcons.calendar,
-        onPressed: () => _viewCalendarEvents(),
-      ),
-      const SizedBox(height: 8),
-    ];
+    return [AdaptiveButton(config: AdaptiveButtonConfig.secondary(), text: context.l10n.viewCalendarEvents, icon: CupertinoIcons.calendar, onPressed: () => _viewCalendarEvents()), const SizedBox(height: 8)];
   }
 
   List<Widget> _buildParentEventActions() {
     final l10n = context.l10n;
-    return [
-      AdaptiveButton(
-        config: AdaptiveButtonConfig.secondary(),
-        text: l10n.viewEventSeries,
-        icon: CupertinoIcons.link,
-        onPressed: () => _viewParentEventSeries(),
-      ),
-      const SizedBox(height: 8),
-    ];
+    return [AdaptiveButton(config: AdaptiveButtonConfig.secondary(), text: l10n.viewEventSeries, icon: CupertinoIcons.link, onPressed: () => _viewParentEventSeries()), const SizedBox(height: 8)];
   }
 
   void _viewCalendarEvents() {
@@ -1221,11 +926,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     if (event.calendarId != null && event.calendarName != null) {
       Navigator.of(context).push(
         CupertinoPageRoute<void>(
-          builder: (context) => CalendarEventsScreen(
-            calendarId: event.calendarId!,
-            calendarName: event.calendarName!,
-            calendarColor: event.calendarColor,
-          ),
+          builder: (context) => CalendarEventsScreen(calendarId: event.calendarId!, calendarName: event.calendarName!, calendarColor: event.calendarColor),
         ),
       );
     }
@@ -1235,12 +936,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final event = _detailedEvent ?? currentEvent;
 
     if (event.owner != null) {
-      Navigator.of(context).push(
-        CupertinoPageRoute<void>(
-          builder: (context) =>
-              PublicUserEventsScreen(publicUser: event.owner!.toUser()),
-        ),
-      );
+      Navigator.of(context).push(CupertinoPageRoute<void>(builder: (context) => PublicUserEventsScreen(publicUser: event.owner!.toUser())));
     }
   }
 
@@ -1255,54 +951,34 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     try {
       // Show loading indicator
       if (mounted) {
-        _showEphemeralMessage(
-          'Cargando serie de eventos...',
-          color: AppStyles.blue600,
-        );
+        _showEphemeralMessage('Cargando serie de eventos...', color: AppStyles.blue600);
       }
 
       final userId = ConfigService.instance.currentUserId;
-      final response = await ref
-          .read(apiClientProvider)
-          .get('/users/$userId/events');
+      final response = await ref.read(apiClientProvider).get('/users/$userId/events');
 
       // Filter events that belong to the same series
-      final allEvents = (response as List)
-          .map((json) => Event.fromJson(json))
-          .toList();
+      final allEvents = (response as List).map((json) => Event.fromJson(json)).toList();
 
-      final seriesEvents = allEvents
-          .where(
-            (e) =>
-                e.parentRecurringEventId == event.parentRecurringEventId ||
-                e.id == event.parentRecurringEventId,
-          )
-          .toList();
+      final seriesEvents = allEvents.where((e) => e.parentRecurringEventId == event.parentRecurringEventId || e.id == event.parentRecurringEventId).toList();
 
       if (mounted) {
         if (seriesEvents.isEmpty) {
-          _showEphemeralMessage(
-            'No se encontraron eventos en esta serie',
-            color: AppStyles.orange600,
-          );
+          _showEphemeralMessage('No se encontraron eventos en esta serie', color: AppStyles.orange600);
           return;
         }
 
         // Navigate to event series screen
         Navigator.of(context).push(
           CupertinoPageRoute(
-            builder: (context) =>
-                EventSeriesScreen(events: seriesEvents, seriesName: event.name),
+            builder: (context) => EventSeriesScreen(events: seriesEvents, seriesName: event.name),
           ),
         );
       }
     } catch (e) {
       print('🔴 [EventDetail] Error loading event series: $e');
       if (mounted) {
-        _showEphemeralMessage(
-          'Error al cargar la serie de eventos',
-          color: AppStyles.errorColor,
-        );
+        _showEphemeralMessage('Error al cargar la serie de eventos', color: AppStyles.errorColor);
       }
     }
   }
@@ -1326,84 +1002,53 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             children: [
               Row(
                 children: [
-                  PlatformWidgets.platformIcon(
-                    CupertinoIcons.person_2,
-                    color: AppStyles.blue600,
-                    size: 20,
-                  ),
+                  PlatformWidgets.platformIcon(CupertinoIcons.person_2, color: AppStyles.blue600, size: 20),
                   const SizedBox(width: 8),
                   Text(l10n.invitedUsers, style: AppStyles.cardTitle),
                 ],
               ),
               const SizedBox(height: 16),
-              ...invitations.where((invitation) => invitation.user != null).map(
-                (invitation) {
-                  final user = invitation.user!;
-                  final status = invitation.participationStatus ?? 'pending';
+              ...invitations.where((invitation) => invitation.user != null).map((invitation) {
+                final user = invitation.user!;
+                final status = invitation.participationStatus ?? 'pending';
 
-                  final statusColor = _getStatusColor(status);
-                  final statusText = _getStatusText(status);
+                final statusColor = _getStatusColor(status);
+                final statusText = _getStatusText(status);
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        UserAvatar(user: user, radius: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.displayName,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppStyles.black87,
-                                ),
-                              ),
-                              if (user.displaySubtitle != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  user.displaySubtitle!,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: AppStyles.grey600,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppStyles.colorWithOpacity(statusColor, 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppStyles.colorWithOpacity(
-                                statusColor,
-                                0.3,
-                              ),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    children: [
+                      UserAvatar(user: user, radius: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.displayName,
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppStyles.black87),
                             ),
-                          ),
-                          child: Text(
-                            statusText,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: statusColor,
-                            ),
-                          ),
+                            if (user.displaySubtitle != null) ...[const SizedBox(height: 2), Text(user.displaySubtitle!, style: TextStyle(fontSize: 13, color: AppStyles.grey600))],
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppStyles.colorWithOpacity(statusColor, 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppStyles.colorWithOpacity(statusColor, 0.3)),
+                        ),
+                        child: Text(
+                          statusText,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: statusColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ],
           ),
         ),
@@ -1446,8 +1091,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     if (_interaction == null) return const SizedBox.shrink();
 
     final status = _interaction!.participationStatus ?? 'pending';
-    final isDeclinedButAttending =
-        status == 'rejected' && (_interaction!.isAttending == true);
+    final isDeclinedButAttending = status == 'rejected' && (_interaction!.isAttending == true);
 
     String statusText;
     Color statusColor;
@@ -1467,11 +1111,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         children: [
           Text(
             l10n.invitationStatus,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppStyles.grey600,
-            ),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppStyles.grey600),
           ),
           const SizedBox(height: 4),
           Container(
@@ -1479,17 +1119,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             decoration: BoxDecoration(
               color: AppStyles.colorWithOpacity(statusColor, 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppStyles.colorWithOpacity(statusColor, 0.3),
-              ),
+              border: Border.all(color: AppStyles.colorWithOpacity(statusColor, 0.3)),
             ),
             child: Text(
               statusText,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: statusColor,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: statusColor),
             ),
           ),
         ],
@@ -1508,10 +1142,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final status = _interaction!.participationStatus ?? 'pending';
     final isAccepted = status == 'accepted';
     final isDeclined = status == 'rejected';
-    final isDeclinedNotAttending =
-        isDeclined && (_interaction!.isAttending == false);
-    final isDeclinedButAttending =
-        isDeclined && (_interaction!.isAttending == true);
+    final isDeclinedNotAttending = isDeclined && (_interaction!.isAttending == false);
+    final isDeclinedButAttending = isDeclined && (_interaction!.isAttending == true);
 
     return Column(
       children: [
@@ -1524,61 +1156,24 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             children: [
               Text(
                 l10n.changeInvitationStatus,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppStyles.grey700,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.grey700),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatusButton(
-                      icon: isAccepted
-                          ? CupertinoIcons.heart_fill
-                          : CupertinoIcons.heart,
-                      label: l10n.accept,
-                      color: AppStyles.green600,
-                      isActive: isAccepted,
-                      onTap: () => _updateParticipationStatus(
-                        'accepted',
-                        isAttending: false,
-                      ),
-                    ),
+                    child: _buildStatusButton(icon: isAccepted ? CupertinoIcons.heart_fill : CupertinoIcons.heart, label: l10n.accept, color: AppStyles.green600, isActive: isAccepted, onTap: () => _updateParticipationStatus('accepted', isAttending: false)),
                   ),
                   const SizedBox(width: 8),
 
                   Expanded(
-                    child: _buildStatusButton(
-                      icon: isDeclinedNotAttending
-                          ? CupertinoIcons.xmark_circle_fill
-                          : CupertinoIcons.xmark,
-                      label: l10n.decline,
-                      color: AppStyles.red600,
-                      isActive: isDeclinedNotAttending,
-                      onTap: () => _updateParticipationStatus(
-                        'rejected',
-                        isAttending: false,
-                      ),
-                    ),
+                    child: _buildStatusButton(icon: isDeclinedNotAttending ? CupertinoIcons.xmark_circle_fill : CupertinoIcons.xmark, label: l10n.decline, color: AppStyles.red600, isActive: isDeclinedNotAttending, onTap: () => _updateParticipationStatus('rejected', isAttending: false)),
                   ),
 
                   if (isPublicEvent) ...[
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _buildStatusButton(
-                        icon: isDeclinedButAttending
-                            ? CupertinoIcons.person_2_fill
-                            : CupertinoIcons.person_2,
-                        label: l10n.attendIndependently,
-                        color: AppStyles.blue600,
-                        isActive: isDeclinedButAttending,
-                        onTap: () => _updateParticipationStatus(
-                          'rejected',
-                          isAttending: true,
-                        ),
-                      ),
+                      child: _buildStatusButton(icon: isDeclinedButAttending ? CupertinoIcons.person_2_fill : CupertinoIcons.person_2, label: l10n.attendIndependently, color: AppStyles.blue600, isActive: isDeclinedButAttending, onTap: () => _updateParticipationStatus('rejected', isAttending: true)),
                     ),
                   ],
                 ],
@@ -1591,26 +1186,15 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     );
   }
 
-  Widget _buildStatusButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildStatusButton({required IconData icon, required String label, required Color color, required bool isActive, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isActive
-              ? AppStyles.colorWithOpacity(color, 0.15)
-              : AppStyles.colorWithOpacity(color, 0.05),
+          color: isActive ? AppStyles.colorWithOpacity(color, 0.15) : AppStyles.colorWithOpacity(color, 0.05),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isActive ? color : AppStyles.colorWithOpacity(color, 0.2),
-            width: isActive ? 2 : 1,
-          ),
+          border: Border.all(color: isActive ? color : AppStyles.colorWithOpacity(color, 0.2), width: isActive ? 2 : 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1620,11 +1204,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                color: color,
-              ),
+              style: TextStyle(fontSize: 12, fontWeight: isActive ? FontWeight.w700 : FontWeight.w500, color: color),
             ),
           ],
         ),
@@ -1632,20 +1212,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     );
   }
 
-  Future<void> _updateParticipationStatus(
-    String status, {
-    required bool isAttending,
-  }) async {
+  Future<void> _updateParticipationStatus(String status, {required bool isAttending}) async {
     if (currentEvent.id == null) return;
 
     try {
-      await ref
-          .read(eventInteractionsProvider.notifier)
-          .updateParticipationStatus(
-            currentEvent.id!,
-            status,
-            isAttending: isAttending,
-          );
+      await ref.read(eventInteractionsProvider.notifier).updateParticipationStatus(currentEvent.id!, status, isAttending: isAttending);
 
       await _loadDetailData();
       // Realtime handles refresh automatically via EventRepository
@@ -1670,10 +1241,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       }
     } catch (e) {
       if (mounted) {
-        _showEphemeralMessage(
-          'Error updating status: $e',
-          color: AppStyles.errorColor,
-        );
+        _showEphemeralMessage('Error updating status: $e', color: AppStyles.errorColor);
       }
     }
   }

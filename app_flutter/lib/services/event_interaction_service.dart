@@ -10,8 +10,7 @@ import 'api_client.dart';
 import 'config_service.dart';
 
 class EventInteractionService {
-  static final EventInteractionService _instance =
-      EventInteractionService._internal();
+  static final EventInteractionService _instance = EventInteractionService._internal();
   factory EventInteractionService() => _instance;
   EventInteractionService._internal();
 
@@ -79,16 +78,9 @@ class EventInteractionService {
     return null;
   }
 
-  Future<EventInteraction> updateParticipationStatus(
-    int eventId,
-    String status, {
-    String? decisionMessage,
-    bool? isAttending,
-  }) async {
+  Future<EventInteraction> updateParticipationStatus(int eventId, String status, {String? decisionMessage, bool? isAttending}) async {
     if (!['pending', 'accepted', 'rejected'].contains(status)) {
-      throw ArgumentError(
-        'Invalid status. Must be: pending, accepted, or rejected',
-      );
+      throw ArgumentError('Invalid status. Must be: pending, accepted, or rejected');
     }
 
     try {
@@ -97,10 +89,7 @@ class EventInteractionService {
         body['rejection_message'] = decisionMessage;
       }
 
-      final response = await ApiClientFactory.instance.patch(
-        '/api/v1/events/$eventId/interaction',
-        body: body,
-      );
+      final response = await ApiClientFactory.instance.patch('/api/v1/events/$eventId/interaction', body: body);
 
       final interaction = EventInteraction.fromJson(response);
 
@@ -108,18 +97,13 @@ class EventInteractionService {
     } on SocketException {
       throw app_exceptions.ApiException('Internet connection required');
     } catch (e) {
-      throw app_exceptions.ApiException(
-        'Failed to update participation status: $e',
-      );
+      throw app_exceptions.ApiException('Failed to update participation status: $e');
     }
   }
 
   Future<EventInteraction> setPersonalNote(int eventId, String note) async {
     try {
-      final response = await ApiClientFactory.instance.patch(
-        '/api/v1/events/$eventId/interaction',
-        body: {'note': note},
-      );
+      final response = await ApiClientFactory.instance.patch('/api/v1/events/$eventId/interaction', body: {'note': note});
 
       final interaction = EventInteraction.fromJson(response);
 
@@ -143,21 +127,14 @@ class EventInteractionService {
 
   Future<void> setHidden(int eventId, bool hidden) async {}
 
-  Future<EventInteraction> sendInvitation(
-    int eventId,
-    int invitedUserId, {
-    String? invitationMessage,
-  }) async {
+  Future<EventInteraction> sendInvitation(int eventId, int invitedUserId, {String? invitationMessage}) async {
     try {
       final body = <String, dynamic>{'invited_user_id': invitedUserId};
       if (invitationMessage != null) {
         body['invitation_message'] = invitationMessage;
       }
 
-      final response = await ApiClientFactory.instance.post(
-        '/api/v1/events/$eventId/interaction/invite',
-        body: body,
-      );
+      final response = await ApiClientFactory.instance.post('/api/v1/events/$eventId/interaction/invite', body: body);
 
       final interaction = EventInteraction.fromJson(response);
 
@@ -176,9 +153,7 @@ class EventInteractionService {
 
   Future<void> deleteInteraction(int eventId) async {
     try {
-      await ApiClientFactory.instance.delete(
-        '/api/v1/events/$eventId/interaction',
-      );
+      await ApiClientFactory.instance.delete('/api/v1/events/$eventId/interaction');
     } on SocketException {
       throw app_exceptions.ApiException('Internet connection required');
     } on app_exceptions.ApiException catch (e) {
@@ -193,9 +168,7 @@ class EventInteractionService {
 
   Future<EventInteraction?> fetchInteraction(int eventId) async {
     try {
-      final response = await ApiClientFactory.instance.get(
-        '/api/v1/events/$eventId/interaction',
-      );
+      final response = await ApiClientFactory.instance.get('/api/v1/events/$eventId/interaction');
 
       return EventInteraction.fromJson(response);
     } on app_exceptions.ApiException catch (e) {
@@ -220,13 +193,7 @@ class EventInteractionService {
         userCounts[hive.userId] = (userCounts[hive.userId] ?? 0) + 1;
       }
 
-      return {
-        'total_entries': totalEntries,
-        'users_with_data': userCounts.length,
-        'user_counts': userCounts,
-        'service_name': serviceName,
-        'box_name': hiveBoxName,
-      };
+      return {'total_entries': totalEntries, 'users_with_data': userCounts.length, 'user_counts': userCounts, 'service_name': serviceName, 'box_name': hiveBoxName};
     } catch (e) {
       rethrow;
     }

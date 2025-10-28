@@ -32,12 +32,7 @@ class ValidationUtils {
     return value;
   }
 
-  static T requireInRange<T extends num>(
-    T? value,
-    String paramName,
-    T min,
-    T max,
-  ) {
+  static T requireInRange<T extends num>(T? value, String paramName, T min, T max) {
     if (value == null) {
       throw ArgumentError('$paramName cannot be null');
     }
@@ -52,9 +47,7 @@ class ValidationUtils {
       throw ArgumentError('Email cannot be empty');
     }
 
-    final emailRegex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
 
     if (!emailRegex.hasMatch(email)) {
       throw ArgumentError('Invalid email format');
@@ -77,14 +70,9 @@ class ValidationUtils {
     return phoneNumber;
   }
 
-  static void validate(
-    List<bool Function()> validations,
-    List<String> errorMessages,
-  ) {
+  static void validate(List<bool Function()> validations, List<String> errorMessages) {
     if (validations.length != errorMessages.length) {
-      throw ArgumentError(
-        'Validations and error messages must have same length',
-      );
+      throw ArgumentError('Validations and error messages must have same length');
     }
 
     for (int i = 0; i < validations.length; i++) {

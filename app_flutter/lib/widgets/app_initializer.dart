@@ -25,13 +25,11 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
   }
 
   Future<void> _initialize() async {
-    DateTime.now();
-
     try {
       await _ensureBirthdayCalendar();
 
-      // Initialize SubscriptionRepository (loads data but doesn't start Realtime yet)
-      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      // Initialize SubscriptionRepository (it now starts Realtime internally after fetch)
+      ref.read(subscriptionRepositoryProvider);
 
       if (mounted) {
         setState(() {
@@ -39,13 +37,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
         });
       }
 
-      // Start Realtime after the app is fully initialized and rendered
-      // This delay ensures the auth token is properly propagated
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          subscriptionRepo.startRealtime();
-        }
-      });
+      // Realtime manual kick no longer needed; repository guards startup and tokens.
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -60,19 +52,11 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       final calendarService = CalendarService();
 
       final calendars = calendarService.getLocalCalendars();
-      final hasBirthdayCalendar = calendars.any(
-        (cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays',
-      );
+      final hasBirthdayCalendar = calendars.any((cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays');
 
       if (!hasBirthdayCalendar) {
-        await calendarService.createCalendar(
-          name: 'Cumpleaños',
-          description: 'Calendario para cumpleaños',
-          color: '#FF5733',
-          isPublic: false,
-          isShareable: false,
-        );
-      } else {}
+        await calendarService.createCalendar(name: 'Cumpleaños', description: 'Calendario para cumpleaños', color: '#FF5733', isPublic: false, isShareable: false);
+      }
     } catch (e) {
       // Ignore errors
     }
@@ -84,22 +68,15 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       if (PlatformDetection.isIOS) {
         return CupertinoApp(
           debugShowCheckedModeBanner: false,
-          home: CupertinoPageScaffold(
-            child: Center(child: PlatformWidgets.platformLoadingIndicator()),
-          ),
+          home: CupertinoPageScaffold(child: Center(child: PlatformWidgets.platformLoadingIndicator())),
         );
       }
 
       return WidgetsApp(
         color: AppStyles.white,
-        builder: (context, child) =>
-            Center(child: PlatformWidgets.platformLoadingIndicator()),
+        builder: (context, child) => Center(child: PlatformWidgets.platformLoadingIndicator()),
         debugShowCheckedModeBanner: false,
-        pageRouteBuilder: <T>(RouteSettings settings, WidgetBuilder builder) =>
-            PageRouteBuilder<T>(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  builder(context),
-            ),
+        pageRouteBuilder: <T>(RouteSettings settings, WidgetBuilder builder) => PageRouteBuilder<T>(pageBuilder: (context, animation, secondaryAnimation) => builder(context)),
       );
     }
 
