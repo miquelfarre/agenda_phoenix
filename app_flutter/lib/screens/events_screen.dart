@@ -541,7 +541,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         Navigator.of(context).pop();
       }
 
-      await _loadData();
+      // EventRepository handles updates via Realtime - no manual refresh needed
     } catch (e) {
       rethrow;
     }
