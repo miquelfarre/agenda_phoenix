@@ -12,6 +12,7 @@ class EventListItem extends StatelessWidget {
   final EventTapCallback onTap;
   final EventActionCallback onDelete;
   final bool navigateAfterDelete;
+  final bool hideInvitationStatus;
 
   const EventListItem({
     super.key,
@@ -19,6 +20,7 @@ class EventListItem extends StatelessWidget {
     required this.onTap,
     required this.onDelete,
     this.navigateAfterDelete = false,
+    this.hideInvitationStatus = false,
   });
 
   @override
@@ -31,6 +33,7 @@ class EventListItem extends StatelessWidget {
         onDelete: onDelete,
         navigateAfterDelete: navigateAfterDelete,
         showNewBadge: true,
+        showInvitationStatus: !hideInvitationStatus,
       ),
     );
   }

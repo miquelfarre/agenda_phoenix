@@ -94,17 +94,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           (e) =>
               e.event.ownerId == userId ||
               (e.event.ownerId != userId &&
-                  (e.interactionType == 'invited' ||
-                      e.interactionType == 'joined') &&
-                  e.invitationStatus == 'accepted'),
+                  e.interactionType == 'joined' &&
+                  e.event.interactionRole == 'admin'),
         )
         .length;
     final invitations = eventItems
         .where(
           (e) =>
               e.event.ownerId != userId &&
-              e.interactionType == 'invited' &&
-              e.invitationStatus == 'pending',
+              e.interactionType == 'invited',
         )
         .length;
     final subscribed = eventItems
@@ -371,11 +369,17 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             ),
           ),
           ...events.map((event) {
+            // Show invitation status badge ONLY for invitations
+            final isInvitation = event.interactionType == 'invited';
+            final shouldShowStatus = _currentFilter == 'invitations' ||
+                (_currentFilter == 'all' && isInvitation);
+
             return EventListItem(
               event: event,
               onTap: _navigateToEventDetail,
               onDelete: _deleteEvent,
               navigateAfterDelete: false,
+              hideInvitationStatus: !shouldShowStatus,
             );
           }),
           const SizedBox(height: 16),
@@ -481,15 +485,14 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     switch (filter) {
       case 'my':
-        // My Events: events I own + events I'm participating in (invited/joined + accepted)
+        // My Events: events I own + events where I'm admin
         return items
             .where(
               (item) =>
                   item.event.ownerId == userId ||
                   (item.event.ownerId != userId &&
-                      (item.interactionType == 'invited' ||
-                          item.interactionType == 'joined') &&
-                      item.invitationStatus == 'accepted'),
+                      item.interactionType == 'joined' &&
+                      item.event.interactionRole == 'admin'),
             )
             .toList();
       case 'subscribed':
@@ -505,8 +508,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             .where(
               (item) =>
                   item.event.ownerId != userId &&
-                  item.interactionType == 'invited' &&
-                  item.invitationStatus == 'pending',
+                  item.interactionType == 'invited',
             )
             .toList();
       case 'all':

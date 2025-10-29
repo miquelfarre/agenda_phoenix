@@ -38,7 +38,8 @@ class EventCard extends ConsumerWidget {
 
     final participationStatus = interaction?.participationStatus;
 
-    final effectiveConfig = participationStatus != null
+    // Only show invitation status if config allows it AND there's a participation status
+    final effectiveConfig = participationStatus != null && config.showInvitationStatus
         ? config.copyWith(
             showInvitationStatus: true,
             invitationStatus: participationStatus,
