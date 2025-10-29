@@ -51,8 +51,8 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
   Future<void> _loadCalendar() async {
     try {
-      final calendarService = ref.read(calendarServiceProvider);
-      final calendar = calendarService.getLocalCalendar(widget.calendarId);
+      final calendarService = ref.read(calendarRepositoryProvider);
+      final calendar = calendarService.getCalendarById(int.parse(widget.calendarId));
 
       if (calendar == null) {
         if (!mounted) return;
@@ -101,13 +101,16 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
+      final updateData = <String, dynamic>{
+        'name': name,
+        'description': description.isEmpty ? null : description,
+        'color': _selectedColor,
+      };
       await ref
-          .read(calendarServiceProvider)
+          .read(calendarRepositoryProvider)
           .updateCalendar(
-            widget.calendarId,
-            name: name,
-            description: description.isEmpty ? null : description,
-            color: _selectedColor,
+            int.parse(widget.calendarId),
+            updateData,
           );
 
       // Realtime handles refresh automatically via CalendarRepository
@@ -137,7 +140,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      await ref.read(calendarServiceProvider).deleteCalendar(widget.calendarId);
+      await ref.read(calendarRepositoryProvider).deleteCalendar(int.parse(widget.calendarId));
 
       // Realtime handles refresh automatically via CalendarRepository
 

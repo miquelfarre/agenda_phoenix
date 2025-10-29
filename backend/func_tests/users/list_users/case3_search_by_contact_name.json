@@ -1,15 +1,42 @@
 {
-  "method": "GET",
-  "path": "/api/v1/users?search=test&enriched=true",
+  "name": "Search users by contact name",
   "description": "Search users by contact name with enriched results",
-  "expected_status": 200,
-  "expected_body_schema": {
-    "type": "array"
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "User One",
+        "phone": "+1234567890",
+        "username": "user_one"
+      },
+      {
+        "id": 2,
+        "name": "Test User",
+        "phone": "+1234567891",
+        "username": "test_user"
+      }
+    ]
   },
-  "assertions": [
-    {
-      "type": "response_is_array",
-      "description": "Response should be an array"
-    }
-  ]
+  "request": {
+    "method": "GET",
+    "endpoint": "/api/v1/users?search=test&enriched=true"
+  },
+  "expected": {
+    "status_code": 200,
+    "body": [
+      {
+        "username": "test_user",
+        "auth_provider": "phone",
+        "auth_id": "{{ID}}",
+        "is_public": false,
+        "is_admin": false,
+        "profile_picture_url": null,
+        "id": "{{ID}}",
+        "contact_id": "{{ID}}",
+        "last_login": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
+  }
 }

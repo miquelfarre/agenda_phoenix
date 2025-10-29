@@ -383,6 +383,7 @@ class GroupMembershipResponse(GroupMembershipBase):
     id: int
     group_id: int
     user_id: int
+    role: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

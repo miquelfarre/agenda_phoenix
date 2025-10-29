@@ -1,17 +1,61 @@
 {
-  "method": "GET",
-  "path": "/api/v1/users?search=john&public=true",
+  "name": "Search users by username",
   "description": "Search users by username (case-insensitive)",
-  "expected_status": 200,
-  "expected_body_schema": {
-    "type": "array"
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "John Doe",
+        "phone": "+1234567890",
+        "username": "john_doe"
+      },
+      {
+        "id": 2,
+        "name": "Jane Smith",
+        "phone": "+1234567891",
+        "username": "jane_smith"
+      },
+      {
+        "id": 3,
+        "name": "Johnny Walker",
+        "phone": "+1234567892",
+        "username": "johnny_walker"
+      }
+    ]
   },
-  "assertions": [
-    {
-      "type": "array_contains",
-      "path": "$[*].username",
-      "value_pattern": "(?i)john",
-      "description": "At least one user should match 'john' in username"
-    }
-  ]
+  "request": {
+    "method": "GET",
+    "endpoint": "/api/v1/users?search=john"
+  },
+  "expected": {
+    "status_code": 200,
+    "body": [
+      {
+        "username": "john_doe",
+        "auth_provider": "phone",
+        "auth_id": "{{ID}}",
+        "is_public": false,
+        "is_admin": false,
+        "profile_picture_url": null,
+        "id": "{{ID}}",
+        "contact_id": "{{ID}}",
+        "last_login": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "username": "johnny_walker",
+        "auth_provider": "phone",
+        "auth_id": "{{ID}}",
+        "is_public": false,
+        "is_admin": false,
+        "profile_picture_url": null,
+        "id": "{{ID}}",
+        "contact_id": "{{ID}}",
+        "last_login": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
+  }
 }

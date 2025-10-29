@@ -861,7 +861,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         final allEvents = allEventsAsync.when(
           data: (events) => events,
           loading: () => <Event>[],
-          error: (_, __) => <Event>[],
+          error: (error, stack) => <Event>[],
         );
 
         final now = DateTime.now();
@@ -1645,7 +1645,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
     try {
       await ref
-          .read(eventInteractionsProvider.notifier)
+          .read(eventInteractionRepositoryProvider)
           .updateParticipationStatus(
             currentEvent.id!,
             status,

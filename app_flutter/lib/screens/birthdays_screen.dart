@@ -131,7 +131,7 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
     final allEvents = allEventsAsync.when(
       data: (events) => events,
       loading: () => <Event>[],
-      error: (_, __) => <Event>[],
+      error: (error, stack) => <Event>[],
     );
 
     final birthdayEvents = allEvents

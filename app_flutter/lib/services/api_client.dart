@@ -275,6 +275,7 @@ class ApiClient implements IApiClient {
     bool? enriched,
     int? limit,
     int? offset,
+    String? search,
   }) async {
     final result = await get(
       '/users',
@@ -283,6 +284,7 @@ class ApiClient implements IApiClient {
         if (enriched != null) 'enriched': enriched,
         if (limit != null) 'limit': limit,
         if (offset != null) 'offset': offset,
+        if (search != null) 'search': search,
       },
     );
     return List<Map<String, dynamic>>.from(result);
@@ -552,16 +554,6 @@ class ApiClient implements IApiClient {
   }
 
   @override
-  Future<Map<String, dynamic>> updateInteraction(
-    int interactionId,
-    Map<String, dynamic> data, {
-    int? currentUserId,
-  }) async {
-    final result = await put('/interactions/$interactionId', body: data);
-    return result as Map<String, dynamic>;
-  }
-
-  @override
   Future<Map<String, dynamic>> patchInteraction(
     int interactionId,
     Map<String, dynamic> data, {
@@ -780,6 +772,15 @@ class ApiClient implements IApiClient {
     Map<String, dynamic> data,
   ) async {
     final result = await post('/group_memberships', body: data);
+    return result as Map<String, dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateGroupMembership(
+    int membershipId,
+    Map<String, dynamic> data,
+  ) async {
+    final result = await put('/group_memberships/$membershipId', body: data);
     return result as Map<String, dynamic>;
   }
 

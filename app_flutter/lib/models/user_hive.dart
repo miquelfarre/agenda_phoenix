@@ -30,6 +30,12 @@ class UserHive extends HiveObject {
   DateTime? registeredAt;
   @HiveField(11)
   DateTime? updatedAt;
+  @HiveField(12)
+  int? newEventsCount;
+  @HiveField(13)
+  int? totalEventsCount;
+  @HiveField(14)
+  int? subscribersCount;
 
   UserHive({
     required this.id,
@@ -44,6 +50,9 @@ class UserHive extends HiveObject {
     this.firebaseUid,
     this.registeredAt,
     DateTime? updatedAt,
+    this.newEventsCount,
+    this.totalEventsCount,
+    this.subscribersCount,
   }) : updatedAt = updatedAt ?? DateTime.now();
 
   factory UserHive.fromJson(Map<String, dynamic> json) => UserHive(
@@ -66,6 +75,26 @@ class UserHive extends HiveObject {
               ? DateTimeUtils.parseAndNormalize(json['registered_at'])
               : json['registered_at'])
         : null,
+    newEventsCount: json['new_events_count'],
+    totalEventsCount: json['total_events_count'],
+    subscribersCount: json['subscribers_count'],
+  );
+
+  factory UserHive.fromUser(User user) => UserHive(
+    id: user.id,
+    instagramName: user.instagramName,
+    fullName: user.fullName,
+    isPublic: user.isPublic,
+    phoneNumber: user.phoneNumber,
+    profilePicture: user.profilePicture,
+    isBanned: user.isBanned,
+    lastSeen: user.lastSeen,
+    isOnline: user.isOnline,
+    firebaseUid: user.firebaseUid,
+    registeredAt: user.createdAt,
+    newEventsCount: user.newEventsCount,
+    totalEventsCount: user.totalEventsCount,
+    subscribersCount: user.subscribersCount,
   );
 
   Map<String, dynamic> toUserJson() => {
@@ -100,6 +129,9 @@ class UserHive extends HiveObject {
       defaultCountryCode: 'ES',
       defaultCity: 'Madrid',
       createdAt: registeredAt,
+      newEventsCount: newEventsCount,
+      totalEventsCount: totalEventsCount,
+      subscribersCount: subscribersCount,
     );
   }
 }

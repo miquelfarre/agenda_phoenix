@@ -49,10 +49,12 @@ def setup_test_data(db, setup_config: Dict):
             user = User(
                 id=user_config.get("id"),
                 contact_id=contact.id,
+                username=user_config.get("username"),
                 auth_provider=auth_provider,
                 auth_id=contact.phone,
                 is_public=is_public,
-                is_admin=user_config.get("is_admin", False)
+                is_admin=user_config.get("is_admin", False),
+                profile_picture_url=user_config.get("profile_picture_url")
             )
             db.add(user)
             db.flush()

@@ -79,6 +79,212 @@ def create_all_tables():
         raise
 
 
+def create_subscription_stats_triggers():
+    """
+    Create user_subscription_stats table and triggers for CDC architecture.
+    These triggers maintain pre-calculated statistics automatically.
+    """
+    logger.info("⚙️  Creating user_subscription_stats table and triggers...")
+
+    try:
+        with engine.connect() as conn:
+            # CREATE TABLE user_subscription_stats
+            # This table maintains pre-calculated statistics updated by triggers
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS user_subscription_stats (
+                    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                    new_events_count INTEGER DEFAULT 0 NOT NULL,
+                    total_events_count INTEGER DEFAULT 0 NOT NULL,
+                    subscribers_count INTEGER DEFAULT 0 NOT NULL,
+                    last_event_date TIMESTAMP WITH TIME ZONE,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+                );
+            """))
+            logger.info("  ✓ Created user_subscription_stats table")
+
+            # TRIGGER 1: Update stats when event is created
+            conn.execute(text("""
+                CREATE OR REPLACE FUNCTION update_stats_on_event_insert()
+                RETURNS TRIGGER AS $$
+                BEGIN
+                    INSERT INTO user_subscription_stats (
+                        user_id,
+                        total_events_count,
+                        new_events_count,
+                        subscribers_count,
+                        last_event_date,
+                        updated_at
+                    )
+                    VALUES (
+                        NEW.owner_id,
+                        1,
+                        CASE WHEN NEW.created_at > NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END,
+                        0,
+                        NEW.created_at,
+                        NOW()
+                    )
+                    ON CONFLICT (user_id) DO UPDATE SET
+                        total_events_count = user_subscription_stats.total_events_count + 1,
+                        new_events_count = CASE
+                            WHEN NEW.created_at > NOW() - INTERVAL '7 days'
+                            THEN user_subscription_stats.new_events_count + 1
+                            ELSE user_subscription_stats.new_events_count
+                        END,
+                        last_event_date = GREATEST(user_subscription_stats.last_event_date, NEW.created_at),
+                        updated_at = NOW();
+
+                    RETURN NEW;
+                END;
+                $$ LANGUAGE plpgsql;
+
+                CREATE TRIGGER event_insert_stats_trigger
+                AFTER INSERT ON events
+                FOR EACH ROW
+                EXECUTE FUNCTION update_stats_on_event_insert();
+            """))
+
+            # TRIGGER 2: Update stats when event is deleted
+            conn.execute(text("""
+                CREATE OR REPLACE FUNCTION update_stats_on_event_delete()
+                RETURNS TRIGGER AS $$
+                BEGIN
+                    UPDATE user_subscription_stats
+                    SET total_events_count = GREATEST(0, total_events_count - 1),
+                        new_events_count = CASE
+                            WHEN OLD.created_at > NOW() - INTERVAL '7 days'
+                            THEN GREATEST(0, new_events_count - 1)
+                            ELSE new_events_count
+                        END,
+                        updated_at = NOW()
+                    WHERE user_id = OLD.owner_id;
+
+                    RETURN OLD;
+                END;
+                $$ LANGUAGE plpgsql;
+
+                CREATE TRIGGER event_delete_stats_trigger
+                AFTER DELETE ON events
+                FOR EACH ROW
+                EXECUTE FUNCTION update_stats_on_event_delete();
+            """))
+
+            # TRIGGER 3: Update subscriber count on subscription
+            conn.execute(text("""
+                CREATE OR REPLACE FUNCTION update_stats_on_subscription()
+                RETURNS TRIGGER AS $$
+                DECLARE
+                    event_owner_id INTEGER;
+                BEGIN
+                    SELECT owner_id INTO event_owner_id
+                    FROM events
+                    WHERE id = NEW.event_id;
+
+                    IF event_owner_id IS NOT NULL AND NEW.interaction_type = 'subscribed' THEN
+                        INSERT INTO user_subscription_stats (
+                            user_id,
+                            total_events_count,
+                            new_events_count,
+                            subscribers_count,
+                            updated_at
+                        )
+                        VALUES (event_owner_id, 0, 0, 1, NOW())
+                        ON CONFLICT (user_id) DO UPDATE SET
+                            subscribers_count = user_subscription_stats.subscribers_count + 1,
+                            updated_at = NOW();
+                    END IF;
+
+                    RETURN NEW;
+                END;
+                $$ LANGUAGE plpgsql;
+
+                CREATE TRIGGER subscription_insert_stats_trigger
+                AFTER INSERT ON event_interactions
+                FOR EACH ROW
+                WHEN (NEW.interaction_type = 'subscribed')
+                EXECUTE FUNCTION update_stats_on_subscription();
+            """))
+
+            # TRIGGER 4: Update subscriber count on unsubscription
+            conn.execute(text("""
+                CREATE OR REPLACE FUNCTION update_stats_on_unsubscription()
+                RETURNS TRIGGER AS $$
+                DECLARE
+                    event_owner_id INTEGER;
+                BEGIN
+                    SELECT owner_id INTO event_owner_id
+                    FROM events
+                    WHERE id = OLD.event_id;
+
+                    IF event_owner_id IS NOT NULL AND OLD.interaction_type = 'subscribed' THEN
+                        UPDATE user_subscription_stats
+                        SET subscribers_count = GREATEST(0, subscribers_count - 1),
+                            updated_at = NOW()
+                        WHERE user_id = event_owner_id;
+                    END IF;
+
+                    RETURN OLD;
+                END;
+                $$ LANGUAGE plpgsql;
+
+                CREATE TRIGGER subscription_delete_stats_trigger
+                AFTER DELETE ON event_interactions
+                FOR EACH ROW
+                WHEN (OLD.interaction_type = 'subscribed')
+                EXECUTE FUNCTION update_stats_on_unsubscription();
+            """))
+
+            # Create indexes for performance
+            conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_user_stats_updated ON user_subscription_stats(updated_at);
+                CREATE INDEX IF NOT EXISTS idx_user_stats_user_id ON user_subscription_stats(user_id);
+            """))
+
+            # Set REPLICA IDENTITY for realtime CDC
+            conn.execute(text("""
+                ALTER TABLE user_subscription_stats REPLICA IDENTITY FULL;
+                GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO postgres;
+                GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO anon;
+                GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO authenticated;
+            """))
+
+            # Initialize stats from existing data
+            conn.execute(text("""
+                INSERT INTO user_subscription_stats (user_id, total_events_count, new_events_count, subscribers_count, last_event_date, updated_at)
+                SELECT
+                    u.id as user_id,
+                    COALESCE(e.total_events, 0) as total_events_count,
+                    COALESCE(e.new_events, 0) as new_events_count,
+                    COALESCE(s.subscribers, 0) as subscribers_count,
+                    e.last_event,
+                    NOW()
+                FROM users u
+                LEFT JOIN (
+                    SELECT owner_id,
+                           COUNT(*) as total_events,
+                           COUNT(CASE WHEN created_at > NOW() - INTERVAL '7 days' THEN 1 END) as new_events,
+                           MAX(created_at) as last_event
+                    FROM events
+                    GROUP BY owner_id
+                ) e ON u.id = e.owner_id
+                LEFT JOIN (
+                    SELECT e.owner_id, COUNT(DISTINCT ei.user_id) as subscribers
+                    FROM events e
+                    JOIN event_interactions ei ON e.id = ei.event_id
+                    WHERE ei.interaction_type = 'subscribed'
+                    GROUP BY e.owner_id
+                ) s ON u.id = s.owner_id
+                ON CONFLICT (user_id) DO NOTHING;
+            """))
+
+            conn.commit()
+
+        logger.info("✅ user_subscription_stats table and triggers created successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Error creating user_subscription_stats: {e}")
+        raise
+
+
 def grant_supabase_permissions():
     """
     Grant necessary permissions to postgres user on Supabase-managed schemas.
@@ -1584,7 +1790,8 @@ def setup_realtime():
                 'event_bans',
                 'user_blocks',
                 'recurring_event_configs',
-                'event_cancellations'
+                'event_cancellations',
+                'user_subscription_stats'
             ]
 
             for table in realtime_tables:
@@ -1996,20 +2203,23 @@ def init_database():
         # Step 2: Create all tables
         create_all_tables()
 
-        # Step 3: Grant permissions on Supabase schemas
+        # Step 3: Create triggers for user_subscription_stats (CDC architecture)
+        create_subscription_stats_triggers()
+
+        # Step 4: Grant permissions on Supabase schemas
         grant_supabase_permissions()
 
-        # Step 4: Create database views
+        # Step 5: Create database views
         create_database_views()
 
-        # Step 5: Setup Supabase Realtime
+        # Step 6: Setup Supabase Realtime
         setup_realtime()
         setup_realtime_tenant()
 
-        # Step 6: Insert sample data
+        # Step 7: Insert sample data
         insert_sample_data()
 
-        # Step 7: Create Supabase Auth users
+        # Step 8: Create Supabase Auth users
         create_supabase_auth_users()
 
         logger.info("=" * 60)

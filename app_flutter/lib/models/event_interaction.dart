@@ -4,6 +4,7 @@ import 'user.dart';
 
 @immutable
 class EventInteraction {
+  final int? id; // Primary key from database
   final int userId;
   final int eventId;
   final User? user;
@@ -38,6 +39,7 @@ class EventInteraction {
   final DateTime updatedAt;
 
   const EventInteraction({
+    this.id,
     required this.userId,
     required this.eventId,
     this.user,
@@ -88,6 +90,7 @@ class EventInteraction {
     final isViewed = readAt != null;
 
     return EventInteraction(
+      id: json['id'],
       userId: json['user_id'],
       eventId: json['event_id'],
       user: json['user'] != null ? User.fromJson(json['user']) : null,
@@ -127,6 +130,7 @@ class EventInteraction {
 
   Map<String, dynamic> toJson() {
     return {
+      if (id != null) 'id': id,
       'user_id': userId,
       'event_id': eventId,
       'user': user?.toJson(),
@@ -155,6 +159,7 @@ class EventInteraction {
   }
 
   EventInteraction copyWith({
+    int? id,
     int? userId,
     int? eventId,
     User? user,
@@ -181,6 +186,7 @@ class EventInteraction {
     DateTime? updatedAt,
   }) {
     return EventInteraction(
+      id: id ?? this.id,
       userId: userId ?? this.userId,
       eventId: eventId ?? this.eventId,
       user: user ?? this.user,
@@ -221,6 +227,7 @@ class EventInteraction {
     if (identical(this, other)) return true;
 
     return other is EventInteraction &&
+        other.id == id &&
         other.userId == userId &&
         other.eventId == eventId &&
         other.user == user &&
@@ -249,28 +256,32 @@ class EventInteraction {
 
   @override
   int get hashCode {
-    return Object.hash(
-          userId,
-          eventId,
-          user,
-          inviterId,
-          inviter,
-          invitationMessage,
-          invitedAt,
-          participationStatus,
-          participationDecidedAt,
-          decisionMessage,
-          postponeUntil,
-          isAttending,
-          isEventAdmin,
-          viewed,
-          firstViewedAt,
-          lastViewedAt,
-          personalNote,
-          noteUpdatedAt,
-          favorited,
-          favoritedAt,
-        ) ^
-        Object.hash(hidden, hiddenAt, createdAt, updatedAt);
+    return Object.hashAll([
+      id,
+      userId,
+      eventId,
+      user,
+      inviterId,
+      inviter,
+      invitationMessage,
+      invitedAt,
+      participationStatus,
+      participationDecidedAt,
+      decisionMessage,
+      postponeUntil,
+      isAttending,
+      isEventAdmin,
+      viewed,
+      firstViewedAt,
+      lastViewedAt,
+      personalNote,
+      noteUpdatedAt,
+      favorited,
+      favoritedAt,
+      hidden,
+      hiddenAt,
+      createdAt,
+      updatedAt,
+    ]);
   }
 }

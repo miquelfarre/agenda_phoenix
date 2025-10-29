@@ -225,11 +225,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Consumer(
               builder: (context, ref, _) {
-                final authAsync = ref.watch(
-                  authProvider.select(
-                    (state) => state.whenData((s) => s.currentUser),
-                  ),
-                );
+                final authAsync = ref.watch(currentUserStreamProvider);
                 final l10n = context.l10n;
                 String greeting = authAsync.maybeWhen(
                   data: (user) {
@@ -645,8 +641,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       print('👤 [_deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner');
 
       if (isOwner) {
-        print('👑 [_deleteEvent] User is owner. Deleting event via eventServiceProvider.');
-        await ref.read(eventServiceProvider).deleteEvent(event.id!);
+        print('👑 [_deleteEvent] User is owner. Deleting event via eventRepositoryProvider.');
+        await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
       } else {
         print('👤 [_deleteEvent] User is not owner. Deleting interaction via API.');
         await ref

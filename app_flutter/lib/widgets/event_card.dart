@@ -320,7 +320,7 @@ class EventCard extends ConsumerWidget {
                       ? 'pending'
                       : 'accepted';
                   await ref
-                      .read(eventInteractionsProvider.notifier)
+                      .read(eventInteractionRepositoryProvider)
                       .updateParticipationStatus(
                         event.id!,
                         newStatus,
@@ -349,7 +349,7 @@ class EventCard extends ConsumerWidget {
               try {
                 final newStatus = isCurrentlyRejected ? 'pending' : 'rejected';
                 await ref
-                    .read(eventInteractionsProvider.notifier)
+                    .read(eventInteractionRepositoryProvider)
                     .updateParticipationStatus(
                       event.id!,
                       newStatus,
@@ -396,7 +396,7 @@ class EventCard extends ConsumerWidget {
 
     final isOwnerPublic = event.owner?.isPublic == true;
     final isSubscribed = subs.any(
-      (s) => s.subscribedToId == event.ownerId && s.userId == currentUserId,
+      (s) => s.id == event.ownerId,
     );
     if (isOwnerPublic && isSubscribed && event.id != null) {
       return Row(

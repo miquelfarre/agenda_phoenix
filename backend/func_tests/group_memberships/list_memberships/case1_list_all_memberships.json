@@ -44,6 +44,7 @@
         "id": "{{ID}}",
         "group_id": "{{ID}}",
         "user_id": "{{ID}}",
+        "role": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"
       },
@@ -51,6 +52,7 @@
         "id": "{{ID}}",
         "group_id": "{{ID}}",
         "user_id": "{{ID}}",
+        "role": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"
       }

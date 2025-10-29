@@ -65,7 +65,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
 
     try {
       await ref
-          .read(calendarServiceProvider)
+          .read(calendarRepositoryProvider)
           .createCalendar(
             name: name,
             description: description.isEmpty ? null : description,

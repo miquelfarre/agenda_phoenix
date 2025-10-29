@@ -171,37 +171,6 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
     return db_interaction
 
 
-@router.put("/{interaction_id}", response_model=EventInteractionResponse)
-async def update_interaction(
-    interaction_id: int,
-    interaction_data: EventInteractionBase,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
-    """
-    Update an existing interaction (typically to change type or status).
-
-    Requires JWT authentication - provide token in Authorization header.
-    Either the event owner/admin OR the user of the interaction can update it.
-    """
-    db_interaction = event_interaction.get(db, id=interaction_id)
-    if not db_interaction:
-        raise HTTPException(status_code=404, detail="Interaction not found")
-
-    # Check if user is event owner/admin OR the interaction user
-    is_event_admin = is_event_owner_or_admin(db_interaction.event_id, current_user_id, db)
-    is_self = db_interaction.user_id == current_user_id
-
-    if not (is_event_admin or is_self):
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to update this interaction. Only the event owner/admin or the user themselves can do this."
-        )
-
-    updated_interaction = event_interaction.update(db, db_obj=db_interaction, obj_in=interaction_data)
-    return updated_interaction
-
-
 @router.patch("/{interaction_id}", response_model=EventInteractionResponse)
 async def patch_interaction(
     interaction_id: int,

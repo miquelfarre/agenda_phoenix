@@ -35,6 +35,7 @@ dependencies:
 
   # Supabase for authentication
   supabase_flutter: ^2.3.4
+  gotrue: ^2.0.0
 
   # UI & UX
   cached_network_image: ^3.3.1
@@ -48,6 +49,7 @@ dependencies:
   dart_jsonwebtoken: ^3.3.1
   contacts_service: ^0.6.3
   permission_handler: ^12.0.1
+  collection: ^1.18.0
 
   # Offline-first support
   uuid: ^4.5.1

@@ -1,90 +1,230 @@
 import 'dart:async';
+import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:collection/collection.dart';
 import '../models/calendar.dart';
+import '../models/calendar_hive.dart';
+import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
+import '../utils/app_exceptions.dart' as exceptions;
 
 class CalendarRepository {
+  static const String _boxName = 'calendars';
   final _supabaseService = SupabaseService.instance;
+  final _apiClient = ApiClient();
   final RealtimeSync _rt = RealtimeSync();
 
+  Box<CalendarHive>? _box;
   final StreamController<List<Calendar>> _calendarsController =
       StreamController<List<Calendar>>.broadcast();
   List<Calendar> _cachedCalendars = [];
   RealtimeChannel? _realtimeChannel;
 
-  Stream<List<Calendar>> get calendarsStream => _calendarsController.stream;
+  Stream<List<Calendar>> get calendarsStream async* {
+    if (_cachedCalendars.isNotEmpty) {
+      yield List.from(_cachedCalendars);
+    }
+    yield* _calendarsController.stream;
+  }
 
   Future<void> initialize() async {
+    print('🚀 [CalendarRepository] Initializing...');
+    _box = await Hive.openBox<CalendarHive>(_boxName);
+
+    // Load calendars from Hive cache first (if any)
+    _loadCalendarsFromHive();
+
+    // Fetch and sync calendars from API BEFORE subscribing to Realtime
     await _fetchAndSync();
+
+    // Now subscribe to Realtime for future updates
     await _startRealtimeSubscription();
+
     _emitCurrentCalendars();
+    print('✅ [CalendarRepository] Initialization complete');
+  }
+
+  void _loadCalendarsFromHive() {
+    if (_box == null) return;
+
+    try {
+      _cachedCalendars = _box!.values
+          .map((calendarHive) => calendarHive.toCalendar())
+          .toList();
+
+      print('✅ [CalendarRepository] Loaded ${_cachedCalendars.length} calendars from Hive cache');
+    } catch (e) {
+      print('❌ [CalendarRepository] Error loading from Hive: $e');
+      _cachedCalendars = [];
+    }
   }
 
   Future<void> _fetchAndSync() async {
     try {
-      final userId = ConfigService.instance.currentUserId;
+      print('📡 [CalendarRepository] Fetching calendars from API...');
+      final response = await _apiClient.fetchCalendars();
+      _cachedCalendars = response.map((data) => Calendar.fromJson(data)).toList();
 
-      final response = await _supabaseService.client
-          .from('calendars')
-          .select('*')
-          .eq('owner_id', userId);
+      await _updateLocalCache(_cachedCalendars);
 
-      final list = (response as List);
-      _cachedCalendars = list.map((json) => Calendar.fromJson(json)).toList();
-
-      // Set server sync time from rows (serverTime not available here)
       _rt.setServerSyncTsFromResponse(
-        rows: list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+        rows: _cachedCalendars.map((c) => c.toJson()),
       );
+      _emitCurrentCalendars();
+      print('✅ [CalendarRepository] Fetched ${_cachedCalendars.length} calendars');
     } catch (e) {
-      print('Error fetching calendars: $e');
+      print('❌ [CalendarRepository] Error fetching calendars: $e');
     }
   }
+
+  Future<void> _updateLocalCache(List<Calendar> calendars) async {
+    if (_box == null) return;
+
+    print('💾 [CalendarRepository] Updating Hive cache with ${calendars.length} calendars...');
+    await _box!.clear();
+
+    for (final calendar in calendars) {
+      final calendarHive = CalendarHive.fromCalendar(calendar);
+      await _box!.put(calendar.id, calendarHive);
+    }
+    print('✅ [CalendarRepository] Hive cache updated');
+  }
+
+  // --- Mutations ---
+
+  Future<Calendar> createCalendar({
+    required String name,
+    String? description,
+    String color = '#2196F3',
+    bool isPublic = false,
+  }) async {
+    print('➕ [CalendarRepository] Creating calendar: "$name"');
+    final newCalendar = await _apiClient.createCalendar({
+      'name': name,
+      'description': description,
+      'color': color,
+      'is_public': isPublic,
+    });
+    await _fetchAndSync();
+    print('✅ [CalendarRepository] Calendar created: "${newCalendar['name']}"');
+    return Calendar.fromJson(newCalendar);
+  }
+
+  Future<Calendar> updateCalendar(
+    int calendarId,
+    Map<String, dynamic> data,
+  ) async {
+    print('🔄 [CalendarRepository] Updating calendar ID $calendarId');
+    final updatedCalendar = await _apiClient.updateCalendar(calendarId, data);
+    await _fetchAndSync();
+    print('✅ [CalendarRepository] Calendar updated: ID $calendarId');
+    return Calendar.fromJson(updatedCalendar);
+  }
+
+  Future<void> deleteCalendar(int calendarId) async {
+    print('🗑️ [CalendarRepository] deleteCalendar START - calendarId: $calendarId');
+    final calendar = _cachedCalendars.firstWhere((c) => c.id == calendarId.toString(), orElse: () => throw exceptions.NotFoundException(message: 'Calendar not found in cache'));
+
+    if (calendar.isDefault) {
+      print('❌ [CalendarRepository] Cannot delete default calendar');
+      throw exceptions.ValidationException(message: 'Cannot delete default calendar');
+    }
+
+    print('🗑️ [CalendarRepository] Calendar in cache: "${calendar.name}"');
+    print('🗑️ [CalendarRepository] Cache size before: ${_cachedCalendars.length}');
+
+    await _apiClient.deleteCalendar(calendarId);
+    await _fetchAndSync();
+
+    print('🗑️ [CalendarRepository] Cache size after: ${_cachedCalendars.length}');
+    print('✅ [CalendarRepository] Calendar deleted: ID $calendarId');
+  }
+
+  Future<void> subscribeToCalendar(int calendarId) async {
+    print('➕ [CalendarRepository] Subscribing to calendar ID $calendarId');
+    await _apiClient.addCalendarMembership(calendarId, {}); // Body might need user id, check API
+    await _fetchAndSync();
+    print('✅ [CalendarRepository] Subscribed to calendar ID $calendarId');
+  }
+
+  Future<void> unsubscribeFromCalendar(int calendarId) async {
+    print('🗑️ [CalendarRepository] unsubscribeFromCalendar START - calendarId: $calendarId');
+    final memberships = await _apiClient.fetchCalendarMemberships(calendarId);
+    if (memberships.isEmpty) {
+      print('⚠️ [CalendarRepository] No membership found, already unsubscribed');
+      return;
+    }
+    final membershipId = memberships[0]['id'];
+    await _apiClient.deleteCalendarMembership(membershipId);
+    removeCalendarFromCache(calendarId);
+    print('✅ [CalendarRepository] Unsubscribed from calendar ID $calendarId');
+  }
+
+  Future<List<Calendar>> fetchPublicCalendars({String? search}) async {
+    print('🔍 [CalendarRepository] Searching public calendars${search != null ? ': "$search"' : ''}');
+    final queryParams = <String, String>{'is_public': 'true'};
+    if (search != null) queryParams['search'] = search;
+
+    final response = await _apiClient.get(
+      '/calendars',
+      queryParams: queryParams,
+    );
+
+    final calendars = <Calendar>[];
+    for (final item in response as List) {
+      calendars.add(Calendar.fromJson(item));
+    }
+    print('✅ [CalendarRepository] Found ${calendars.length} public calendars');
+    return calendars;
+  }
+
+  void removeCalendarFromCache(int calendarId) {
+    print('🗑️ [CalendarRepository] removeCalendarFromCache START - calendarId: $calendarId');
+
+    final calendarBefore = _cachedCalendars.where((c) => c.id == calendarId.toString()).firstOrNull;
+    print('🗑️ [CalendarRepository] Calendar in cache: ${calendarBefore != null ? '"${calendarBefore.name}"' : 'NOT FOUND'}');
+
+    final initialCount = _cachedCalendars.length;
+    print('🗑️ [CalendarRepository] Cache size before: $initialCount');
+
+    _cachedCalendars.removeWhere((c) => c.id == calendarId.toString());
+    print('🗑️ [CalendarRepository] Cache size after: ${_cachedCalendars.length}');
+
+    _box?.delete(calendarId.toString());
+    print('🗑️ [CalendarRepository] Deleted from Hive box');
+
+    if (_cachedCalendars.length < initialCount) {
+      print('🗑️ [CalendarRepository] Emitting updated calendars to stream...');
+      _emitCurrentCalendars();
+      print('✅ [CalendarRepository] Calendar manually removed and stream emitted - ID $calendarId');
+    }
+  }
+
+  // --- Realtime ---
 
   Future<void> _startRealtimeSubscription() async {
     final userId = ConfigService.instance.currentUserId;
     _realtimeChannel = _supabaseService.client
-        .channel('calendars_realtime')
+        .channel('calendar_memberships_realtime')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
-          table: 'calendars',
+          table: 'calendar_memberships',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
+            column: 'user_id',
             value: userId.toString(),
           ),
-          callback: _handleCalendarChange,
+          callback: (payload) {
+            print('🔄 [CalendarRepository] Realtime change detected, refreshing calendars');
+            _fetchAndSync();
+          },
         )
         .subscribe();
-  }
 
-  void _handleCalendarChange(PostgresChangePayload payload) {
-    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
-
-    if (payload.eventType == PostgresChangeEvent.insert) {
-      if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
-      final calendar = Calendar.fromJson(payload.newRecord);
-      _cachedCalendars.add(calendar);
-      _emitCurrentCalendars();
-    } else if (payload.eventType == PostgresChangeEvent.update) {
-      if (!_rt.shouldProcessInsertOrUpdate(ct)) return;
-      final updatedCalendar = Calendar.fromJson(payload.newRecord);
-      final index = _cachedCalendars.indexWhere(
-        (c) => c.id == updatedCalendar.id,
-      );
-      if (index != -1) {
-        _cachedCalendars[index] = updatedCalendar;
-        _emitCurrentCalendars();
-      }
-    } else if (payload.eventType == PostgresChangeEvent.delete) {
-      if (!_rt.shouldProcessDelete()) return;
-      final calendarId = payload.oldRecord['id']?.toString() ?? '';
-      _cachedCalendars.removeWhere((c) => c.id == calendarId);
-      _emitCurrentCalendars();
-    }
+    print('✅ [CalendarRepository] Realtime subscription started for calendar_memberships table');
   }
 
   void _emitCurrentCalendars() {
@@ -93,7 +233,12 @@ class CalendarRepository {
     }
   }
 
+  Calendar? getCalendarById(int calendarId) {
+    return _cachedCalendars.firstWhereOrNull((c) => c.id == calendarId.toString());
+  }
+
   void dispose() {
+    print('👋 [CalendarRepository] Disposing...');
     _realtimeChannel?.unsubscribe();
     _calendarsController.close();
   }

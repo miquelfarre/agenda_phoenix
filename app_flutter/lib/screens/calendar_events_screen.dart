@@ -74,7 +74,7 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
     final allEvents = allEventsAsync.when(
       data: (events) => events,
       loading: () => <Event>[],
-      error: (_, __) => <Event>[],
+      error: (error, stack) => <Event>[],
     );
 
     final calendarEvents = allEvents

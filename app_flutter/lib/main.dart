@@ -9,10 +9,7 @@ import 'package:eventypop/models/subscription_hive.dart';
 import 'package:eventypop/models/user_event_note_hive.dart';
 import 'package:eventypop/models/user_hive.dart';
 import 'package:eventypop/services/api_client.dart';
-import 'package:eventypop/services/calendar_service.dart';
 import 'package:eventypop/services/config_service.dart';
-import 'package:eventypop/services/group_service.dart';
-import 'package:eventypop/services/sync_service.dart';
 import 'package:eventypop/services/timezone_service.dart';
 import 'package:eventypop/services/supabase_service.dart';
 import 'package:eventypop/services/app_config.dart';
@@ -73,8 +70,6 @@ void main() async {
 
     await TimezoneService.initialize();
 
-    await SyncService.init();
-
     await ConfigService.instance.initialize();
 
     await _validateTestModeConfiguration();
@@ -82,10 +77,6 @@ void main() async {
     // When running in test mode (debug), apply a generated JWT as Supabase auth
     // so Realtime (RLS) connections use a user token instead of the anon key.
     await SupabaseService.instance.applyTestAuthIfNeeded();
-
-    await GroupService().initialize();
-
-    await CalendarService().initialize();
 
     const env = String.fromEnvironment(
       'FLUTTER_ENV',

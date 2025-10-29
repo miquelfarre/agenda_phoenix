@@ -61,7 +61,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       data: (events) =>
           events.where((event) => event.calendarId == calendarId).length,
       loading: () => 0,
-      error: (_, __) => 0,
+      error: (error, stack) => 0,
     );
   }
 

@@ -176,33 +176,15 @@ class CreateEditEventScreenState
         await ref
             .read(eventServiceProvider)
             .updateEvent(
-              eventId: widget.eventToEdit!.id!,
-              name: eventData['title'],
-              description: eventData['description'],
-              startDate: eventData['start_date'] is DateTime
-                  ? eventData['start_date']
-                  : (eventData['start_date'] != null
-                        ? DateTime.parse(eventData['start_date'].toString())
-                        : null),
-              eventType: eventData['is_recurring'] == true
-                  ? 'recurring'
-                  : 'regular',
-              calendarId: eventData['calendar_id'],
+              widget.eventToEdit!.id!,
+              eventData,
             );
         // Realtime handles refresh automatically via EventRepository
       } else {
         await ref
             .read(eventServiceProvider)
             .createEvent(
-              name: eventData['title'] ?? '',
-              description: eventData['description'],
-              startDate: eventData['start_date'] is DateTime
-                  ? eventData['start_date']
-                  : DateTime.parse(eventData['start_date'].toString()),
-              eventType: eventData['is_recurring'] == true
-                  ? 'recurring'
-                  : 'regular',
-              calendarId: eventData['calendar_id'],
+              eventData,
             );
         // Realtime handles refresh automatically via EventRepository
       }
