@@ -16,7 +16,6 @@ import '../../repositories/group_repository.dart';
 import '../../repositories/calendar_repository.dart';
 import '../../repositories/user_repository.dart';
 import '../../repositories/user_blocking_repository.dart';
-import '../../repositories/event_interaction_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase_flutter;
 import '../notifiers/locale_notifier.dart';
 
@@ -82,13 +81,6 @@ final userBlockingRepositoryProvider = Provider<UserBlockingRepository>((ref) {
   return repository;
 });
 
-final eventInteractionRepositoryProvider = Provider<EventInteractionRepository>((ref) {
-  final repository = EventInteractionRepository();
-  ref.onDispose(() => repository.dispose());
-  repository.initialize();
-  return repository;
-});
-
 // --- Locale Provider ---
 
 final localeProvider = localeNotifierProvider;
@@ -133,7 +125,7 @@ final blockedUsersStreamProvider = StreamProvider<List<User>>((ref) {
 });
 
 final eventInteractionsStreamProvider = StreamProvider<List<EventInteraction>>((ref) {
-  final repository = ref.watch(eventInteractionRepositoryProvider);
+  final repository = ref.watch(eventRepositoryProvider);
   return repository.interactionsStream;
 });
 
@@ -141,6 +133,7 @@ final eventInteractionsStreamProvider = StreamProvider<List<EventInteraction>>((
 final eventInteractionsProvider = eventInteractionsStreamProvider;
 final subscriptionsProvider = subscriptionsStreamProvider;
 final eventServiceProvider = eventRepositoryProvider;
+final eventInteractionRepositoryProvider = eventRepositoryProvider;
 
 
 // --- Notifications (example, might need its own repository) ---

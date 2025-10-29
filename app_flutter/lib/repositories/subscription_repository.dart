@@ -12,13 +12,11 @@ class SubscriptionRepository {
   static const String _boxName = 'subscriptions';
   final _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
-  final RealtimeSync _rt = RealtimeSync();
 
   Box<UserHive>? _box;
   final StreamController<List<models.User>> _subscriptionsController =
       StreamController<List<models.User>>.broadcast();
   List<models.User> _cachedUsers = [];
-  RealtimeChannel? _realtimeChannel;
   RealtimeChannel? _statsChannel;
 
   Stream<List<models.User>> get subscriptionsStream async* {
@@ -69,9 +67,6 @@ class SubscriptionRepository {
 
       await _updateLocalCache(_cachedUsers);
 
-      _rt.setServerSyncTsFromResponse(
-        rows: _cachedUsers.map((u) => u.toJson()),
-      );
       _emitCurrentSubscriptions();
       print('✅ [SubscriptionRepository] Fetched ${_cachedUsers.length} subscriptions');
     } catch (e) {
@@ -93,52 +88,76 @@ class SubscriptionRepository {
   }
 
   Future<void> refresh() async {
-    print('🔄 [SubscriptionRepository] Manual refresh requested');
-    await _fetchAndSync();
+    try {
+      print('🔄 [SubscriptionRepository] Manual refresh requested');
+      await _fetchAndSync();
+    } catch (e, stackTrace) {
+      print('❌ [SubscriptionRepository] Error refreshing: $e');
+      print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<void> createSubscription({required int targetUserId}) async {
-    print('➕ [SubscriptionRepository] Creating subscription to user $targetUserId');
-    await _apiClient.subscribeToUser(ConfigService.instance.currentUserId, targetUserId);
-    await _fetchAndSync();
-    print('✅ [SubscriptionRepository] Subscription created');
+    try {
+      print('➕ [SubscriptionRepository] Creating subscription to user $targetUserId');
+      await _apiClient.subscribeToUser(ConfigService.instance.currentUserId, targetUserId);
+      await _fetchAndSync();
+      print('✅ [SubscriptionRepository] Subscription created');
+    } catch (e, stackTrace) {
+      print('❌ [SubscriptionRepository] Error creating subscription: $e');
+      print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<void> deleteSubscription({required int targetUserId}) async {
-    print('🗑️ [SubscriptionRepository] deleteSubscription START - userId: $targetUserId');
+    try {
+      print('🗑️ [SubscriptionRepository] deleteSubscription START - userId: $targetUserId');
 
-    final userBefore = _cachedUsers.where((u) => u.id == targetUserId).firstOrNull;
-    print('🗑️ [SubscriptionRepository] User in cache: ${userBefore != null ? '"${userBefore.fullName ?? userBefore.instagramName}"' : 'NOT FOUND'}');
-    print('🗑️ [SubscriptionRepository] Cache size before: ${_cachedUsers.length}');
+      final userBefore = _cachedUsers.where((u) => u.id == targetUserId).firstOrNull;
+      print('🗑️ [SubscriptionRepository] User in cache: ${userBefore != null ? '"${userBefore.fullName ?? userBefore.instagramName}"' : 'NOT FOUND'}');
+      print('🗑️ [SubscriptionRepository] Cache size before: ${_cachedUsers.length}');
 
-    final currentUserId = ConfigService.instance.currentUserId;
-    final interactions = await _apiClient.fetchInteractions(
-      userId: currentUserId,
-      interactionType: 'subscribed',
-    );
+      final currentUserId = ConfigService.instance.currentUserId;
+      final interactions = await _apiClient.fetchInteractions(
+        userId: currentUserId,
+        interactionType: 'subscribed',
+      );
 
-    final targetInteraction = interactions.firstWhere(
-      (interaction) => interaction['target_user_id'] == targetUserId,
-      orElse: () => throw Exception('Subscription not found'),
-    );
+      final targetInteraction = interactions.firstWhere(
+        (interaction) => interaction['target_user_id'] == targetUserId,
+        orElse: () => throw Exception('Subscription not found'),
+      );
 
-    await _apiClient.deleteInteraction(targetInteraction['id']);
-    removeSubscriptionFromCache(targetUserId);
+      await _apiClient.deleteInteraction(targetInteraction['id']);
+      removeSubscriptionFromCache(targetUserId);
 
-    print('✅ [SubscriptionRepository] Subscription deleted - User ID $targetUserId');
+      print('✅ [SubscriptionRepository] Subscription deleted - User ID $targetUserId');
+    } catch (e, stackTrace) {
+      print('❌ [SubscriptionRepository] Error deleting subscription: $e');
+      print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<List<models.User>> searchPublicUsers({required String query}) async {
-    print('🔍 [SubscriptionRepository] Searching public users: "$query"');
-    final usersData = await _apiClient.fetchUsers(isPublic: true);
-    final results = usersData
-        .map((data) => models.User.fromJson(data))
-        .where((user) =>
-            (user.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-            (user.email?.toLowerCase().contains(query.toLowerCase()) ?? false))
-        .toList();
-    print('✅ [SubscriptionRepository] Found ${results.length} users matching "$query"');
-    return results;
+    try {
+      print('🔍 [SubscriptionRepository] Searching public users: "$query"');
+      final usersData = await _apiClient.fetchUsers(isPublic: true);
+      final results = usersData
+          .map((data) => models.User.fromJson(data))
+          .where((user) =>
+              (user.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
+              (user.email?.toLowerCase().contains(query.toLowerCase()) ?? false))
+          .toList();
+      print('✅ [SubscriptionRepository] Found ${results.length} users matching "$query"');
+      return results;
+    } catch (e, stackTrace) {
+      print('❌ [SubscriptionRepository] Error searching public users: $e');
+      print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   void removeSubscriptionFromCache(int userId) {
@@ -164,20 +183,9 @@ class SubscriptionRepository {
   }
 
   Future<void> _startRealtimeSubscription() async {
-    final userId = ConfigService.instance.currentUserId;
-    _realtimeChannel = RealtimeUtils.subscribeTable(
-      client: _supabaseService.client,
-      schema: 'public',
-      table: 'event_interactions',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'user_id',
-        value: userId.toString(),
-      ),
-      onChange: _handleSubscriptionChange,
-    );
-
-    print('✅ [SubscriptionRepository] Realtime subscription started for event_interactions table');
+    // NOTE: We no longer subscribe to event_interactions here because EventRepository
+    // now handles all interactions (including subscriptions). This avoids conflicts
+    // with duplicate Realtime subscriptions to the same table.
 
     _statsChannel = RealtimeUtils.subscribeTable(
       client: _supabaseService.client,
@@ -187,34 +195,6 @@ class SubscriptionRepository {
     );
 
     print('✅ [SubscriptionRepository] Realtime subscription started for user_subscription_stats table');
-  }
-
-  void _handleSubscriptionChange(PostgresChangePayload payload) {
-    final userId = ConfigService.instance.currentUserId;
-    bool isSubscribedInteraction(Map<String, dynamic> rec) {
-      return rec['user_id'] == userId && rec['interaction_type'] == 'subscribed';
-    }
-
-    final ct = payload.commitTimestamp.toUtc();
-
-    if (payload.eventType == PostgresChangeEvent.delete) {
-      final oldRec = Map<String, dynamic>.from(payload.oldRecord);
-      if (isSubscribedInteraction(oldRec) && _rt.shouldProcessDelete()) {
-        print('🔄 [SubscriptionRepository] DELETE detected, refreshing subscriptions');
-        _fetchAndSync();
-      }
-      return;
-    }
-
-    final newRec = Map<String, dynamic>.from(payload.newRecord);
-    if (isSubscribedInteraction(newRec)) {
-      if (_rt.shouldProcessInsertOrUpdate(ct)) {
-        print('🔄 [SubscriptionRepository] INSERT/UPDATE detected, refreshing subscriptions');
-        _fetchAndSync();
-      } else {
-        print('⏸️ [SubscriptionRepository] Event skipped by time gate');
-      }
-    }
   }
 
   void _handleStatsChange(PostgresChangePayload payload) {
@@ -251,8 +231,8 @@ class SubscriptionRepository {
 
   void dispose() {
     print('👋 [SubscriptionRepository] Disposing...');
-    _realtimeChannel?.unsubscribe();
     _statsChannel?.unsubscribe();
     _subscriptionsController.close();
+    _box?.close();
   }
 }

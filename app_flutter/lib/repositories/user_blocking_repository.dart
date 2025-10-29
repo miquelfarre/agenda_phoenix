@@ -18,13 +18,16 @@ class UserBlockingRepository {
   Stream<List<User>> get blockedUsersStream => _blockedUsersController.stream;
 
   Future<void> initialize() async {
+    print('🚀 [UserBlockingRepository] Initializing...');
     await _fetchAndSync();
     await _startRealtimeSubscription();
     _emitBlockedUsers();
+    print('✅ [UserBlockingRepository] Initialization complete');
   }
 
   Future<void> _fetchAndSync() async {
     try {
+      print('📡 [UserBlockingRepository] Fetching blocked users from API...');
       final currentUserId = ConfigService.instance.currentUserId;
       final blocks = await _apiClient.fetchUserBlocks(
         blockerUserId: currentUserId,
@@ -40,32 +43,49 @@ class UserBlockingRepository {
           )
           .toList();
       _emitBlockedUsers();
+      print('✅ [UserBlockingRepository] Fetched ${_cachedBlockedUsers.length} blocked users');
     } catch (e) {
-      print('Error fetching blocked users: $e');
+      print('❌ [UserBlockingRepository] Error fetching blocked users: $e');
     }
   }
 
   Future<void> blockUser(int userId) async {
-    final currentUserId = ConfigService.instance.currentUserId;
-    await _apiClient.createUserBlock({
-      'blocker_user_id': currentUserId,
-      'blocked_user_id': userId,
-    });
-    await _fetchAndSync();
+    try {
+      print('🚫 [UserBlockingRepository] Blocking user $userId');
+      final currentUserId = ConfigService.instance.currentUserId;
+      await _apiClient.createUserBlock({
+        'blocker_user_id': currentUserId,
+        'blocked_user_id': userId,
+      });
+      await _fetchAndSync();
+      print('✅ [UserBlockingRepository] User $userId blocked');
+    } catch (e, stackTrace) {
+      print('❌ [UserBlockingRepository] Error blocking user: $e');
+      print('📍 [UserBlockingRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<void> unblockUser(int userId) async {
-    final currentUserId = ConfigService.instance.currentUserId;
-    final blocks = await _apiClient.fetchUserBlocks(
-      blockerUserId: currentUserId,
-      blockedUserId: userId,
-    );
+    try {
+      print('✅ [UserBlockingRepository] Unblocking user $userId');
+      final currentUserId = ConfigService.instance.currentUserId;
+      final blocks = await _apiClient.fetchUserBlocks(
+        blockerUserId: currentUserId,
+        blockedUserId: userId,
+      );
 
-    if (blocks.isNotEmpty) {
-      final blockId = blocks.first['id'] as int;
-      await _apiClient.deleteUserBlock(blockId, currentUserId: currentUserId);
+      if (blocks.isNotEmpty) {
+        final blockId = blocks.first['id'] as int;
+        await _apiClient.deleteUserBlock(blockId, currentUserId: currentUserId);
+      }
+      await _fetchAndSync();
+      print('✅ [UserBlockingRepository] User $userId unblocked');
+    } catch (e, stackTrace) {
+      print('❌ [UserBlockingRepository] Error unblocking user: $e');
+      print('📍 [UserBlockingRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-    await _fetchAndSync();
   }
 
   bool isUserBlocked(int userId) {
@@ -100,6 +120,7 @@ class UserBlockingRepository {
   }
 
   void dispose() {
+    print('👋 [UserBlockingRepository] Disposing...');
     _realtimeChannel?.unsubscribe();
     _blockedUsersController.close();
   }

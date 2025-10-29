@@ -15,7 +15,10 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
   @override
   String get serviceName => 'SettingsRepository';
 
-  Future<void> initialize() async {}
+  Future<void> initialize() async {
+    print('🚀 [SettingsRepository] Initializing...');
+    print('✅ [SettingsRepository] Initialization complete');
+  }
 
   static const String _defaultCountryCodeKey = 'default_country_code';
   static const String _defaultTimezoneKey = 'default_timezone';
@@ -179,5 +182,9 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
         tag: 'SettingsRepository',
       );
     }
+  }
+
+  void dispose() {
+    print('👋 [SettingsRepository] Disposing...');
   }
 }

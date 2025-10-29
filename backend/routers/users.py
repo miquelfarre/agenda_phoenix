@@ -485,7 +485,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         interaction_user_id = current_user_id if current_user_id is not None else user_id
         interactions = event_interaction.get_by_event_ids_and_user(db, event_ids=visible_event_ids, user_id=interaction_user_id)
         for interaction in interactions:
-            user_interactions[interaction.event_id] = {"interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note, "is_new": interaction.is_new}
+            user_interactions[interaction.event_id] = {"id": interaction.id, "interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note, "is_new": interaction.is_new}
 
     # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)

@@ -98,16 +98,22 @@ class GroupRepository {
     required String name,
     String? description,
   }) async {
-    print('➕ [GroupRepository] Creating group: "$name"');
-    final creatorId = ConfigService.instance.currentUserId;
-    final newGroup = await _apiClient.createGroup({
-      'name': name,
-      'description': description,
-      'creator_id': creatorId,
-    });
-    await _fetchAndSync();
-    print('✅ [GroupRepository] Group created: "${newGroup['name']}"');
-    return Group.fromJson(newGroup);
+    try {
+      print('➕ [GroupRepository] Creating group: "$name"');
+      final creatorId = ConfigService.instance.currentUserId;
+      final newGroup = await _apiClient.createGroup({
+        'name': name,
+        'description': description,
+        'creator_id': creatorId,
+      });
+      await _fetchAndSync();
+      print('✅ [GroupRepository] Group created: "${newGroup['name']}"');
+      return Group.fromJson(newGroup);
+    } catch (e, stackTrace) {
+      print('❌ [GroupRepository] Error creating group: $e');
+      print('📍 [GroupRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<Group> updateGroup({
@@ -115,137 +121,179 @@ class GroupRepository {
     String? name,
     String? description,
   }) async {
-    print('🔄 [GroupRepository] Updating group ID $groupId');
-    final userId = ConfigService.instance.currentUserId;
-    _validateAdminPermissions(groupId, userId);
+    try {
+      print('🔄 [GroupRepository] Updating group ID $groupId');
+      final userId = ConfigService.instance.currentUserId;
+      _validateAdminPermissions(groupId, userId);
 
-    final updateData = <String, dynamic>{};
-    if (name != null) updateData['name'] = name;
-    if (description != null) updateData['description'] = description;
+      final updateData = <String, dynamic>{};
+      if (name != null) updateData['name'] = name;
+      if (description != null) updateData['description'] = description;
 
-    final updatedGroup = await _apiClient.updateGroup(groupId, updateData);
-    await _fetchAndSync();
-    print('✅ [GroupRepository] Group updated: ID $groupId');
-    return Group.fromJson(updatedGroup);
+      final updatedGroup = await _apiClient.updateGroup(groupId, updateData);
+      await _fetchAndSync();
+      print('✅ [GroupRepository] Group updated: ID $groupId');
+      return Group.fromJson(updatedGroup);
+    } catch (e, stackTrace) {
+      print('❌ [GroupRepository] Error updating group: $e');
+      print('📍 [GroupRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<void> deleteGroup({required int groupId}) async {
-    print('🗑️ [GroupRepository] deleteGroup START - groupId: $groupId');
-    final userId = ConfigService.instance.currentUserId;
-    final group = _getGroupFromCache(groupId);
+    try {
+      print('🗑️ [GroupRepository] deleteGroup START - groupId: $groupId');
+      final userId = ConfigService.instance.currentUserId;
+      final group = _getGroupFromCache(groupId);
 
-    print('🗑️ [GroupRepository] Group in cache: "${group.name}"');
-    print('🗑️ [GroupRepository] Cache size before: ${_cachedGroups.length}');
+      print('🗑️ [GroupRepository] Group in cache: "${group.name}"');
+      print('🗑️ [GroupRepository] Cache size before: ${_cachedGroups.length}');
 
-    if (!group.isCreator(userId)) {
-      print('❌ [GroupRepository] Permission denied: Only creator can delete');
-      throw const exceptions.PermissionDeniedException(
-        message: 'Only group creator can delete the group',
-      );
+      if (!group.isCreator(userId)) {
+        print('❌ [GroupRepository] Permission denied: Only creator can delete');
+        throw const exceptions.PermissionDeniedException(
+          message: 'Only group creator can delete the group',
+        );
+      }
+
+      await _apiClient.deleteGroup(groupId);
+      await _fetchAndSync();
+
+      print('🗑️ [GroupRepository] Cache size after: ${_cachedGroups.length}');
+      print('✅ [GroupRepository] Group deleted: ID $groupId');
+    } catch (e, stackTrace) {
+      print('❌ [GroupRepository] Error deleting group: $e');
+      print('📍 [GroupRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-
-    await _apiClient.deleteGroup(groupId);
-    await _fetchAndSync();
-
-    print('🗑️ [GroupRepository] Cache size after: ${_cachedGroups.length}');
-    print('✅ [GroupRepository] Group deleted: ID $groupId');
   }
 
   Future<void> addMemberToGroup({
     required int groupId,
     required int memberUserId,
   }) async {
-    print('👥 [GroupRepository] Adding user $memberUserId to group $groupId');
-    final adminUserId = ConfigService.instance.currentUserId;
-    _validateMemberOperationPermissions(groupId, memberUserId, adminUserId, 'add');
-    await _apiClient.createGroupMembership({
-      'group_id': groupId,
-      'user_id': memberUserId,
-    });
-    await _fetchAndSync();
-    print('✅ [GroupRepository] Member $memberUserId added to group $groupId');
+    try {
+      print('👥 [GroupRepository] Adding user $memberUserId to group $groupId');
+      final adminUserId = ConfigService.instance.currentUserId;
+      _validateMemberOperationPermissions(groupId, memberUserId, adminUserId, 'add');
+      await _apiClient.createGroupMembership({
+        'group_id': groupId,
+        'user_id': memberUserId,
+      });
+      await _fetchAndSync();
+      print('✅ [GroupRepository] Member $memberUserId added to group $groupId');
+    } catch (e, stackTrace) {
+      print('❌ [GroupRepository] Error adding member to group: $e');
+      print('📍 [GroupRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<void> removeMemberFromGroup({
     required int groupId,
     required int memberUserId,
   }) async {
-    print('👥 [GroupRepository] Removing user $memberUserId from group $groupId');
-    final adminUserId = ConfigService.instance.currentUserId;
-    _validateMemberOperationPermissions(groupId, memberUserId, adminUserId, 'remove');
-    final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: memberUserId);
-    if (memberships.isEmpty) {
-      print('❌ [GroupRepository] Membership not found');
-      throw exceptions.NotFoundException(
-        message: 'Membership not found for user $memberUserId in group $groupId',
-      );
+    try {
+      print('👥 [GroupRepository] Removing user $memberUserId from group $groupId');
+      final adminUserId = ConfigService.instance.currentUserId;
+      _validateMemberOperationPermissions(groupId, memberUserId, adminUserId, 'remove');
+      final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: memberUserId);
+      if (memberships.isEmpty) {
+        print('❌ [GroupRepository] Membership not found');
+        throw exceptions.NotFoundException(
+          message: 'Membership not found for user $memberUserId in group $groupId',
+        );
+      }
+      final membershipId = memberships[0]['id'];
+      await _apiClient.deleteGroupMembership(membershipId);
+      await _fetchAndSync();
+      print('✅ [GroupRepository] Member $memberUserId removed from group $groupId');
+    } catch (e, stackTrace) {
+      print('❌ [GroupRepository] Error removing member from group: $e');
+      print('📍 [GroupRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-    final membershipId = memberships[0]['id'];
-    await _apiClient.deleteGroupMembership(membershipId);
-    await _fetchAndSync();
-    print('✅ [GroupRepository] Member $memberUserId removed from group $groupId');
   }
 
   Future<void> leaveGroup(int groupId) async {
-    print('🚪 [GroupRepository] User leaving group $groupId');
-    final userId = ConfigService.instance.currentUserId;
-    final group = _getGroupFromCache(groupId);
+    try {
+      print('🚪 [GroupRepository] User leaving group $groupId');
+      final userId = ConfigService.instance.currentUserId;
+      final group = _getGroupFromCache(groupId);
 
-    if (group.isCreator(userId)) {
-      print('❌ [GroupRepository] Creator cannot leave group');
-      throw const exceptions.ConflictException(
-        message: 'Group creator cannot leave. Delete the group instead.',
-      );
-    }
+      if (group.isCreator(userId)) {
+        print('❌ [GroupRepository] Creator cannot leave group');
+        throw const exceptions.ConflictException(
+          message: 'Group creator cannot leave. Delete the group instead.',
+        );
+      }
 
-    final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
-    if (memberships.isEmpty) {
-      print('❌ [GroupRepository] Membership not found');
-      throw exceptions.NotFoundException(
-        message: 'Membership not found for user $userId in group $groupId',
-      );
+      final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
+      if (memberships.isEmpty) {
+        print('❌ [GroupRepository] Membership not found');
+        throw exceptions.NotFoundException(
+          message: 'Membership not found for user $userId in group $groupId',
+        );
+      }
+      final membershipId = memberships[0]['id'];
+      await _apiClient.deleteGroupMembership(membershipId);
+      // No full sync, just remove locally for faster UI update
+      removeGroupFromCache(groupId);
+      print('✅ [GroupRepository] User left group $groupId');
+    } catch (e, stackTrace) {
+      print('❌ [GroupRepository] Error leaving group: $e');
+      print('📍 [GroupRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-    final membershipId = memberships[0]['id'];
-    await _apiClient.deleteGroupMembership(membershipId);
-    // No full sync, just remove locally for faster UI update
-    removeGroupFromCache(groupId);
-    print('✅ [GroupRepository] User left group $groupId');
   }
 
   Future<void> grantAdminPermission({
     required int groupId,
     required int userId,
   }) async {
-    print('👑 [GroupRepository] Granting admin permission to user $userId in group $groupId');
-    final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
-    if (memberships.isEmpty) {
-      print('❌ [GroupRepository] Membership not found');
-      throw exceptions.NotFoundException(
-        message: 'Membership not found for user $userId in group $groupId',
-      );
+    try {
+      print('👑 [GroupRepository] Granting admin permission to user $userId in group $groupId');
+      final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
+      if (memberships.isEmpty) {
+        print('❌ [GroupRepository] Membership not found');
+        throw exceptions.NotFoundException(
+          message: 'Membership not found for user $userId in group $groupId',
+        );
+      }
+      final membershipId = memberships[0]['id'];
+      await _apiClient.updateGroupMembership(membershipId, {'role': 'admin'});
+      await _fetchAndSync();
+      print('✅ [GroupRepository] Admin permission granted to user $userId');
+    } catch (e, stackTrace) {
+      print('❌ [GroupRepository] Error granting admin permission: $e');
+      print('📍 [GroupRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-    final membershipId = memberships[0]['id'];
-    await _apiClient.updateGroupMembership(membershipId, {'role': 'admin'});
-    await _fetchAndSync();
-    print('✅ [GroupRepository] Admin permission granted to user $userId');
   }
 
   Future<void> removeAdminPermission({
     required int groupId,
     required int userId,
   }) async {
-    print('👑 [GroupRepository] Removing admin permission from user $userId in group $groupId');
-    final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
-    if (memberships.isEmpty) {
-      print('❌ [GroupRepository] Membership not found');
-      throw exceptions.NotFoundException(
-        message: 'Membership not found for user $userId in group $groupId',
-      );
+    try {
+      print('👑 [GroupRepository] Removing admin permission from user $userId in group $groupId');
+      final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
+      if (memberships.isEmpty) {
+        print('❌ [GroupRepository] Membership not found');
+        throw exceptions.NotFoundException(
+          message: 'Membership not found for user $userId in group $groupId',
+        );
+      }
+      final membershipId = memberships[0]['id'];
+      await _apiClient.updateGroupMembership(membershipId, {'role': 'member'});
+      await _fetchAndSync();
+      print('✅ [GroupRepository] Admin permission removed from user $userId');
+    } catch (e, stackTrace) {
+      print('❌ [GroupRepository] Error removing admin permission: $e');
+      print('📍 [GroupRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-    final membershipId = memberships[0]['id'];
-    await _apiClient.updateGroupMembership(membershipId, {'role': 'member'});
-    await _fetchAndSync();
-    print('✅ [GroupRepository] Admin permission removed from user $userId');
   }
 
   // --- Local cache and realtime ---
@@ -351,6 +399,7 @@ class GroupRepository {
     print('👋 [GroupRepository] Disposing...');
     _realtimeChannel?.unsubscribe();
     _groupsController.close();
+    _box?.close();
   }
 
   // --- Helpers ---

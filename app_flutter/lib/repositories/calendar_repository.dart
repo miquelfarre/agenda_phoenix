@@ -100,84 +100,120 @@ class CalendarRepository {
     String color = '#2196F3',
     bool isPublic = false,
   }) async {
-    print('➕ [CalendarRepository] Creating calendar: "$name"');
-    final newCalendar = await _apiClient.createCalendar({
-      'name': name,
-      'description': description,
-      'color': color,
-      'is_public': isPublic,
-    });
-    await _fetchAndSync();
-    print('✅ [CalendarRepository] Calendar created: "${newCalendar['name']}"');
-    return Calendar.fromJson(newCalendar);
+    try {
+      print('➕ [CalendarRepository] Creating calendar: "$name"');
+      final newCalendar = await _apiClient.createCalendar({
+        'name': name,
+        'description': description,
+        'color': color,
+        'is_public': isPublic,
+      });
+      await _fetchAndSync();
+      print('✅ [CalendarRepository] Calendar created: "${newCalendar['name']}"');
+      return Calendar.fromJson(newCalendar);
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error creating calendar: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<Calendar> updateCalendar(
     int calendarId,
     Map<String, dynamic> data,
   ) async {
-    print('🔄 [CalendarRepository] Updating calendar ID $calendarId');
-    final updatedCalendar = await _apiClient.updateCalendar(calendarId, data);
-    await _fetchAndSync();
-    print('✅ [CalendarRepository] Calendar updated: ID $calendarId');
-    return Calendar.fromJson(updatedCalendar);
+    try {
+      print('🔄 [CalendarRepository] Updating calendar ID $calendarId');
+      final updatedCalendar = await _apiClient.updateCalendar(calendarId, data);
+      await _fetchAndSync();
+      print('✅ [CalendarRepository] Calendar updated: ID $calendarId');
+      return Calendar.fromJson(updatedCalendar);
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error updating calendar: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<void> deleteCalendar(int calendarId) async {
-    print('🗑️ [CalendarRepository] deleteCalendar START - calendarId: $calendarId');
-    final calendar = _cachedCalendars.firstWhere((c) => c.id == calendarId.toString(), orElse: () => throw exceptions.NotFoundException(message: 'Calendar not found in cache'));
+    try {
+      print('🗑️ [CalendarRepository] deleteCalendar START - calendarId: $calendarId');
+      final calendar = _cachedCalendars.firstWhere((c) => c.id == calendarId.toString(), orElse: () => throw exceptions.NotFoundException(message: 'Calendar not found in cache'));
 
-    if (calendar.isDefault) {
-      print('❌ [CalendarRepository] Cannot delete default calendar');
-      throw exceptions.ValidationException(message: 'Cannot delete default calendar');
+      if (calendar.isDefault) {
+        print('❌ [CalendarRepository] Cannot delete default calendar');
+        throw exceptions.ValidationException(message: 'Cannot delete default calendar');
+      }
+
+      print('🗑️ [CalendarRepository] Calendar in cache: "${calendar.name}"');
+      print('🗑️ [CalendarRepository] Cache size before: ${_cachedCalendars.length}');
+
+      await _apiClient.deleteCalendar(calendarId);
+      await _fetchAndSync();
+
+      print('🗑️ [CalendarRepository] Cache size after: ${_cachedCalendars.length}');
+      print('✅ [CalendarRepository] Calendar deleted: ID $calendarId');
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error deleting calendar: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-
-    print('🗑️ [CalendarRepository] Calendar in cache: "${calendar.name}"');
-    print('🗑️ [CalendarRepository] Cache size before: ${_cachedCalendars.length}');
-
-    await _apiClient.deleteCalendar(calendarId);
-    await _fetchAndSync();
-
-    print('🗑️ [CalendarRepository] Cache size after: ${_cachedCalendars.length}');
-    print('✅ [CalendarRepository] Calendar deleted: ID $calendarId');
   }
 
   Future<void> subscribeToCalendar(int calendarId) async {
-    print('➕ [CalendarRepository] Subscribing to calendar ID $calendarId');
-    await _apiClient.addCalendarMembership(calendarId, {}); // Body might need user id, check API
-    await _fetchAndSync();
-    print('✅ [CalendarRepository] Subscribed to calendar ID $calendarId');
+    try {
+      print('➕ [CalendarRepository] Subscribing to calendar ID $calendarId');
+      await _apiClient.addCalendarMembership(calendarId, {}); // Body might need user id, check API
+      await _fetchAndSync();
+      print('✅ [CalendarRepository] Subscribed to calendar ID $calendarId');
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error subscribing to calendar: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<void> unsubscribeFromCalendar(int calendarId) async {
-    print('🗑️ [CalendarRepository] unsubscribeFromCalendar START - calendarId: $calendarId');
-    final memberships = await _apiClient.fetchCalendarMemberships(calendarId);
-    if (memberships.isEmpty) {
-      print('⚠️ [CalendarRepository] No membership found, already unsubscribed');
-      return;
+    try {
+      print('🗑️ [CalendarRepository] unsubscribeFromCalendar START - calendarId: $calendarId');
+      final memberships = await _apiClient.fetchCalendarMemberships(calendarId);
+      if (memberships.isEmpty) {
+        print('⚠️ [CalendarRepository] No membership found, already unsubscribed');
+        return;
+      }
+      final membershipId = memberships[0]['id'];
+      await _apiClient.deleteCalendarMembership(membershipId);
+      removeCalendarFromCache(calendarId);
+      print('✅ [CalendarRepository] Unsubscribed from calendar ID $calendarId');
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error unsubscribing from calendar: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-    final membershipId = memberships[0]['id'];
-    await _apiClient.deleteCalendarMembership(membershipId);
-    removeCalendarFromCache(calendarId);
-    print('✅ [CalendarRepository] Unsubscribed from calendar ID $calendarId');
   }
 
   Future<List<Calendar>> fetchPublicCalendars({String? search}) async {
-    print('🔍 [CalendarRepository] Searching public calendars${search != null ? ': "$search"' : ''}');
-    final queryParams = <String, String>{'is_public': 'true'};
-    if (search != null) queryParams['search'] = search;
+    try {
+      print('🔍 [CalendarRepository] Searching public calendars${search != null ? ': "$search"' : ''}');
+      final queryParams = <String, String>{'is_public': 'true'};
+      if (search != null) queryParams['search'] = search;
 
-    final response = await _apiClient.get(
-      '/calendars',
-      queryParams: queryParams,
-    );
+      final response = await _apiClient.get(
+        '/calendars',
+        queryParams: queryParams,
+      );
 
-    final calendars = <Calendar>[];
-    for (final item in response as List) {
-      calendars.add(Calendar.fromJson(item));
+      final calendars = <Calendar>[];
+      for (final item in response as List) {
+        calendars.add(Calendar.fromJson(item));
+      }
+      print('✅ [CalendarRepository] Found ${calendars.length} public calendars');
+      return calendars;
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error fetching public calendars: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
     }
-    print('✅ [CalendarRepository] Found ${calendars.length} public calendars');
-    return calendars;
   }
 
   void removeCalendarFromCache(int calendarId) {
@@ -241,5 +277,6 @@ class CalendarRepository {
     print('👋 [CalendarRepository] Disposing...');
     _realtimeChannel?.unsubscribe();
     _calendarsController.close();
+    _box?.close();
   }
 }

@@ -85,6 +85,7 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": {
+          "id": "{{ID}}",
           "interaction_type": "invited",
           "status": "accepted",
           "role": null,

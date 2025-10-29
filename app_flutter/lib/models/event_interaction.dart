@@ -123,8 +123,12 @@ class EventInteraction {
       favoritedAt: null,
       hidden: false,
       hiddenAt: null,
-      createdAt: DateTimeUtils.parseAndNormalize(json['created_at']),
-      updatedAt: DateTimeUtils.parseAndNormalize(json['updated_at']),
+      createdAt: json['created_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
+          : DateTime.now(),
     );
   }
 

@@ -4,9 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/realtime_sync.dart';
 import '../models/event.dart';
 import '../models/event_hive.dart';
+import '../models/event_interaction.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../services/api_client.dart';
+import '../utils/app_exceptions.dart' as exceptions;
 
 class EventRepository {
   static const String _boxName = 'events';
@@ -19,30 +21,40 @@ class EventRepository {
   RealtimeChannel? _interactionsChannel;
   final StreamController<List<Event>> _eventsStreamController =
       StreamController<List<Event>>.broadcast();
+  final StreamController<List<EventInteraction>> _interactionsStreamController =
+      StreamController<List<EventInteraction>>.broadcast();
 
   List<Event> _cachedEvents = [];
   DateTime? _initialSyncCompletedAt;
 
   Stream<List<Event>> get eventsStream => _eventsStreamController.stream;
 
+  Stream<List<EventInteraction>> get interactionsStream async* {
+    final interactions = _extractInteractionsFromEvents();
+    if (interactions.isNotEmpty) {
+      yield interactions;
+    }
+    yield* _interactionsStreamController.stream;
+  }
+
   Future<void> initialize() async {
+    print('🚀 [EventRepository] Initializing...');
     _box = await Hive.openBox<EventHive>(_boxName);
 
-    // Load events from Hive cache first (if any)
     _loadEventsFromHive();
 
-    // Fetch and sync events from API BEFORE subscribing to Realtime
     await _fetchAndSync();
 
-    // Now subscribe to Realtime for future updates
     await _startRealtimeSubscription();
     await _startInteractionsSubscription();
 
     _emitCurrentEvents();
+    print('✅ [EventRepository] Initialization complete');
   }
 
   Future<void> _fetchAndSync() async {
     try {
+      print('📡 [EventRepository] Fetching events from API...');
       final userId = ConfigService.instance.currentUserId;
       final apiData = await _apiClient.fetchUserEvents(userId);
 
@@ -65,8 +77,9 @@ class EventRepository {
         }
       }
       _emitCurrentEvents();
+      print('✅ [EventRepository] Fetched ${_cachedEvents.length} events');
     } catch (e) {
-      print('Error fetching events: $e');
+      print('❌ [EventRepository] Error fetching events: $e');
     }
   }
 
@@ -88,6 +101,163 @@ class EventRepository {
     await _apiClient.deleteEvent(eventId);
     // Local cache will be updated by the realtime event, or by manual removal for non-owners
     // For owners, the realtime event should be sufficient.
+  }
+
+  // --- Event Interaction Methods ---
+
+  Future<EventInteraction> updateParticipationStatus(
+    int eventId,
+    String status, {
+    String? decisionMessage,
+    bool? isAttending,
+  }) async {
+    try {
+      print('🔄 [EventRepository] Updating participation status for event $eventId: $status');
+      final currentUserId = ConfigService.instance.currentUserId;
+      final interactions = _extractInteractionsFromEvents();
+
+      print('🔍 [EventRepository] Looking for interaction - eventId: $eventId, userId: $currentUserId, total interactions: ${interactions.length}');
+
+      final interaction = interactions.firstWhere(
+        (i) => i.eventId == eventId && i.userId == currentUserId,
+        orElse: () => throw exceptions.NotFoundException(message: 'Interaction not found'),
+      );
+
+      print('✅ [EventRepository] Found interaction ID: ${interaction.id}');
+
+      final updateData = <String, dynamic>{'status': status};
+      if (decisionMessage != null) updateData['rejection_message'] = decisionMessage;
+      if (isAttending != null) updateData['is_attending'] = isAttending;
+
+      print('📤 [EventRepository] Calling patchInteraction with data: $updateData');
+      final updatedInteraction = await _apiClient.patchInteraction(interaction.id!, updateData);
+
+      print('📥 [EventRepository] patchInteraction successful, syncing...');
+      await _fetchAndSync();
+      _emitInteractions();
+      print('✅ [EventRepository] Participation status updated for event $eventId');
+      return EventInteraction.fromJson(updatedInteraction);
+    } catch (e, stackTrace) {
+      print('❌ [EventRepository] Error updating participation status: $e');
+      print('📍 [EventRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> markAsViewed(int eventId) async {
+    try {
+      print('👁️ [EventRepository] Marking event $eventId as viewed');
+      final currentUserId = ConfigService.instance.currentUserId;
+      final interactions = _extractInteractionsFromEvents();
+      final interaction = interactions.firstWhere(
+        (i) => i.eventId == eventId && i.userId == currentUserId,
+        orElse: () => throw exceptions.NotFoundException(message: 'Interaction not found'),
+      );
+      await _apiClient.markInteractionRead(interaction.id!);
+      await _fetchAndSync();
+      _emitInteractions();
+      print('✅ [EventRepository] Event $eventId marked as viewed');
+    } catch (e, stackTrace) {
+      print('❌ [EventRepository] Error marking event as viewed: $e');
+      print('📍 [EventRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> toggleFavorite(int eventId) async {
+    try {
+      final currentUserId = ConfigService.instance.currentUserId;
+      final interactions = _extractInteractionsFromEvents();
+      final interaction = interactions.firstWhere(
+        (i) => i.eventId == eventId && i.userId == currentUserId,
+        orElse: () => throw exceptions.NotFoundException(message: 'Interaction not found'),
+      );
+      final newFavoriteStatus = !interaction.favorited;
+      print('⭐ [EventRepository] ${newFavoriteStatus ? 'Adding' : 'Removing'} favorite for event $eventId');
+      await _apiClient.patchInteraction(interaction.id!, {'favorited': newFavoriteStatus});
+      await _fetchAndSync();
+      _emitInteractions();
+      print('✅ [EventRepository] Favorite toggled for event $eventId');
+    } catch (e, stackTrace) {
+      print('❌ [EventRepository] Error toggling favorite: $e');
+      print('📍 [EventRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> setPersonalNote(int eventId, String note) async {
+    try {
+      print('📝 [EventRepository] Setting personal note for event $eventId');
+      final currentUserId = ConfigService.instance.currentUserId;
+      final interactions = _extractInteractionsFromEvents();
+      final interaction = interactions.firstWhere(
+        (i) => i.eventId == eventId && i.userId == currentUserId,
+        orElse: () => throw exceptions.NotFoundException(message: 'Interaction not found'),
+      );
+      await _apiClient.patchInteraction(interaction.id!, {'personal_note': note});
+      await _fetchAndSync();
+      _emitInteractions();
+      print('✅ [EventRepository] Personal note set for event $eventId');
+    } catch (e, stackTrace) {
+      print('❌ [EventRepository] Error setting personal note: $e');
+      print('📍 [EventRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> sendInvitation(
+    int eventId,
+    int invitedUserId,
+    String? invitationMessage,
+  ) async {
+    try {
+      print('✉️ [EventRepository] Sending invitation to user $invitedUserId for event $eventId');
+      await _apiClient.createInteraction({
+        'event_id': eventId,
+        'user_id': invitedUserId,
+        'interaction_type': 'invited',
+        'status': 'pending',
+        if (invitationMessage != null) 'note': invitationMessage,
+      });
+      await _fetchAndSync();
+      _emitInteractions();
+      print('✅ [EventRepository] Invitation sent to user $invitedUserId');
+    } catch (e, stackTrace) {
+      print('❌ [EventRepository] Error sending invitation: $e');
+      print('📍 [EventRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // --- Helper Methods ---
+
+  List<EventInteraction> _extractInteractionsFromEvents() {
+    final interactions = <EventInteraction>[];
+    final currentUserId = ConfigService.instance.currentUserId;
+
+    for (final event in _cachedEvents) {
+      if (event.id != null && event.interactionData != null) {
+        try {
+          final interactionJson = Map<String, dynamic>.from(event.interactionData!);
+          interactionJson['event_id'] = event.id;
+          interactionJson['user_id'] = currentUserId;
+
+          final interaction = EventInteraction.fromJson(interactionJson);
+          interactions.add(interaction);
+        } catch (e) {
+          print('⚠️ [EventRepository] Error parsing interaction for event ${event.id}: $e');
+        }
+      }
+    }
+
+    return interactions;
+  }
+
+  void _emitInteractions() {
+    if (!_interactionsStreamController.isClosed) {
+      final interactions = _extractInteractionsFromEvents();
+      _interactionsStreamController.add(interactions);
+    }
   }
 
   void _loadEventsFromHive() {
@@ -234,6 +404,7 @@ class EventRepository {
                 payload.newRecord['interaction_type'];
             _cachedEvents[index] = currentEvent.copyWith(interactionData: updatedInteractionData);
             _emitCurrentEvents();
+            _emitInteractions();
           }
         } else {
           _refreshEventFull(eventId);
@@ -332,12 +503,15 @@ class EventRepository {
   void _emitCurrentEvents() {
     final events = getLocalEvents();
     _eventsStreamController.add(events);
+    _emitInteractions();
   }
 
-  Future<void> dispose() async {
-    await _realtimeChannel?.unsubscribe();
-    await _interactionsChannel?.unsubscribe();
-    await _eventsStreamController.close();
-    await _box?.close();
+  void dispose() {
+    print('👋 [EventRepository] Disposing...');
+    _realtimeChannel?.unsubscribe();
+    _interactionsChannel?.unsubscribe();
+    _eventsStreamController.close();
+    _interactionsStreamController.close();
+    _box?.close();
   }
 }

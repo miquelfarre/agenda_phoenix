@@ -3,9 +3,7 @@ import 'package:eventypop/core/storage/hive_migration.dart';
 import 'package:eventypop/models/calendar_hive.dart';
 import 'package:eventypop/models/calendar_share_hive.dart';
 import 'package:eventypop/models/event_hive.dart';
-import 'package:eventypop/models/event_interaction_hive.dart';
 import 'package:eventypop/models/group_hive.dart';
-import 'package:eventypop/models/subscription_hive.dart';
 import 'package:eventypop/models/user_event_note_hive.dart';
 import 'package:eventypop/models/user_hive.dart';
 import 'package:eventypop/services/api_client.dart';
@@ -35,36 +33,15 @@ void main() async {
     await Hive.initFlutter();
 
     Hive.registerAdapter(EventHiveAdapter());
-    Hive.registerAdapter(SubscriptionHiveAdapter());
     Hive.registerAdapter(GroupHiveAdapter());
     Hive.registerAdapter(UserHiveAdapter());
-
     Hive.registerAdapter(CalendarHiveAdapter());
     Hive.registerAdapter(CalendarShareHiveAdapter());
-    Hive.registerAdapter(EventInteractionHiveAdapter());
+    Hive.registerAdapter(UserEventNoteHiveAdapter());
 
-    try {
-      await Hive.openBox<EventHive>('events');
-    } catch (e) {
-      try {
-        await Hive.deleteBoxFromDisk('events');
-        await Hive.openBox<EventHive>('events');
-      } catch (recoveryError) {
-        rethrow;
-      }
-    }
-
-    if (!Hive.isBoxOpen('subscriptions')) {
-      await Hive.openBox<SubscriptionHive>('subscriptions');
-    }
-
-    await Hive.openBox<GroupHive>('groups');
     await Hive.openBox<UserEventNoteHive>('user_event_note');
     await Hive.openBox<UserHive>('users');
-
-    await Hive.openBox<CalendarHive>('calendars');
     await Hive.openBox<CalendarShareHive>('calendar_shares');
-    await Hive.openBox<EventInteractionHive>('event_interactions');
 
     await HiveMigration.initialize();
 

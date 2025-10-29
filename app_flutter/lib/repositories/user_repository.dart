@@ -15,8 +15,9 @@ class UserRepository {
   Stream<User?> get currentUserStream => _currentUserController.stream;
 
   Future<void> initialize() async {
+    print('🚀 [UserRepository] Initializing...');
     await _loadCurrentUser();
-    // Realtime subscription for user profile changes could be added here
+    print('✅ [UserRepository] Initialization complete');
   }
 
   Future<User?> _loadCurrentUser({bool forceRefresh = false}) async {
@@ -105,6 +106,7 @@ class UserRepository {
   }
 
   void dispose() {
+    print('👋 [UserRepository] Disposing...');
     _currentUserController.close();
   }
 }
