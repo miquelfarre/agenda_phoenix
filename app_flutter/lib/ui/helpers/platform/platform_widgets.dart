@@ -157,7 +157,6 @@ class PlatformWidgets {
       return CupertinoSwitch(
         value: value,
         onChanged: onChanged,
-
         activeTrackColor: activeColor ?? AppStyles.primary600,
       );
     }

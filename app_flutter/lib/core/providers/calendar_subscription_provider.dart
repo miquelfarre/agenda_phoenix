@@ -1,14 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/calendar.dart';
-import '../../services/calendar_service.dart';
-import 'calendar_provider.dart';
+import '../../repositories/calendar_repository.dart';
+import '../state/app_state.dart';
+import '../../services/config_service.dart';
 
 final publicCalendarsProvider = FutureProvider.family<List<Calendar>, String?>((
   ref,
   search,
 ) async {
-  final service = ref.watch(calendarServiceProvider);
-  return await service.fetchPublicCalendars(search: search);
+  final calendars = await ref.read(calendarRepositoryProvider).fetchPublicCalendars(search: search);
+  return calendars;
 });
 
 final calendarSubscriptionNotifierProvider =
@@ -17,24 +18,22 @@ final calendarSubscriptionNotifierProvider =
     );
 
 class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
-  late final CalendarService _service;
+  late final CalendarRepository _repo;
 
   @override
   AsyncValue<Set<int>> build() {
-    _service = ref.watch(calendarServiceProvider);
+    _repo = ref.watch(calendarRepositoryProvider);
     _loadSubscribedCalendarIds();
     return const AsyncValue.data({});
   }
 
   Future<void> _loadSubscribedCalendarIds() async {
+    state = const AsyncValue.loading();
     try {
-      state = const AsyncValue.loading();
-
-      final availableCalendars = await _service.fetchAvailableCalendars();
-      final ownCalendars = await _service.fetchCalendars();
-
+      final calendars = await _repo.calendarsStream.first;
+      final ownCalendars = calendars.where((c) => c.isOwnedBy(ConfigService.instance.currentUserId.toString())).toList();
       final ownIds = ownCalendars.map((c) => int.parse(c.id)).toSet();
-      final subscribedIds = availableCalendars
+      final subscribedIds = calendars
           .map((c) => int.parse(c.id))
           .where((id) => !ownIds.contains(id))
           .toSet();
@@ -47,13 +46,10 @@ class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
 
   Future<void> subscribe(int calendarId) async {
     try {
-      await _service.subscribeToCalendar(calendarId);
-
+      await _repo.subscribeToCalendar(calendarId);
       state.whenData((subscribedIds) {
         state = AsyncValue.data({...subscribedIds, calendarId});
       });
-
-      ref.invalidate(availableCalendarsProvider);
     } catch (error) {
       await refresh();
       rethrow;
@@ -62,15 +58,12 @@ class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
 
   Future<void> unsubscribe(int calendarId) async {
     try {
-      await _service.unsubscribeFromCalendar(calendarId);
-
+      await _repo.unsubscribeFromCalendar(calendarId);
       state.whenData((subscribedIds) {
         final newSet = Set<int>.from(subscribedIds);
         newSet.remove(calendarId);
         state = AsyncValue.data(newSet);
       });
-
-      ref.invalidate(availableCalendarsProvider);
     } catch (error) {
       await refresh();
       rethrow;

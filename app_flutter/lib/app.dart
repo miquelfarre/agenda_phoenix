@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/core/navigation/app_router.dart';
-import 'package:eventypop/core/state/app_state.dart';
+import 'package:eventypop/core/state/app_state.dart' show localeProvider;
 import 'package:eventypop/l10n/app_localizations.dart';
 import 'package:eventypop/widgets/adaptive_app.dart';
 import 'package:eventypop/widgets/app_initializer.dart';

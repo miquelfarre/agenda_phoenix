@@ -1,11 +1,13 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/config_service.dart';
-import '../../services/user_service.dart';
 import '../../services/api_client.dart';
 import '../../services/country_service.dart';
 import '../../models/country.dart';
+import '../../core/state/app_state.dart';
+
 import '../../widgets/pickers/country_picker.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
@@ -17,14 +19,14 @@ import '../../widgets/adaptive_scaffold.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'dart:io';
 
-class PhoneLoginScreen extends StatefulWidget {
+class PhoneLoginScreen extends ConsumerStatefulWidget {
   const PhoneLoginScreen({super.key});
 
   @override
-  State<PhoneLoginScreen> createState() => _PhoneLoginScreenState();
+  ConsumerState<PhoneLoginScreen> createState() => _PhoneLoginScreenState();
 }
 
-class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
+class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
 
@@ -335,7 +337,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         token: _codeController.text.trim(),
       );
 
-      await _onAuthSuccess();
+      await _onAuthSuccess(ref);
     } catch (e) {
       if (!mounted || !context.mounted) return;
       final l10n = context.l10n;
@@ -360,10 +362,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     setState(() => _isLoading = false);
   }
 
-  Future<void> _onAuthSuccess() async {
+  Future<void> _onAuthSuccess(WidgetRef ref) async {
     try {
       // Get current user from Supabase authenticated session
-      final user = await UserService.getCurrentUser();
+      final user = await ref.read(userRepositoryProvider).currentUserStream.first;
 
       if (user == null) {
         if (mounted && context.mounted) {
@@ -423,17 +425,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
       await ConfigService.instance.setCurrentUserId(testUserId);
 
-      if (mounted && context.mounted) {
-        try {
-          context.go('/events');
-        } catch (navError) {
-          try {
-            context.go('/splash');
-          } catch (e) {
-            // Ignore error
-          }
-        }
-      }
+      await _onAuthSuccess(ref);
     } catch (e) {
       if (mounted && context.mounted) {
         PlatformDialogHelpers.showSnackBar(

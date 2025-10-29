@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 import '../ui/styles/app_styles.dart';
-import '../services/calendar_service.dart';
+import '../core/state/app_state.dart';
 
 class AppInitializer extends ConsumerStatefulWidget {
   final Widget child;
@@ -24,16 +24,19 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
   }
 
   Future<void> _initialize() async {
-    DateTime.now();
-
     try {
       await _ensureBirthdayCalendar();
+
+      // Initialize SubscriptionRepository (it now starts Realtime internally after fetch)
+      ref.read(subscriptionRepositoryProvider);
 
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
       }
+
+      // Realtime manual kick no longer needed; repository guards startup and tokens.
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -45,22 +48,20 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
 
   Future<void> _ensureBirthdayCalendar() async {
     try {
-      final calendarService = CalendarService();
+      final calendarRepository = ref.read(calendarRepositoryProvider);
 
-      final calendars = calendarService.getLocalCalendars();
+      final calendars = await calendarRepository.calendarsStream.first;
       final hasBirthdayCalendar = calendars.any(
         (cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays',
       );
 
       if (!hasBirthdayCalendar) {
-        await calendarService.createCalendar(
+        await calendarRepository.createCalendar(
           name: 'Cumpleaños',
           description: 'Calendario para cumpleaños',
           color: '#FF5733',
-          isPublic: false,
-          isShareable: false,
         );
-      } else {}
+      }
     } catch (e) {
       // Ignore errors
     }

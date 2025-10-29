@@ -3,7 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
-import '../core/state/app_state.dart';
+
+import '../core/notifiers/locale_notifier.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 
@@ -13,7 +14,7 @@ class LanguageSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isIOS = PlatformDetection.isIOS;
-    final localeNotifier = ref.read(localeProvider.notifier);
+    final localeNotifier = ref.read(localeNotifierProvider.notifier);
     final l10n = context.l10n;
 
     final availableLanguages = localeNotifier.getAvailableLanguages();
@@ -35,7 +36,7 @@ class LanguageSelector extends ConsumerWidget {
           final locale = lang['locale'] as Locale;
           final name = lang['name'] as String;
           final flag = lang['flag'] as String;
-          final isSelected = ref.watch(localeProvider) == locale;
+          final isSelected = ref.watch(localeNotifierProvider) == locale;
 
           return PlatformWidgets.platformListTile(
             leading: Text(
@@ -71,7 +72,7 @@ class LanguageSelector extends ConsumerWidget {
     WidgetRef ref,
     Locale locale,
   ) async {
-    final localeNotifier = ref.read(localeProvider.notifier);
+    final localeNotifier = ref.read(localeNotifierProvider.notifier);
     final l10n = context.l10n;
 
     try {
@@ -84,7 +85,7 @@ class LanguageSelector extends ConsumerWidget {
     }
 
     try {
-      await localeNotifier.setLocale(locale);
+      localeNotifier.setLocale(locale);
 
       if (context.mounted) {
         try {

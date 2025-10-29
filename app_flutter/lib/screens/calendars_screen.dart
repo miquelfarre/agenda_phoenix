@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/calendar.dart';
 import '../core/state/app_state.dart';
-import '../core/providers/calendar_provider.dart';
 import 'calendar_events_screen.dart';
 import 'create_calendar_screen.dart';
 import '../ui/styles/app_styles.dart';
@@ -57,13 +56,18 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   }
 
   int _getEventCountForCalendar(int calendarId) {
-    final allEvents = ref.watch(eventStateProvider);
-    return allEvents.where((event) => event.calendarId == calendarId).length;
+    final allEventsAsync = ref.watch(eventsStreamProvider);
+    return allEventsAsync.when(
+      data: (events) =>
+          events.where((event) => event.calendarId == calendarId).length,
+      loading: () => 0,
+      error: (error, stack) => 0,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final calendarsAsync = ref.watch(calendarsNotifierProvider);
+    final calendarsAsync = ref.watch(calendarsStreamProvider);
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(

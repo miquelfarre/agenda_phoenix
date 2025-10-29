@@ -134,4 +134,48 @@ class User {
       registeredAt: createdAt,
     );
   }
+
+  User copyWith({
+    int? id,
+    String? firebaseUid,
+    String? phoneNumber,
+    String? instagramName,
+    String? email,
+    String? fullName,
+    bool? isPublic,
+    bool? isActive,
+    String? profilePicture,
+    bool? isBanned,
+    DateTime? lastSeen,
+    bool? isOnline,
+    String? defaultTimezone,
+    String? defaultCountryCode,
+    String? defaultCity,
+    DateTime? createdAt,
+    int? newEventsCount,
+    int? totalEventsCount,
+    int? subscribersCount,
+  }) {
+    return User(
+      id: id ?? this.id,
+      firebaseUid: firebaseUid ?? this.firebaseUid,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      instagramName: instagramName ?? this.instagramName,
+      email: email ?? this.email,
+      fullName: fullName ?? this.fullName,
+      isPublic: isPublic ?? this.isPublic,
+      isActive: isActive ?? this.isActive,
+      profilePicture: profilePicture ?? this.profilePicture,
+      isBanned: isBanned ?? this.isBanned,
+      lastSeen: lastSeen ?? this.lastSeen,
+      isOnline: isOnline ?? this.isOnline,
+      defaultTimezone: defaultTimezone ?? this.defaultTimezone,
+      defaultCountryCode: defaultCountryCode ?? this.defaultCountryCode,
+      defaultCity: defaultCity ?? this.defaultCity,
+      createdAt: createdAt ?? this.createdAt,
+      newEventsCount: newEventsCount ?? this.newEventsCount,
+      totalEventsCount: totalEventsCount ?? this.totalEventsCount,
+      subscribersCount: subscribersCount ?? this.subscribersCount,
+    );
+  }
 }

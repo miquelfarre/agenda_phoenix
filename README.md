@@ -44,6 +44,22 @@ flutter run
 
 ---
 
+## 🧰 Supabase Studio (opcional en desarrollo)
+
+Este proyecto incluye el panel web de Supabase Studio para facilitar tareas de desarrollo y administración:
+
+- URL local: http://localhost:3000
+- Uso típico: explorar/editar tablas, ejecutar SQL, revisar RLS/policies, usuarios de Auth y Storage.
+- Integración: se conecta a los servicios vía Kong (`SUPABASE_URL=http://kong:8000`) y a Postgres Meta (`STUDIO_PG_META_URL=http://meta:8080`).
+- Seguridad: contiene claves sensibles (incluye service role). No lo expongas fuera de localhost ni lo uses en producción.
+
+Mantendremos Studio activo por ahora para facilitar verificación y debugging. Si en el futuro quieres desactivarlo, puedes:
+
+- Omitir el servicio `studio` al levantar con Docker Compose.
+- Comentar el bloque `studio` en `docker-compose.yml` o moverlo a un perfil para activarlo solo bajo demanda.
+
+---
+
 ## 📁 Project Structure
 
 ```

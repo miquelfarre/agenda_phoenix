@@ -25,12 +25,13 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 @router.get("", response_model=List[Union[UserResponse, UserEnrichedResponse]])
-async def get_users(public: Optional[bool] = None, enriched: bool = False, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
-    """Get all users, optionally filtered by public status, optionally enriched with contact info"""
+async def get_users(public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
+    """Get all users, optionally filtered by public status, with optional search by username/contact name, optionally enriched with contact info"""
     return user.get_multi_with_optional_enrichment(
         db,
         public=public,
         enriched=enriched,
+        search=search,
         skip=offset,
         limit=limit,
         order_by=order_by or "id",
@@ -225,7 +226,7 @@ async def delete_user(
 
 
 @router.get("/{user_id}/events", response_model=List[EventResponse])
-async def get_user_events(user_id: int, include_past: bool = False, from_date: Optional[datetime] = None, to_date: Optional[datetime] = None, search: Optional[str] = None, filter: Optional[str] = None, limit: Optional[int] = None, offset: int = 0, db: Session = Depends(get_db)):
+async def get_user_events(user_id: int, include_past: bool = False, from_date: Optional[datetime] = None, to_date: Optional[datetime] = None, search: Optional[str] = None, filter: Optional[str] = None, limit: Optional[int] = None, offset: int = 0, current_user_id: Optional[int] = Depends(get_current_user_id_optional), db: Session = Depends(get_db)):
     """
     Get all events for a user from multiple sources:
     - Own events (where user is owner)
@@ -480,9 +481,11 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     visible_event_ids = [e.id for e in visible_events]
     user_interactions = {}
     if visible_event_ids:
-        interactions = event_interaction.get_by_event_ids_and_user(db, event_ids=visible_event_ids, user_id=user_id)
+        # Use current_user_id if provided (authenticated user), otherwise use user_id from URL
+        interaction_user_id = current_user_id if current_user_id is not None else user_id
+        interactions = event_interaction.get_by_event_ids_and_user(db, event_ids=visible_event_ids, user_id=interaction_user_id)
         for interaction in interactions:
-            user_interactions[interaction.event_id] = {"interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note, "is_new": interaction.is_new}
+            user_interactions[interaction.event_id] = {"id": interaction.id, "interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note, "is_new": interaction.is_new}
 
     # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)
@@ -615,19 +618,25 @@ async def unsubscribe_from_user(
     This deletes all 'subscribed' interactions for all events owned by target_user_id.
     Returns the count of successful unsubscriptions.
     """
+    logger.info(f"🔴 [Unsubscribe] START: user {current_user_id} unsubscribing from user {target_user_id}")
+
     # Verify both users exist
     db_user = user.get(db, id=current_user_id)
     if not db_user:
+        logger.error(f"🔴 [Unsubscribe] User {current_user_id} not found")
         raise HTTPException(status_code=404, detail="User not found")
 
     db_target_user = user.get(db, id=target_user_id)
     if not db_target_user:
+        logger.error(f"🔴 [Unsubscribe] Target user {target_user_id} not found")
         raise HTTPException(status_code=404, detail="Target user not found")
 
     # Get all events owned by target user
     events = event.get_by_owner(db, owner_id=target_user_id)
+    logger.info(f"🔴 [Unsubscribe] Found {len(events)} events owned by user {target_user_id}")
 
     if not events:
+        logger.info(f"🔴 [Unsubscribe] Target user has no events, returning")
         return {"message": "Target user has no events", "unsubscribed_count": 0}
 
     unsubscribed_count = 0
@@ -637,13 +646,18 @@ async def unsubscribe_from_user(
         existing = event_interaction.get_interaction(db, event_id=db_event.id, user_id=current_user_id)
 
         if existing and existing.interaction_type == "subscribed":
+            logger.info(f"🔴 [Unsubscribe] Deleting subscription: event_id={db_event.id}, interaction_id={existing.id}")
             try:
                 event_interaction.delete(db, id=existing.id)
                 unsubscribed_count += 1
+                logger.info(f"🔴 [Unsubscribe] Successfully deleted interaction_id={existing.id}")
             except Exception as e:
-                logger.error(f"Error unsubscribing from event {db_event.id}: {e}")
+                logger.error(f"🔴 [Unsubscribe] Error unsubscribing from event {db_event.id}: {e}")
+        else:
+            logger.info(f"🔴 [Unsubscribe] No subscription found for event_id={db_event.id}")
 
     db.commit()
+    logger.info(f"🔴 [Unsubscribe] COMMIT: Deleted {unsubscribed_count} subscriptions")
 
     return {"message": f"Unsubscribed from {unsubscribed_count} events", "unsubscribed_count": unsubscribed_count}
 

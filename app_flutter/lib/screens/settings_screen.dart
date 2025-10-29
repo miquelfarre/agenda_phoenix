@@ -4,7 +4,7 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers/settings_provider.dart';
-import '../core/state/app_state.dart' show blockedUsersProvider;
+import '../core/state/app_state.dart' show blockedUsersStreamProvider;
 import '../models/app_settings.dart';
 import '../services/country_service.dart';
 import '../widgets/country_timezone_selector.dart';
@@ -188,7 +188,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget _buildBlockedUsersSection(BuildContext context, dynamic l10n) {
     return Consumer(
       builder: (context, ref, child) {
-        final blockedUsersState = ref.watch(blockedUsersProvider);
+        final blockedUsersState = ref.watch(blockedUsersStreamProvider);
         final blockedCount = blockedUsersState.when(
           data: (users) => users.length,
           loading: () => 0,

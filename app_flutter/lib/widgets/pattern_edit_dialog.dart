@@ -101,11 +101,8 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 16),
-
         _buildDayOfWeekSelector(l10n),
-
         const SizedBox(height: 24),
-
         _buildTimeSelector(l10n),
       ],
     );

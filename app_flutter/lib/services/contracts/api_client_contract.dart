@@ -10,6 +10,7 @@ abstract class IApiClient {
     bool? enriched,
     int? limit,
     int? offset,
+    String? search,
   });
 
   Future<Map<String, dynamic>> fetchUser(int userId, {bool? enriched});
@@ -126,12 +127,6 @@ abstract class IApiClient {
     bool force = false,
   });
 
-  Future<Map<String, dynamic>> updateInteraction(
-    int interactionId,
-    Map<String, dynamic> data, {
-    int? currentUserId,
-  });
-
   Future<Map<String, dynamic>> patchInteraction(
     int interactionId,
     Map<String, dynamic> data, {
@@ -228,6 +223,11 @@ abstract class IApiClient {
   Future<Map<String, dynamic>> fetchGroupMembership(int membershipId);
 
   Future<Map<String, dynamic>> createGroupMembership(Map<String, dynamic> data);
+
+  Future<Map<String, dynamic>> updateGroupMembership(
+    int membershipId,
+    Map<String, dynamic> data,
+  );
 
   Future<void> deleteGroupMembership(int membershipId);
 

@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config_service.dart';
 
 class SupabaseService {
   static SupabaseService? _instance;
@@ -15,12 +16,30 @@ class SupabaseService {
     required String supabaseUrl,
     required String supabaseAnonKey,
   }) async {
+    print('🔵 [SupabaseService] Initializing Supabase client...');
+    print('🔵 [SupabaseService] URL: $supabaseUrl');
+
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
-      realtimeClientOptions: const RealtimeClientOptions(eventsPerSecond: 10),
+      realtimeClientOptions: const RealtimeClientOptions(
+        eventsPerSecond: 10,
+        logLevel: RealtimeLogLevel.info,
+      ),
     );
     _client = Supabase.instance.client;
+
+    // Listen to auth state changes to debug token issues
+    _client!.auth.onAuthStateChange.listen((data) {
+      print('🔵 [SupabaseService] Auth state changed: ${data.event}');
+      if (data.session != null) {
+        print(
+          '🔵 [SupabaseService] Session active, token (first 50): ${data.session!.accessToken.substring(0, 50)}...',
+        );
+      }
+    });
+
+    print('✅ [SupabaseService] Supabase client initialized');
   }
 
   SupabaseClient get client {
@@ -30,6 +49,28 @@ class SupabaseService {
       );
     }
     return _client!;
+  }
+
+  /// In debug/test mode, apply a generated test JWT as the current auth token
+  /// so Realtime connections and HTTP requests use a user token (required for RLS).
+  Future<void> applyTestAuthIfNeeded() async {
+    final config = ConfigService.instance;
+    if (!config.isTestMode) return;
+
+    final token = config.testToken;
+    if (token == null || token.isEmpty) return;
+
+    try {
+      // Update Realtime auth token so socket uses a user JWT (RLS-compatible)
+      client.realtime.setAuth(token);
+
+      // Also update the token for HTTP requests
+      client.auth.headers['Authorization'] = 'Bearer $token';
+
+      print('🔐 [SupabaseService] Applied test auth token to Realtime and HTTP clients');
+    } catch (e) {
+      print('❌ [SupabaseService] Failed to apply auth tokens: $e');
+    }
   }
 
   SupabaseQueryBuilder get events => client.from('events');

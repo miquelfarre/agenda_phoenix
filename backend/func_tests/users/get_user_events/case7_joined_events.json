@@ -81,6 +81,7 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": {
+          "id": "{{ID}}",
           "interaction_type": "joined",
           "status": "accepted",
           "role": "member",

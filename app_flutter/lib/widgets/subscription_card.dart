@@ -98,7 +98,8 @@ class SubscriptionCard extends ConsumerWidget {
     if (user.fullName?.isNotEmpty == true) {
       final nameParts = user.fullName!.trim().split(' ');
       if (nameParts.length >= 2) {
-        initials = nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
+        initials =
+            nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
       } else {
         initials = nameParts[0][0].toUpperCase();
       }

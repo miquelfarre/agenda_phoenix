@@ -6,10 +6,10 @@ _format_version: "1.1"
 consumers:
   - username: anon
     keyauth_credentials:
-      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIiwiYXVkIjoiYXV0aGVudGljYXRlZCIsImV4cCI6MTk4MzgxMjk5Nn0.VZkz5UpquChN3tfC9v5FyuE7_k6cqyrOXpIpajpGVsw
   - username: service_role
     keyauth_credentials:
-      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxOTgzODEyOTk2fQ.DTZ2kRzUk5A16SC7lPkk396yf5pHeSq1u1rtdhnSiHM
 
 ###
 ### Access Control List
@@ -48,9 +48,12 @@ services:
           - /realtime/v1/
     plugins:
       - name: cors
-      - name: key-auth
+      - name: request-transformer
         config:
-          hide_credentials: false
+          add:
+            headers:
+              - "Connection: upgrade"
+              - "Upgrade: websocket"
 
   ## Storage
   - name: storage-v1

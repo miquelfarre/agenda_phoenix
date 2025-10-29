@@ -32,7 +32,9 @@ class EventCard extends ConsumerWidget {
 
     // Get interaction from provider (source of truth for interaction state)
     final interactions = ref.watch(eventInteractionsProvider).value ?? [];
-    final interaction = interactions.where((i) => i.eventId == event.id).firstOrNull;
+    final interaction = interactions
+        .where((i) => i.eventId == event.id)
+        .firstOrNull;
 
     final participationStatus = interaction?.participationStatus;
 
@@ -77,7 +79,13 @@ class EventCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _buildTrailingActions(context, ref, effectiveConfig, interaction, participationStatus),
+                _buildTrailingActions(
+                  context,
+                  ref,
+                  effectiveConfig,
+                  interaction,
+                  participationStatus,
+                ),
               ],
             ),
 
@@ -312,7 +320,7 @@ class EventCard extends ConsumerWidget {
                       ? 'pending'
                       : 'accepted';
                   await ref
-                      .read(eventInteractionsProvider.notifier)
+                      .read(eventInteractionRepositoryProvider)
                       .updateParticipationStatus(
                         event.id!,
                         newStatus,
@@ -339,11 +347,9 @@ class EventCard extends ConsumerWidget {
             onTap: () async {
               if (event.id == null) return;
               try {
-                final newStatus = isCurrentlyRejected
-                    ? 'pending'
-                    : 'rejected';
+                final newStatus = isCurrentlyRejected ? 'pending' : 'rejected';
                 await ref
-                    .read(eventInteractionsProvider.notifier)
+                    .read(eventInteractionRepositoryProvider)
                     .updateParticipationStatus(
                       event.id!,
                       newStatus,
@@ -390,7 +396,7 @@ class EventCard extends ConsumerWidget {
 
     final isOwnerPublic = event.owner?.isPublic == true;
     final isSubscribed = subs.any(
-      (s) => s.subscribedToId == event.ownerId && s.userId == currentUserId,
+      (s) => s.id == event.ownerId,
     );
     if (isOwnerPublic && isSubscribed && event.id != null) {
       return Row(

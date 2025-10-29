@@ -4,7 +4,7 @@ import '../models/event.dart';
 import '../models/user.dart';
 import '../models/group.dart';
 import '../services/api_client.dart';
-import '../services/event_interaction_service.dart';
+import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
@@ -329,13 +329,13 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
         }
       }
 
-      final interactionService = EventInteractionService();
+      final eventInteractionRepository = ref.read(eventInteractionRepositoryProvider);
       int successCount = 0;
       int errorCount = 0;
 
       for (final userId in allUserIds) {
         try {
-          await interactionService.sendInvitation(eventId, userId);
+          await eventInteractionRepository.sendInvitation(eventId, userId, null);
           successCount++;
 
           _recentlyInvitedUserIds.add(userId);

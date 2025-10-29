@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../widgets/adaptive_scaffold.dart';
-import '../core/providers/calendar_provider.dart';
+import '../core/state/app_state.dart';
 
 class CreateCalendarScreen extends ConsumerStatefulWidget {
   const CreateCalendarScreen({super.key});
@@ -64,15 +64,16 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     });
 
     try {
-      final calendarNotifier = ref.read(calendarsNotifierProvider.notifier);
+      await ref
+          .read(calendarRepositoryProvider)
+          .createCalendar(
+            name: name,
+            description: description.isEmpty ? null : description,
+            color: _selectedColor,
+            isPublic: _isPublic,
+          );
 
-      await calendarNotifier.createCalendar(
-        name: name,
-        description: description.isEmpty ? null : description,
-        color: _selectedColor,
-        isPublic: _isPublic,
-        deleteAssociatedEvents: _deleteAssociatedEvents,
-      );
+      // Realtime handles refresh automatically via CalendarRepository
 
       if (!mounted) return;
 

@@ -12,31 +12,31 @@
       {
         "id": 1,
         "name": "Yesterday",
-        "start_date": "2025-10-22T10:00:00",
+        "start_date": "2025-10-28T10:00:00",
         "owner_id": 1
       },
       {
         "id": 2,
         "name": "Today",
-        "start_date": "2025-10-23T10:00:00",
+        "start_date": "2025-10-29T10:00:00",
         "owner_id": 1
       },
       {
         "id": 3,
         "name": "In 3 days",
-        "start_date": "2025-10-26T10:00:00",
+        "start_date": "2025-11-01T10:00:00",
         "owner_id": 1
       },
       {
         "id": 4,
         "name": "In 6 days",
-        "start_date": "2025-10-29T10:00:00",
+        "start_date": "2025-11-04T10:00:00",
         "owner_id": 1
       },
       {
         "id": 5,
         "name": "In 8 days",
-        "start_date": "2025-10-31T10:00:00",
+        "start_date": "2025-11-06T10:00:00",
         "owner_id": 1
       }
     ]
@@ -47,8 +47,32 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return events in next 7 days (id=2,3,4), NOT id=1 (past) or id=5 (8 days away), assuming today is 2025-10-23",
+    "note": "Should return events in next 7 days (id=2,3,4), NOT id=1 (past) or id=5 (8 days away), assuming today is 2025-10-29",
     "body": [
+      {
+        "name": "Today",
+        "description": null,
+        "start_date": "{{TIMESTAMP}}",
+        "event_type": "regular",
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "calendar_id": null,
+        "parent_recurring_event_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "interaction": null,
+        "owner_name": "Alice",
+        "owner_profile_picture": null,
+        "is_owner_public": false,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "calendar_name": null,
+        "calendar_color": null,
+        "is_birthday": false,
+        "attendees": [],
+        "invitation_stats": null
+      },
       {
         "name": "In 3 days",
         "description": null,

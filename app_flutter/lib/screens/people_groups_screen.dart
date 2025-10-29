@@ -1,4 +1,3 @@
-import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +16,7 @@ import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/widgets/adaptive/configs/button_config.dart';
 import '../services/api_client.dart';
+import '../core/state/app_state.dart';
 
 class PeopleGroupsScreen extends ConsumerStatefulWidget {
   const PeopleGroupsScreen({super.key});
@@ -30,12 +30,10 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
   int _tabIndex = 0;
   TextEditingController searchController = TextEditingController();
   int get userId => ConfigService.instance.currentUserId;
-  bool _isRefreshing = false;
 
   List<User> _contacts = [];
-  List<Group> _groups = [];
-  bool _isLoading = false;
-  String? _error;
+  bool _isLoadingContacts = false;
+  String? _contactsError;
 
   @override
   void initState() {
@@ -43,7 +41,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController(initialPage: 0);
     _checkContactsPermission();
-    _loadData();
+    _loadContacts();
   }
 
   @override
@@ -57,9 +55,10 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed && !_isRefreshing) {
+    if (state == AppLifecycleState.resumed) {
       _checkContactsPermission();
-      _loadData();
+      _loadContacts();
+      ref.invalidate(groupsStreamProvider);
     }
   }
 
@@ -67,58 +66,33 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
     await Permission.contacts.status;
   }
 
-  Future<void> _loadData() async {
-    if (_isRefreshing) return;
+  Future<void> _loadContacts() async {
+    if (_isLoadingContacts) return;
 
     setState(() {
-      _isLoading = true;
-      _error = null;
+      _isLoadingContacts = true;
+      _contactsError = null;
     });
 
     try {
-      _isRefreshing = true;
-
-      // Fetch contacts and groups separately from backend API
+      // Fetch contacts from backend API (not migrated to Realtime)
       final contactsData = await ApiClient().fetchContacts(
         currentUserId: userId,
       );
-      final groupsData = await ApiClient().fetchGroups(currentUserId: userId);
 
       if (mounted) {
         setState(() {
           _contacts = contactsData.map((c) => User.fromJson(c)).toList();
-          _groups = groupsData.map((g) => Group.fromJson(g)).toList();
-          _isLoading = false;
+          _isLoadingContacts = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
-          _isLoading = false;
+          _contactsError = e.toString();
+          _isLoadingContacts = false;
         });
       }
-    } finally {
-      if (mounted) _isRefreshing = false;
-    }
-  }
-
-  Future<void> _refreshData() async {
-    if (_isRefreshing) return;
-
-    try {
-      _isRefreshing = true;
-      await _loadData();
-    } catch (e) {
-      if (mounted) {
-        final l10n = context.l10n;
-        PlatformDialogHelpers.showSnackBar(
-          message: '${l10n.error}: $e',
-          isError: true,
-        );
-      }
-    } finally {
-      if (mounted) _isRefreshing = false;
     }
   }
 
@@ -146,12 +120,12 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
   Widget _buildContactsTab() {
     final l10n = context.l10n;
 
-    if (_isLoading) {
+    if (_isLoadingContacts) {
       return const Center(child: CupertinoActivityIndicator());
     }
 
-    if (_error != null) {
-      return _buildContactsError(l10n, _error!);
+    if (_contactsError != null) {
+      return _buildContactsError(l10n, _contactsError!);
     }
 
     return _buildContactsList(_contacts, l10n);
@@ -203,8 +177,8 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
                 final hasPermission = await Permission.contacts
                     .request()
                     .isGranted;
-                if (hasPermission && !_isRefreshing) {
-                  await _loadData();
+                if (hasPermission) {
+                  await _loadContacts();
                 } else {
                   await openAppSettings();
                 }
@@ -293,13 +267,14 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
     }
 
     return PlatformListView(
-      onRefresh: _refreshData,
+      onRefresh: () async {
+        await _loadContacts();
+      },
       padding: EdgeInsets.only(
         top: PlatformWidgets.isIOS ? 12.0 : 8.0,
         left: 8.0,
         right: 8.0,
       ),
-
       itemCount: filteredContacts.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -330,38 +305,55 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
 
   Widget _buildGroupsTab() {
     final l10n = context.l10n;
+    final groupsAsync = ref.watch(groupsStreamProvider);
 
-    if (_isLoading) {
-      return const Center(child: CupertinoActivityIndicator());
-    }
+    return groupsAsync.when(
+      data: (groups) {
+        final userGroups = groups
+            .where(
+              (group) => group.members.any((member) => member.id == userId),
+            )
+            .toList();
 
-    if (_error != null) {
-      return Center(child: Text('${l10n.error}: $_error'));
-    }
+        if (userGroups.isEmpty) {
+          return EmptyState(
+            message: l10n.noGroupsMessage,
+            icon: CupertinoIcons.group,
+          );
+        }
 
-    final userGroups = _groups
-        .where((group) => group.members.any((member) => member.id == userId))
-        .toList();
-
-    if (userGroups.isEmpty) {
-      return EmptyState(
-        message: l10n.noGroupsMessage,
-        icon: CupertinoIcons.group,
-      );
-    }
-
-    return PlatformListView(
-      onRefresh: _refreshData,
-      padding: EdgeInsets.only(
-        top: PlatformWidgets.isIOS ? 12.0 : 8.0,
-        left: 8.0,
-        right: 8.0,
-      ),
-      itemCount: userGroups.length,
-      itemBuilder: (context, index) {
-        final group = userGroups[index];
-        return _buildGroupCard(group, l10n);
+        return PlatformListView(
+          onRefresh: () async {
+            ref.invalidate(groupsStreamProvider);
+          },
+          padding: EdgeInsets.only(
+            top: PlatformWidgets.isIOS ? 12.0 : 8.0,
+            left: 8.0,
+            right: 8.0,
+          ),
+          itemCount: userGroups.length,
+          itemBuilder: (context, index) {
+            final group = userGroups[index];
+            return _buildGroupCard(group, l10n);
+          },
+        );
       },
+      loading: () => const Center(child: CupertinoActivityIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${l10n.error}: $error'),
+            const SizedBox(height: 16),
+            CupertinoButton(
+              onPressed: () {
+                ref.invalidate(groupsStreamProvider);
+              },
+              child: Text(l10n.retry),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -510,7 +502,6 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
               ],
             ),
           ),
-
           Expanded(
             child: PageView(
               controller: _pageController,

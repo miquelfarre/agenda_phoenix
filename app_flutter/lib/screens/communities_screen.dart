@@ -6,7 +6,7 @@ import '../ui/helpers/platform/platform_detection.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive/adaptive_button.dart';
-import '../core/providers/calendar_provider.dart';
+import '../core/state/app_state.dart';
 import '../core/providers/calendar_subscription_provider.dart';
 import '../models/calendar.dart';
 
@@ -65,7 +65,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
   }
 
   Widget _buildMyCalendarsView() {
-    final calendarsAsync = ref.watch(availableCalendarsProvider);
+    final calendarsAsync = ref.watch(calendarsStreamProvider);
 
     return calendarsAsync.when(
       data: (calendars) {

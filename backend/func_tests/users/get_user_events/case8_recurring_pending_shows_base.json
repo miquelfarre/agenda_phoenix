@@ -95,6 +95,7 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": {
+          "id": "{{ID}}",
           "interaction_type": "invited",
           "status": "pending",
           "role": null,
@@ -126,6 +127,7 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": {
+          "id": "{{ID}}",
           "interaction_type": "invited",
           "status": "pending",
           "role": null,
@@ -157,6 +159,7 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": {
+          "id": "{{ID}}",
           "interaction_type": "invited",
           "status": "pending",
           "role": null,

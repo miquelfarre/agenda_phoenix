@@ -127,7 +127,12 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allEvents = ref.watch(eventStateProvider);
+    final allEventsAsync = ref.watch(eventsStreamProvider);
+    final allEvents = allEventsAsync.when(
+      data: (events) => events,
+      loading: () => <Event>[],
+      error: (error, stack) => <Event>[],
+    );
 
     final birthdayEvents = allEvents
         .where((event) => event.isBirthday)

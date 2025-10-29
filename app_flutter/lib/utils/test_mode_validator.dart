@@ -1,7 +1,13 @@
 import 'package:flutter/foundation.dart';
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 
 class TestModeValidator {
   TestModeValidator._();
+
+  // JWT secret must match the one in .env and docker-compose.yml
+  // MUST match the unified JWT secret used by backend/compose/Realtime
+  static const String _jwtSecret =
+      'super-secret-jwt-token-with-at-least-32-characters-long';
 
   static bool canEnableTestMode() {
     final violations = getSafetyViolations();
@@ -31,8 +37,31 @@ class TestModeValidator {
   }
 
   static String generateTestToken(int userId) {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return 'test-token-$userId-$timestamp';
+    // Generate a valid JWT token for test mode
+    // This matches the format expected by Supabase
+    final jwt = JWT({
+      'aud': 'authenticated',
+      'role': 'authenticated',
+      'sub': 'test-user-$userId',
+      'user_id': userId,
+      'email': 'test-user-$userId@eventypop.test',
+      'iss': 'supabase',
+      'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      'exp':
+          DateTime.now()
+              .add(const Duration(hours: 24))
+              .millisecondsSinceEpoch ~/
+          1000,
+    });
+
+    final token = jwt.sign(SecretKey(_jwtSecret));
+    if (kDebugMode) {
+      print('🔐 [TestMode] Generated JWT token for user $userId');
+      print(
+        '🔐 [TestMode] Token (first 50 chars): ${token.substring(0, 50)}...',
+      );
+    }
+    return token;
   }
 
   static Map<String, dynamic> createTestUserInfo(int userId) {

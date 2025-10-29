@@ -112,7 +112,6 @@ class GroupHive extends HiveObject {
       memberNames: memberNames.cast<String?>(),
       memberFullNames: memberFullNames,
       memberIsPublic: memberIsPublic,
-
       adminIds: adminIds,
     );
   }

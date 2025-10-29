@@ -151,7 +151,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
 
     final safeContact = widget.contact;
     final l10n = context.l10n;
-    final blockedUsersNotifier = ref.read(blockedUsersProvider.notifier);
+    final userBlockingRepo = ref.read(userBlockingRepositoryProvider);
     if (!ConfigService.instance.hasUser) {
       _showMessage(l10n.userNotLoggedIn);
       return;
@@ -162,7 +162,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     });
 
     try {
-      await blockedUsersNotifier.blockUser(safeContact.id);
+      await userBlockingRepo.blockUser(safeContact.id);
       if (!mounted) return;
 
       if (!mounted) return;
@@ -284,7 +284,12 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                 );
               }
 
-              final allEvents = ref.watch(eventStateProvider);
+              final allEventsAsync = ref.watch(eventsStreamProvider);
+              final allEvents = allEventsAsync.when(
+                data: (events) => events,
+                loading: () => <Event>[],
+                error: (error, stack) => <Event>[],
+              );
               final contactEvents = allEvents
                   .where(
                     (e) => e.attendees.any(

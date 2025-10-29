@@ -3,17 +3,11 @@ import 'package:eventypop/core/storage/hive_migration.dart';
 import 'package:eventypop/models/calendar_hive.dart';
 import 'package:eventypop/models/calendar_share_hive.dart';
 import 'package:eventypop/models/event_hive.dart';
-import 'package:eventypop/models/event_interaction_hive.dart';
-import 'package:eventypop/models/event_note_hive.dart';
 import 'package:eventypop/models/group_hive.dart';
-import 'package:eventypop/models/subscription_hive.dart';
 import 'package:eventypop/models/user_event_note_hive.dart';
 import 'package:eventypop/models/user_hive.dart';
 import 'package:eventypop/services/api_client.dart';
-import 'package:eventypop/services/calendar_service.dart';
 import 'package:eventypop/services/config_service.dart';
-import 'package:eventypop/services/group_service.dart';
-import 'package:eventypop/services/sync_service.dart';
 import 'package:eventypop/services/timezone_service.dart';
 import 'package:eventypop/services/supabase_service.dart';
 import 'package:eventypop/services/app_config.dart';
@@ -39,53 +33,27 @@ void main() async {
     await Hive.initFlutter();
 
     Hive.registerAdapter(EventHiveAdapter());
-    Hive.registerAdapter(SubscriptionHiveAdapter());
     Hive.registerAdapter(GroupHiveAdapter());
-    Hive.registerAdapter(EventNoteHiveAdapter());
-    Hive.registerAdapter(UserEventNoteHiveAdapter());
     Hive.registerAdapter(UserHiveAdapter());
-
     Hive.registerAdapter(CalendarHiveAdapter());
     Hive.registerAdapter(CalendarShareHiveAdapter());
-    Hive.registerAdapter(EventInteractionHiveAdapter());
+    Hive.registerAdapter(UserEventNoteHiveAdapter());
 
-    try {
-      await Hive.openBox<EventHive>('events');
-    } catch (e) {
-      try {
-        await Hive.deleteBoxFromDisk('events');
-        await Hive.openBox<EventHive>('events');
-      } catch (recoveryError) {
-        rethrow;
-      }
-    }
-
-    if (!Hive.isBoxOpen('subscriptions')) {
-      await Hive.openBox<SubscriptionHive>('subscriptions');
-    }
-
-    await Hive.openBox<GroupHive>('groups');
-    await Hive.openBox<EventNoteHive>('event_notes');
     await Hive.openBox<UserEventNoteHive>('user_event_note');
     await Hive.openBox<UserHive>('users');
-
-    await Hive.openBox<CalendarHive>('calendars');
     await Hive.openBox<CalendarShareHive>('calendar_shares');
-    await Hive.openBox<EventInteractionHive>('event_interactions');
 
     await HiveMigration.initialize();
 
     await TimezoneService.initialize();
 
-    await SyncService.init();
-
     await ConfigService.instance.initialize();
 
     await _validateTestModeConfiguration();
 
-    await GroupService().initialize();
-
-    await CalendarService().initialize();
+    // When running in test mode (debug), apply a generated JWT as Supabase auth
+    // so Realtime (RLS) connections use a user token instead of the anon key.
+    await SupabaseService.instance.applyTestAuthIfNeeded();
 
     const env = String.fromEnvironment(
       'FLUTTER_ENV',

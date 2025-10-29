@@ -100,11 +100,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             limit: Maximum number of records
 
         Returns:
-            List of public users
+            List of public users (users with is_public=True)
         """
-        # TODO: Add 'is_public' field to User model
-        # For now, return all users
-        return self.get_multi(db, skip=skip, limit=limit)
+        return db.query(User).filter(User.is_public == True).offset(skip).limit(limit).all()
 
     def get_multi_with_optional_enrichment(
         self,
@@ -112,6 +110,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         *,
         public: Optional[bool] = None,
         enriched: bool = False,
+        search: Optional[str] = None,
         skip: int = 0,
         limit: int = 50,
         order_by: str = "id",
@@ -124,6 +123,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             db: Database session
             public: Filter by public status (True=has username, False=no username, None=all)
             enriched: Return enriched data with contact information
+            search: Case-insensitive search in username and contact name
             skip: Number of records to skip
             limit: Maximum number of records
             order_by: Column name to order by
@@ -132,7 +132,21 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         Returns:
             List of User objects or enriched dicts
         """
+        from sqlalchemy import or_
+
         query = db.query(User)
+
+        # Apply search filter if provided
+        if search:
+            search_term = f"%{search}%"
+            # Join with Contact to search in both username and contact name
+            query = query.outerjoin(Contact, User.contact_id == Contact.id)
+            query = query.filter(
+                or_(
+                    User.username.ilike(search_term),
+                    Contact.name.ilike(search_term)
+                )
+            )
 
         if public is not None:
             if public:
@@ -157,6 +171,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         if enriched:
             # Use JOIN to get contact data efficiently
             results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id)
+
+            # Apply search filter if provided
+            if search:
+                search_term = f"%{search}%"
+                results = results.filter(
+                    or_(
+                        User.username.ilike(search_term),
+                        Contact.name.ilike(search_term)
+                    )
+                )
 
             if public is not None:
                 if public:

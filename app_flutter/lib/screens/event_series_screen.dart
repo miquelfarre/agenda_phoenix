@@ -50,10 +50,7 @@ class EventSeriesScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     '${sortedEvents.length} ${sortedEvents.length == 1 ? l10n.event : l10n.events}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppStyles.grey600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: AppStyles.grey600),
                   ),
                 ],
               ),

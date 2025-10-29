@@ -24,6 +24,7 @@
 ### 📱 Frontend
 - [**Flutter App**](frontend/flutter.md) - Mobile app (Flutter)
 - [**React Native**](frontend/react-native.md) - Mobile app (RN) - deprecated
+- [**Realtime Sync Standard**](frontend/realtime.md) - Pattern used across repositories
 
 ### 🏗️ Architecture
 - [**System Architecture**](architecture/system.md) - Overall system design

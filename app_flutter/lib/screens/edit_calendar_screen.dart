@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../widgets/adaptive_scaffold.dart';
-import '../core/providers/calendar_provider.dart';
 import '../models/calendar.dart';
+import '../core/state/app_state.dart';
 
 class EditCalendarScreen extends ConsumerStatefulWidget {
   final String calendarId;
@@ -51,8 +51,8 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
   Future<void> _loadCalendar() async {
     try {
-      final calendarService = ref.read(calendarServiceProvider);
-      final calendar = calendarService.getLocalCalendar(widget.calendarId);
+      final calendarService = ref.read(calendarRepositoryProvider);
+      final calendar = calendarService.getCalendarById(int.parse(widget.calendarId));
 
       if (calendar == null) {
         if (!mounted) return;
@@ -101,14 +101,19 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      final calendarNotifier = ref.read(calendarsNotifierProvider.notifier);
+      final updateData = <String, dynamic>{
+        'name': name,
+        'description': description.isEmpty ? null : description,
+        'color': _selectedColor,
+      };
+      await ref
+          .read(calendarRepositoryProvider)
+          .updateCalendar(
+            int.parse(widget.calendarId),
+            updateData,
+          );
 
-      await calendarNotifier.updateCalendar(
-        widget.calendarId,
-        name: name,
-        description: description.isEmpty ? null : description,
-        color: _selectedColor,
-      );
+      // Realtime handles refresh automatically via CalendarRepository
 
       if (!mounted) return;
       context.pop();
@@ -135,8 +140,9 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      final calendarNotifier = ref.read(calendarsNotifierProvider.notifier);
-      await calendarNotifier.deleteCalendar(widget.calendarId);
+      await ref.read(calendarRepositoryProvider).deleteCalendar(int.parse(widget.calendarId));
+
+      // Realtime handles refresh automatically via CalendarRepository
 
       if (!mounted) return;
       context.pop();

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 
 import 'package:flutter/cupertino.dart';
@@ -15,7 +14,6 @@ import 'event_detail_screen.dart';
 import 'create_edit_event_screen.dart';
 
 import '../services/config_service.dart';
-import '../repositories/event_repository.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
@@ -57,10 +55,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _currentFilter = 'all';
   String _searchQuery = '';
-  EventsData? _eventsData;
-  bool _isLoading = true;
-  EventRepository? _eventRepository;
-  StreamSubscription<List<Event>>? _eventsSubscription;
 
   @override
   void initState() {
@@ -71,144 +65,66 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         _searchQuery = _searchController.text;
       });
     });
-
-    _initializeRepository();
   }
 
-  Future<void> _initializeRepository() async {
-    try {
-      _eventRepository = ref.read(eventRepositoryProvider);
+  // Build EventsData from event list (pure function)
+  static EventsData _buildEventsData(List<Event> events) {
+    final userId = ConfigService.instance.currentUserId;
 
-      _eventsSubscription = _eventRepository!.eventsStream.listen((events) {
-        print('📥 [EventsScreen] Stream received ${events.length} events');
-        print('📥 [EventsScreen] Event IDs: ${events.map((e) => e.id).take(10).toList()}${events.length > 10 ? '...' : ''}');
-        _buildEventsDataFromRepository(events);
-      });
+    final eventItems = <EventWithInteraction>[];
+    for (final event in events) {
+      final eventOwnerId = event.ownerId;
+      final isOwner = eventOwnerId == userId;
 
-      final events = _eventRepository?.getLocalEvents() ?? [];
-      _buildEventsDataFromRepository(events);
-    } catch (e) {
-      print('🔴 [EventsScreen] Error initializing repository: $e');
-      setState(() => _isLoading = false);
-    }
-  }
+      String? interactionType;
+      String? invitationStatus;
 
-  Future<void> _loadData() async {
-    // Uncomment for debugging:
-    // print('🔵 [EventsScreen] _loadData START');
-    setState(() => _isLoading = true);
-    try {
-      // Uncomment for debugging:
-      // print('🔵 [EventsScreen] Fetching events from EventRepository...');
-
-      await _eventRepository?.fetchAndSyncEvents();
-
-      final events = _eventRepository?.getLocalEvents() ?? [];
-      _buildEventsDataFromRepository(events);
-
-      // Uncomment for debugging:
-      // print('🔵 [EventsScreen] _loadData completed');
-    } catch (e) {
-      print('🔴 [EventsScreen] ERROR in _loadData: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _buildEventsDataFromRepository(List<Event> events) {
-    print('🔧 [EventsScreen] _buildEventsDataFromRepository START');
-    print('🔧 [EventsScreen] Received ${events.length} events from repository');
-
-    try {
-      final userId = ConfigService.instance.currentUserId;
-      print('🔧 [EventsScreen] Current userId: $userId');
-
-      final eventItems = <EventWithInteraction>[];
-      for (final event in events) {
-        final eventOwnerId = event.ownerId;
-        final isOwner = eventOwnerId == userId;
-
-        String? interactionType;
-        String? invitationStatus;
-
-        if (!isOwner && event.interactionData != null) {
-          interactionType = event.interactionData!['interaction_type'] as String?;
-          invitationStatus = event.interactionData!['status'] as String?;
-        }
-
-        eventItems.add(
-          EventWithInteraction(event, interactionType, invitationStatus),
-        );
+      if (!isOwner && event.interactionData != null) {
+        interactionType = event.interactionData!['interaction_type'] as String?;
+        invitationStatus = event.interactionData!['status'] as String?;
       }
 
-      print('🔧 [EventsScreen] Processed ${eventItems.length} event items');
-
-      final myEvents = eventItems
-          .where(
-            (e) =>
-                e.event.ownerId == userId ||
-                (e.event.ownerId != userId &&
-                    (e.interactionType == 'invited' ||
-                        e.interactionType == 'joined') &&
-                    e.invitationStatus == 'accepted'),
-          )
-          .length;
-      final invitations = eventItems
-          .where(
-            (e) =>
-                e.event.ownerId != userId &&
-                e.interactionType == 'invited' &&
-                e.invitationStatus == 'pending',
-          )
-          .length;
-      final subscribed = eventItems
-          .where(
-            (e) =>
-                e.event.ownerId != userId && e.interactionType == 'subscribed',
-          )
-          .length;
-
-      // Uncomment for debugging:
-      // print('🔍 [EventsScreen] Filter counts:');
-      // print('   userId: $userId');
-      // print('   myEvents: $myEvents');
-      // print('   invitations: $invitations');
-      // print('   subscribed: $subscribed');
-      // print('   total: ${eventItems.length}');
-
-      final data = EventsData(
-        events: eventItems,
-        myEventsCount: myEvents,
-        invitationsCount: invitations,
-        subscribedCount: subscribed,
-        allCount: eventItems.length,
+      eventItems.add(
+        EventWithInteraction(event, interactionType, invitationStatus),
       );
-
-      print('🔧 [EventsScreen] Filter results - myEvents: $myEvents, invitations: $invitations, subscribed: $subscribed, all: ${eventItems.length}');
-
-      if (mounted) {
-        print('🔧 [EventsScreen] Calling setState with new data...');
-        setState(() {
-          _eventsData = data;
-          _isLoading = false;
-        });
-        print('✅ [EventsScreen] setState completed, UI should update now');
-      } else {
-        print('⚠️ [EventsScreen] Widget not mounted, skipping setState');
-      }
-    } catch (e) {
-      print('🔴 [EventsScreen] ERROR in _buildEventsDataFromRepository: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
+
+    final myEvents = eventItems
+        .where(
+          (e) =>
+              e.event.ownerId == userId ||
+              (e.event.ownerId != userId &&
+                  (e.interactionType == 'invited' ||
+                      e.interactionType == 'joined') &&
+                  e.invitationStatus == 'accepted'),
+        )
+        .length;
+    final invitations = eventItems
+        .where(
+          (e) =>
+              e.event.ownerId != userId &&
+              e.interactionType == 'invited' &&
+              e.invitationStatus == 'pending',
+        )
+        .length;
+    final subscribed = eventItems
+        .where(
+          (e) => e.event.ownerId != userId && e.interactionType == 'subscribed',
+        )
+        .length;
+
+    return EventsData(
+      events: eventItems,
+      myEventsCount: myEvents,
+      invitationsCount: invitations,
+      subscribedCount: subscribed,
+      allCount: eventItems.length,
+    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _eventsSubscription?.cancel();
     super.dispose();
   }
 
@@ -217,7 +133,18 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     final isIOS = PlatformDetection.isIOS;
     final l10n = context.l10n;
 
-    Widget body = _buildBody(context, isIOS: isIOS);
+    // Watch events from StreamProvider
+    final eventsAsync = ref.watch(eventsStreamProvider);
+
+    Widget body = eventsAsync.when(
+      data: (events) => _buildBody(
+        context,
+        eventsData: _buildEventsData(events),
+        isIOS: isIOS,
+      ),
+      loading: () => Center(child: PlatformWidgets.platformLoadingIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+    );
 
     if (isIOS) {
       body = Stack(
@@ -266,26 +193,23 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, {required bool isIOS}) {
-    return SafeArea(child: _buildContent(isIOS));
+  Widget _buildBody(
+    BuildContext context, {
+    required EventsData eventsData,
+    required bool isIOS,
+  }) {
+    return SafeArea(child: _buildContent(eventsData, isIOS));
   }
 
-  Widget _buildContent(bool isIOS) {
-    if (_isLoading || _eventsData == null) {
-      return Center(child: PlatformWidgets.platformLoadingIndicator());
-    }
-
+  Widget _buildContent(EventsData eventsData, bool isIOS) {
     final bool isFiltered = _currentFilter != 'all' || _searchQuery.isNotEmpty;
 
     // Get all events for filter chips
-    final allEvents = _eventsData!.events.map((item) => item.event).toList();
+    final allEvents = eventsData.events.map((item) => item.event).toList();
 
     // Filter with interaction data first
     List<EventWithInteraction> filteredItems =
-        _applyEventTypeFilterWithInteraction(
-          _eventsData!.events,
-          _currentFilter,
-        );
+        _applyEventTypeFilterWithInteraction(eventsData.events, _currentFilter);
 
     // Then extract events and apply search
     List<Event> events = filteredItems.map((item) => item.event).toList();
@@ -301,11 +225,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Consumer(
               builder: (context, ref, _) {
-                final authAsync = ref.watch(
-                  authProvider.select(
-                    (state) => state.whenData((s) => s.currentUser),
-                  ),
-                );
+                final authAsync = ref.watch(currentUserStreamProvider);
                 final l10n = context.l10n;
                 String greeting = authAsync.maybeWhen(
                   data: (user) {
@@ -345,7 +265,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         ),
 
         SliverToBoxAdapter(
-          child: _buildEventTypeFilters(context, allEvents, isFiltered),
+          child: _buildEventTypeFilters(
+            context,
+            eventsData,
+            allEvents,
+            isFiltered,
+          ),
         ),
 
         _buildSliverContent(events, isFiltered, isIOS),
@@ -505,6 +430,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   Widget _buildEventTypeFilters(
     BuildContext context,
+    EventsData eventsData,
     List<Event> allEvents,
     bool isFiltered,
   ) {
@@ -518,28 +444,28 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           _buildFilterChip(
             'all',
             l10n.allEvents,
-            _eventsData?.allCount ?? allEvents.length,
+            eventsData.allCount,
             currentFilter == 'all',
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
             'my',
             l10n.myEventsFilter,
-            _eventsData?.myEventsCount ?? 0,
+            eventsData.myEventsCount,
             currentFilter == 'my',
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
             'subscribed',
             l10n.subscribedEvents,
-            _eventsData?.subscribedCount ?? 0,
+            eventsData.subscribedCount,
             currentFilter == 'subscribed',
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
             'invitations',
             l10n.invitationEvents,
-            _eventsData?.invitationsCount ?? 0,
+            eventsData.invitationsCount,
             currentFilter == 'invitations',
           ),
         ],
@@ -701,26 +627,42 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
+    print(
+      '🗑️ [_deleteEvent] Initiating delete for event: "${event.name}" (ID: ${event.id})',
+    );
     try {
       if (event.id == null) {
+        print('❌ [_deleteEvent] Error: Event ID is null.');
         throw Exception('Event ID is null');
       }
 
       final currentUserId = ConfigService.instance.currentUserId;
       final isOwner = event.ownerId == currentUserId;
+      print('👤 [_deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner');
 
       if (isOwner) {
-        await ref.read(eventServiceProvider).deleteEvent(event.id!);
+        print('👑 [_deleteEvent] User is owner. Deleting event via eventRepositoryProvider.');
+        await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
       } else {
-        await ref.read(apiClientProvider).delete('/events/${event.id}/interaction');
+        print('👤 [_deleteEvent] User is not owner. Deleting interaction via API.');
+        await ref
+            .read(apiClientProvider)
+            .delete('/events/${event.id}/interaction');
+        print('✅ [_deleteEvent] API call successful. Manually removing from cache.');
+        ref.read(eventRepositoryProvider).removeEventFromCache(event.id!);
       }
 
       if (shouldNavigate && mounted) {
+        print('➡️ [_deleteEvent] Navigating back.');
         Navigator.of(context).pop();
       }
 
-      await _loadData();
-    } catch (e) {
+      print('✅ [_deleteEvent] Delete process finished for event ID: ${event.id}');
+      // EventRepository handles updates via Realtime, but we manually remove
+      // for non-owners as RLS policies can prevent the DELETE event from broadcasting.
+    } catch (e, s) {
+      print('❌ [_deleteEvent] Error deleting event: $e');
+      print('STACK TRACE: $s');
       rethrow;
     }
   }

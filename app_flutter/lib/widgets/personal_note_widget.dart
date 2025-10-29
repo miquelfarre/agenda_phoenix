@@ -4,7 +4,6 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../models/event.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../core/state/app_state.dart';
 import '../services/api_client.dart';
 import '../utils/app_exceptions.dart';
 import 'adaptive/adaptive_button.dart';
@@ -96,7 +95,7 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
         _event = updatedEvent;
         widget.onEventUpdated(updatedEvent);
 
-        await ref.read(eventStateProvider.notifier).refresh();
+        // Realtime handles refresh automatically via EventRepository
 
         PlatformWidgets.showGlobalPlatformMessage(
           message: l10n.personalNoteUpdated,
@@ -129,7 +128,7 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
         body: {'note': null},
       );
 
-      await ref.read(eventStateProvider.notifier).refresh();
+      // Realtime handles refresh automatically via EventRepository
 
       _currentNote = null;
       _controller.clear();
@@ -149,7 +148,7 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
       }
     } on ApiException catch (apiErr) {
       if (apiErr.statusCode == 404) {
-        await ref.read(eventStateProvider.notifier).refresh();
+        // Realtime handles refresh automatically via EventRepository
 
         _currentNote = null;
         _controller.clear();
