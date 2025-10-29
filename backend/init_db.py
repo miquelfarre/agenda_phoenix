@@ -1190,7 +1190,7 @@ def insert_sample_data():
             )
         )
 
-        # Miquel invited to "Cumpleaños clase Sara"
+        # Miquel invited to "Cumpleaños clase Sara" (NEW - created recently)
         interactions.append(
             EventInteraction(
                 event_id=event_cumple_sara_clase.id,
@@ -1198,6 +1198,8 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="pending",
                 invited_by_user_id=sonia.id,
+                created_at=datetime.now(),  # Makes this interaction "new" (is_new badge will show)
+                read_at=None,  # Explicitly set as unread
             )
         )
 

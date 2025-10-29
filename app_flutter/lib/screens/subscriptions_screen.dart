@@ -10,7 +10,6 @@ import '../core/state/app_state.dart';
 import '../widgets/subscription_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
-import '../widgets/platform_refresh.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
 import 'public_user_events_screen.dart';
@@ -95,22 +94,18 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       );
     }
 
-    return PlatformRefresh(
-      onRefresh: () async {
-        await ref.read(subscriptionRepositoryProvider).refresh();
-      },
-      sliverChild: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          if (index == 0) {
-            return _buildSearchField(isIOS);
-          }
+    return ListView.builder(
+      physics: const ClampingScrollPhysics(),
+      itemCount: users.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _buildSearchField(isIOS);
+        }
 
-          final subIndex = index - 1;
-          final user = users[subIndex];
-          return _buildUserItem(user, isIOS, l10n, ref);
-        }, childCount: users.length + 1),
-      ),
-      child: Container(),
+        final subIndex = index - 1;
+        final user = users[subIndex];
+        return _buildUserItem(user, isIOS, l10n, ref);
+      },
     );
   }
 

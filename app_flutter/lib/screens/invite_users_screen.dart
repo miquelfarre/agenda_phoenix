@@ -8,7 +8,6 @@ import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
-import '../widgets/platform_refresh.dart';
 import '../services/config_service.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
@@ -223,79 +222,74 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
       );
     }
 
-    return PlatformRefresh(
-      onRefresh: () async {
-        await _loadData();
-      },
-      child: ListView(
-        physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-        children: [
-          _buildSearchField(),
-          if (searchQuery.isNotEmpty && users.isEmpty && groups.isEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: EmptyState(
-                message: l10n.noSearchResults,
-                icon: CupertinoIcons.search,
-              ),
+    return ListView(
+      physics: const ClampingScrollPhysics(),
+      padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
+      children: [
+        _buildSearchField(),
+        if (searchQuery.isNotEmpty && users.isEmpty && groups.isEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: EmptyState(
+              message: l10n.noSearchResults,
+              icon: CupertinoIcons.search,
             ),
-          ],
-          if (users.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 8.0,
-                horizontal: 16.0,
-              ),
-              child: Text(
-                l10n.users,
-                style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700),
-              ),
-            ),
-            ...users.map((user) {
-              final isSelected = selectedUserIds.contains(user.id);
-              return SelectableCard(
-                title: user.displayName,
-                subtitle: user.displaySubtitle,
-                icon: CupertinoIcons.person,
-                color: AppStyles.blue600,
-                selected: isSelected,
-                onTap: () => _toggleUser(user.id),
-                onChanged: (_) => _toggleUser(user.id),
-              );
-            }),
-          ],
-          if (groups.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 8.0,
-                horizontal: 16.0,
-              ),
-              child: Text(
-                l10n.groups,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  decoration: TextDecoration.none,
-                ).copyWith(color: AppStyles.grey700),
-              ),
-            ),
-            ...groups.map((group) {
-              final isSelected = selectedGroupIds.contains(group.id);
-
-              return SelectableCard(
-                title: group.name,
-                subtitle: group.description,
-                icon: CupertinoIcons.person_2,
-                color: AppStyles.blue600,
-                selected: isSelected,
-                onTap: () => _toggleGroup(group.id),
-                onChanged: (_) => _toggleGroup(group.id),
-              );
-            }),
-          ],
+          ),
         ],
-      ),
+        if (users.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
+            child: Text(
+              l10n.users,
+              style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700),
+            ),
+          ),
+          ...users.map((user) {
+            final isSelected = selectedUserIds.contains(user.id);
+            return SelectableCard(
+              title: user.displayName,
+              subtitle: user.displaySubtitle,
+              icon: CupertinoIcons.person,
+              color: AppStyles.blue600,
+              selected: isSelected,
+              onTap: () => _toggleUser(user.id),
+              onChanged: (_) => _toggleUser(user.id),
+            );
+          }),
+        ],
+        if (groups.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
+            child: Text(
+              l10n.groups,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                decoration: TextDecoration.none,
+              ).copyWith(color: AppStyles.grey700),
+            ),
+          ),
+          ...groups.map((group) {
+            final isSelected = selectedGroupIds.contains(group.id);
+
+            return SelectableCard(
+              title: group.name,
+              subtitle: group.description,
+              icon: CupertinoIcons.person_2,
+              color: AppStyles.blue600,
+              selected: isSelected,
+              onTap: () => _toggleGroup(group.id),
+              onChanged: (_) => _toggleGroup(group.id),
+            );
+          }),
+        ],
+      ],
     );
   }
 

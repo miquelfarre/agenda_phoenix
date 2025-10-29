@@ -8,7 +8,6 @@ import '../services/config_service.dart';
 import '../models/user.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
-import '../widgets/platform_refresh.dart';
 import '../widgets/contact_card.dart';
 import '../widgets/adaptive_scaffold.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -266,10 +265,8 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
       );
     }
 
-    return PlatformListView(
-      onRefresh: () async {
-        await _loadContacts();
-      },
+    return ListView.builder(
+      physics: const ClampingScrollPhysics(),
       padding: EdgeInsets.only(
         top: PlatformWidgets.isIOS ? 12.0 : 8.0,
         left: 8.0,
@@ -322,10 +319,8 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
           );
         }
 
-        return PlatformListView(
-          onRefresh: () async {
-            ref.invalidate(groupsStreamProvider);
-          },
+        return ListView.builder(
+          physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.only(
             top: PlatformWidgets.isIOS ? 12.0 : 8.0,
             left: 8.0,

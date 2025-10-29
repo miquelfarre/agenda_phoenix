@@ -14,7 +14,6 @@ import '../widgets/user_avatar.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_card/event_card_config.dart';
 import '../widgets/empty_state.dart';
-import '../widgets/platform_refresh.dart';
 import 'event_detail_screen.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
@@ -301,66 +300,61 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                   .toList();
               final availableEvents = _filterAvailableEvents(contactEvents);
 
-              return PlatformRefresh(
-                onRefresh: () async {
-                  await _loadContactDetail();
-                },
-                child: CustomScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          l10n.events,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppStyles.black87,
-                            decoration: TextDecoration.none,
-                          ),
+              return CustomScrollView(
+                physics: const ClampingScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        l10n.events,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppStyles.black87,
+                          decoration: TextDecoration.none,
                         ),
                       ),
                     ),
+                  ),
 
-                    if (availableEvents.isEmpty)
-                      SliverToBoxAdapter(
-                        child: EmptyState(
-                          message: l10n.noEventsMessage,
-                          icon: CupertinoIcons.calendar,
-                        ),
-                      )
-                    else
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          if (index == availableEvents.length) {
-                            return Container(
-                              margin: const EdgeInsets.all(16),
-                              width: double.infinity,
-                              child: AdaptiveButton(
-                                config:
-                                    AdaptiveButtonConfigExtended.destructive(),
-                                text: l10n.blockUser,
-                                enabled: !_blockingUser,
-                                onPressed: _showBlockConfirmation,
-                              ),
-                            );
-                          }
-
-                          final event = availableEvents[index];
-                          return EventCard(
-                            event: event,
-                            onTap: () => _navigateToEventDetail(event),
-                            config: EventCardConfig(
-                              onDelete:
-                                  (event, {bool shouldNavigate = false}) =>
-                                      _hideEvent(event),
+                  if (availableEvents.isEmpty)
+                    SliverToBoxAdapter(
+                      child: EmptyState(
+                        message: l10n.noEventsMessage,
+                        icon: CupertinoIcons.calendar,
+                      ),
+                    )
+                  else
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        if (index == availableEvents.length) {
+                          return Container(
+                            margin: const EdgeInsets.all(16),
+                            width: double.infinity,
+                            child: AdaptiveButton(
+                              config:
+                                  AdaptiveButtonConfigExtended.destructive(),
+                              text: l10n.blockUser,
+                              enabled: !_blockingUser,
+                              onPressed: _showBlockConfirmation,
                             ),
                           );
-                        }, childCount: availableEvents.length + 1),
-                      ),
-                  ],
-                ),
+                        }
+
+                        final event = availableEvents[index];
+                        return EventCard(
+                          event: event,
+                          onTap: () => _navigateToEventDetail(event),
+                          config: EventCardConfig(
+                            onDelete:
+                                (event, {bool shouldNavigate = false}) =>
+                                    _hideEvent(event),
+                          ),
+                        );
+                      }, childCount: availableEvents.length + 1),
+                    ),
+                ],
               );
             },
           ),

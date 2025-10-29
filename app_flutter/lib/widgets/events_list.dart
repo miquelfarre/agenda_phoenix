@@ -1,14 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 import '../models/event.dart';
-import 'platform_refresh.dart';
 
 import '../widgets/empty_state.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 import 'event_date_header.dart';
 import 'event_list_item.dart';
-import 'event_list_separator.dart';
 import '../utils/datetime_utils.dart';
 
 class EventsList extends StatelessWidget {
@@ -16,7 +14,6 @@ class EventsList extends StatelessWidget {
   final EventTapCallback onEventTap;
   final EventActionCallback onDelete;
   final bool navigateAfterDelete;
-  final Future<void> Function()? onRefresh;
   final Widget? header;
 
   const EventsList({
@@ -25,7 +22,6 @@ class EventsList extends StatelessWidget {
     required this.onEventTap,
     required this.onDelete,
     this.navigateAfterDelete = false,
-    this.onRefresh,
     this.header,
   });
 
@@ -66,32 +62,6 @@ class EventsList extends StatelessWidget {
         return _buildDateGroup(context, group);
       },
     );
-
-    final sliverList = SliverList(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        if (hasHeader && index == 0) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: header!,
-          );
-        }
-        final effectiveIndex = hasHeader ? index - 1 : index;
-        final group = groupedEvents[effectiveIndex];
-        return _buildDateGroup(context, group);
-      }, childCount: groupedEvents.length + (hasHeader ? 1 : 0)),
-    );
-
-    if (onRefresh != null) {
-      return SafeArea(
-        top: true,
-        bottom: false,
-        child: PlatformRefresh(
-          onRefresh: onRefresh!,
-          sliverChild: sliverList,
-          child: listView,
-        ),
-      );
-    }
 
     return SafeArea(top: true, bottom: false, child: listView);
   }
@@ -153,7 +123,7 @@ class EventsList extends StatelessWidget {
             navigateAfterDelete: navigateAfterDelete,
           );
         }),
-        const EventListSeparator(height: 16),
+        const SizedBox(height: 16),
       ],
     );
   }
