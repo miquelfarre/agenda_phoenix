@@ -22,6 +22,9 @@ class CalendarRepository {
   List<Calendar> _cachedCalendars = [];
   RealtimeChannel? _realtimeChannel;
 
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initialized => _initCompleter.future;
+
   Stream<List<Calendar>> get calendarsStream async* {
     if (_cachedCalendars.isNotEmpty) {
       yield List.from(_cachedCalendars);
@@ -30,20 +33,33 @@ class CalendarRepository {
   }
 
   Future<void> initialize() async {
-    print('🚀 [CalendarRepository] Initializing...');
-    _box = await Hive.openBox<CalendarHive>(_boxName);
+    if (_initCompleter.isCompleted) return;
 
-    // Load calendars from Hive cache first (if any)
-    _loadCalendarsFromHive();
+    try {
+      print('🚀 [CalendarRepository] Initializing...');
+      _box = await Hive.openBox<CalendarHive>(_boxName);
 
-    // Fetch and sync calendars from API BEFORE subscribing to Realtime
-    await _fetchAndSync();
+      // Load calendars from Hive cache first (if any)
+      _loadCalendarsFromHive();
 
-    // Now subscribe to Realtime for future updates
-    await _startRealtimeSubscription();
+      // Fetch and sync calendars from API BEFORE subscribing to Realtime
+      await _fetchAndSync();
 
-    _emitCurrentCalendars();
-    print('✅ [CalendarRepository] Initialization complete');
+      // Now subscribe to Realtime for future updates
+      await _startRealtimeSubscription();
+
+      _emitCurrentCalendars();
+      print('✅ [CalendarRepository] Initialization complete');
+
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
+    } catch (e) {
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.completeError(e);
+      }
+      rethrow;
+    }
   }
 
   void _loadCalendarsFromHive() {
@@ -102,11 +118,13 @@ class CalendarRepository {
   }) async {
     try {
       print('➕ [CalendarRepository] Creating calendar: "$name"');
+      final userId = ConfigService.instance.currentUserId;
       final newCalendar = await _apiClient.createCalendar({
         'name': name,
         'description': description,
         'color': color,
         'is_public': isPublic,
+        'owner_id': userId,
       });
       await _fetchAndSync();
       print('✅ [CalendarRepository] Calendar created: "${newCalendar['name']}"');

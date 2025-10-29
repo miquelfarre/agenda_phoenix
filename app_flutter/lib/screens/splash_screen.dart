@@ -10,6 +10,7 @@ import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../widgets/adaptive_scaffold.dart';
 import 'package:eventypop/widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/widgets/adaptive/configs/button_config.dart';
+import '../core/state/app_state.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   final Widget? nextScreen;
@@ -109,24 +110,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       final startTime = DateTime.now();
       const minDuration = Duration(seconds: 2);
 
-      _updateStatus(l10n.initializingOfflineSystem);
-
-      await Future.delayed(const Duration(milliseconds: 400));
-
-      _updateStatus(l10n.loadingConfiguration);
-      await Future.delayed(const Duration(milliseconds: 400));
-
-      _updateStatus(l10n.startingAutomaticSync);
-      await Future.delayed(const Duration(milliseconds: 600));
-
+      // Real action: Initialize all repositories
       _updateStatus(l10n.loadingLocalData);
-      await Future.delayed(const Duration(milliseconds: 600));
+      await _initializeRepositories();
 
-      _updateStatus(l10n.verifyingSync);
-      await Future.delayed(const Duration(milliseconds: 500));
-
+      // Real action: Check permissions
       _updateStatus(l10n.checkingContactsPermissions);
-      await Future.delayed(const Duration(milliseconds: 300));
       try {
         _safetyTimer?.cancel();
         if (mounted) {
@@ -140,16 +129,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         // Ignore error
       }
 
+      // Real action: Data is ready
       _updateStatus(l10n.dataUpdated);
-      await Future.delayed(const Duration(milliseconds: 500));
 
+      // Ensure minimum duration for smooth UX (only if initialization was very fast)
       final elapsedTime = DateTime.now().difference(startTime);
       if (elapsedTime < minDuration) {
         final remainingTime = minDuration - elapsedTime;
         await Future.delayed(remainingTime);
       }
-
-      await Future.delayed(const Duration(milliseconds: 500));
 
       _navigateToNextScreen();
     } catch (e) {
@@ -163,6 +151,52 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           _errorMessage = '${l10n.errorInitializingApp} $e';
         });
       }
+    }
+  }
+
+  Future<void> _initializeRepositories() async {
+    try {
+      // Create all repository instances (triggers initialize() asynchronously)
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      final eventRepo = ref.read(eventRepositoryProvider);
+      final userRepo = ref.read(userRepositoryProvider);
+      final calendarRepo = ref.read(calendarRepositoryProvider);
+      final groupRepo = ref.read(groupRepositoryProvider);
+
+      // Wait for all repositories to complete initialization in parallel
+      await Future.wait([
+        subscriptionRepo.initialized,
+        eventRepo.initialized,
+        userRepo.initialized,
+        calendarRepo.initialized,
+        groupRepo.initialized,
+      ]);
+
+      // Ensure birthday calendar exists (calendar repo is guaranteed to be ready)
+      await _ensureBirthdayCalendar();
+    } catch (e) {
+      print('Error initializing repositories: $e');
+      // Continue anyway, repositories may still be partially functional
+    }
+  }
+
+  Future<void> _ensureBirthdayCalendar() async {
+    try {
+      final calendarRepository = ref.read(calendarRepositoryProvider);
+      final calendars = await calendarRepository.calendarsStream.first;
+      final hasBirthdayCalendar = calendars.any(
+        (cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays',
+      );
+
+      if (!hasBirthdayCalendar) {
+        await calendarRepository.createCalendar(
+          name: 'Cumpleaños',
+          description: 'Calendario para cumpleaños',
+          color: '#FF5733',
+        );
+      }
+    } catch (e) {
+      // Ignore errors
     }
   }
 

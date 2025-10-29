@@ -27,7 +27,17 @@ class EventRepository {
   List<Event> _cachedEvents = [];
   DateTime? _initialSyncCompletedAt;
 
-  Stream<List<Event>> get eventsStream => _eventsStreamController.stream;
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initialized => _initCompleter.future;
+
+  Stream<List<Event>> get eventsStream async* {
+    // Emit cached events immediately for new subscribers
+    if (_cachedEvents.isNotEmpty) {
+      yield List.from(_cachedEvents);
+    }
+    // Then listen for future updates
+    yield* _eventsStreamController.stream;
+  }
 
   Stream<List<EventInteraction>> get interactionsStream async* {
     final interactions = _extractInteractionsFromEvents();
@@ -38,18 +48,31 @@ class EventRepository {
   }
 
   Future<void> initialize() async {
-    print('🚀 [EventRepository] Initializing...');
-    _box = await Hive.openBox<EventHive>(_boxName);
+    if (_initCompleter.isCompleted) return;
 
-    _loadEventsFromHive();
+    try {
+      print('🚀 [EventRepository] Initializing...');
+      _box = await Hive.openBox<EventHive>(_boxName);
 
-    await _fetchAndSync();
+      _loadEventsFromHive();
 
-    await _startRealtimeSubscription();
-    await _startInteractionsSubscription();
+      await _fetchAndSync();
 
-    _emitCurrentEvents();
-    print('✅ [EventRepository] Initialization complete');
+      await _startRealtimeSubscription();
+      await _startInteractionsSubscription();
+
+      _emitCurrentEvents();
+      print('✅ [EventRepository] Initialization complete');
+
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
+    } catch (e) {
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.completeError(e);
+      }
+      rethrow;
+    }
   }
 
   Future<void> _fetchAndSync() async {

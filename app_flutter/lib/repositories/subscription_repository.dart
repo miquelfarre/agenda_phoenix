@@ -19,6 +19,9 @@ class SubscriptionRepository {
   List<models.User> _cachedUsers = [];
   RealtimeChannel? _statsChannel;
 
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initialized => _initCompleter.future;
+
   Stream<List<models.User>> get subscriptionsStream async* {
     if (_cachedUsers.isNotEmpty) {
       yield List.from(_cachedUsers);
@@ -27,20 +30,33 @@ class SubscriptionRepository {
   }
 
   Future<void> initialize() async {
-    print('🚀 [SubscriptionRepository] Initializing...');
-    _box = await Hive.openBox<UserHive>(_boxName);
+    if (_initCompleter.isCompleted) return;
 
-    // Load subscriptions from Hive cache first (if any)
-    _loadSubscriptionsFromHive();
+    try {
+      print('🚀 [SubscriptionRepository] Initializing...');
+      _box = await Hive.openBox<UserHive>(_boxName);
 
-    // Fetch and sync subscriptions from API BEFORE subscribing to Realtime
-    await _fetchAndSync();
+      // Load subscriptions from Hive cache first (if any)
+      _loadSubscriptionsFromHive();
 
-    // Now subscribe to Realtime for future updates
-    await _startRealtimeSubscription();
+      // Fetch and sync subscriptions from API BEFORE subscribing to Realtime
+      await _fetchAndSync();
 
-    _emitCurrentSubscriptions();
-    print('✅ [SubscriptionRepository] Initialization complete');
+      // Now subscribe to Realtime for future updates
+      await _startRealtimeSubscription();
+
+      _emitCurrentSubscriptions();
+      print('✅ [SubscriptionRepository] Initialization complete');
+
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
+    } catch (e) {
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.completeError(e);
+      }
+      rethrow;
+    }
   }
 
   void _loadSubscriptionsFromHive() {

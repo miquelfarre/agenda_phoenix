@@ -42,6 +42,7 @@ final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 final eventRepositoryProvider = Provider<EventRepository>((ref) {
   final repository = EventRepository();
   ref.onDispose(() => repository.dispose());
+  // Initialize asynchronously - callers can await repository.initialized if needed
   repository.initialize();
   return repository;
 });

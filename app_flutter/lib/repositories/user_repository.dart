@@ -12,12 +12,35 @@ class UserRepository {
       StreamController<User?>.broadcast();
   User? _cachedCurrentUser;
 
-  Stream<User?> get currentUserStream => _currentUserController.stream;
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initialized => _initCompleter.future;
+
+  Stream<User?> get currentUserStream async* {
+    // Emit cached user immediately for new subscribers
+    if (_cachedCurrentUser != null) {
+      yield _cachedCurrentUser;
+    }
+    // Then listen for future updates
+    yield* _currentUserController.stream;
+  }
 
   Future<void> initialize() async {
-    print('🚀 [UserRepository] Initializing...');
-    await _loadCurrentUser();
-    print('✅ [UserRepository] Initialization complete');
+    if (_initCompleter.isCompleted) return;
+
+    try {
+      print('🚀 [UserRepository] Initializing...');
+      await _loadCurrentUser();
+      print('✅ [UserRepository] Initialization complete');
+
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
+    } catch (e) {
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.completeError(e);
+      }
+      rethrow;
+    }
   }
 
   Future<User?> _loadCurrentUser({bool forceRefresh = false}) async {

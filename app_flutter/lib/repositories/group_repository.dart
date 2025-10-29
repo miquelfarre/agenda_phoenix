@@ -21,6 +21,9 @@ class GroupRepository {
   List<Group> _cachedGroups = [];
   RealtimeChannel? _realtimeChannel;
 
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initialized => _initCompleter.future;
+
   Stream<List<Group>> get groupsStream async* {
     if (_cachedGroups.isNotEmpty) {
       yield List.from(_cachedGroups);
@@ -29,20 +32,33 @@ class GroupRepository {
   }
 
   Future<void> initialize() async {
-    print('🚀 [GroupRepository] Initializing...');
-    _box = await Hive.openBox<GroupHive>(_boxName);
+    if (_initCompleter.isCompleted) return;
 
-    // Load groups from Hive cache first (if any)
-    _loadGroupsFromHive();
+    try {
+      print('🚀 [GroupRepository] Initializing...');
+      _box = await Hive.openBox<GroupHive>(_boxName);
 
-    // Fetch and sync groups from API BEFORE subscribing to Realtime
-    await _fetchAndSync();
+      // Load groups from Hive cache first (if any)
+      _loadGroupsFromHive();
 
-    // Now subscribe to Realtime for future updates
-    await _startRealtimeSubscription();
+      // Fetch and sync groups from API BEFORE subscribing to Realtime
+      await _fetchAndSync();
 
-    _emitCurrentGroups();
-    print('✅ [GroupRepository] Initialization complete');
+      // Now subscribe to Realtime for future updates
+      await _startRealtimeSubscription();
+
+      _emitCurrentGroups();
+      print('✅ [GroupRepository] Initialization complete');
+
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
+    } catch (e) {
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.completeError(e);
+      }
+      rethrow;
+    }
   }
 
   void _loadGroupsFromHive() {

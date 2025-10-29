@@ -221,6 +221,50 @@ clean_hive_data() {
     fi
 }
 
+# Check and generate Hive adapters if needed
+check_and_generate_hive() {
+    info "Checking Hive generated files..."
+
+    cd "$ROOT_DIR/app_flutter"
+
+    # Check if main .g.dart files exist
+    local missing=0
+    local hive_files=(
+        "lib/models/event_hive.g.dart"
+        "lib/models/group_hive.g.dart"
+        "lib/models/user_hive.g.dart"
+        "lib/models/calendar_hive.g.dart"
+        "lib/models/calendar_share_hive.g.dart"
+        "lib/models/user_event_note_hive.g.dart"
+    )
+
+    for file in "${hive_files[@]}"; do
+        if [[ ! -f "$file" ]]; then
+            missing=1
+            break
+        fi
+    done
+
+    if [[ $missing -eq 1 ]]; then
+        warn "Hive generated files missing, running build_runner..."
+        flutter pub run build_runner build --delete-conflicting-outputs
+        success "Hive adapters generated"
+    else
+        info "Hive adapters already generated"
+    fi
+}
+
+# Check if .env file exists
+check_env_file() {
+    if [[ ! -f "$ROOT_DIR/.env" ]]; then
+        warn "⚠️  .env file not found in agenda_phoenix/"
+        info "Create a .env file with your configuration if needed"
+        info "Example: SUPABASE_URL=http://localhost:8000"
+    else
+        info "✓ .env file found"
+    fi
+}
+
 # Start Flutter app
 start_flutter() {
     local device_udid="$1"
@@ -228,6 +272,10 @@ start_flutter() {
     info "Starting Flutter app with USER_ID=$USER_ID..."
 
     cd "$ROOT_DIR/app_flutter"
+
+    # Check environment and generated files
+    check_env_file
+    check_and_generate_hive
 
     # Clean Hive data before starting
     clean_hive_data "$device_udid"
