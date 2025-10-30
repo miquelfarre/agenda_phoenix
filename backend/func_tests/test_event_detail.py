@@ -7,36 +7,44 @@ Flutter event detail screen functionality.
 
 import pytest
 from datetime import datetime, timedelta
-from crud import user as user_crud, event as event_crud, event_interaction as interaction_crud
-from schemas import UserCreate, EventCreate, EventInteractionCreate
+from crud import user as user_crud, event as event_crud, event_interaction as interaction_crud, contact as contact_crud
+from schemas import UserCreate, EventCreate, EventInteractionCreate, ContactCreate
 
 
 @pytest.fixture
 def test_users(test_db):
-    """Create test users"""
+    """Create test users with contacts"""
+    # Create contacts first
+    contact1_data = ContactCreate(name="Owner User", phone="+1234567890", owner_id=None)
+    contact2_data = ContactCreate(name="Invitee One", phone="+1234567891", owner_id=None)
+    contact3_data = ContactCreate(name="Invitee Two", phone="+1234567892", owner_id=None)
+
+    contact1 = contact_crud.create(test_db, obj_in=contact1_data)
+    contact2 = contact_crud.create(test_db, obj_in=contact2_data)
+    contact3 = contact_crud.create(test_db, obj_in=contact3_data)
+    test_db.commit()
+
+    # Create users with contact references
     user1_data = UserCreate(
-        full_name="Owner User",
         username="owner",
-        phone_number="+1234567890",
         auth_provider="test",
         auth_id="test_owner_123",
-        is_public=False
+        is_public=False,
+        contact_id=contact1.id
     )
     user2_data = UserCreate(
-        full_name="Invitee One",
         username="invitee1",
-        phone_number="+1234567891",
         auth_provider="test",
         auth_id="test_invitee1_456",
-        is_public=False
+        is_public=False,
+        contact_id=contact2.id
     )
     user3_data = UserCreate(
-        full_name="Invitee Two",
         username="invitee2",
-        phone_number="+1234567892",
         auth_provider="test",
         auth_id="test_invitee2_789",
-        is_public=False
+        is_public=False,
+        contact_id=contact3.id
     )
 
     user1 = user_crud.create(test_db, obj_in=user1_data)
