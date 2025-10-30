@@ -459,14 +459,17 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
       final currentUserId = ConfigService.instance.currentUserId;
       final isOwner = event.ownerId == currentUserId;
-      print('👤 [_deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner');
+      final isAdmin = event.interactionType == 'joined' && event.interactionRole == 'admin';
+      print('👤 [_deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner, Is Admin: $isAdmin');
 
-      if (isOwner) {
-        print('👑 [_deleteEvent] User is owner. Deleting event via eventRepositoryProvider.');
+      if (isOwner || isAdmin) {
+        print('🗑️ [_deleteEvent] User has permission. DELETING event via eventRepositoryProvider.');
         await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
+        print('✅ [_deleteEvent] Event DELETED successfully');
       } else {
-        print('👤 [_deleteEvent] User is not owner. Leaving event via eventRepositoryProvider.');
+        print('👋 [_deleteEvent] User is not owner/admin. LEAVING event via eventRepositoryProvider.');
         await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+        print('✅ [_deleteEvent] Event LEFT successfully');
       }
 
       if (shouldNavigate && mounted) {
@@ -474,11 +477,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         Navigator.of(context).pop();
       }
 
-      print('✅ [_deleteEvent] Delete process finished for event ID: ${event.id}');
+      print('✅ [_deleteEvent] Operation completed for event ID: ${event.id}');
       // EventRepository handles updates via Realtime, but we manually remove
       // for non-owners as RLS policies can prevent the DELETE event from broadcasting.
     } catch (e, s) {
-      print('❌ [_deleteEvent] Error deleting event: $e');
+      print('❌ [_deleteEvent] Error: $e');
       print('STACK TRACE: $s');
       rethrow;
     }

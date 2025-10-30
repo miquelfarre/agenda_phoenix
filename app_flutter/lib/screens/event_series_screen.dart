@@ -98,14 +98,17 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
 
       final currentUserId = ConfigService.instance.currentUserId;
       final isOwner = event.ownerId == currentUserId;
-      print('👤 [EventSeriesScreen._deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner');
+      final isAdmin = event.interactionType == 'joined' && event.interactionRole == 'admin';
+      print('👤 [EventSeriesScreen._deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner, Is Admin: $isAdmin');
 
-      if (isOwner) {
-        print('👑 [EventSeriesScreen._deleteEvent] User is owner. Deleting event via eventRepositoryProvider.');
+      if (isOwner || isAdmin) {
+        print('🗑️ [EventSeriesScreen._deleteEvent] User has permission. DELETING event via eventRepositoryProvider.');
         await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
+        print('✅ [EventSeriesScreen._deleteEvent] Event DELETED successfully');
       } else {
-        print('👤 [EventSeriesScreen._deleteEvent] User is not owner. Leaving event via eventRepositoryProvider.');
+        print('👋 [EventSeriesScreen._deleteEvent] User is not owner/admin. LEAVING event via eventRepositoryProvider.');
         await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+        print('✅ [EventSeriesScreen._deleteEvent] Event LEFT successfully');
       }
 
       // Update local list
@@ -117,7 +120,7 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
 
       print('✅ [EventSeriesScreen._deleteEvent] Event removed from series list. Remaining: ${_events.length}');
     } catch (e, s) {
-      print('❌ [EventSeriesScreen._deleteEvent] Error deleting event: $e');
+      print('❌ [EventSeriesScreen._deleteEvent] Error: $e');
       print('STACK TRACE: $s');
       rethrow;
     }

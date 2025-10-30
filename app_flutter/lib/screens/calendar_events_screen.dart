@@ -167,20 +167,23 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
 
       final currentUserId = ConfigService.instance.currentUserId;
       final isOwner = event.ownerId == currentUserId;
-      print('👤 [CalendarEventsScreen._deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner');
+      final isAdmin = event.interactionType == 'joined' && event.interactionRole == 'admin';
+      print('👤 [CalendarEventsScreen._deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner, Is Admin: $isAdmin');
 
-      if (isOwner) {
-        print('👑 [CalendarEventsScreen._deleteEvent] User is owner. Deleting event via eventRepositoryProvider.');
+      if (isOwner || isAdmin) {
+        print('🗑️ [CalendarEventsScreen._deleteEvent] User has permission. DELETING event via eventRepositoryProvider.');
         await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
+        print('✅ [CalendarEventsScreen._deleteEvent] Event DELETED successfully');
       } else {
-        print('👤 [CalendarEventsScreen._deleteEvent] User is not owner. Leaving event via eventRepositoryProvider.');
+        print('👋 [CalendarEventsScreen._deleteEvent] User is not owner/admin. LEAVING event via eventRepositoryProvider.');
         await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+        print('✅ [CalendarEventsScreen._deleteEvent] Event LEFT successfully');
       }
 
-      print('✅ [CalendarEventsScreen._deleteEvent] Delete process finished for event ID: ${event.id}');
+      print('✅ [CalendarEventsScreen._deleteEvent] Operation completed for event ID: ${event.id}');
       // EventRepository handles updates via Realtime
     } catch (e, s) {
-      print('❌ [CalendarEventsScreen._deleteEvent] Error deleting event: $e');
+      print('❌ [CalendarEventsScreen._deleteEvent] Error: $e');
       print('STACK TRACE: $s');
       rethrow;
     }

@@ -5,9 +5,9 @@ import '../models/event.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
-import '../widgets/event_card.dart';
-import '../widgets/event_card/event_card_config.dart';
+import '../widgets/event_list_item.dart';
 import 'event_detail_screen.dart';
+import '../core/state/app_state.dart';
 
 class PublicUserEventsScreen extends ConsumerStatefulWidget {
   final User publicUser;
@@ -282,17 +282,46 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
 
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: EventCard(
+                child: EventListItem(
                   event: event,
-                  onTap: () {
+                  onTap: (event) {
                     Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => EventDetailScreen(event: event)));
                   },
-                  config: EventCardConfig.readOnly().copyWith(showOwner: false),
+                  onDelete: _deleteEvent,
                 ),
               );
             }, childCount: eventsToShow.length),
           ),
       ],
     );
+  }
+
+  Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
+    print('👋 [PublicUserEventsScreen._deleteEvent] Initiating LEAVE for public user event: "${event.name}" (ID: ${event.id})');
+    try {
+      if (event.id == null) {
+        print('❌ [PublicUserEventsScreen._deleteEvent] Error: Event ID is null.');
+        throw Exception('Event ID is null');
+      }
+
+      // Public user events can only be LEFT, never DELETED
+      // (user is never owner/admin of public user events)
+      print('👋 [PublicUserEventsScreen._deleteEvent] LEAVING public user event via eventRepositoryProvider...');
+      await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+      print('✅ [PublicUserEventsScreen._deleteEvent] Event LEFT successfully');
+
+      // Remove from local list
+      if (mounted) {
+        setState(() {
+          _events.removeWhere((e) => e.id == event.id);
+        });
+      }
+
+      print('✅ [PublicUserEventsScreen._deleteEvent] Operation completed for event ID: ${event.id}');
+    } catch (e, s) {
+      print('❌ [PublicUserEventsScreen._deleteEvent] Error: $e');
+      print('STACK TRACE: $s');
+      rethrow;
+    }
   }
 }

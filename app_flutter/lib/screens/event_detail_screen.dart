@@ -638,11 +638,23 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
     }
 
     try {
-      print('🗑️ [EventDetail] Calling EventService.deleteEvent(${event.id})...');
-      await ref.read(eventServiceProvider).deleteEvent(event.id!);
-      print('✅ [EventDetail] EventService.deleteEvent completed successfully');
+      final currentUserId = ConfigService.instance.currentUserId;
+      final isOwner = event.ownerId == currentUserId;
+      final isAdmin = event.interactionType == 'joined' && event.interactionRole == 'admin';
+
+      print('👤 [EventDetail] Is Owner: $isOwner, Is Admin: $isAdmin');
+
+      if (isOwner || isAdmin) {
+        print('🗑️ [EventDetail] User has permission. DELETING event via EventService...');
+        await ref.read(eventServiceProvider).deleteEvent(event.id!);
+        print('✅ [EventDetail] Event DELETED successfully');
+      } else {
+        print('👋 [EventDetail] User is not owner/admin. LEAVING event via EventRepository...');
+        await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+        print('✅ [EventDetail] Event LEFT successfully');
+      }
     } catch (e) {
-      print('❌ [EventDetail] Error in deleteEvent: $e');
+      print('❌ [EventDetail] Error in _deleteEvent: $e');
       rethrow;
     }
 
