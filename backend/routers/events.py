@@ -159,6 +159,97 @@ async def get_event(
             stats = event_interaction.get_invitation_stats(db, event_id=event_id)
             response_data["invitation_stats"] = stats
 
+            # Get all interactions with enriched user data
+            interactions_data = []
+            interactions_enriched = event_interaction.get_enriched_by_event(db, event_id=event_id)
+
+            for interaction, interaction_user, contact in interactions_enriched:
+                if not interaction_user:
+                    continue
+
+                # Get inviter if exists
+                inviter = None
+                if interaction.invited_by_user_id:
+                    inviter = user.get(db, id=interaction.invited_by_user_id)
+
+                interactions_data.append({
+                    "id": interaction.id,
+                    "user_id": interaction.user_id,
+                    "event_id": interaction.event_id,
+                    "interaction_type": interaction.interaction_type,
+                    "status": interaction.status,
+                    "role": interaction.role,
+                    "invited_by_user_id": interaction.invited_by_user_id,
+                    "note": interaction.note,
+                    "read_at": interaction.read_at.isoformat() if interaction.read_at else None,
+                    "created_at": interaction.created_at.isoformat(),
+                    "updated_at": interaction.updated_at.isoformat(),
+                    "user": {
+                        "id": interaction_user.id,
+                        "full_name": interaction_user.full_name,
+                        "username": interaction_user.username,
+                        "phone_number": interaction_user.phone_number,
+                        "profile_picture": interaction_user.profile_picture,
+                    },
+                    "inviter": {
+                        "id": inviter.id,
+                        "full_name": inviter.full_name,
+                        "username": inviter.username,
+                    } if inviter else None
+                })
+
+            response_data["interactions"] = interactions_data
+
+        # If user is not owner/admin but is authenticated, add their own interaction
+        elif current_user_id is not None:
+            # Get current user's interaction only
+            user_interaction = db.query(EventInteraction).filter(
+                EventInteraction.event_id == event_id,
+                EventInteraction.user_id == current_user_id
+            ).first()
+
+            if user_interaction:
+                inviter = None
+                if user_interaction.invited_by_user_id:
+                    inviter = user.get(db, id=user_interaction.invited_by_user_id)
+
+                response_data["interactions"] = [{
+                    "id": user_interaction.id,
+                    "user_id": user_interaction.user_id,
+                    "event_id": user_interaction.event_id,
+                    "interaction_type": user_interaction.interaction_type,
+                    "status": user_interaction.status,
+                    "role": user_interaction.role,
+                    "invited_by_user_id": user_interaction.invited_by_user_id,
+                    "note": user_interaction.note,
+                    "read_at": user_interaction.read_at.isoformat() if user_interaction.read_at else None,
+                    "inviter": {
+                        "id": inviter.id,
+                        "full_name": inviter.full_name,
+                        "username": inviter.username,
+                    } if inviter else None
+                }]
+
+    # Get accepted users (attendees) - available for all authenticated users
+    if current_user_id is not None:
+        accepted_interactions = db.query(EventInteraction).filter(
+            EventInteraction.event_id == event_id,
+            EventInteraction.status == "accepted"
+        ).all()
+
+        attendees = []
+        for interaction in accepted_interactions:
+            user_obj = user.get(db, id=interaction.user_id)
+            if user_obj:
+                attendees.append({
+                    "id": user_obj.id,
+                    "full_name": user_obj.full_name,
+                    "username": user_obj.username,
+                    "profile_picture": user_obj.profile_picture,
+                })
+
+        response_data["attendees"] = attendees
+
     return EventResponse(**response_data)
 
 

@@ -154,6 +154,7 @@ class EventResponse(EventBase):
     created_at: datetime
     updated_at: datetime
     interaction: Optional[dict] = None  # User's interaction with this event (type, status, role) - only for /users/{id}/events
+    interactions: Optional[List[dict]] = None  # All interactions for this event with enriched user data - only for /events/{id}
     # Owner info
     owner_name: Optional[str] = None  # Full name of event owner
     owner_profile_picture: Optional[str] = None  # Profile picture URL of owner
