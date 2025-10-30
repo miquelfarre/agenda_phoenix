@@ -18,18 +18,24 @@ def test_users(test_db):
         full_name="Owner User",
         username="owner",
         phone_number="+1234567890",
+        auth_provider="test",
+        auth_id="test_owner_123",
         is_public=False
     )
     user2_data = UserCreate(
         full_name="Invitee One",
         username="invitee1",
         phone_number="+1234567891",
+        auth_provider="test",
+        auth_id="test_invitee1_456",
         is_public=False
     )
     user3_data = UserCreate(
         full_name="Invitee Two",
         username="invitee2",
         phone_number="+1234567892",
+        auth_provider="test",
+        auth_id="test_invitee2_789",
         is_public=False
     )
 

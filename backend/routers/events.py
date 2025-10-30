@@ -167,10 +167,20 @@ async def get_event(
                 if not interaction_user:
                     continue
 
+                # Get user display name from contact or username
+                user_name = contact.name if contact else interaction_user.username or f"User {interaction_user.id}"
+                user_phone = contact.phone if contact else None
+
                 # Get inviter if exists
                 inviter = None
+                inviter_contact = None
+                inviter_name = None
                 if interaction.invited_by_user_id:
                     inviter = user.get(db, id=interaction.invited_by_user_id)
+                    if inviter and inviter.contact_id:
+                        from crud import contact as contact_crud
+                        inviter_contact = contact_crud.get(db, id=inviter.contact_id)
+                    inviter_name = inviter_contact.name if inviter_contact else (inviter.username if inviter else None)
 
                 interactions_data.append({
                     "id": interaction.id,
@@ -186,14 +196,14 @@ async def get_event(
                     "updated_at": interaction.updated_at.isoformat(),
                     "user": {
                         "id": interaction_user.id,
-                        "full_name": interaction_user.full_name,
+                        "full_name": user_name,
                         "username": interaction_user.username,
-                        "phone_number": interaction_user.phone_number,
-                        "profile_picture": interaction_user.profile_picture,
+                        "phone_number": user_phone,
+                        "profile_picture": interaction_user.profile_picture_url,
                     },
                     "inviter": {
                         "id": inviter.id,
-                        "full_name": inviter.full_name,
+                        "full_name": inviter_name,
                         "username": inviter.username,
                     } if inviter else None
                 })
@@ -210,8 +220,14 @@ async def get_event(
 
             if user_interaction:
                 inviter = None
+                inviter_contact = None
+                inviter_name = None
                 if user_interaction.invited_by_user_id:
                     inviter = user.get(db, id=user_interaction.invited_by_user_id)
+                    if inviter and inviter.contact_id:
+                        from crud import contact as contact_crud
+                        inviter_contact = contact_crud.get(db, id=inviter.contact_id)
+                    inviter_name = inviter_contact.name if inviter_contact else (inviter.username if inviter else None)
 
                 response_data["interactions"] = [{
                     "id": user_interaction.id,
@@ -225,7 +241,7 @@ async def get_event(
                     "read_at": user_interaction.read_at.isoformat() if user_interaction.read_at else None,
                     "inviter": {
                         "id": inviter.id,
-                        "full_name": inviter.full_name,
+                        "full_name": inviter_name,
                         "username": inviter.username,
                     } if inviter else None
                 }]
@@ -241,11 +257,19 @@ async def get_event(
         for interaction in accepted_interactions:
             user_obj = user.get(db, id=interaction.user_id)
             if user_obj:
+                # Get user name from contact or username
+                user_contact = None
+                user_name = user_obj.username or f"User {user_obj.id}"
+                if user_obj.contact_id:
+                    from crud import contact as contact_crud
+                    user_contact = contact_crud.get(db, id=user_obj.contact_id)
+                    user_name = user_contact.name if user_contact else user_name
+
                 attendees.append({
                     "id": user_obj.id,
-                    "full_name": user_obj.full_name,
+                    "full_name": user_name,
                     "username": user_obj.username,
-                    "profile_picture": user_obj.profile_picture,
+                    "profile_picture": user_obj.profile_picture_url,
                 })
 
         response_data["attendees"] = attendees
