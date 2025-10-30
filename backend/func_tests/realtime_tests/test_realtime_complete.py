@@ -44,6 +44,8 @@ def api_request(method: str, path: str, json_data=None, user_id: int = 1):
         response = requests.post(url, json=json_data, headers=headers)
     elif method == "DELETE":
         response = requests.delete(url, headers=headers)
+    elif method == "PUT":
+        response = requests.put(url, json=json_data, headers=headers)
     elif method == "PATCH":
         response = requests.patch(url, json=json_data, headers=headers)
     else:
@@ -134,7 +136,7 @@ class TestEventsRealtimeUPDATE:
     """Tabla: events - Evento: UPDATE"""
 
     def test_update_event_triggers_realtime_update(self):
-        """PATCH /events/X → UPDATE en events → Realtime notifica → GET /users/X/events refleja cambios"""
+        """PUT /events/X → UPDATE en events → Realtime notifica → GET /users/X/events refleja cambios"""
         user_id = 1
 
         # Create
@@ -149,7 +151,7 @@ class TestEventsRealtimeUPDATE:
 
         # Update
         update_data = {"name": "Updated Name"}
-        response = api_request("PATCH", f"/events/{event_id}", json_data=update_data, user_id=user_id)
+        response = api_request("PUT", f"/events/{event_id}", json_data=update_data, user_id=user_id)
         assert response.status_code == 200
 
         wait_for_realtime()
@@ -546,7 +548,7 @@ class TestGroupsRealtimeUPDATE:
 
         # Update
         update_data = {"name": "Updated Group Name"}
-        response = api_request("PATCH", f"/groups/{group_id}", json_data=update_data, user_id=user_id)
+        response = api_request("PUT", f"/groups/{group_id}", json_data=update_data, user_id=user_id)
         assert response.status_code == 200
 
         wait_for_realtime()

@@ -48,6 +48,8 @@ def api_request(method: str, path: str, json_data=None, user_id: int = 1):
         response = requests.post(url, json=json_data, headers=headers)
     elif method == "DELETE":
         response = requests.delete(url, headers=headers)
+    elif method == "PUT":
+        response = requests.put(url, json=json_data, headers=headers)
     elif method == "PATCH":
         response = requests.patch(url, json=json_data, headers=headers)
     else:
@@ -198,7 +200,7 @@ class TestEventRealtimeFlow:
         FLUJO COMPLETO: Actualizar evento
 
         1. POST /events -> crear evento
-        2. PATCH /events/{id} -> actualizar nombre
+        2. PUT /events/{id} -> actualizar nombre
         3. Esperar propagación Realtime
         4. GET /users/1/events -> verificar cambios reflejados
         """
@@ -221,7 +223,7 @@ class TestEventRealtimeFlow:
 
         # 2. Actualizar evento
         update_data = {"name": "Updated Name"}
-        update_response = api_request("PATCH", f"/events/{event_id}", json_data=update_data, user_id=user_id)
+        update_response = api_request("PUT", f"/events/{event_id}", json_data=update_data, user_id=user_id)
         assert update_response.status_code == 200, f"Update failed: {update_response.text}"
 
         print(f"✅ Updated event name")
