@@ -101,8 +101,9 @@ class EventCard extends ConsumerWidget {
 
   Widget _buildTimeContainer(BuildContext context) {
     final eventTime = event.date;
+    final l10n = context.l10n;
 
-    final colon = context.l10n.colon;
+    final colon = l10n.colon;
     final timeStr = '${eventTime.hour.toString().padLeft(2, '0')}$colon${eventTime.minute.toString().padLeft(2, '0')}';
 
     return Container(
@@ -120,9 +121,35 @@ class EventCard extends ConsumerWidget {
             timeStr,
             style: AppStyles.cardTitle.copyWith(fontSize: 18, fontWeight: FontWeight.bold, color: AppStyles.blue600, letterSpacing: 0.5),
           ),
+          if (config.showDate) ...[
+            const SizedBox(height: 2),
+            Text(
+              _formatDateShort(eventTime, l10n),
+              style: AppStyles.bodyText.copyWith(fontSize: 10, color: AppStyles.blue600, fontWeight: FontWeight.w500),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  String _formatDateShort(DateTime date, AppLocalizations l10n) {
+    final months = [
+      l10n.january.substring(0, 3),
+      l10n.february.substring(0, 3),
+      l10n.march.substring(0, 3),
+      l10n.april.substring(0, 3),
+      l10n.may.substring(0, 3),
+      l10n.june.substring(0, 3),
+      l10n.july.substring(0, 3),
+      l10n.august.substring(0, 3),
+      l10n.september.substring(0, 3),
+      l10n.october.substring(0, 3),
+      l10n.november.substring(0, 3),
+      l10n.december.substring(0, 3),
+    ];
+
+    return '${date.day} ${months[date.month - 1]}';
   }
 
   Widget _buildEventContent(BuildContext context, AppLocalizations l10n, EventCardConfig config, WidgetRef ref) {

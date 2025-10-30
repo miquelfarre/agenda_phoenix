@@ -8,6 +8,7 @@ class EventCardConfig {
   final bool showOwner;
   final bool navigateAfterDelete;
   final bool showNewBadge;
+  final bool showDate;
 
   final String? customTitle;
   final String? customSubtitle;
@@ -32,6 +33,7 @@ class EventCardConfig {
     this.showOwner = true,
     this.navigateAfterDelete = false,
     this.showNewBadge = false,
+    this.showDate = false,
     this.customTitle,
     this.customSubtitle,
     this.customStatus,
@@ -54,6 +56,7 @@ class EventCardConfig {
     bool? showOwner,
     bool? navigateAfterDelete,
     bool? showNewBadge,
+    bool? showDate,
     String? customTitle,
     String? customSubtitle,
     String? customStatus,
@@ -75,6 +78,7 @@ class EventCardConfig {
       showOwner: showOwner ?? this.showOwner,
       navigateAfterDelete: navigateAfterDelete ?? this.navigateAfterDelete,
       showNewBadge: showNewBadge ?? this.showNewBadge,
+      showDate: showDate ?? this.showDate,
       customTitle: customTitle ?? this.customTitle,
       customSubtitle: customSubtitle ?? this.customSubtitle,
       customStatus: customStatus ?? this.customStatus,

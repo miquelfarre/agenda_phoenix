@@ -3,25 +3,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../models/event.dart';
-import '../widgets/event_card.dart';
-import '../widgets/event_card/event_card_config.dart';
+import '../widgets/event_list_item.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
 import 'event_detail_screen.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
+import '../core/state/app_state.dart';
+import '../services/config_service.dart';
 
-class EventSeriesScreen extends ConsumerWidget {
+class EventSeriesScreen extends ConsumerStatefulWidget {
   final List<Event> events;
   final String seriesName;
 
   const EventSeriesScreen({super.key, required this.events, required this.seriesName});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EventSeriesScreen> createState() => _EventSeriesScreenState();
+}
+
+class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
+  late List<Event> _events;
+
+  @override
+  void initState() {
+    super.initState();
+    _events = List<Event>.from(widget.events);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
 
     // Sort events by date
-    final sortedEvents = List<Event>.from(events)..sort((a, b) => a.date.compareTo(b.date));
+    final sortedEvents = List<Event>.from(_events)..sort((a, b) => a.date.compareTo(b.date));
 
     return AdaptivePageScaffold(
       title: l10n.eventSeries,
@@ -35,7 +49,7 @@ class EventSeriesScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    seriesName,
+                    widget.seriesName,
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppStyles.grey700),
                   ),
                   const SizedBox(height: 8),
@@ -55,12 +69,15 @@ class EventSeriesScreen extends ConsumerWidget {
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final event = sortedEvents[index];
-                        return EventCard(
+                        return EventListItem(
                           event: event,
-                          onTap: () {
-                            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => EventDetailScreen(event: event)));
-                          },
-                          config: EventCardConfig(navigateAfterDelete: false, onDelete: null, onEdit: null),
+                          onTap: (event) => Navigator.of(context).push(
+                            CupertinoPageRoute(builder: (context) => EventDetailScreen(event: event)),
+                          ),
+                          onDelete: _deleteEvent,
+                          showDate: true,
+                          showNewBadge: false,
+                          hideInvitationStatus: true,
                         );
                       },
                     ),
@@ -69,5 +86,40 @@ class EventSeriesScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
+    print('🗑️ [EventSeriesScreen._deleteEvent] Initiating delete for event: "${event.name}" (ID: ${event.id})');
+    try {
+      if (event.id == null) {
+        print('❌ [EventSeriesScreen._deleteEvent] Error: Event ID is null.');
+        throw Exception('Event ID is null');
+      }
+
+      final currentUserId = ConfigService.instance.currentUserId;
+      final isOwner = event.ownerId == currentUserId;
+      print('👤 [EventSeriesScreen._deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner');
+
+      if (isOwner) {
+        print('👑 [EventSeriesScreen._deleteEvent] User is owner. Deleting event via eventRepositoryProvider.');
+        await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
+      } else {
+        print('👤 [EventSeriesScreen._deleteEvent] User is not owner. Leaving event via eventRepositoryProvider.');
+        await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+      }
+
+      // Update local list
+      if (mounted) {
+        setState(() {
+          _events.removeWhere((e) => e.id == event.id);
+        });
+      }
+
+      print('✅ [EventSeriesScreen._deleteEvent] Event removed from series list. Remaining: ${_events.length}');
+    } catch (e, s) {
+      print('❌ [EventSeriesScreen._deleteEvent] Error deleting event: $e');
+      print('STACK TRACE: $s');
+      rethrow;
+    }
   }
 }

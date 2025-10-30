@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/event.dart';
 import '../core/state/app_state.dart';
-import '../widgets/event_card.dart';
-import '../widgets/event_card/event_card_config.dart';
+import '../widgets/event_list_item.dart';
 import 'event_detail_screen.dart';
 import '../ui/styles/app_styles.dart';
+import '../services/config_service.dart';
 
 class CalendarEventsScreen extends ConsumerStatefulWidget {
   final int calendarId;
@@ -143,17 +143,46 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
 
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: EventCard(
+                child: EventListItem(
                   event: event,
-                  onTap: () {
+                  onTap: (event) {
                     Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => EventDetailScreen(event: event)));
                   },
-                  config: EventCardConfig.readOnly(),
+                  onDelete: _deleteEvent,
                 ),
               );
             }, childCount: eventsToShow.length),
           ),
       ],
     );
+  }
+
+  Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
+    print('🗑️ [CalendarEventsScreen._deleteEvent] Initiating delete for event: "${event.name}" (ID: ${event.id})');
+    try {
+      if (event.id == null) {
+        print('❌ [CalendarEventsScreen._deleteEvent] Error: Event ID is null.');
+        throw Exception('Event ID is null');
+      }
+
+      final currentUserId = ConfigService.instance.currentUserId;
+      final isOwner = event.ownerId == currentUserId;
+      print('👤 [CalendarEventsScreen._deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner');
+
+      if (isOwner) {
+        print('👑 [CalendarEventsScreen._deleteEvent] User is owner. Deleting event via eventRepositoryProvider.');
+        await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
+      } else {
+        print('👤 [CalendarEventsScreen._deleteEvent] User is not owner. Leaving event via eventRepositoryProvider.');
+        await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+      }
+
+      print('✅ [CalendarEventsScreen._deleteEvent] Delete process finished for event ID: ${event.id}');
+      // EventRepository handles updates via Realtime
+    } catch (e, s) {
+      print('❌ [CalendarEventsScreen._deleteEvent] Error deleting event: $e');
+      print('STACK TRACE: $s');
+      rethrow;
+    }
   }
 }
