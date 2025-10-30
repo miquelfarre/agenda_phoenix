@@ -88,6 +88,20 @@ async def get_event(
     if not owner:
         raise HTTPException(status_code=404, detail="Event owner not found")
 
+    # Get owner contact for full name
+    from crud import contact as contact_crud
+    owner_contact = None
+    if owner.contact_id:
+        owner_contact = contact_crud.get(db, id=owner.contact_id)
+
+    # Determine owner name: use contact name if available, otherwise username (for Instagram users)
+    owner_name = owner_contact.name if owner_contact else owner.username
+
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"[GET /events/{event_id}] OWNER INFO: user_id={owner.id}, is_public={owner.is_public}, "
+               f"has_contact={owner_contact is not None}, owner_name={owner_name}, username={owner.username}")
+
     # Build response dict from event
     response_data = {
         "id": db_event.id,
@@ -100,6 +114,8 @@ async def get_event(
         "parent_recurring_event_id": db_event.parent_recurring_event_id,
         "created_at": db_event.created_at,
         "updated_at": db_event.updated_at,
+        "owner_name": owner_name,
+        "owner_profile_picture": owner.profile_picture_url,
         "is_owner_public": owner.is_public,
     }
 

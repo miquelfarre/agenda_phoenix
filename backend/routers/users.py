@@ -371,8 +371,13 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         ).filter(models.User.id.in_(owner_ids)).all()
 
         for user_obj, contact_obj in owners_query:
+            # Determine owner name: use contact name if available, otherwise username (for Instagram users)
+            owner_name = contact_obj.name if contact_obj else user_obj.username
+            logger.info(f"[GET /users/{user_id}/events] OWNER INFO: user_id={user_obj.id}, "
+                       f"is_public={user_obj.is_public}, has_contact={contact_obj is not None}, "
+                       f"owner_name={owner_name}, username={user_obj.username}")
             owner_info[user_obj.id] = {
-                "name": contact_obj.name if contact_obj else None,
+                "name": owner_name,
                 "is_public": user_obj.is_public,
                 "profile_picture": user_obj.profile_picture_url
             }
@@ -391,7 +396,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
             }
 
     # Fetch attendees for all events (users with accepted interactions OR rejected with is_attending=True)
-    # Exclude public users (they don't attend their own events)
+    # Exclude public users from attendees (they are organizations, not physical people)
     event_ids = [e.id for e in events]
     attendees_map = {}  # event_id -> [user_dict]
     if event_ids:
@@ -413,7 +418,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
                     models.EventInteraction.is_attending == True
                 )
             ),
-            models.User.is_public == False  # Exclude public users
+            models.User.is_public == False  # Exclude public users (they are not physical attendees)
         ).all()
 
         for event_id, user_obj, contact_obj in attendees_query:

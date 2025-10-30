@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'user.dart';
+import '../services/config_service.dart';
 
 class OwnerStub {
   final int id;
@@ -72,7 +73,11 @@ class Event {
   OwnerStub? get owner => OwnerStub(id: ownerId, fullName: ownerName, isPublic: isOwnerPublic ?? false, profilePicture: ownerProfilePicture);
 
   List<dynamic> get attendees => attendeesList ?? [];
-  bool get canInviteUsers => true;
+  bool get canInviteUsers {
+    final currentUserId = ConfigService.instance.currentUserId;
+    // Can invite if: owner OR admin
+    return ownerId == currentUserId || interactionRole == 'admin';
+  }
   List<dynamic> get recurrencePatterns => [];
 
   // Interaction getters (from backend data)

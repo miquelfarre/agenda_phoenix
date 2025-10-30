@@ -166,8 +166,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
           print('🔔 [EventDetail] Event ${updatedEvent.name} updated via realtime');
           setState(() {
             currentEvent = updatedEvent;
-            _detailedEvent = updatedEvent;
+            // Don't replace _detailedEvent - reload from API to preserve full details
           });
+          // Reload detailed event data to preserve all fields (interactions, owner info, etc.)
+          _loadDetailData();
         }
       });
     } catch (e) {
@@ -271,7 +273,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
 
             if (isEventOwner) ...[const SizedBox(height: 24), _buildCancellationNotificationSection()] else ...[const SizedBox(height: 24), _buildRemoveFromListButton()],
 
-            if (widget.event.owner?.isPublic == true && widget.event.owner?.fullName != null) ...[
+            if ((_detailedEvent ?? currentEvent).owner?.isPublic == true && (_detailedEvent ?? currentEvent).owner?.fullName != null) ...[
               const SizedBox(height: 32),
               Consumer(
                 builder: (context, ref, child) {
