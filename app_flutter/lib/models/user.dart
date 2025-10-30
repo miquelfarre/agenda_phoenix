@@ -49,7 +49,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     final instagramName = json['instagram_name'] as String? ?? json['username'] as String?;
-    final fullName = json['full_name'] as String? ?? json['contact_name'] as String?;
+    final fullName = json['full_name'] as String? ?? json['contact_name'] as String? ?? json['name'] as String?;
 
     return User(
       id: json['id'],

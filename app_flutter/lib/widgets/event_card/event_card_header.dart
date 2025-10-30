@@ -45,7 +45,8 @@ class EventCardHeader extends ConsumerWidget {
     String inviterText = '';
     if (event.invitedByUserId != null) {
       // Find inviter name in attendees list
-      final inviterName = event.attendees.firstWhere((a) => a is Map && a['id'] == event.invitedByUserId, orElse: () => null)?['name'];
+      final inviter = event.attendees.firstWhere((a) => a is Map && a['id'] == event.invitedByUserId, orElse: () => null);
+      final inviterName = inviter != null ? (inviter['full_name'] ?? inviter['name']) : null;
       if (inviterName != null) {
         inviterText = ' • $inviterName';
       }
@@ -177,7 +178,7 @@ class EventCardAttendeesRow extends ConsumerWidget {
     final List<Map<String, dynamic>> attendeeData = [];
     for (final a in event.attendees) {
       if (a is User) {
-        attendeeData.add({'id': a.id, 'name': a.fullName, 'profile_picture': a.profilePicture});
+        attendeeData.add({'id': a.id, 'full_name': a.fullName, 'profile_picture': a.profilePicture});
       } else if (a is Map<String, dynamic>) {
         attendeeData.add(a);
       }
@@ -203,7 +204,7 @@ class EventCardAttendeesRow extends ConsumerWidget {
               spacing: 6,
               runSpacing: 4,
               children: otherAttendees.take(6).map((a) {
-                final name = (a['name'] as String?) ?? '';
+                final name = (a['full_name'] as String?) ?? (a['name'] as String?) ?? '';
                 final initials = name.trim().isNotEmpty ? name.trim().split(RegExp(r"\s+")).first[0].toUpperCase() : '?';
                 return Container(
                   width: 26,

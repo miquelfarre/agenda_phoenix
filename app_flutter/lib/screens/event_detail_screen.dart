@@ -92,8 +92,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
         print('🔍 DEBUG: isEventOwner=$isEventOwner, interactions null=${data['interactions'] == null}');
       }
 
+      // Get other invitations if available (owner, admin, or accepted participant can see them)
       List<EventInteraction>? otherInvitations;
-      if (isEventOwner && data['interactions'] != null) {
+      if (data['interactions'] != null) {
+        // Backend now returns interactions for users who can invite (owner/admin/accepted participant)
         otherInvitations = (data['interactions'] as List).map((i) => EventInteraction.fromJson(i)).where((i) => i.userId != currentUserId).toList();
       }
 
@@ -505,18 +507,34 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
   Widget _buildAttendeesSection() {
     final event = _detailedEvent ?? currentEvent;
 
+    print('🔍 DEBUG ATTENDEES: event.attendees count = ${event.attendees.length}');
+    print('🔍 DEBUG ATTENDEES: event.attendees = ${event.attendees}');
+
     final List<User> attendeeUsers = [];
     for (final a in event.attendees) {
       if (a is User) {
+        print('🔍 DEBUG ATTENDEES: Found User object - id=${a.id}, fullName=${a.fullName}');
         attendeeUsers.add(a);
       } else if (a is Map<String, dynamic>) {
+        print('🔍 DEBUG ATTENDEES: Found Map - data=$a');
         try {
-          attendeeUsers.add(User.fromJson(a));
-        } catch (_) {}
+          final user = User.fromJson(a);
+          print('🔍 DEBUG ATTENDEES: Parsed User - id=${user.id}, fullName=${user.fullName}');
+          attendeeUsers.add(user);
+        } catch (e) {
+          print('🔍 DEBUG ATTENDEES: Failed to parse user - error=$e');
+        }
       }
     }
 
+    print('🔍 DEBUG ATTENDEES: Total attendeeUsers = ${attendeeUsers.length}');
+    for (final u in attendeeUsers) {
+      print('🔍 DEBUG ATTENDEES: User ${u.id}: fullName="${u.fullName}", profilePicture="${u.profilePicture}"');
+    }
+
     final otherAttendees = attendeeUsers.where((u) => u.id != currentUserId).toList();
+
+    print('🔍 DEBUG ATTENDEES: otherAttendees after filter = ${otherAttendees.length}');
 
     if (otherAttendees.isEmpty) return const SizedBox.shrink();
 

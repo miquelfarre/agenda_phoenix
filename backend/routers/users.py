@@ -421,7 +421,8 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
                 attendees_map[event_id] = []
             attendees_map[event_id].append({
                 "id": user_obj.id,
-                "name": contact_obj.name if contact_obj else None,
+                "full_name": contact_obj.name if contact_obj else None,
+                "username": user_obj.instagram_name,
                 "profile_picture": user_obj.profile_picture_url
             })
 

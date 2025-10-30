@@ -162,11 +162,27 @@ async def get_event(
                 is_admin = True
 
         print(f"🔍 DEBUG BACKEND: is_admin = {is_admin}")
-        print(f"🔍 DEBUG BACKEND: Will enter owner/admin block = {is_owner or is_admin}")
 
-        # If user is owner or admin, get invitation stats
+        # Check if user is an accepted participant who can invite others
+        user_interaction_for_permission = db.query(EventInteraction).filter(
+            EventInteraction.event_id == event_id,
+            EventInteraction.user_id == current_user_id
+        ).first()
+
+        can_invite = False
         if is_owner or is_admin:
-            print(f"🔍 DEBUG BACKEND: Entering OWNER/ADMIN block")
+            can_invite = True
+        elif user_interaction_for_permission:
+            # Accepted participant (subscribed/joined) can invite and see all invitations
+            if user_interaction_for_permission.interaction_type in ["subscribed", "joined"] and user_interaction_for_permission.status == "accepted":
+                can_invite = True
+
+        print(f"🔍 DEBUG BACKEND: can_invite = {can_invite}")
+        print(f"🔍 DEBUG BACKEND: Will enter owner/admin/participant block = {can_invite}")
+
+        # If user is owner, admin, or accepted participant, get invitation stats
+        if can_invite:
+            print(f"🔍 DEBUG BACKEND: Entering OWNER/ADMIN/PARTICIPANT block (can_invite={can_invite})")
             stats = event_interaction.get_invitation_stats(db, event_id=event_id)
             response_data["invitation_stats"] = stats
 
@@ -289,17 +305,24 @@ async def get_event(
         ).all()
 
         attendees = []
+        print(f"🔍 DEBUG BACKEND: Building attendees list from {len(accepted_interactions)} accepted interactions")
         for interaction in accepted_interactions:
             user_obj = user.get(db, id=interaction.user_id)
+            print(f"🔍 DEBUG BACKEND: Processing interaction for user_id={interaction.user_id}, user_obj found={user_obj is not None}")
             if user_obj:
                 # Get user name from contact or username
                 user_contact = None
                 user_name = user_obj.username or f"User {user_obj.id}"
+                print(f"🔍 DEBUG BACKEND: user_obj.username={user_obj.username}, user_obj.contact_id={user_obj.contact_id}")
                 if user_obj.contact_id:
                     from crud import contact as contact_crud
                     user_contact = contact_crud.get(db, id=user_obj.contact_id)
+                    print(f"🔍 DEBUG BACKEND: contact found={user_contact is not None}")
+                    if user_contact:
+                        print(f"🔍 DEBUG BACKEND: contact.name={user_contact.name}")
                     user_name = user_contact.name if user_contact else user_name
 
+                print(f"🔍 DEBUG BACKEND: Final user_name={user_name}, profile_picture={user_obj.profile_picture_url}")
                 attendees.append({
                     "id": user_obj.id,
                     "full_name": user_name,
