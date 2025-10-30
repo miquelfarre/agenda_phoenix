@@ -319,13 +319,18 @@ class EventInteraction(Base):
 
         Returns True if:
         - read_at is NULL (not yet read) AND
-        - created_at is within the last 24 hours
+        - created_at is within the last 24 hours AND
+        - user is NOT the owner of the event (own events should never be "new")
         """
         if self.read_at is not None:
             # Already read
             return False
 
         if self.created_at is None:
+            return False
+
+        # If the user is the event owner, it's never "new" (own events don't count as new)
+        if self.event and self.event.owner_id == self.user_id:
             return False
 
         # Check if created within last 24 hours

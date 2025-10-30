@@ -108,6 +108,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
         print('🔍 DEBUG: _interaction assigned = $_interaction');
         print('🔍 DEBUG: _interaction?.wasInvited = ${_interaction?.wasInvited}');
         print('🔍 DEBUG: _interaction?.inviterId = ${_interaction?.inviterId}');
+
+        // Mark interaction as read if it exists and hasn't been read yet
+        if (interaction != null && !interaction.viewed) {
+          _markInteractionAsRead();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -115,6 +120,18 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
           _isLoadingComposite = false;
         });
       }
+    }
+  }
+
+  Future<void> _markInteractionAsRead() async {
+    if (currentEvent.id == null || _interaction == null) return;
+
+    try {
+      await ref.read(eventRepositoryProvider).markAsViewed(currentEvent.id!);
+      print('✅ [EventDetail] Interaction marked as read');
+    } catch (e) {
+      print('⚠️ [EventDetail] Error marking interaction as read: $e');
+      // Don't show error to user - this is a background operation
     }
   }
 
