@@ -30,8 +30,6 @@ class EventInteraction {
   final String? personalNote;
   final DateTime? noteUpdatedAt;
 
-  final bool favorited;
-  final DateTime? favoritedAt;
   final bool hidden;
   final DateTime? hiddenAt;
 
@@ -58,8 +56,6 @@ class EventInteraction {
     this.lastViewedAt,
     this.personalNote,
     this.noteUpdatedAt,
-    this.favorited = false,
-    this.favoritedAt,
     this.hidden = false,
     this.hiddenAt,
     required this.createdAt,
@@ -81,7 +77,7 @@ class EventInteraction {
   bool get hasDecided => isAccepted || isDeclined;
 
   bool get hasAnyInteraction =>
-      wasInvited || viewed || hasNote || favorited || hidden;
+      wasInvited || viewed || hasNote || hidden;
 
   factory EventInteraction.fromJson(Map<String, dynamic> json) {
     final role = json['role'];
@@ -119,8 +115,6 @@ class EventInteraction {
       noteUpdatedAt: json['updated_at'] != null
           ? DateTimeUtils.parseAndNormalize(json['updated_at'])
           : null,
-      favorited: false,
-      favoritedAt: null,
       hidden: false,
       hiddenAt: null,
       createdAt: json['created_at'] != null
@@ -153,8 +147,6 @@ class EventInteraction {
       'last_viewed_at': lastViewedAt?.toIso8601String(),
       'personal_note': personalNote,
       'note_updated_at': noteUpdatedAt?.toIso8601String(),
-      'favorited': favorited,
-      'favorited_at': favoritedAt?.toIso8601String(),
       'hidden': hidden,
       'hidden_at': hiddenAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
@@ -182,8 +174,6 @@ class EventInteraction {
     DateTime? lastViewedAt,
     String? personalNote,
     DateTime? noteUpdatedAt,
-    bool? favorited,
-    DateTime? favoritedAt,
     bool? hidden,
     DateTime? hiddenAt,
     DateTime? createdAt,
@@ -210,8 +200,6 @@ class EventInteraction {
       lastViewedAt: lastViewedAt ?? this.lastViewedAt,
       personalNote: personalNote ?? this.personalNote,
       noteUpdatedAt: noteUpdatedAt ?? this.noteUpdatedAt,
-      favorited: favorited ?? this.favorited,
-      favoritedAt: favoritedAt ?? this.favoritedAt,
       hidden: hidden ?? this.hidden,
       hiddenAt: hiddenAt ?? this.hiddenAt,
       createdAt: createdAt ?? this.createdAt,
@@ -223,7 +211,7 @@ class EventInteraction {
   String toString() {
     return 'EventInteraction(userId: $userId, eventId: $eventId, '
         'status: $participationStatus, viewed: $viewed, '
-        'hasNote: $hasNote, favorited: $favorited, hidden: $hidden)';
+        'hasNote: $hasNote, hidden: $hidden)';
   }
 
   @override
@@ -250,8 +238,6 @@ class EventInteraction {
         other.lastViewedAt == lastViewedAt &&
         other.personalNote == personalNote &&
         other.noteUpdatedAt == noteUpdatedAt &&
-        other.favorited == favorited &&
-        other.favoritedAt == favoritedAt &&
         other.hidden == hidden &&
         other.hiddenAt == hiddenAt &&
         other.createdAt == createdAt &&
@@ -280,8 +266,6 @@ class EventInteraction {
       lastViewedAt,
       personalNote,
       noteUpdatedAt,
-      favorited,
-      favoritedAt,
       hidden,
       hiddenAt,
       createdAt,

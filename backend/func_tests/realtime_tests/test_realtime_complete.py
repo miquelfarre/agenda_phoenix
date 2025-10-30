@@ -374,7 +374,7 @@ class TestEventInteractionsRealtimeUPDATE:
         wait_for_realtime()
 
         # Mark as viewed
-        response = api_request("PATCH", f"/interactions/{interaction_id}/mark-read", user_id=invitee_id)
+        response = api_request("POST", f"/interactions/{interaction_id}/mark-read", user_id=invitee_id)
         assert response.status_code == 200
 
         wait_for_realtime()
@@ -390,52 +390,8 @@ class TestEventInteractionsRealtimeUPDATE:
         # Cleanup
         api_request("DELETE", f"/events/{event_id}", user_id=owner_id)
 
-    def test_toggle_favorite_triggers_realtime_update(self):
-        """PATCH /interactions/X (favorite) → UPDATE favorited → Realtime → favorited actualizado"""
-        owner_id = 1
-        invitee_id = 2
-
-        # Create and invite
-        event_data = {
-            "name": "Event to Favorite",
-            "start_date": "2025-12-01T10:00:00Z",
-            "event_type": "regular",
-            "owner_id": owner_id,
-        }
-        response = api_request("POST", "/events", json_data=event_data, user_id=owner_id)
-        event_id = response.json()["id"]
-
-        invitation_data = {
-            "event_id": event_id,
-            "user_id": invitee_id,
-            "interaction_type": "invited",
-            "status": "accepted",
-        }
-        response = api_request("POST", "/interactions", json_data=invitation_data, user_id=owner_id)
-        interaction_id = response.json()["id"]
-
-        wait_for_realtime()
-
-        # Toggle favorite
-        favorite_data = {"favorited": True}
-        response = api_request("PATCH", f"/interactions/{interaction_id}", json_data=favorite_data, user_id=invitee_id)
-        assert response.status_code == 200
-
-        wait_for_realtime()
-
-        # Verify favorited
-        events = get_user_events(invitee_id)
-        event = next((e for e in events if e["id"] == event_id), None)
-
-        assert event["interaction"].get("favorited") is True, "favorited should be True"
-
-        print(f"✅ UPDATE interaction (favorite): favorited updated via Realtime")
-
-        # Cleanup
-        api_request("DELETE", f"/events/{event_id}", user_id=owner_id)
-
     def test_set_personal_note_triggers_realtime_update(self):
-        """PATCH /interactions/X (personal_note) → UPDATE personal_note → Realtime → nota actualizada"""
+        """PATCH /interactions/X (note) → UPDATE note → Realtime → nota actualizada"""
         owner_id = 1
         invitee_id = 2
 
@@ -461,7 +417,7 @@ class TestEventInteractionsRealtimeUPDATE:
         wait_for_realtime()
 
         # Set note
-        note_data = {"personal_note": "My personal note"}
+        note_data = {"note": "My personal note"}
         response = api_request("PATCH", f"/interactions/{interaction_id}", json_data=note_data, user_id=invitee_id)
         assert response.status_code == 200
 
@@ -471,9 +427,9 @@ class TestEventInteractionsRealtimeUPDATE:
         events = get_user_events(invitee_id)
         event = next((e for e in events if e["id"] == event_id), None)
 
-        assert event["interaction"].get("personal_note") == "My personal note"
+        assert event["interaction"].get("note") == "My personal note"
 
-        print(f"✅ UPDATE interaction (note): personal_note updated via Realtime")
+        print(f"✅ UPDATE interaction (note): note updated via Realtime")
 
         # Cleanup
         api_request("DELETE", f"/events/{event_id}", user_id=owner_id)

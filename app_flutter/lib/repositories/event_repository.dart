@@ -199,27 +199,6 @@ class EventRepository {
     }
   }
 
-  Future<void> toggleFavorite(int eventId) async {
-    try {
-      final currentUserId = ConfigService.instance.currentUserId;
-      final interactions = _extractInteractionsFromEvents();
-      final interaction = interactions.firstWhere(
-        (i) => i.eventId == eventId && i.userId == currentUserId,
-        orElse: () => throw exceptions.NotFoundException(message: 'Interaction not found'),
-      );
-      final newFavoriteStatus = !interaction.favorited;
-      print('⭐ [EventRepository] ${newFavoriteStatus ? 'Adding' : 'Removing'} favorite for event $eventId');
-      await _apiClient.patchInteraction(interaction.id!, {'favorited': newFavoriteStatus});
-      await _fetchAndSync();
-      _emitInteractions();
-      print('✅ [EventRepository] Favorite toggled for event $eventId');
-    } catch (e, stackTrace) {
-      print('❌ [EventRepository] Error toggling favorite: $e');
-      print('📍 [EventRepository] Stack trace: $stackTrace');
-      rethrow;
-    }
-  }
-
   Future<void> setPersonalNote(int eventId, String note) async {
     try {
       print('📝 [EventRepository] Setting personal note for event $eventId');
