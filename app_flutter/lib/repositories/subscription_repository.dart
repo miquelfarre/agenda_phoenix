@@ -129,12 +129,7 @@ class SubscriptionRepository {
 
   Future<void> deleteSubscription({required int targetUserId}) async {
     try {
-      print('🗑️ [SubscriptionRepository] deleteSubscription START - userId: $targetUserId');
-
-      final userBefore = _cachedUsers.where((u) => u.id == targetUserId).firstOrNull;
-      print('🗑️ [SubscriptionRepository] User in cache: ${userBefore != null ? '"${userBefore.fullName ?? userBefore.instagramName}"' : 'NOT FOUND'}');
-      print('🗑️ [SubscriptionRepository] Cache size before: ${_cachedUsers.length}');
-
+      print('🗑️ [SubscriptionRepository] Deleting subscription to user $targetUserId');
       final currentUserId = ConfigService.instance.currentUserId;
       final interactions = await _apiClient.fetchInteractions(
         userId: currentUserId,
@@ -147,9 +142,8 @@ class SubscriptionRepository {
       );
 
       await _apiClient.deleteInteraction(targetInteraction['id']);
-      removeSubscriptionFromCache(targetUserId);
-
-      print('✅ [SubscriptionRepository] Subscription deleted - User ID $targetUserId');
+      await _fetchAndSync();
+      print('✅ [SubscriptionRepository] Subscription deleted');
     } catch (e, stackTrace) {
       print('❌ [SubscriptionRepository] Error deleting subscription: $e');
       print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
@@ -176,27 +170,6 @@ class SubscriptionRepository {
     }
   }
 
-  void removeSubscriptionFromCache(int userId) {
-    print('🗑️ [SubscriptionRepository] removeSubscriptionFromCache START - userId: $userId');
-
-    final userBefore = _cachedUsers.where((u) => u.id == userId).firstOrNull;
-    print('🗑️ [SubscriptionRepository] User in cache: ${userBefore != null ? '"${userBefore.fullName ?? userBefore.instagramName}"' : 'NOT FOUND'}');
-
-    final initialCount = _cachedUsers.length;
-    print('🗑️ [SubscriptionRepository] Cache size before: $initialCount');
-
-    _cachedUsers.removeWhere((user) => user.id == userId);
-    print('🗑️ [SubscriptionRepository] Cache size after: ${_cachedUsers.length}');
-
-    _box?.delete(userId);
-    print('🗑️ [SubscriptionRepository] Deleted from Hive box');
-
-    if (_cachedUsers.length < initialCount) {
-      print('🗑️ [SubscriptionRepository] Emitting updated subscriptions to stream...');
-      _emitCurrentSubscriptions();
-      print('✅ [SubscriptionRepository] User manually removed and stream emitted - ID $userId');
-    }
-  }
 
   Future<void> _startRealtimeSubscription() async {
     // NOTE: We no longer subscribe to event_interactions here because EventRepository

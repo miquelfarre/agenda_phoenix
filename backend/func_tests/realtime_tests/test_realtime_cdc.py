@@ -25,7 +25,7 @@ DB_CONFIG = {
     "port": int(os.getenv("DB_PORT", "5432")),
     "database": os.getenv("POSTGRES_DB", "postgres"),
     "user": os.getenv("POSTGRES_USER", "postgres"),
-    "password": os.getenv("POSTGRES_PASSWORD", "yoursupersecretandlongpostgrespassword"),
+    "password": os.getenv("POSTGRES_PASSWORD", "your-super-secret-and-long-postgres-password"),
 }
 
 

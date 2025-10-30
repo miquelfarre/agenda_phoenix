@@ -223,13 +223,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   Future<void> _removeUser(User user, WidgetRef ref) async {
     final l10n = context.l10n;
     try {
-      // Use new bulk unsubscribe endpoint
-      await ApiClient().delete('/users/${user.id}/subscribe');
-
+      await ref.read(subscriptionRepositoryProvider).deleteSubscription(targetUserId: user.id);
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
-
-      // Manually remove from cache for immediate UI update
-      ref.read(subscriptionRepositoryProvider).removeSubscriptionFromCache(user.id);
     } catch (e) {
       String cleanError = e.toString().replaceFirst('Exception: ', '');
       _showErrorMessage(cleanError);

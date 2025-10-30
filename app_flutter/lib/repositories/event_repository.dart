@@ -122,8 +122,20 @@ class EventRepository {
 
   Future<void> deleteEvent(int eventId) async {
     await _apiClient.deleteEvent(eventId);
-    // Local cache will be updated by the realtime event, or by manual removal for non-owners
-    // For owners, the realtime event should be sufficient.
+    await _fetchAndSync();
+  }
+
+  Future<void> leaveEvent(int eventId) async {
+    try {
+      print('👋 [EventRepository] Leaving event $eventId');
+      await _apiClient.delete('/events/$eventId/interaction');
+      await _fetchAndSync();
+      print('✅ [EventRepository] Left event $eventId');
+    } catch (e, stackTrace) {
+      print('❌ [EventRepository] Error leaving event: $e');
+      print('📍 [EventRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   // --- Event Interaction Methods ---
@@ -312,29 +324,6 @@ class EventRepository {
     return eventHive?.toEvent();
   }
 
-  void removeEventFromCache(int eventId) {
-    print(
-      '🗑️ [EventRepository] removeEventFromCache START - eventId: $eventId',
-    );
-
-    final eventBefore = _cachedEvents.where((e) => e.id == eventId).firstOrNull;
-    print(
-      '🗑️ [EventRepository] Event in cache: ${eventBefore != null ? '"${eventBefore.name}"' : 'NOT FOUND'}',
-    );
-    print('🗑️ [EventRepository] Cache size before: ${_cachedEvents.length}');
-
-    _cachedEvents.removeWhere((e) => e.id == eventId);
-    print('🗑️ [EventRepository] Cache size after: ${_cachedEvents.length}');
-
-    _box?.delete(eventId);
-    print('🗑️ [EventRepository] Deleted from Hive box');
-
-    print('🗑️ [EventRepository] Emitting updated events to stream...');
-    _emitCurrentEvents();
-    print(
-      '✅ [EventRepository] Event manually removed and stream emitted - ID $eventId',
-    );
-  }
 
   Future<void> _startRealtimeSubscription() async {
     _realtimeChannel = RealtimeUtils.subscribeTable(

@@ -646,12 +646,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         print('👑 [_deleteEvent] User is owner. Deleting event via eventRepositoryProvider.');
         await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
       } else {
-        print('👤 [_deleteEvent] User is not owner. Deleting interaction via API.');
-        await ref
-            .read(apiClientProvider)
-            .delete('/events/${event.id}/interaction');
-        print('✅ [_deleteEvent] API call successful. Manually removing from cache.');
-        ref.read(eventRepositoryProvider).removeEventFromCache(event.id!);
+        print('👤 [_deleteEvent] User is not owner. Leaving event via eventRepositoryProvider.');
+        await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
       }
 
       if (shouldNavigate && mounted) {

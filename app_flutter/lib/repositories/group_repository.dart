@@ -254,8 +254,7 @@ class GroupRepository {
       }
       final membershipId = memberships[0]['id'];
       await _apiClient.deleteGroupMembership(membershipId);
-      // No full sync, just remove locally for faster UI update
-      removeGroupFromCache(groupId);
+      await _fetchAndSync();
       print('✅ [GroupRepository] User left group $groupId');
     } catch (e, stackTrace) {
       print('❌ [GroupRepository] Error leaving group: $e');
@@ -314,29 +313,6 @@ class GroupRepository {
 
   // --- Local cache and realtime ---
 
-  void removeGroupFromCache(int groupId) {
-    print('🗑️ [GroupRepository] removeGroupFromCache START - groupId: $groupId');
-
-    final groupBefore = _cachedGroups.where((g) => g.id == groupId).firstOrNull;
-    print('🗑️ [GroupRepository] Group in cache: ${groupBefore != null ? '"${groupBefore.name}"' : 'NOT FOUND'}');
-
-    final initialCount = _cachedGroups.length;
-    print('🗑️ [GroupRepository] Cache size before: $initialCount');
-
-    _cachedGroups.removeWhere((group) => group.id == groupId);
-    print('🗑️ [GroupRepository] Cache size after: ${_cachedGroups.length}');
-
-    _box?.delete(groupId);
-    print('🗑️ [GroupRepository] Deleted from Hive box');
-
-    if (_cachedGroups.length < initialCount) {
-      print('🗑️ [GroupRepository] Emitting updated groups to stream...');
-      _emitCurrentGroups();
-      print('✅ [GroupRepository] Group manually removed and stream emitted - ID $groupId');
-    } else {
-      print('⚠️ [GroupRepository] Group $groupId not found in cache. No update emitted.');
-    }
-  }
 
   Future<void> _startRealtimeSubscription() async {
     _realtimeChannel = _supabaseService.client

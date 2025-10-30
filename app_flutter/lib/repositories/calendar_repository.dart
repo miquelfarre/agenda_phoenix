@@ -193,7 +193,7 @@ class CalendarRepository {
 
   Future<void> unsubscribeFromCalendar(int calendarId) async {
     try {
-      print('🗑️ [CalendarRepository] unsubscribeFromCalendar START - calendarId: $calendarId');
+      print('🗑️ [CalendarRepository] Unsubscribing from calendar ID $calendarId');
       final memberships = await _apiClient.fetchCalendarMemberships(calendarId);
       if (memberships.isEmpty) {
         print('⚠️ [CalendarRepository] No membership found, already unsubscribed');
@@ -201,7 +201,7 @@ class CalendarRepository {
       }
       final membershipId = memberships[0]['id'];
       await _apiClient.deleteCalendarMembership(membershipId);
-      removeCalendarFromCache(calendarId);
+      await _fetchAndSync();
       print('✅ [CalendarRepository] Unsubscribed from calendar ID $calendarId');
     } catch (e, stackTrace) {
       print('❌ [CalendarRepository] Error unsubscribing from calendar: $e');
@@ -234,27 +234,6 @@ class CalendarRepository {
     }
   }
 
-  void removeCalendarFromCache(int calendarId) {
-    print('🗑️ [CalendarRepository] removeCalendarFromCache START - calendarId: $calendarId');
-
-    final calendarBefore = _cachedCalendars.where((c) => c.id == calendarId.toString()).firstOrNull;
-    print('🗑️ [CalendarRepository] Calendar in cache: ${calendarBefore != null ? '"${calendarBefore.name}"' : 'NOT FOUND'}');
-
-    final initialCount = _cachedCalendars.length;
-    print('🗑️ [CalendarRepository] Cache size before: $initialCount');
-
-    _cachedCalendars.removeWhere((c) => c.id == calendarId.toString());
-    print('🗑️ [CalendarRepository] Cache size after: ${_cachedCalendars.length}');
-
-    _box?.delete(calendarId.toString());
-    print('🗑️ [CalendarRepository] Deleted from Hive box');
-
-    if (_cachedCalendars.length < initialCount) {
-      print('🗑️ [CalendarRepository] Emitting updated calendars to stream...');
-      _emitCurrentCalendars();
-      print('✅ [CalendarRepository] Calendar manually removed and stream emitted - ID $calendarId');
-    }
-  }
 
   // --- Realtime ---
 

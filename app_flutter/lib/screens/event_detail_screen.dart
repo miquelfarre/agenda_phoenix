@@ -795,38 +795,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
 
     try {
-      print(
-        '👋 [EventDetail] Calling DELETE /events/${event.id}/interaction...',
-      );
-      await ref
-          .read(apiClientProvider)
-          .delete('/events/${event.id}/interaction');
-      print('✅ [EventDetail] DELETE interaction completed successfully');
-
-      print(
-        '👋 [EventDetail] Manually removing event from EventRepository cache...',
-      );
-      final repository = ref.read(eventRepositoryProvider);
-      final userId = ConfigService.instance.currentUserId;
-
-      // Manually remove the event from cache since realtime DELETE doesn't work
-      if (event.ownerId != userId) {
-        print(
-          '👋 [EventDetail] User is not owner, removing event ${event.id} from cache',
-        );
-        repository.removeEventFromCache(event.id!);
-      } else {
-        print(
-          '👋 [EventDetail] User is owner, keeping event but clearing interaction data',
-        );
-      }
-
-      print('👋 [EventDetail] Realtime handles refresh automatically');
-      // Realtime handles refresh automatically via EventRepository
-
-      print('👋 [EventDetail] Reloading detail data...');
-      await _loadDetailData();
-      print('✅ [EventDetail] Detail data reloaded');
+      print('👋 [EventDetail] Leaving event via EventRepository...');
+      await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+      print('✅ [EventDetail] Left event successfully');
 
       if (shouldNavigate && mounted) {
         print('👋 [EventDetail] Navigating back...');
