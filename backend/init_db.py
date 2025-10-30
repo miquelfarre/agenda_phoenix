@@ -817,7 +817,7 @@ def insert_sample_data():
         event_cumple_sara_clase = Event(
             name="Cumpleaños clase Sara",
             description="Celebración del cumpleaños de la clase de Sara",
-            start_date=datetime(2025, 11, 16, 17, 0),
+            start_date=in_21_days.replace(hour=17, minute=0),
             event_type="regular",
             owner_id=sonia.id,
         )
@@ -825,7 +825,7 @@ def insert_sample_data():
         recurring_promociona_madrid = Event(
             name="Promociona Madrid",
             description="Evento promocional diario",
-            start_date=datetime(2025, 11, 16, 9, 0),
+            start_date=in_21_days.replace(hour=9, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
         )
@@ -833,7 +833,7 @@ def insert_sample_data():
         event_compra_semanal = Event(
             name="Compra semanal sábado",
             description="Compra semanal en el supermercado",
-            start_date=datetime(2025, 10, 25, 10, 0),
+            start_date=in_5_days.replace(hour=10, minute=0),
             event_type="regular",
             owner_id=sonia.id,
         )
@@ -854,7 +854,7 @@ def insert_sample_data():
                 {"day": 5, "day_name": "Sábado", "time": "09:00"},
                 {"day": 6, "day_name": "Domingo", "time": "09:00"},
             ],
-            recurrence_end_date=datetime(2025, 11, 21, 23, 59),
+            recurrence_end_date=(in_21_days + timedelta(days=5)).replace(hour=23, minute=59),
         )
         db.add(config_promociona)
         db.flush()
@@ -869,35 +869,35 @@ def insert_sample_data():
         miquel_gym = Event(
             name="Gimnasio",
             description="Sesión de entrenamiento en el gimnasio",
-            start_date=datetime(2025, 10, 28, 7, 0),
+            start_date=in_2_days.replace(hour=7, minute=0),
             event_type="regular",
             owner_id=miquel.id,
         )
         miquel_dentist = Event(
             name="Dentista",
             description="Revisión dental anual",
-            start_date=datetime(2025, 11, 5, 10, 30),
+            start_date=in_7_days.replace(hour=10, minute=30),
             event_type="regular",
             owner_id=miquel.id,
         )
         miquel_dinner = Event(
             name="Cena con amigos",
             description="Cena en restaurante japonés",
-            start_date=datetime(2025, 11, 8, 21, 0),
+            start_date=in_10_days.replace(hour=21, minute=0),
             event_type="regular",
             owner_id=miquel.id,
         )
         miquel_meeting = Event(
             name="Reunión de proyecto",
             description="Revisión trimestral del proyecto",
-            start_date=datetime(2025, 11, 12, 16, 0),
+            start_date=in_14_days.replace(hour=16, minute=0),
             event_type="regular",
             owner_id=miquel.id,
         )
         miquel_weekend = Event(
             name="Escapada fin de semana",
             description="Viaje a la montaña",
-            start_date=datetime(2025, 11, 15, 9, 0),
+            start_date=in_21_days.replace(hour=9, minute=0),
             event_type="regular",
             owner_id=miquel.id,
         )
@@ -910,7 +910,7 @@ def insert_sample_data():
         ada_school = Event(
             name="Presentación escolar",
             description="Presentación de ciencias naturales",
-            start_date=datetime(2025, 10, 30, 10, 0),
+            start_date=tomorrow.replace(hour=10, minute=0),
             event_type="regular",
             owner_id=ada.id,
         )
@@ -924,7 +924,7 @@ def insert_sample_data():
         ada_party = Event(
             name="Fiesta de Halloween",
             description="Fiesta de disfraces con amigos",
-            start_date=datetime(2025, 10, 31, 18, 0),
+            start_date=in_2_days.replace(hour=18, minute=0),
             event_type="regular",
             owner_id=ada.id,
         )
@@ -951,35 +951,35 @@ def insert_sample_data():
         sara_work = Event(
             name="Reunión de equipo",
             description="Planificación sprint Q4",
-            start_date=datetime(2025, 10, 29, 9, 30),
+            start_date=tomorrow.replace(hour=9, minute=30),
             event_type="regular",
             owner_id=sara.id,
         )
         sara_lunch = Event(
             name="Almuerzo con cliente",
             description="Presentación de propuesta",
-            start_date=datetime(2025, 11, 4, 13, 0),
+            start_date=in_5_days.replace(hour=13, minute=0),
             event_type="regular",
             owner_id=sara.id,
         )
         sara_yoga = Event(
             name="Yoga",
             description="Clase de yoga y meditación",
-            start_date=datetime(2025, 11, 6, 19, 0),
+            start_date=in_7_days.replace(hour=19, minute=0),
             event_type="regular",
             owner_id=sara.id,
         )
         sara_conference = Event(
             name="Conferencia tech",
             description="Conferencia de desarrollo web",
-            start_date=datetime(2025, 11, 13, 9, 0),
+            start_date=in_14_days.replace(hour=9, minute=0),
             event_type="regular",
             owner_id=sara.id,
         )
         sara_brunch = Event(
             name="Brunch dominical",
             description="Brunch con amigas en el centro",
-            start_date=datetime(2025, 11, 17, 11, 0),
+            start_date=in_21_days.replace(hour=11, minute=0),
             event_type="regular",
             owner_id=sara.id,
         )
@@ -993,21 +993,21 @@ def insert_sample_data():
         gym_spinning = Event(
             name="Clase de Spinning",
             description="Clase intensiva de spinning - Nivel intermedio",
-            start_date=datetime(2025, 10, 28, 18, 0),
+            start_date=in_2_days.replace(hour=18, minute=0),
             event_type="regular",
             owner_id=gym_fitzone.id,
         )
         gym_yoga_morning = Event(
             name="Yoga matinal",
             description="Sesión de yoga para comenzar el día con energía",
-            start_date=datetime(2025, 11, 1, 7, 30),
+            start_date=in_3_days.replace(hour=7, minute=30),
             event_type="regular",
             owner_id=gym_fitzone.id,
         )
         gym_crossfit = Event(
             name="CrossFit Challenge",
             description="Desafío mensual de CrossFit - Todos los niveles",
-            start_date=datetime(2025, 11, 8, 19, 0),
+            start_date=in_10_days.replace(hour=19, minute=0),
             event_type="regular",
             owner_id=gym_fitzone.id,
         )
@@ -1030,7 +1030,7 @@ def insert_sample_data():
         restaurant_tasting = Event(
             name="Degustación de vinos",
             description="Cata de vinos de la Rioja con maridaje",
-            start_date=datetime(2025, 10, 30, 20, 0),
+            start_date=tomorrow.replace(hour=20, minute=0),
             event_type="regular",
             owner_id=restaurant_sabor.id,
         )
