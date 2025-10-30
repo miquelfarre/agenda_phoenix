@@ -305,8 +305,14 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         if event_id not in event_sources:
             event_sources[event_id] = "subscribed"
 
-    # Invited events
-    invited_event_ids = event_interaction.get_event_ids_by_user_type_status(db, user_id=user_id, interaction_type="invited")
+    # Invited events (exclude rejected_invitation_accepted_event - those are handled by other sources)
+    invited_interactions = event_interaction.get_by_user(
+        db, user_id=user_id, interaction_type="invited"
+    )
+    invited_event_ids = [
+        i.event_id for i in invited_interactions
+        if i.status != "rejected_invitation_accepted_event"
+    ]
     for event_id in invited_event_ids:
         if event_id not in event_sources:
             event_sources[event_id] = "invited"
