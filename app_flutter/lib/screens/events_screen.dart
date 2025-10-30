@@ -485,14 +485,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     switch (filter) {
       case 'my':
-        // My Events: events I own + events where I'm admin
+        // My Events: events I own + events where I'm admin + events with rejected_invitation_accepted_event
         return items
             .where(
               (item) =>
                   item.event.ownerId == userId ||
                   (item.event.ownerId != userId &&
                       item.interactionType == 'joined' &&
-                      item.event.interactionRole == 'admin'),
+                      item.event.interactionRole == 'admin') ||
+                  (item.invitationStatus == 'rejected_invitation_accepted_event'),
             )
             .toList();
       case 'subscribed':
@@ -508,7 +509,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             .where(
               (item) =>
                   item.event.ownerId != userId &&
-                  item.interactionType == 'invited',
+                  item.interactionType == 'invited' &&
+                  item.invitationStatus != 'rejected_invitation_accepted_event',
             )
             .toList();
       case 'all':
