@@ -24,19 +24,13 @@ class ContactDetailScreen extends ConsumerStatefulWidget {
   final User contact;
   final List<Event>? excludedEventIds;
 
-  const ContactDetailScreen({
-    super.key,
-    required this.contact,
-    this.excludedEventIds,
-  });
+  const ContactDetailScreen({super.key, required this.contact, this.excludedEventIds});
 
   @override
-  ConsumerState<ContactDetailScreen> createState() =>
-      _ContactDetailScreenState();
+  ConsumerState<ContactDetailScreen> createState() => _ContactDetailScreenState();
 }
 
-class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
-    with WidgetsBindingObserver {
+class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> with WidgetsBindingObserver {
   bool _isLoading = false;
   String? _error;
 
@@ -80,10 +74,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
 
     try {
       final currentUserId = ConfigService.instance.currentUserId;
-      await ApiClient().fetchContact(
-        widget.contact.id,
-        currentUserId: currentUserId,
-      );
+      await ApiClient().fetchContact(widget.contact.id, currentUserId: currentUserId);
 
       if (mounted) {
         setState(() {
@@ -103,12 +94,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
   List<Event> _filterAvailableEvents(List<Event> allEvents) {
     final excludedIds = <int>{};
     if (widget.excludedEventIds != null) {
-      excludedIds.addAll(
-        widget.excludedEventIds!
-            .map((e) => e.id)
-            .where((id) => id != null)
-            .cast<int>(),
-      );
+      excludedIds.addAll(widget.excludedEventIds!.map((e) => e.id).where((id) => id != null).cast<int>());
     }
 
     final allExcludedIds = {...excludedIds, ..._hiddenEventIds};
@@ -129,14 +115,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     final safeContext = context;
     final contactName = widget.contact.displayName;
     Future<void> handleBlockConfirmation() async {
-      final confirmed = await PlatformWidgets.showPlatformConfirmDialog(
-        safeContext,
-        title: l10n.blockUser,
-        message: l10n.confirmBlockUser(contactName),
-        confirmText: l10n.blockUser,
-        cancelText: l10n.cancel,
-        isDestructive: true,
-      );
+      final confirmed = await PlatformWidgets.showPlatformConfirmDialog(safeContext, title: l10n.blockUser, message: l10n.confirmBlockUser(contactName), confirmText: l10n.blockUser, cancelText: l10n.cancel, isDestructive: true);
       if (confirmed == true) {
         _blockUser();
       }
@@ -182,11 +161,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
   }
 
   void _showMessage(String message, {bool isSuccess = false}) {
-    PlatformWidgets.showSnackBar(
-      context: context,
-      message: message,
-      isError: !isSuccess,
-    );
+    PlatformWidgets.showSnackBar(context: context, message: message, isError: !isSuccess);
   }
 
   @override
@@ -207,19 +182,10 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isIOS
-                ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
-                : AppStyles.cardBackgroundColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: BoxDecoration(color: isIOS ? CupertinoColors.systemGroupedBackground.resolveFrom(context) : AppStyles.cardBackgroundColor, borderRadius: BorderRadius.circular(12)),
           child: Row(
             children: [
-              UserAvatar(
-                user: widget.contact,
-                radius: 30,
-                showOnlineIndicator: false,
-              ),
+              UserAvatar(user: widget.contact, radius: 30, showOnlineIndicator: false),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -227,22 +193,13 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                   children: [
                     Text(
                       widget.contact.displayName,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppStyles.black87,
-                        decoration: TextDecoration.none,
-                      ),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppStyles.black87, decoration: TextDecoration.none),
                     ),
                     if (widget.contact.instagramName?.isNotEmpty == true) ...[
                       const SizedBox(height: 4),
                       Text(
                         '@${widget.contact.instagramName}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppStyles.grey600,
-                          decoration: TextDecoration.none,
-                        ),
+                        style: TextStyle(fontSize: 14, color: AppStyles.grey600, decoration: TextDecoration.none),
                       ),
                     ],
                   ],
@@ -256,9 +213,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
           child: Builder(
             builder: (context) {
               if (_isLoading) {
-                return Center(
-                  child: PlatformWidgets.platformLoadingIndicator(),
-                );
+                return Center(child: PlatformWidgets.platformLoadingIndicator());
               }
 
               if (_error != null) {
@@ -266,38 +221,17 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Error loading data',
-                        style: TextStyle(
-                          color: AppStyles.grey600,
-                          fontSize: 16,
-                        ),
-                      ),
+                      Text('Error loading data', style: TextStyle(color: AppStyles.grey600, fontSize: 16)),
                       const SizedBox(height: 16),
-                      CupertinoButton(
-                        onPressed: _loadContactDetail,
-                        child: Text(l10n.retry),
-                      ),
+                      CupertinoButton(onPressed: _loadContactDetail, child: Text(l10n.retry)),
                     ],
                   ),
                 );
               }
 
               final allEventsAsync = ref.watch(eventsStreamProvider);
-              final allEvents = allEventsAsync.when(
-                data: (events) => events,
-                loading: () => <Event>[],
-                error: (error, stack) => <Event>[],
-              );
-              final contactEvents = allEvents
-                  .where(
-                    (e) => e.attendees.any(
-                      (a) =>
-                          (a is User && a.id == widget.contact.id) ||
-                          (a is Map && a['id'] == widget.contact.id),
-                    ),
-                  )
-                  .toList();
+              final allEvents = allEventsAsync.when(data: (events) => events, loading: () => <Event>[], error: (error, stack) => <Event>[]);
+              final contactEvents = allEvents.where((e) => e.attendees.any((a) => (a is User && a.id == widget.contact.id) || (a is Map && a['id'] == widget.contact.id))).toList();
               final availableEvents = _filterAvailableEvents(contactEvents);
 
               return CustomScrollView(
@@ -308,22 +242,14 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                       padding: const EdgeInsets.all(16),
                       child: Text(
                         l10n.events,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppStyles.black87,
-                          decoration: TextDecoration.none,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppStyles.black87, decoration: TextDecoration.none),
                       ),
                     ),
                   ),
 
                   if (availableEvents.isEmpty)
                     SliverToBoxAdapter(
-                      child: EmptyState(
-                        message: l10n.noEventsMessage,
-                        icon: CupertinoIcons.calendar,
-                      ),
+                      child: EmptyState(message: l10n.noEventsMessage, icon: CupertinoIcons.calendar),
                     )
                   else
                     SliverList(
@@ -332,13 +258,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                           return Container(
                             margin: const EdgeInsets.all(16),
                             width: double.infinity,
-                            child: AdaptiveButton(
-                              config:
-                                  AdaptiveButtonConfigExtended.destructive(),
-                              text: l10n.blockUser,
-                              enabled: !_blockingUser,
-                              onPressed: _showBlockConfirmation,
-                            ),
+                            child: AdaptiveButton(config: AdaptiveButtonConfigExtended.destructive(), text: l10n.blockUser, enabled: !_blockingUser, onPressed: _showBlockConfirmation),
                           );
                         }
 
@@ -346,11 +266,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                         return EventCard(
                           event: event,
                           onTap: () => _navigateToEventDetail(event),
-                          config: EventCardConfig(
-                            onDelete:
-                                (event, {bool shouldNavigate = false}) =>
-                                    _hideEvent(event),
-                          ),
+                          config: EventCardConfig(onDelete: (event, {bool shouldNavigate = false}) => _hideEvent(event)),
                         );
                       }, childCount: availableEvents.length + 1),
                     ),
@@ -370,11 +286,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
       });
 
       final l10n = context.l10n;
-      PlatformWidgets.showSnackBar(
-        context: context,
-        message: l10n.eventHidden(event.title),
-        duration: const Duration(seconds: 2),
-      );
+      PlatformWidgets.showSnackBar(context: context, message: l10n.eventHidden(event.title), duration: const Duration(seconds: 2));
     }
   }
 }

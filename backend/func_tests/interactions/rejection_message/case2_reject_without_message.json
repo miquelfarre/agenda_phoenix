@@ -50,13 +50,14 @@
       "role": null,
       "note": null,
       "rejection_message": null,
-      "read_at": null,
-      "is_new": true,
+      "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",
       "user_id": "{{ID}}",
       "invited_by_user_id": "{{ID}}",
       "invited_via_group_id": null,
+      "read_at": null,
+      "is_new": true,
       "created_at": "{{TIMESTAMP}}",
       "updated_at": "{{TIMESTAMP}}"
     }

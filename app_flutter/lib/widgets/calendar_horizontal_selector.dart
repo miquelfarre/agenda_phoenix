@@ -15,14 +15,7 @@ class CalendarHorizontalSelector extends StatelessWidget {
 
   final String? label;
 
-  const CalendarHorizontalSelector({
-    super.key,
-    required this.calendars,
-    this.selectedCalendarId,
-    required this.onSelected,
-    this.isDisabled = false,
-    this.label,
-  });
+  const CalendarHorizontalSelector({super.key, required this.calendars, this.selectedCalendarId, required this.onSelected, this.isDisabled = false, this.label});
 
   List<SelectorOption<Calendar>> _transformCalendars() {
     return calendars.map((calendar) {
@@ -34,13 +27,7 @@ class CalendarHorizontalSelector extends StatelessWidget {
         calendarColor = Colors.blue;
       }
 
-      return SelectorOption<Calendar>(
-        value: calendar,
-        displayText: calendar.name,
-        highlightColor: calendarColor,
-        isSelected: calendar.id == selectedCalendarId,
-        isEnabled: !isDisabled,
-      );
+      return SelectorOption<Calendar>(value: calendar, displayText: calendar.name, highlightColor: calendarColor, isSelected: calendar.id == selectedCalendarId, isEnabled: !isDisabled);
     }).toList();
   }
 

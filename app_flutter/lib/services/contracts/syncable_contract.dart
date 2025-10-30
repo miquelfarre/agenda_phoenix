@@ -12,58 +12,14 @@ class SyncResult {
   final String? lastSyncHash;
   final Map<String, dynamic> metadata;
 
-  const SyncResult({
-    required this.success,
-    required this.itemsSynced,
-    required this.itemsAdded,
-    required this.itemsUpdated,
-    required this.itemsDeleted,
-    required this.errors,
-    required this.syncDuration,
-    required this.syncTimestamp,
-    this.lastSyncHash,
-    this.metadata = const {},
-  });
+  const SyncResult({required this.success, required this.itemsSynced, required this.itemsAdded, required this.itemsUpdated, required this.itemsDeleted, required this.errors, required this.syncDuration, required this.syncTimestamp, this.lastSyncHash, this.metadata = const {}});
 
-  factory SyncResult.success({
-    required int itemsSynced,
-    int itemsAdded = 0,
-    int itemsUpdated = 0,
-    int itemsDeleted = 0,
-    required Duration syncDuration,
-    String? lastSyncHash,
-    Map<String, dynamic> metadata = const {},
-  }) {
-    return SyncResult(
-      success: true,
-      itemsSynced: itemsSynced,
-      itemsAdded: itemsAdded,
-      itemsUpdated: itemsUpdated,
-      itemsDeleted: itemsDeleted,
-      errors: [],
-      syncDuration: syncDuration,
-      syncTimestamp: DateTime.now(),
-      lastSyncHash: lastSyncHash,
-      metadata: metadata,
-    );
+  factory SyncResult.success({required int itemsSynced, int itemsAdded = 0, int itemsUpdated = 0, int itemsDeleted = 0, required Duration syncDuration, String? lastSyncHash, Map<String, dynamic> metadata = const {}}) {
+    return SyncResult(success: true, itemsSynced: itemsSynced, itemsAdded: itemsAdded, itemsUpdated: itemsUpdated, itemsDeleted: itemsDeleted, errors: [], syncDuration: syncDuration, syncTimestamp: DateTime.now(), lastSyncHash: lastSyncHash, metadata: metadata);
   }
 
-  factory SyncResult.failure({
-    required List<String> errors,
-    required Duration syncDuration,
-    Map<String, dynamic> metadata = const {},
-  }) {
-    return SyncResult(
-      success: false,
-      itemsSynced: 0,
-      itemsAdded: 0,
-      itemsUpdated: 0,
-      itemsDeleted: 0,
-      errors: errors,
-      syncDuration: syncDuration,
-      syncTimestamp: DateTime.now(),
-      metadata: metadata,
-    );
+  factory SyncResult.failure({required List<String> errors, required Duration syncDuration, Map<String, dynamic> metadata = const {}}) {
+    return SyncResult(success: false, itemsSynced: 0, itemsAdded: 0, itemsUpdated: 0, itemsDeleted: 0, errors: errors, syncDuration: syncDuration, syncTimestamp: DateTime.now(), metadata: metadata);
   }
 
   bool get hasErrors => errors.isNotEmpty;
@@ -105,29 +61,15 @@ class SyncConfig {
   });
 
   factory SyncConfig.realtime() {
-    return const SyncConfig(
-      strategy: SyncStrategy.incremental,
-      direction: SyncDirection.bidirectional,
-      syncInterval: Duration(seconds: 30),
-      autoSync: true,
-    );
+    return const SyncConfig(strategy: SyncStrategy.incremental, direction: SyncDirection.bidirectional, syncInterval: Duration(seconds: 30), autoSync: true);
   }
 
   factory SyncConfig.background() {
-    return const SyncConfig(
-      strategy: SyncStrategy.hashBased,
-      direction: SyncDirection.bidirectional,
-      syncInterval: Duration(minutes: 15),
-      autoSync: true,
-    );
+    return const SyncConfig(strategy: SyncStrategy.hashBased, direction: SyncDirection.bidirectional, syncInterval: Duration(minutes: 15), autoSync: true);
   }
 
   factory SyncConfig.manual() {
-    return const SyncConfig(
-      strategy: SyncStrategy.full,
-      direction: SyncDirection.bidirectional,
-      autoSync: false,
-    );
+    return const SyncConfig(strategy: SyncStrategy.full, direction: SyncDirection.bidirectional, autoSync: false);
   }
 }
 
@@ -142,11 +84,7 @@ abstract class ISyncable {
 
   String? get lastSyncHash;
 
-  Future<SyncResult> sync({
-    bool force = false,
-    SyncStrategy? strategy,
-    SyncDirection? direction,
-  });
+  Future<SyncResult> sync({bool force = false, SyncStrategy? strategy, SyncDirection? direction});
 
   void startAutoSync();
 
@@ -184,56 +122,22 @@ class SyncEvent {
   final SyncResult? result;
   final Map<String, dynamic> metadata;
 
-  const SyncEvent({
-    required this.type,
-    required this.serviceName,
-    required this.timestamp,
-    this.progress,
-    this.message,
-    this.result,
-    this.metadata = const {},
-  });
+  const SyncEvent({required this.type, required this.serviceName, required this.timestamp, this.progress, this.message, this.result, this.metadata = const {}});
 
   factory SyncEvent.started(String serviceName) {
-    return SyncEvent(
-      type: SyncEventType.started,
-      serviceName: serviceName,
-      timestamp: DateTime.now(),
-      progress: 0.0,
-    );
+    return SyncEvent(type: SyncEventType.started, serviceName: serviceName, timestamp: DateTime.now(), progress: 0.0);
   }
 
-  factory SyncEvent.progress(
-    String serviceName,
-    double progress,
-    String? message,
-  ) {
-    return SyncEvent(
-      type: SyncEventType.progress,
-      serviceName: serviceName,
-      timestamp: DateTime.now(),
-      progress: progress,
-      message: message,
-    );
+  factory SyncEvent.progress(String serviceName, double progress, String? message) {
+    return SyncEvent(type: SyncEventType.progress, serviceName: serviceName, timestamp: DateTime.now(), progress: progress, message: message);
   }
 
   factory SyncEvent.completed(String serviceName, SyncResult result) {
-    return SyncEvent(
-      type: SyncEventType.completed,
-      serviceName: serviceName,
-      timestamp: DateTime.now(),
-      progress: 1.0,
-      result: result,
-    );
+    return SyncEvent(type: SyncEventType.completed, serviceName: serviceName, timestamp: DateTime.now(), progress: 1.0, result: result);
   }
 
   factory SyncEvent.failed(String serviceName, String message) {
-    return SyncEvent(
-      type: SyncEventType.failed,
-      serviceName: serviceName,
-      timestamp: DateTime.now(),
-      message: message,
-    );
+    return SyncEvent(type: SyncEventType.failed, serviceName: serviceName, timestamp: DateTime.now(), message: message);
   }
 }
 
@@ -247,16 +151,7 @@ class SyncConflict {
   final DateTime remoteTimestamp;
   final ConflictResolution suggestedResolution;
 
-  const SyncConflict({
-    required this.id,
-    required this.entityType,
-    required this.entityId,
-    required this.localData,
-    required this.remoteData,
-    required this.localTimestamp,
-    required this.remoteTimestamp,
-    required this.suggestedResolution,
-  });
+  const SyncConflict({required this.id, required this.entityType, required this.entityId, required this.localData, required this.remoteData, required this.localTimestamp, required this.remoteTimestamp, required this.suggestedResolution});
 
   bool get isLocalNewer => localTimestamp.isAfter(remoteTimestamp);
   bool get isRemoteNewer => remoteTimestamp.isAfter(localTimestamp);
@@ -264,10 +159,7 @@ class SyncConflict {
 }
 
 abstract class IBatchSyncable extends ISyncable {
-  Future<Map<String, SyncResult>> batchSync({
-    required List<String> serviceNames,
-    bool force = false,
-  });
+  Future<Map<String, SyncResult>> batchSync({required List<String> serviceNames, bool force = false});
 
   List<String> get syncPriorityOrder;
 
@@ -292,14 +184,7 @@ class RealtimeChange {
   final DateTime timestamp;
   final String? userId;
 
-  const RealtimeChange({
-    required this.entityType,
-    required this.entityId,
-    required this.changeType,
-    required this.data,
-    required this.timestamp,
-    this.userId,
-  });
+  const RealtimeChange({required this.entityType, required this.entityId, required this.changeType, required this.data, required this.timestamp, this.userId});
 }
 
 enum RealtimeChangeType { created, updated, deleted, moved }
@@ -310,12 +195,7 @@ class SyncException implements Exception {
   final SyncEventType? eventType;
   final dynamic originalError;
 
-  const SyncException({
-    required this.message,
-    required this.serviceName,
-    this.eventType,
-    this.originalError,
-  });
+  const SyncException({required this.message, required this.serviceName, this.eventType, this.originalError});
 
   @override
   String toString() => 'SyncException($serviceName): $message';

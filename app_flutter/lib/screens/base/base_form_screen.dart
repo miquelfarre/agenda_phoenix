@@ -7,9 +7,7 @@ abstract class BaseFormScreen extends ConsumerStatefulWidget {
   const BaseFormScreen({super.key});
 }
 
-abstract class BaseFormScreenState<W extends BaseFormScreen>
-    extends ConsumerState<W>
-    with BaseScreenState<W> {
+abstract class BaseFormScreenState<W extends BaseFormScreen> extends ConsumerState<W> with BaseScreenState<W> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   GlobalKey<FormState> get formKey => _formKey;
 
@@ -51,8 +49,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
 
   bool get confirmCancelIfDirty => true;
 
-  String get unsavedChangesMessage =>
-      'You have unsaved changes. Are you sure you want to leave?';
+  String get unsavedChangesMessage => 'You have unsaved changes. Are you sure you want to leave?';
 
   void setFieldValue(String fieldName, dynamic value) {
     if (_formData[fieldName] != value) {
@@ -147,16 +144,8 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
         title: Text(l10n.unsavedChanges),
         content: Text(unsavedChangesMessage),
         actions: [
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.leave),
-          ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.stay),
-          ),
+          CupertinoDialogAction(isDestructiveAction: true, onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.leave)),
+          CupertinoDialogAction(isDefaultAction: true, onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.stay)),
         ],
       ),
     );
@@ -164,31 +153,14 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: buildNavigationBar(),
-      child: buildBody(),
-    );
+    return CupertinoPageScaffold(navigationBar: buildNavigationBar(), child: buildBody());
   }
 
   CupertinoNavigationBar buildNavigationBar() {
     return CupertinoNavigationBar(
-      leading: showCancelButton
-          ? CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: handleCancel,
-              child: Text(cancelButtonText),
-            )
-          : null,
+      leading: showCancelButton ? CupertinoButton(padding: EdgeInsets.zero, onPressed: handleCancel, child: Text(cancelButtonText)) : null,
       middle: Text(screenTitle),
-      trailing: showSaveInNavBar
-          ? CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: _isSubmitting ? null : handleSubmit,
-              child: _isSubmitting
-                  ? const CupertinoActivityIndicator()
-                  : Text(submitButtonText),
-            )
-          : null,
+      trailing: showSaveInNavBar ? CupertinoButton(padding: EdgeInsets.zero, onPressed: _isSubmitting ? null : handleSubmit, child: _isSubmitting ? const CupertinoActivityIndicator() : Text(submitButtonText)) : null,
     );
   }
 
@@ -215,14 +187,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ...buildFormFields(),
-                    const SizedBox(height: 32),
-                    if (!showSaveInNavBar) buildSubmitButton(),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [...buildFormFields(), const SizedBox(height: 32), if (!showSaveInNavBar) buildSubmitButton()]),
               ),
             ),
           ],
@@ -234,9 +199,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
   Widget buildSubmitButton() {
     return CupertinoButton.filled(
       onPressed: _isSubmitting ? null : handleSubmit,
-      child: _isSubmitting
-          ? const CupertinoActivityIndicator(color: CupertinoColors.white)
-          : Text(submitButtonText),
+      child: _isSubmitting ? const CupertinoActivityIndicator(color: CupertinoColors.white) : Text(submitButtonText),
     );
   }
 
@@ -258,10 +221,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          required ? '$label *' : label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
+        Text(required ? '$label *' : label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         CupertinoTextFormFieldRow(
           controller: controller,
@@ -272,16 +232,11 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
           maxLength: maxLength,
           padding: EdgeInsets.zero,
           decoration: BoxDecoration(
-            border: Border.all(
-              color: error != null
-                  ? CupertinoColors.systemRed
-                  : CupertinoColors.separator,
-            ),
+            border: Border.all(color: error != null ? CupertinoColors.systemRed : CupertinoColors.separator),
             borderRadius: BorderRadius.circular(8),
           ),
           validator: (value) {
-            final fieldError =
-                validator?.call(value) ?? validateField(fieldName, value);
+            final fieldError = validator?.call(value) ?? validateField(fieldName, value);
             if (fieldError != null) {
               setFieldError(fieldName, fieldError);
             }
@@ -292,93 +247,45 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
             onChanged?.call(value);
           },
         ),
-        if (error != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            error,
-            style: const TextStyle(
-              fontSize: 14,
-              color: CupertinoColors.systemRed,
-            ),
-          ),
-        ],
+        if (error != null) ...[const SizedBox(height: 4), Text(error, style: const TextStyle(fontSize: 14, color: CupertinoColors.systemRed))],
         const SizedBox(height: 16),
       ],
     );
   }
 
-  Widget buildPickerField<T>({
-    required String fieldName,
-    required String label,
-    required List<T> options,
-    required String Function(T) getOptionLabel,
-    bool required = false,
-    String? placeholder,
-  }) {
+  Widget buildPickerField<T>({required String fieldName, required String label, required List<T> options, required String Function(T) getOptionLabel, bool required = false, String? placeholder}) {
     final value = getFieldValue<T>(fieldName);
     final error = getFieldError(fieldName);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          required ? '$label *' : label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
+        Text(required ? '$label *' : label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () => _showPicker(fieldName, options, getOptionLabel),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: error != null
-                    ? CupertinoColors.systemRed
-                    : CupertinoColors.separator,
-              ),
+              border: Border.all(color: error != null ? CupertinoColors.systemRed : CupertinoColors.separator),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  value != null
-                      ? getOptionLabel(value)
-                      : (placeholder ?? 'Select $label'),
-                  style: TextStyle(
-                    color: value != null
-                        ? CupertinoColors.label
-                        : CupertinoColors.placeholderText,
-                  ),
-                ),
-                const Icon(
-                  CupertinoIcons.chevron_down,
-                  color: CupertinoColors.separator,
-                ),
+                Text(value != null ? getOptionLabel(value) : (placeholder ?? 'Select $label'), style: TextStyle(color: value != null ? CupertinoColors.label : CupertinoColors.placeholderText)),
+                const Icon(CupertinoIcons.chevron_down, color: CupertinoColors.separator),
               ],
             ),
           ),
         ),
-        if (error != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            error,
-            style: const TextStyle(
-              fontSize: 14,
-              color: CupertinoColors.systemRed,
-            ),
-          ),
-        ],
+        if (error != null) ...[const SizedBox(height: 4), Text(error, style: const TextStyle(fontSize: 14, color: CupertinoColors.systemRed))],
         const SizedBox(height: 16),
       ],
     );
   }
 
-  void _showPicker<T>(
-    String fieldName,
-    List<T> options,
-    String Function(T) getOptionLabel,
-  ) {
+  void _showPicker<T>(String fieldName, List<T> options, String Function(T) getOptionLabel) {
     showCupertinoModalPopup<void>(
       context: context,
       builder: (context) => SizedBox(
@@ -389,19 +296,13 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
           onSelectedItemChanged: (index) {
             setFieldValue(fieldName, options[index]);
           },
-          children: options
-              .map((option) => Center(child: Text(getOptionLabel(option))))
-              .toList(),
+          children: options.map((option) => Center(child: Text(getOptionLabel(option)))).toList(),
         ),
       ),
     );
   }
 
-  Widget buildSwitchField({
-    required String fieldName,
-    required String label,
-    String? description,
-  }) {
+  Widget buildSwitchField({required String fieldName, required String label, String? description}) {
     final value = getFieldValue<bool>(fieldName) ?? false;
 
     return Column(
@@ -414,23 +315,8 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (description != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: CupertinoColors.secondaryLabel,
-                      ),
-                    ),
-                  ],
+                  Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  if (description != null) ...[const SizedBox(height: 4), Text(description, style: const TextStyle(fontSize: 14, color: CupertinoColors.secondaryLabel))],
                 ],
               ),
             ),
@@ -450,10 +336,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
   Widget buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 16),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
     );
   }
 }

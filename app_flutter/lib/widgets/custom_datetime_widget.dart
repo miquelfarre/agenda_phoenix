@@ -14,15 +14,7 @@ class CustomDateTimeWidget extends StatefulWidget {
   final bool showTimePicker;
   final bool showTodayButton;
 
-  const CustomDateTimeWidget({
-    super.key,
-    this.initialDateTime,
-    required this.timezone,
-    required this.onDateTimeChanged,
-    this.locale = 'es',
-    this.showTimePicker = true,
-    this.showTodayButton = true,
-  });
+  const CustomDateTimeWidget({super.key, this.initialDateTime, required this.timezone, required this.onDateTimeChanged, this.locale = 'es', this.showTimePicker = true, this.showTodayButton = true});
 
   @override
   State<CustomDateTimeWidget> createState() => _CustomDateTimeWidgetState();
@@ -53,36 +45,23 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
 
     final maxDate = DateRangeCalculator.calculateMaxDate(today, 30);
 
-    monthOptions = DateRangeCalculator.generateMonthOptions(
-      today,
-      maxDate,
-      widget.locale,
-    );
+    monthOptions = DateRangeCalculator.generateMonthOptions(today, maxDate, widget.locale);
 
     timeOptions = DateRangeCalculator.generateTimeOptions();
 
     final initialDate = widget.initialDateTime ?? now;
     final roundedDate = DateRangeCalculator.roundToNext15Min(initialDate);
 
-    selectedMonthIndex = monthOptions.indexWhere(
-      (m) => m.month == roundedDate.month && m.year == roundedDate.year,
-    );
+    selectedMonthIndex = monthOptions.indexWhere((m) => m.month == roundedDate.month && m.year == roundedDate.year);
     if (selectedMonthIndex == -1) selectedMonthIndex = 0;
 
     final selectedMonth = monthOptions[selectedMonthIndex];
-    dayOptions = DateRangeCalculator.generateDayOptions(
-      selectedMonth.month,
-      selectedMonth.year,
-      widget.locale,
-    );
+    dayOptions = DateRangeCalculator.generateDayOptions(selectedMonth.month, selectedMonth.year, widget.locale);
 
     selectedDayIndex = dayOptions.indexWhere((d) => d.day == roundedDate.day);
     if (selectedDayIndex == -1) selectedDayIndex = 0;
 
-    final isToday =
-        selectedMonth.month == now.month &&
-        selectedMonth.year == now.year &&
-        roundedDate.day == now.day;
+    final isToday = selectedMonth.month == now.month && selectedMonth.year == now.year && roundedDate.day == now.day;
 
     if (isToday) {
       final allTimeOptions = DateRangeCalculator.generateTimeOptions();
@@ -91,8 +70,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
 
       timeOptions = allTimeOptions.where((timeOption) {
         if (timeOption.hour > currentHour) return true;
-        if (timeOption.hour == currentHour &&
-            timeOption.minute > currentMinute) {
+        if (timeOption.hour == currentHour && timeOption.minute > currentMinute) {
           return true;
         }
         return false;
@@ -105,10 +83,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
         selectedTimeIndex = 0;
       }
     } else {
-      selectedTimeIndex = DateRangeCalculator.getTimeOptionIndex(
-        roundedDate,
-        timeOptions,
-      );
+      selectedTimeIndex = DateRangeCalculator.getTimeOptionIndex(roundedDate, timeOptions);
     }
 
     monthController = ScrollController();
@@ -128,21 +103,15 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
 
     if (monthController.hasClients) {
       final offset = selectedMonthIndex * monthItemWidth;
-      monthController.jumpTo(
-        offset.clamp(0.0, monthController.position.maxScrollExtent),
-      );
+      monthController.jumpTo(offset.clamp(0.0, monthController.position.maxScrollExtent));
     }
     if (dayController.hasClients) {
       final offset = selectedDayIndex * dayItemWidth;
-      dayController.jumpTo(
-        offset.clamp(0.0, dayController.position.maxScrollExtent),
-      );
+      dayController.jumpTo(offset.clamp(0.0, dayController.position.maxScrollExtent));
     }
     if (timeController.hasClients && widget.showTimePicker) {
       final offset = selectedTimeIndex * timeItemWidth;
-      timeController.jumpTo(
-        offset.clamp(0.0, timeController.position.maxScrollExtent),
-      );
+      timeController.jumpTo(offset.clamp(0.0, timeController.position.maxScrollExtent));
     }
   }
 
@@ -151,11 +120,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
       selectedMonthIndex = index;
       final selectedMonth = monthOptions[index];
 
-      dayOptions = DateRangeCalculator.generateDayOptions(
-        selectedMonth.month,
-        selectedMonth.year,
-        widget.locale,
-      );
+      dayOptions = DateRangeCalculator.generateDayOptions(selectedMonth.month, selectedMonth.year, widget.locale);
 
       if (selectedDayIndex >= dayOptions.length) {
         selectedDayIndex = dayOptions.length - 1;
@@ -180,10 +145,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
     final selectedMonth = monthOptions[selectedMonthIndex];
     final selectedDay = dayOptions[selectedDayIndex];
 
-    final isToday =
-        selectedMonth.month == now.month &&
-        selectedMonth.year == now.year &&
-        selectedDay.day == now.day;
+    final isToday = selectedMonth.month == now.month && selectedMonth.year == now.year && selectedDay.day == now.day;
 
     if (isToday) {
       final allTimeOptions = DateRangeCalculator.generateTimeOptions();
@@ -192,8 +154,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
 
       timeOptions = allTimeOptions.where((timeOption) {
         if (timeOption.hour > currentHour) return true;
-        if (timeOption.hour == currentHour &&
-            timeOption.minute > currentMinute) {
+        if (timeOption.hour == currentHour && timeOption.minute > currentMinute) {
           return true;
         }
         return false;
@@ -221,12 +182,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
   }
 
   void _notifyDateTimeChanged() {
-    final selection = DateTimeSelection.fromOptions(
-      monthOptions[selectedMonthIndex],
-      dayOptions[selectedDayIndex],
-      timeOptions[selectedTimeIndex],
-      widget.timezone,
-    );
+    final selection = DateTimeSelection.fromOptions(monthOptions[selectedMonthIndex], dayOptions[selectedDayIndex], timeOptions[selectedTimeIndex], widget.timezone);
     widget.onDateTimeChanged(selection);
   }
 
@@ -234,27 +190,18 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
     final now = DateTime.now();
     final roundedNow = DateRangeCalculator.roundToNext15Min(now);
 
-    final monthIndex = monthOptions.indexWhere(
-      (m) => m.month == roundedNow.month && m.year == roundedNow.year,
-    );
+    final monthIndex = monthOptions.indexWhere((m) => m.month == roundedNow.month && m.year == roundedNow.year);
 
     if (monthIndex != -1) {
       setState(() {
         selectedMonthIndex = monthIndex;
         final selectedMonth = monthOptions[monthIndex];
 
-        dayOptions = DateRangeCalculator.generateDayOptions(
-          selectedMonth.month,
-          selectedMonth.year,
-          widget.locale,
-        );
+        dayOptions = DateRangeCalculator.generateDayOptions(selectedMonth.month, selectedMonth.year, widget.locale);
       });
 
       final dayIndex = dayOptions.indexWhere((d) => d.day == roundedNow.day);
-      final timeIndex = DateRangeCalculator.getTimeOptionIndex(
-        roundedNow,
-        timeOptions,
-      );
+      final timeIndex = DateRangeCalculator.getTimeOptionIndex(roundedNow, timeOptions);
 
       setState(() {
         if (dayIndex != -1) {
@@ -269,42 +216,22 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
 
       if (monthController.hasClients) {
         final offset = monthIndex * monthItemWidth;
-        monthController.animateTo(
-          offset.clamp(0.0, monthController.position.maxScrollExtent),
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
+        monthController.animateTo(offset.clamp(0.0, monthController.position.maxScrollExtent), duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
       }
       if (dayController.hasClients && dayIndex != -1) {
         final offset = dayIndex * dayItemWidth;
-        dayController.animateTo(
-          offset.clamp(0.0, dayController.position.maxScrollExtent),
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
+        dayController.animateTo(offset.clamp(0.0, dayController.position.maxScrollExtent), duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
       }
       if (timeController.hasClients && widget.showTimePicker) {
         final offset = timeIndex * timeItemWidth;
-        timeController.animateTo(
-          offset.clamp(0.0, timeController.position.maxScrollExtent),
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
+        timeController.animateTo(offset.clamp(0.0, timeController.position.maxScrollExtent), duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
       }
 
       _notifyDateTimeChanged();
     }
   }
 
-  Widget _buildHorizontalScrollList<T>({
-    required String label,
-    required IconData icon,
-    required List<T> items,
-    required int selectedIndex,
-    required ScrollController controller,
-    required String Function(T) displayText,
-    required Function(int) onSelectedItemChanged,
-  }) {
+  Widget _buildHorizontalScrollList<T>({required String label, required IconData icon, required List<T> items, required int selectedIndex, required ScrollController controller, required String Function(T) displayText, required Function(int) onSelectedItemChanged}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -314,13 +241,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
             children: [
               Icon(icon, size: 20),
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             ],
           ),
         ),
@@ -339,34 +260,16 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
                 onTap: () => onSelectedItemChanged(index),
                 child: Container(
                   margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
-                        : null,
-                    border: Border.all(
-                      color: isSelected
-                          ? Theme.of(context).primaryColor
-                          : Colors.grey.shade300,
-                      width: isSelected ? 2 : 1,
-                    ),
+                    color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : null,
+                    border: Border.all(color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300, width: isSelected ? 2 : 1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
                       displayText(items[index]),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isSelected
-                            ? Theme.of(context).primaryColor
-                            : null,
-                      ),
+                      style: TextStyle(fontSize: 15, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? Theme.of(context).primaryColor : null),
                     ),
                   ),
                 ),
@@ -396,12 +299,7 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
               onPressed: scrollToToday,
               icon: const Icon(Icons.today),
               label: Text(context.l10n.today),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
+              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
             ),
           ),
           const SizedBox(height: 16),
@@ -409,38 +307,14 @@ class _CustomDateTimeWidgetState extends State<CustomDateTimeWidget> {
           const SizedBox(height: 8),
         ],
 
-        _buildHorizontalScrollList<MonthOption>(
-          label: context.l10n.month,
-          icon: Icons.calendar_month,
-          items: monthOptions,
-          selectedIndex: selectedMonthIndex,
-          controller: monthController,
-          displayText: (month) => month.displayName,
-          onSelectedItemChanged: _onMonthChanged,
-        ),
+        _buildHorizontalScrollList<MonthOption>(label: context.l10n.month, icon: Icons.calendar_month, items: monthOptions, selectedIndex: selectedMonthIndex, controller: monthController, displayText: (month) => month.displayName, onSelectedItemChanged: _onMonthChanged),
         const SizedBox(height: 16),
 
-        _buildHorizontalScrollList<DayOption>(
-          label: context.l10n.day,
-          icon: Icons.today,
-          items: dayOptions,
-          selectedIndex: selectedDayIndex,
-          controller: dayController,
-          displayText: (day) => day.displayName,
-          onSelectedItemChanged: _onDayChanged,
-        ),
+        _buildHorizontalScrollList<DayOption>(label: context.l10n.day, icon: Icons.today, items: dayOptions, selectedIndex: selectedDayIndex, controller: dayController, displayText: (day) => day.displayName, onSelectedItemChanged: _onDayChanged),
 
         if (widget.showTimePicker) ...[
           const SizedBox(height: 16),
-          _buildHorizontalScrollList<TimeOption>(
-            label: context.l10n.hour,
-            icon: Icons.access_time,
-            items: timeOptions,
-            selectedIndex: selectedTimeIndex,
-            controller: timeController,
-            displayText: (time) => time.displayName,
-            onSelectedItemChanged: _onTimeChanged,
-          ),
+          _buildHorizontalScrollList<TimeOption>(label: context.l10n.hour, icon: Icons.access_time, items: timeOptions, selectedIndex: selectedTimeIndex, controller: timeController, displayText: (time) => time.displayName, onSelectedItemChanged: _onTimeChanged),
         ],
       ],
     );

@@ -13,17 +13,7 @@ class AdaptiveScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final Widget? leading;
 
-  const AdaptiveScaffold({
-    super.key,
-    required this.body,
-    this.title,
-    required this.navigationItems,
-    required this.currentIndex,
-    required this.onNavigationChanged,
-    this.actions,
-    this.floatingActionButton,
-    this.leading,
-  });
+  const AdaptiveScaffold({super.key, required this.body, this.title, required this.navigationItems, required this.currentIndex, required this.onNavigationChanged, this.actions, this.floatingActionButton, this.leading});
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +24,7 @@ class AdaptiveScaffold extends StatelessWidget {
                 transitionBetweenRoutes: false,
                 middle: Text(title!),
                 leading: leading,
-                trailing: actions != null && actions!.isNotEmpty
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: actions!.take(2).toList(),
-                      )
-                    : null,
+                trailing: actions != null && actions!.isNotEmpty ? Row(mainAxisSize: MainAxisSize.min, children: actions!.take(2).toList()) : null,
               )
             : null,
         child: SafeArea(
@@ -51,14 +36,8 @@ class AdaptiveScaffold extends StatelessWidget {
                 items: navigationItems
                     .map(
                       (item) => BottomNavigationBarItem(
-                        icon: PlatformWidgets.platformIcon(
-                          item.icon,
-                          color: AppStyles.grey600,
-                        ),
-                        activeIcon: PlatformWidgets.platformIcon(
-                          item.activeIcon ?? item.icon,
-                          color: AppStyles.blue600,
-                        ),
+                        icon: PlatformWidgets.platformIcon(item.icon, color: AppStyles.grey600),
+                        activeIcon: PlatformWidgets.platformIcon(item.activeIcon ?? item.icon, color: AppStyles.blue600),
                         label: item.label,
                       ),
                     )
@@ -76,27 +55,15 @@ class AdaptiveScaffold extends StatelessWidget {
           children: [
             if (title != null)
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 color: AppStyles.blue600,
                 child: Row(
                   children: [
                     if (leading != null) leading!,
                     Expanded(
-                      child: Text(
-                        title!,
-                        style: AppStyles.headlineSmall.copyWith(
-                          color: AppStyles.white,
-                        ),
-                      ),
+                      child: Text(title!, style: AppStyles.headlineSmall.copyWith(color: AppStyles.white)),
                     ),
-                    if (actions != null && actions!.isNotEmpty)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: actions!.take(2).toList(),
-                      ),
+                    if (actions != null && actions!.isNotEmpty) Row(mainAxisSize: MainAxisSize.min, children: actions!.take(2).toList()),
                   ],
                 ),
               ),
@@ -105,12 +72,7 @@ class AdaptiveScaffold extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   color: AppStyles.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppStyles.colorWithOpacity(AppStyles.black, 0.06),
-                      blurRadius: 4,
-                    ),
-                  ],
+                  boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black, 0.06), blurRadius: 4)],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -118,33 +80,16 @@ class AdaptiveScaffold extends StatelessWidget {
                     final index = navigationItems.indexOf(item);
                     final selected = index == currentIndex;
                     return GestureDetector(
-                      key: Key(
-                        'adaptive_scaffold_nav_item_${item.label.replaceAll(' ', '_').toLowerCase()}',
-                      ),
+                      key: Key('adaptive_scaffold_nav_item_${item.label.replaceAll(' ', '_').toLowerCase()}'),
                       onTap: () => onNavigationChanged(index),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 12,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            PlatformWidgets.platformIcon(
-                              item.icon,
-                              color: selected
-                                  ? AppStyles.blue600
-                                  : AppStyles.grey600,
-                            ),
+                            PlatformWidgets.platformIcon(item.icon, color: selected ? AppStyles.blue600 : AppStyles.grey600),
                             const SizedBox(height: 4),
-                            Text(
-                              item.label,
-                              style: AppStyles.bodyText.copyWith(
-                                color: selected
-                                    ? AppStyles.blue600
-                                    : AppStyles.grey600,
-                              ),
-                            ),
+                            Text(item.label, style: AppStyles.bodyText.copyWith(color: selected ? AppStyles.blue600 : AppStyles.grey600)),
                           ],
                         ),
                       ),
@@ -152,11 +97,7 @@ class AdaptiveScaffold extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-            if (floatingActionButton != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: floatingActionButton,
-              ),
+            if (floatingActionButton != null) Padding(padding: const EdgeInsets.only(bottom: 12), child: floatingActionButton),
           ],
         ),
       );
@@ -172,12 +113,7 @@ class AdaptiveNavigationItem {
   final String label;
   final Widget screen;
 
-  const AdaptiveNavigationItem({
-    required this.icon,
-    this.activeIcon,
-    required this.label,
-    required this.screen,
-  });
+  const AdaptiveNavigationItem({required this.icon, this.activeIcon, required this.label, required this.screen});
 }
 
 class AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -187,14 +123,7 @@ class AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onLeadingPressed;
   final bool automaticallyImplyLeading;
 
-  const AdaptiveAppBar({
-    super.key,
-    required this.title,
-    this.actions,
-    this.leading,
-    this.onLeadingPressed,
-    this.automaticallyImplyLeading = true,
-  });
+  const AdaptiveAppBar({super.key, required this.title, this.actions, this.leading, this.onLeadingPressed, this.automaticallyImplyLeading = true});
 
   @override
   Widget build(BuildContext context) {
@@ -212,12 +141,7 @@ class AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
                         },
                   )
                 : null),
-        trailing: actions != null && actions!.isNotEmpty
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: actions!.take(2).toList(),
-              )
-            : null,
+        trailing: actions != null && actions!.isNotEmpty ? Row(mainAxisSize: MainAxisSize.min, children: actions!.take(2).toList()) : null,
       );
     } else {
       return Container(
@@ -228,16 +152,9 @@ class AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             if (leading != null) leading!,
             Expanded(
-              child: Text(
-                title,
-                style: AppStyles.headlineSmall.copyWith(color: AppStyles.white),
-              ),
+              child: Text(title, style: AppStyles.headlineSmall.copyWith(color: AppStyles.white)),
             ),
-            if (actions != null && actions!.isNotEmpty)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: actions!.take(2).toList(),
-              ),
+            if (actions != null && actions!.isNotEmpty) Row(mainAxisSize: MainAxisSize.min, children: actions!.take(2).toList()),
           ],
         ),
       );
@@ -256,15 +173,7 @@ class AdaptivePageScaffold extends StatelessWidget {
   final bool automaticallyImplyLeading;
   final Widget? floatingActionButton;
 
-  const AdaptivePageScaffold({
-    super.key,
-    required this.body,
-    this.title,
-    this.actions,
-    this.leading,
-    this.automaticallyImplyLeading = true,
-    this.floatingActionButton,
-  });
+  const AdaptivePageScaffold({super.key, required this.body, this.title, this.actions, this.leading, this.automaticallyImplyLeading = true, this.floatingActionButton});
 
   @override
   Widget build(BuildContext context) {
@@ -283,12 +192,7 @@ class AdaptivePageScaffold extends StatelessWidget {
                             },
                           )
                         : null),
-                trailing: actions != null && actions!.isNotEmpty
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: actions!.take(2).toList(),
-                      )
-                    : null,
+                trailing: actions != null && actions!.isNotEmpty ? Row(mainAxisSize: MainAxisSize.min, children: actions!.take(2).toList()) : null,
               )
             : null,
         child: body,
@@ -299,36 +203,20 @@ class AdaptivePageScaffold extends StatelessWidget {
           children: [
             if (title != null)
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 color: AppStyles.blue600,
                 child: Row(
                   children: [
                     if (leading != null) leading!,
                     Expanded(
-                      child: Text(
-                        title!,
-                        style: AppStyles.headlineSmall.copyWith(
-                          color: AppStyles.white,
-                        ),
-                      ),
+                      child: Text(title!, style: AppStyles.headlineSmall.copyWith(color: AppStyles.white)),
                     ),
-                    if (actions != null && actions!.isNotEmpty)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: actions!.take(2).toList(),
-                      ),
+                    if (actions != null && actions!.isNotEmpty) Row(mainAxisSize: MainAxisSize.min, children: actions!.take(2).toList()),
                   ],
                 ),
               ),
             Expanded(child: body),
-            if (floatingActionButton != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: floatingActionButton,
-              ),
+            if (floatingActionButton != null) Padding(padding: const EdgeInsets.only(bottom: 12), child: floatingActionButton),
           ],
         ),
       );

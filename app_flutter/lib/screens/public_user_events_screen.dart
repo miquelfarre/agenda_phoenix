@@ -15,12 +15,10 @@ class PublicUserEventsScreen extends ConsumerStatefulWidget {
   const PublicUserEventsScreen({super.key, required this.publicUser});
 
   @override
-  ConsumerState<PublicUserEventsScreen> createState() =>
-      _PublicUserEventsScreenState();
+  ConsumerState<PublicUserEventsScreen> createState() => _PublicUserEventsScreenState();
 }
 
-class _PublicUserEventsScreenState
-    extends ConsumerState<PublicUserEventsScreen> {
+class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isProcessingSubscription = false;
 
@@ -50,14 +48,10 @@ class _PublicUserEventsScreenState
 
   Future<void> _loadData() async {
     print('📊 [PublicUserEvents] _loadData START');
-    print(
-      '📊 [PublicUserEvents] _isLoading: $_isLoading, _isProcessingSubscription: $_isProcessingSubscription',
-    );
+    print('📊 [PublicUserEvents] _isLoading: $_isLoading, _isProcessingSubscription: $_isProcessingSubscription');
 
     if (_isLoading && !_isProcessingSubscription) {
-      print(
-        '⚠️ [PublicUserEvents] Already loading and not processing subscription, returning',
-      );
+      print('⚠️ [PublicUserEvents] Already loading and not processing subscription, returning');
       return;
     }
 
@@ -68,12 +62,8 @@ class _PublicUserEventsScreenState
     });
 
     try {
-      print(
-        '📊 [PublicUserEvents] Fetching events for user ${widget.publicUser.id}',
-      );
-      final eventsData = await ApiClient().fetchUserEvents(
-        widget.publicUser.id,
-      );
+      print('📊 [PublicUserEvents] Fetching events for user ${widget.publicUser.id}');
+      final eventsData = await ApiClient().fetchUserEvents(widget.publicUser.id);
       final events = eventsData.map((e) => Event.fromJson(e)).toList();
       print('✅ [PublicUserEvents] Fetched ${events.length} events');
 
@@ -83,14 +73,10 @@ class _PublicUserEventsScreenState
       for (final eventData in eventsData) {
         if (eventData['interaction'] != null) {
           final interaction = eventData['interaction'] as Map<String, dynamic>;
-          print(
-            '📊 [PublicUserEvents] Found interaction: ${interaction['interaction_type']}',
-          );
+          print('📊 [PublicUserEvents] Found interaction: ${interaction['interaction_type']}');
           if (interaction['interaction_type'] == 'subscribed') {
             isSubscribed = true;
-            print(
-              '✅ [PublicUserEvents] User IS subscribed (found in event interaction)',
-            );
+            print('✅ [PublicUserEvents] User IS subscribed (found in event interaction)');
             break;
           }
         }
@@ -98,17 +84,13 @@ class _PublicUserEventsScreenState
       print('📊 [PublicUserEvents] Subscription status: $isSubscribed');
 
       if (mounted) {
-        print(
-          '📊 [PublicUserEvents] Setting state with events and subscription status',
-        );
+        print('📊 [PublicUserEvents] Setting state with events and subscription status');
         setState(() {
           _events = events;
           _isSubscribed = isSubscribed;
           _isLoading = false;
         });
-        print(
-          '✅ [PublicUserEvents] State updated: _isSubscribed=$isSubscribed, events count=${events.length}',
-        );
+        print('✅ [PublicUserEvents] State updated: _isSubscribed=$isSubscribed, events count=${events.length}');
       }
     } catch (e) {
       print('❌ [PublicUserEvents] ERROR in _loadData: $e');
@@ -128,9 +110,7 @@ class _PublicUserEventsScreenState
   }
 
   Future<void> _subscribeToUser() async {
-    print(
-      '🟢 [PublicUserEvents] _subscribeToUser START - userId: ${widget.publicUser.id}',
-    );
+    print('🟢 [PublicUserEvents] _subscribeToUser START - userId: ${widget.publicUser.id}');
     if (_isProcessingSubscription) {
       print('⚠️ [PublicUserEvents] Already processing subscription, returning');
       return;
@@ -140,24 +120,17 @@ class _PublicUserEventsScreenState
     setState(() => _isProcessingSubscription = true);
 
     try {
-      print(
-        '🟢 [PublicUserEvents] Calling API POST /users/${widget.publicUser.id}/subscribe',
-      );
+      print('🟢 [PublicUserEvents] Calling API POST /users/${widget.publicUser.id}/subscribe');
       // Use new bulk subscribe endpoint
       await ApiClient().post('/users/${widget.publicUser.id}/subscribe');
       print('✅ [PublicUserEvents] API call successful');
 
       if (mounted) {
         print('🟢 [PublicUserEvents] Showing success message');
-        PlatformDialogHelpers.showSnackBar(
-          context: context,
-          message: AppLocalizations.of(context)!.subscribedSuccessfully,
-        );
+        PlatformDialogHelpers.showSnackBar(context: context, message: AppLocalizations.of(context)!.subscribedSuccessfully);
       }
 
-      print(
-        '🟢 [PublicUserEvents] Realtime handles subscriptions automatically',
-      );
+      print('🟢 [PublicUserEvents] Realtime handles subscriptions automatically');
       // Realtime handles refresh automatically via SubscriptionRepository
 
       print('🟢 [PublicUserEvents] Reloading local data...');
@@ -167,11 +140,7 @@ class _PublicUserEventsScreenState
       print('❌ [PublicUserEvents] ERROR in _subscribeToUser: $e');
       print('❌ [PublicUserEvents] Stack trace: ${StackTrace.current}');
       if (mounted) {
-        PlatformDialogHelpers.showSnackBar(
-          context: context,
-          message: 'Error: ${e.toString()}',
-          isError: true,
-        );
+        PlatformDialogHelpers.showSnackBar(context: context, message: 'Error: ${e.toString()}', isError: true);
       }
     } finally {
       print('🟢 [PublicUserEvents] Setting _isProcessingSubscription = false');
@@ -181,9 +150,7 @@ class _PublicUserEventsScreenState
   }
 
   Future<void> _unsubscribeFromUser() async {
-    print(
-      '🔴 [PublicUserEvents] _unsubscribeFromUser START - userId: ${widget.publicUser.id}',
-    );
+    print('🔴 [PublicUserEvents] _unsubscribeFromUser START - userId: ${widget.publicUser.id}');
     if (_isProcessingSubscription) {
       print('⚠️ [PublicUserEvents] Already processing subscription, returning');
       return;
@@ -193,24 +160,17 @@ class _PublicUserEventsScreenState
     setState(() => _isProcessingSubscription = true);
 
     try {
-      print(
-        '🔴 [PublicUserEvents] Calling API DELETE /users/${widget.publicUser.id}/subscribe',
-      );
+      print('🔴 [PublicUserEvents] Calling API DELETE /users/${widget.publicUser.id}/subscribe');
       // Use new bulk unsubscribe endpoint
       await ApiClient().delete('/users/${widget.publicUser.id}/subscribe');
       print('✅ [PublicUserEvents] API DELETE call successful');
 
       if (mounted) {
         print('🔴 [PublicUserEvents] Showing success message');
-        PlatformDialogHelpers.showSnackBar(
-          context: context,
-          message: AppLocalizations.of(context)!.unsubscribedSuccessfully,
-        );
+        PlatformDialogHelpers.showSnackBar(context: context, message: AppLocalizations.of(context)!.unsubscribedSuccessfully);
       }
 
-      print(
-        '🔴 [PublicUserEvents] Realtime handles subscriptions automatically',
-      );
+      print('🔴 [PublicUserEvents] Realtime handles subscriptions automatically');
       // Realtime handles refresh automatically via SubscriptionRepository
 
       print('🔴 [PublicUserEvents] Reloading local data...');
@@ -220,11 +180,7 @@ class _PublicUserEventsScreenState
       print('❌ [PublicUserEvents] ERROR in _unsubscribeFromUser: $e');
       print('❌ [PublicUserEvents] Stack trace: ${StackTrace.current}');
       if (mounted) {
-        PlatformDialogHelpers.showSnackBar(
-          context: context,
-          message: 'Error: ${e.toString()}',
-          isError: true,
-        );
+        PlatformDialogHelpers.showSnackBar(context: context, message: 'Error: ${e.toString()}', isError: true);
       }
     } finally {
       print('🔴 [PublicUserEvents] Setting _isProcessingSubscription = false');
@@ -238,11 +194,7 @@ class _PublicUserEventsScreenState
     Iterable<Event> result = events;
 
     if (query.isNotEmpty) {
-      result = result.where(
-        (event) =>
-            event.title.toLowerCase().contains(query) ||
-            (event.description?.toLowerCase().contains(query) ?? false),
-      );
+      result = result.where((event) => event.title.toLowerCase().contains(query) || (event.description?.toLowerCase().contains(query) ?? false));
     }
 
     return result.toList();
@@ -250,15 +202,10 @@ class _PublicUserEventsScreenState
 
   @override
   Widget build(BuildContext context) {
-    print(
-      '🎨 [PublicUserEvents] BUILD - _isSubscribed: $_isSubscribed, _isProcessingSubscription: $_isProcessingSubscription',
-    );
+    print('🎨 [PublicUserEvents] BUILD - _isSubscribed: $_isSubscribed, _isProcessingSubscription: $_isProcessingSubscription');
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text(
-          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.fullName ?? widget.publicUser.instagramName ?? 'User'}',
-          style: const TextStyle(fontSize: 16),
-        ),
+        middle: Text('${AppLocalizations.of(context)!.events} - ${widget.publicUser.fullName ?? widget.publicUser.instagramName ?? 'User'}', style: const TextStyle(fontSize: 16)),
         trailing: CupertinoButton(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           onPressed: _isProcessingSubscription
@@ -272,11 +219,7 @@ class _PublicUserEventsScreenState
                   print('🔘 [PublicUserEvents] FOLLOW button pressed');
                   _subscribeToUser();
                 },
-          child: Text(
-            _isSubscribed
-                ? AppLocalizations.of(context)!.unfollow
-                : AppLocalizations.of(context)!.follow,
-          ),
+          child: Text(_isSubscribed ? AppLocalizations.of(context)!.unfollow : AppLocalizations.of(context)!.follow),
         ),
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
       ),
@@ -294,18 +237,9 @@ class _PublicUserEventsScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              AppLocalizations.of(context)!.errorLoadingEvents,
-              style: const TextStyle(
-                color: CupertinoColors.destructiveRed,
-                fontSize: 16,
-              ),
-            ),
+            Text(AppLocalizations.of(context)!.errorLoadingEvents, style: const TextStyle(color: CupertinoColors.destructiveRed, fontSize: 16)),
             const SizedBox(height: 16),
-            CupertinoButton(
-              onPressed: _refreshEvents,
-              child: Text(AppLocalizations.of(context)!.retry),
-            ),
+            CupertinoButton(onPressed: _refreshEvents, child: Text(AppLocalizations.of(context)!.retry)),
           ],
         ),
       );
@@ -313,9 +247,7 @@ class _PublicUserEventsScreenState
 
     List<Event> baseEvents = _events;
 
-    baseEvents = baseEvents
-        .where((e) => e.id == null || !_hiddenEventIds.contains(e.id))
-        .toList();
+    baseEvents = baseEvents.where((e) => e.id == null || !_hiddenEventIds.contains(e.id)).toList();
 
     final eventsToShow = _applySearchAndStatusFilters(baseEvents);
 
@@ -325,11 +257,7 @@ class _PublicUserEventsScreenState
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(
-              controller: _searchController,
-              placeholder: AppLocalizations.of(context)!.searchEvents,
-              backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context),
-            ),
+            child: CupertinoSearchTextField(controller: _searchController, placeholder: AppLocalizations.of(context)!.searchEvents, backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context)),
           ),
         ),
 
@@ -340,21 +268,9 @@ class _PublicUserEventsScreenState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    CupertinoIcons.calendar,
-                    size: 64,
-                    color: CupertinoColors.systemGrey,
-                  ),
+                  const Icon(CupertinoIcons.calendar, size: 64, color: CupertinoColors.systemGrey),
                   const SizedBox(height: 16),
-                  Text(
-                    _searchController.text.isNotEmpty
-                        ? AppLocalizations.of(context)!.noEventsFound
-                        : AppLocalizations.of(context)!.noEvents,
-                    style: const TextStyle(
-                      color: CupertinoColors.systemGrey,
-                      fontSize: 16,
-                    ),
-                  ),
+                  Text(_searchController.text.isNotEmpty ? AppLocalizations.of(context)!.noEventsFound : AppLocalizations.of(context)!.noEvents, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 16)),
                 ],
               ),
             ),
@@ -365,18 +281,11 @@ class _PublicUserEventsScreenState
               final event = eventsToShow[index];
 
               return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: EventCard(
                   event: event,
                   onTap: () {
-                    Navigator.of(context).push(
-                      CupertinoPageRoute<void>(
-                        builder: (_) => EventDetailScreen(event: event),
-                      ),
-                    );
+                    Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => EventDetailScreen(event: event)));
                   },
                   config: EventCardConfig.readOnly().copyWith(showOwner: false),
                 ),

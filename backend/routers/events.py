@@ -7,6 +7,7 @@ Handles all event-related endpoints.
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from auth import get_current_user_id, get_current_user_id_optional
@@ -141,9 +142,15 @@ async def get_event(
         response_data["owner_upcoming_events"] = upcoming_events_data
 
     # If current_user_id is provided and user is owner or admin, add invitation stats
+    print(f"🔍 DEBUG BACKEND PRE-CHECK: current_user_id = {current_user_id}, type = {type(current_user_id)}")
+    print(f"🔍 DEBUG BACKEND PRE-CHECK: current_user_id is not None = {current_user_id is not None}")
     if current_user_id is not None:
         is_owner = db_event.owner_id == current_user_id
         is_admin = False
+        print(f"🔍 DEBUG BACKEND: GET /events/{event_id}")
+        print(f"🔍 DEBUG BACKEND: current_user_id = {current_user_id}")
+        print(f"🔍 DEBUG BACKEND: db_event.owner_id = {db_event.owner_id}")
+        print(f"🔍 DEBUG BACKEND: is_owner = {is_owner}")
 
         # Check if user is admin of the calendar containing this event
         if db_event.calendar_id:
@@ -154,8 +161,12 @@ async def get_event(
             if membership and membership.role in ["owner", "admin"] and membership.status == "accepted":
                 is_admin = True
 
+        print(f"🔍 DEBUG BACKEND: is_admin = {is_admin}")
+        print(f"🔍 DEBUG BACKEND: Will enter owner/admin block = {is_owner or is_admin}")
+
         # If user is owner or admin, get invitation stats
         if is_owner or is_admin:
+            print(f"🔍 DEBUG BACKEND: Entering OWNER/ADMIN block")
             stats = event_interaction.get_invitation_stats(db, event_id=event_id)
             response_data["invitation_stats"] = stats
 
@@ -212,11 +223,22 @@ async def get_event(
 
         # If user is not owner/admin but is authenticated, add their own interaction
         elif current_user_id is not None:
+            print(f"🔍 DEBUG BACKEND: Entering REGULAR USER block")
+            print(f"🔍 DEBUG BACKEND: current_user_id = {current_user_id}, event_id = {event_id}")
             # Get current user's interaction only
             user_interaction = db.query(EventInteraction).filter(
                 EventInteraction.event_id == event_id,
                 EventInteraction.user_id == current_user_id
             ).first()
+
+            print(f"🔍 DEBUG BACKEND: user_interaction found = {user_interaction is not None}")
+            if user_interaction:
+                print(f"🔍 DEBUG BACKEND: interaction.id = {user_interaction.id}")
+                print(f"🔍 DEBUG BACKEND: interaction.interaction_type = {user_interaction.interaction_type}")
+                print(f"🔍 DEBUG BACKEND: interaction.status = {user_interaction.status}")
+                print(f"🔍 DEBUG BACKEND: interaction.invited_by_user_id = {user_interaction.invited_by_user_id}")
+            else:
+                print(f"🔍 DEBUG BACKEND: No interaction found for user {current_user_id} and event {event_id}")
 
             if user_interaction:
                 inviter = None
@@ -238,6 +260,7 @@ async def get_event(
                     "role": user_interaction.role,
                     "invited_by_user_id": user_interaction.invited_by_user_id,
                     "note": user_interaction.note,
+                    "is_attending": user_interaction.is_attending,
                     "read_at": user_interaction.read_at.isoformat() if user_interaction.read_at else None,
                     "inviter": {
                         "id": inviter.id,
@@ -247,10 +270,22 @@ async def get_event(
                 }]
 
     # Get accepted users (attendees) - available for all authenticated users
+    # Include users who accepted OR rejected but are attending (for public events)
+    # Exclude public users (they don't attend their own events)
     if current_user_id is not None:
-        accepted_interactions = db.query(EventInteraction).filter(
+        from models import User
+        accepted_interactions = db.query(EventInteraction).join(
+            User, EventInteraction.user_id == User.id
+        ).filter(
             EventInteraction.event_id == event_id,
-            EventInteraction.status == "accepted"
+            or_(
+                EventInteraction.status == "accepted",
+                and_(
+                    EventInteraction.status == "rejected",
+                    EventInteraction.is_attending == True
+                )
+            ),
+            User.is_public == False  # Exclude public users
         ).all()
 
         attendees = []

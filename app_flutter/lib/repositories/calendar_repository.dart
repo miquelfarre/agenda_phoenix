@@ -17,8 +17,7 @@ class CalendarRepository {
   final RealtimeSync _rt = RealtimeSync();
 
   Box<CalendarHive>? _box;
-  final StreamController<List<Calendar>> _calendarsController =
-      StreamController<List<Calendar>>.broadcast();
+  final StreamController<List<Calendar>> _calendarsController = StreamController<List<Calendar>>.broadcast();
   List<Calendar> _cachedCalendars = [];
   RealtimeChannel? _realtimeChannel;
 
@@ -66,9 +65,7 @@ class CalendarRepository {
     if (_box == null) return;
 
     try {
-      _cachedCalendars = _box!.values
-          .map((calendarHive) => calendarHive.toCalendar())
-          .toList();
+      _cachedCalendars = _box!.values.map((calendarHive) => calendarHive.toCalendar()).toList();
 
       print('✅ [CalendarRepository] Loaded ${_cachedCalendars.length} calendars from Hive cache');
     } catch (e) {
@@ -85,9 +82,7 @@ class CalendarRepository {
 
       await _updateLocalCache(_cachedCalendars);
 
-      _rt.setServerSyncTsFromResponse(
-        rows: _cachedCalendars.map((c) => c.toJson()),
-      );
+      _rt.setServerSyncTsFromResponse(rows: _cachedCalendars.map((c) => c.toJson()));
       _emitCurrentCalendars();
       print('✅ [CalendarRepository] Fetched ${_cachedCalendars.length} calendars');
     } catch (e) {
@@ -110,22 +105,11 @@ class CalendarRepository {
 
   // --- Mutations ---
 
-  Future<Calendar> createCalendar({
-    required String name,
-    String? description,
-    String color = '#2196F3',
-    bool isPublic = false,
-  }) async {
+  Future<Calendar> createCalendar({required String name, String? description, String color = '#2196F3', bool isPublic = false}) async {
     try {
       print('➕ [CalendarRepository] Creating calendar: "$name"');
       final userId = ConfigService.instance.currentUserId;
-      final newCalendar = await _apiClient.createCalendar({
-        'name': name,
-        'description': description,
-        'color': color,
-        'is_public': isPublic,
-        'owner_id': userId,
-      });
+      final newCalendar = await _apiClient.createCalendar({'name': name, 'description': description, 'color': color, 'is_public': isPublic, 'owner_id': userId});
       await _fetchAndSync();
       print('✅ [CalendarRepository] Calendar created: "${newCalendar['name']}"');
       return Calendar.fromJson(newCalendar);
@@ -136,10 +120,7 @@ class CalendarRepository {
     }
   }
 
-  Future<Calendar> updateCalendar(
-    int calendarId,
-    Map<String, dynamic> data,
-  ) async {
+  Future<Calendar> updateCalendar(int calendarId, Map<String, dynamic> data) async {
     try {
       print('🔄 [CalendarRepository] Updating calendar ID $calendarId');
       final updatedCalendar = await _apiClient.updateCalendar(calendarId, data);
@@ -216,10 +197,7 @@ class CalendarRepository {
       final queryParams = <String, String>{'is_public': 'true'};
       if (search != null) queryParams['search'] = search;
 
-      final response = await _apiClient.get(
-        '/calendars',
-        queryParams: queryParams,
-      );
+      final response = await _apiClient.get('/calendars', queryParams: queryParams);
 
       final calendars = <Calendar>[];
       for (final item in response as List) {
@@ -234,7 +212,6 @@ class CalendarRepository {
     }
   }
 
-
   // --- Realtime ---
 
   Future<void> _startRealtimeSubscription() async {
@@ -245,11 +222,7 @@ class CalendarRepository {
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'calendar_memberships',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId.toString(),
-          ),
+          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
           callback: (payload) {
             print('🔄 [CalendarRepository] Realtime change detected, refreshing calendars');
             _fetchAndSync();

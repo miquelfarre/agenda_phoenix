@@ -186,6 +186,7 @@ class EventInteractionBase(BaseModel):
     role: Optional[str] = None
     note: Optional[str] = None
     rejection_message: Optional[str] = None
+    is_attending: Optional[bool] = None
 
 
 class EventInteractionCreate(EventInteractionBase):
@@ -203,6 +204,7 @@ class EventInteractionUpdate(BaseModel):
     role: Optional[str] = None
     note: Optional[str] = None
     rejection_message: Optional[str] = None
+    is_attending: Optional[bool] = None
 
 
 class EventInteractionResponse(EventInteractionBase):

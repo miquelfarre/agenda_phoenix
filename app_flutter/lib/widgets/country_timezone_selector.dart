@@ -20,19 +20,10 @@ class CountryTimezoneSelector extends StatefulWidget {
   final bool showOffset;
   final String? label;
 
-  const CountryTimezoneSelector({
-    super.key,
-    this.initialCountry,
-    this.initialTimezone,
-    this.initialCity,
-    required this.onChanged,
-    this.showOffset = true,
-    this.label,
-  });
+  const CountryTimezoneSelector({super.key, this.initialCountry, this.initialTimezone, this.initialCity, required this.onChanged, this.showOffset = true, this.label});
 
   @override
-  State<CountryTimezoneSelector> createState() =>
-      _CountryTimezoneSelectorState();
+  State<CountryTimezoneSelector> createState() => _CountryTimezoneSelectorState();
 }
 
 class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
@@ -45,8 +36,7 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
   void initState() {
     super.initState();
     _selectedCountry = widget.initialCountry;
-    _selectedTimezone =
-        widget.initialTimezone ?? widget.initialCountry?.primaryTimezone;
+    _selectedTimezone = widget.initialTimezone ?? widget.initialCountry?.primaryTimezone;
     _selectedCity = widget.initialCity;
   }
 
@@ -54,13 +44,10 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
   void didUpdateWidget(CountryTimezoneSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.initialCountry != oldWidget.initialCountry ||
-        widget.initialTimezone != oldWidget.initialTimezone ||
-        widget.initialCity != oldWidget.initialCity) {
+    if (widget.initialCountry != oldWidget.initialCountry || widget.initialTimezone != oldWidget.initialTimezone || widget.initialCity != oldWidget.initialCity) {
       setState(() {
         _selectedCountry = widget.initialCountry;
-        _selectedTimezone =
-            widget.initialTimezone ?? widget.initialCountry?.primaryTimezone;
+        _selectedTimezone = widget.initialTimezone ?? widget.initialCountry?.primaryTimezone;
         _selectedCity = widget.initialCity;
       });
     }
@@ -103,31 +90,15 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
   }
 
   Future<void> _showCupertinoCountryPicker() async {
-    await PlatformNavigation.presentModal<void>(
-      context,
-      CountryPickerModal(
-        initialCountry: _selectedCountry,
-        showOffset: widget.showOffset,
-        searchController: _searchController,
-        onSelected: (country) => _selectCountry(country),
-      ),
-      isScrollControlled: true,
-    );
+    await PlatformNavigation.presentModal<void>(context, CountryPickerModal(initialCountry: _selectedCountry, showOffset: widget.showOffset, searchController: _searchController, onSelected: (country) => _selectCountry(country)), isScrollControlled: true);
   }
 
   Future<void> _showMaterialCountryPicker() async {
     await PlatformNavigation.presentModal<void>(
       context,
-      CountryPickerModal(
-        initialCountry: _selectedCountry,
-        showOffset: widget.showOffset,
-        searchController: _searchController,
-        onSelected: (country) => _selectCountry(country),
-      ),
+      CountryPickerModal(initialCountry: _selectedCountry, showOffset: widget.showOffset, searchController: _searchController, onSelected: (country) => _selectCountry(country)),
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
     );
   }
 
@@ -152,19 +123,15 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
     final safeContext = context;
 
     try {
-      final choice =
-          await PlatformDialogHelpers.showPlatformActionSheet<String>(
-            safeContext,
-            title: l10n.selectTimezoneForCountry(_selectedCountry!.name),
-            actions: _selectedCountry!.timezones.map((timezone) {
-              final offset = TimezoneService.getCurrentOffset(timezone);
-              return PlatformAction(
-                text: l10n.timezoneWithOffset(timezone, offset),
-                value: timezone,
-              );
-            }).toList(),
-            cancelText: l10n.cancel,
-          );
+      final choice = await PlatformDialogHelpers.showPlatformActionSheet<String>(
+        safeContext,
+        title: l10n.selectTimezoneForCountry(_selectedCountry!.name),
+        actions: _selectedCountry!.timezones.map((timezone) {
+          final offset = TimezoneService.getCurrentOffset(timezone);
+          return PlatformAction(text: l10n.timezoneWithOffset(timezone, offset), value: timezone);
+        }).toList(),
+        cancelText: l10n.cancel,
+      );
 
       if (choice != null) {
         _selectTimezone(choice);
@@ -177,19 +144,15 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
     final safeContext = context;
 
     try {
-      final choice =
-          await PlatformDialogHelpers.showPlatformActionSheet<String>(
-            safeContext,
-            title: l10n.selectTimezoneForCountry(_selectedCountry!.name),
-            actions: _selectedCountry!.timezones.map((timezone) {
-              final offset = TimezoneService.getCurrentOffset(timezone);
-              return PlatformAction(
-                text: l10n.timezoneWithOffset(timezone, offset),
-                value: timezone,
-              );
-            }).toList(),
-            cancelText: l10n.cancel,
-          );
+      final choice = await PlatformDialogHelpers.showPlatformActionSheet<String>(
+        safeContext,
+        title: l10n.selectTimezoneForCountry(_selectedCountry!.name),
+        actions: _selectedCountry!.timezones.map((timezone) {
+          final offset = TimezoneService.getCurrentOffset(timezone);
+          return PlatformAction(text: l10n.timezoneWithOffset(timezone, offset), value: timezone);
+        }).toList(),
+        cancelText: l10n.cancel,
+      );
 
       if (choice != null) {
         _selectTimezone(choice);
@@ -208,27 +171,15 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
   }
 
   Future<void> _showCupertinoCitySearchPicker() async {
-    await PlatformNavigation.presentModal<void>(
-      context,
-      CitySearchPickerModal(
-        initialCountryCode: _selectedCountry?.code,
-        onSelected: (city) => _selectCityWithTimezone(city),
-      ),
-      isScrollControlled: true,
-    );
+    await PlatformNavigation.presentModal<void>(context, CitySearchPickerModal(initialCountryCode: _selectedCountry?.code, onSelected: (city) => _selectCityWithTimezone(city)), isScrollControlled: true);
   }
 
   Future<void> _showMaterialCitySearchPicker() async {
     await PlatformNavigation.presentModal<void>(
       context,
-      CitySearchPickerModal(
-        initialCountryCode: _selectedCountry?.code,
-        onSelected: (city) => _selectCityWithTimezone(city),
-      ),
+      CitySearchPickerModal(initialCountryCode: _selectedCountry?.code, onSelected: (city) => _selectCityWithTimezone(city)),
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
     );
   }
 
@@ -242,8 +193,7 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
     setState(() {
       _selectedCountry = country;
       _selectedCity = city.name;
-      _selectedTimezone =
-          city.timezone ?? country?.primaryTimezone ?? context.l10n.utc;
+      _selectedTimezone = city.timezone ?? country?.primaryTimezone ?? context.l10n.utc;
     });
 
     if (country != null) {
@@ -256,9 +206,7 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
     final l10n = context.l10n;
     final isIOS = PlatformDetection.isIOS;
     String offset = '';
-    if (_selectedCountry != null &&
-        widget.showOffset &&
-        _selectedTimezone != null) {
+    if (_selectedCountry != null && widget.showOffset && _selectedTimezone != null) {
       try {
         offset = TimezoneService.getCurrentOffset(_selectedTimezone!);
       } catch (e) {
@@ -272,11 +220,7 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
         if (widget.label != null) ...[
           Text(
             widget.label!,
-            style: AppStyles.bodyText.copyWith(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppStyles.black87,
-            ),
+            style: AppStyles.bodyText.copyWith(fontSize: 16, fontWeight: FontWeight.w500, color: AppStyles.black87),
           ),
           const SizedBox(height: 8),
         ],
@@ -289,57 +233,17 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
           ),
           child: isIOS
               ? CupertinoListTile(
-                  leading: _selectedCountry != null
-                      ? Text(
-                          _selectedCountry!.flag,
-                          style: AppStyles.headlineSmall.copyWith(fontSize: 24),
-                        )
-                      : PlatformWidgets.platformIcon(CupertinoIcons.globe),
-                  title: Text(
-                    _selectedCountry?.name ?? l10n.selectCountryTimezone,
-                  ),
-                  subtitle: widget.showOffset && _selectedCountry != null
-                      ? Text(
-                          l10n.timezoneWithOffset(
-                            _selectedCountry!.primaryTimezone,
-                            offset,
-                          ),
-                          style: AppStyles.cardSubtitle.copyWith(
-                            color: AppStyles.grey600,
-                            fontSize: 14,
-                          ),
-                        )
-                      : null,
-                  trailing: PlatformWidgets.platformIcon(
-                    CupertinoIcons.forward,
-                  ),
+                  leading: _selectedCountry != null ? Text(_selectedCountry!.flag, style: AppStyles.headlineSmall.copyWith(fontSize: 24)) : PlatformWidgets.platformIcon(CupertinoIcons.globe),
+                  title: Text(_selectedCountry?.name ?? l10n.selectCountryTimezone),
+                  subtitle: widget.showOffset && _selectedCountry != null ? Text(l10n.timezoneWithOffset(_selectedCountry!.primaryTimezone, offset), style: AppStyles.cardSubtitle.copyWith(color: AppStyles.grey600, fontSize: 14)) : null,
+                  trailing: PlatformWidgets.platformIcon(CupertinoIcons.forward),
                   onTap: _showCountryPicker,
                 )
               : _buildPlatformTile(
-                  leading: _selectedCountry != null
-                      ? Text(
-                          _selectedCountry!.flag,
-                          style: AppStyles.headlineSmall.copyWith(fontSize: 24),
-                        )
-                      : PlatformWidgets.platformIcon(CupertinoIcons.globe),
-                  title: Text(
-                    _selectedCountry?.name ?? l10n.selectCountryTimezone,
-                  ),
-                  subtitle: widget.showOffset && _selectedCountry != null
-                      ? Text(
-                          l10n.timezoneWithOffset(
-                            _selectedCountry!.primaryTimezone,
-                            offset,
-                          ),
-                          style: AppStyles.cardSubtitle.copyWith(
-                            color: AppStyles.grey600,
-                            fontSize: 14,
-                          ),
-                        )
-                      : null,
-                  trailing: PlatformWidgets.platformIcon(
-                    CupertinoIcons.forward,
-                  ),
+                  leading: _selectedCountry != null ? Text(_selectedCountry!.flag, style: AppStyles.headlineSmall.copyWith(fontSize: 24)) : PlatformWidgets.platformIcon(CupertinoIcons.globe),
+                  title: Text(_selectedCountry?.name ?? l10n.selectCountryTimezone),
+                  subtitle: widget.showOffset && _selectedCountry != null ? Text(l10n.timezoneWithOffset(_selectedCountry!.primaryTimezone, offset), style: AppStyles.cardSubtitle.copyWith(color: AppStyles.grey600, fontSize: 14)) : null,
+                  trailing: PlatformWidgets.platformIcon(CupertinoIcons.forward),
                   onTap: _showCountryPicker,
                 ),
         ),
@@ -354,48 +258,23 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
             ),
             child: isIOS
                 ? CupertinoListTile(
-                    leading: PlatformWidgets.platformIcon(
-                      CupertinoIcons.location_solid,
-                    ),
+                    leading: PlatformWidgets.platformIcon(CupertinoIcons.location_solid),
                     title: Text(l10n.city),
-                    subtitle: Text(
-                      _selectedCity ?? l10n.select,
-                      style: AppStyles.cardSubtitle.copyWith(
-                        color: _selectedCity != null
-                            ? AppStyles.grey600
-                            : AppStyles.grey400,
-                        fontSize: 14,
-                      ),
-                    ),
-                    trailing: PlatformWidgets.platformIcon(
-                      CupertinoIcons.forward,
-                    ),
+                    subtitle: Text(_selectedCity ?? l10n.select, style: AppStyles.cardSubtitle.copyWith(color: _selectedCity != null ? AppStyles.grey600 : AppStyles.grey400, fontSize: 14)),
+                    trailing: PlatformWidgets.platformIcon(CupertinoIcons.forward),
                     onTap: _showCityPicker,
                   )
                 : _buildPlatformTile(
-                    leading: PlatformWidgets.platformIcon(
-                      CupertinoIcons.location_solid,
-                    ),
+                    leading: PlatformWidgets.platformIcon(CupertinoIcons.location_solid),
                     title: Text(l10n.city),
-                    subtitle: Text(
-                      _selectedCity ?? l10n.select,
-                      style: AppStyles.cardSubtitle.copyWith(
-                        color: _selectedCity != null
-                            ? AppStyles.grey600
-                            : AppStyles.grey400,
-                        fontSize: 14,
-                      ),
-                    ),
-                    trailing: PlatformWidgets.platformIcon(
-                      CupertinoIcons.forward,
-                    ),
+                    subtitle: Text(_selectedCity ?? l10n.select, style: AppStyles.cardSubtitle.copyWith(color: _selectedCity != null ? AppStyles.grey600 : AppStyles.grey400, fontSize: 14)),
+                    trailing: PlatformWidgets.platformIcon(CupertinoIcons.forward),
                     onTap: _showCityPicker,
                   ),
           ),
         ],
 
-        if (_selectedCountry != null &&
-            _selectedCountry!.timezones.length > 1) ...[
+        if (_selectedCountry != null && _selectedCountry!.timezones.length > 1) ...[
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
@@ -407,31 +286,15 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
                 ? CupertinoListTile(
                     leading: PlatformWidgets.platformIcon(CupertinoIcons.time),
                     title: Text(l10n.specificTimezone),
-                    subtitle: Text(
-                      _selectedTimezone ?? l10n.select,
-                      style: AppStyles.cardSubtitle.copyWith(
-                        color: AppStyles.grey600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    trailing: PlatformWidgets.platformIcon(
-                      CupertinoIcons.forward,
-                    ),
+                    subtitle: Text(_selectedTimezone ?? l10n.select, style: AppStyles.cardSubtitle.copyWith(color: AppStyles.grey600, fontSize: 14)),
+                    trailing: PlatformWidgets.platformIcon(CupertinoIcons.forward),
                     onTap: _showTimezonePicker,
                   )
                 : _buildPlatformTile(
                     leading: PlatformWidgets.platformIcon(CupertinoIcons.time),
                     title: Text(l10n.specificTimezone),
-                    subtitle: Text(
-                      _selectedTimezone ?? l10n.select,
-                      style: AppStyles.cardSubtitle.copyWith(
-                        color: AppStyles.grey600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    trailing: PlatformWidgets.platformIcon(
-                      CupertinoIcons.forward,
-                    ),
+                    subtitle: Text(_selectedTimezone ?? l10n.select, style: AppStyles.cardSubtitle.copyWith(color: AppStyles.grey600, fontSize: 14)),
+                    trailing: PlatformWidgets.platformIcon(CupertinoIcons.forward),
                     onTap: _showTimezonePicker,
                   ),
           ),
@@ -440,13 +303,7 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
     );
   }
 
-  Widget _buildPlatformTile({
-    Widget? leading,
-    required Widget title,
-    Widget? subtitle,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
+  Widget _buildPlatformTile({Widget? leading, required Widget title, Widget? subtitle, Widget? trailing, VoidCallback? onTap}) {
     return Semantics(
       button: true,
       child: GestureDetector(
@@ -456,22 +313,13 @@ class _CountryTimezoneSelectorState extends State<CountryTimezoneSelector> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
             children: [
-              if (leading != null) ...[
-                SizedBox(width: 36, child: Center(child: leading)),
-                const SizedBox(width: 12),
-              ],
+              if (leading != null) ...[SizedBox(width: 36, child: Center(child: leading)), const SizedBox(width: 12)],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DefaultTextStyle(style: AppStyles.bodyText, child: title),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      DefaultTextStyle(
-                        style: AppStyles.cardSubtitle,
-                        child: subtitle,
-                      ),
-                    ],
+                    if (subtitle != null) ...[const SizedBox(height: 4), DefaultTextStyle(style: AppStyles.cardSubtitle, child: subtitle)],
                   ],
                 ),
               ),

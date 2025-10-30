@@ -298,6 +298,7 @@ class EventInteraction(Base):
     invited_via_group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
     note = Column(Text, nullable=True)  # Personal note for this event
     rejection_message = Column(Text, nullable=True)  # Message when rejecting invitation
+    is_attending = Column(Boolean, default=False, nullable=True)  # Whether user is attending despite rejecting invitation (for public events)
     read_at = Column(TIMESTAMP(timezone=True), nullable=True)  # Timestamp when interaction was marked as read
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

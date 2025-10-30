@@ -14,17 +14,7 @@ class Group {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
-  const Group({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.creatorId,
-    this.creator,
-    this.members = const [],
-    this.admins = const [],
-    required this.createdAt,
-    this.updatedAt,
-  });
+  const Group({required this.id, required this.name, required this.description, required this.creatorId, this.creator, this.members = const [], this.admins = const [], required this.createdAt, this.updatedAt});
 
   factory Group.fromJson(Map<String, dynamic> json) {
     return Group(
@@ -33,16 +23,10 @@ class Group {
       description: json['description'] ?? '',
       creatorId: json['creator_id'],
       creator: json['creator'] != null ? User.fromJson(json['creator']) : null,
-      members: json['members'] != null
-          ? (json['members'] as List).map((m) => User.fromJson(m)).toList()
-          : [],
-      admins: json['admins'] != null
-          ? (json['admins'] as List).map((a) => User.fromJson(a)).toList()
-          : [],
+      members: json['members'] != null ? (json['members'] as List).map((m) => User.fromJson(m)).toList() : [],
+      admins: json['admins'] != null ? (json['admins'] as List).map((a) => User.fromJson(a)).toList() : [],
       createdAt: DateTimeUtils.parseAndNormalize(json['created_at']),
-      updatedAt: json['updated_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
-          : null,
+      updatedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : null,
     );
   }
 
@@ -89,17 +73,7 @@ class Group {
     return count == 1 ? '1 miembro' : '$count miembros';
   }
 
-  Group copyWith({
-    int? id,
-    String? name,
-    String? description,
-    int? creatorId,
-    User? creator,
-    List<User>? members,
-    List<User>? admins,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
+  Group copyWith({int? id, String? name, String? description, int? creatorId, User? creator, List<User>? members, List<User>? admins, DateTime? createdAt, DateTime? updatedAt}) {
     return Group(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -134,9 +108,7 @@ extension GroupInvitationState on Group {
   GroupState invitationState(Set<int> invitedUserIds) {
     if (members.isEmpty) return GroupState.empty;
 
-    final invitedCount = members
-        .where((member) => invitedUserIds.contains(member.id))
-        .length;
+    final invitedCount = members.where((member) => invitedUserIds.contains(member.id)).length;
 
     if (invitedCount == members.length) {
       return GroupState.fullyInvited;

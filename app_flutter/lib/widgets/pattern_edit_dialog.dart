@@ -30,10 +30,7 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
       _selectedDayOfWeek = widget.pattern!.dayOfWeek;
 
       final timeParts = widget.pattern!.time.split(':');
-      _selectedTime = TimeOfDay(
-        hour: int.parse(timeParts[0]),
-        minute: int.parse(timeParts[1]),
-      );
+      _selectedTime = TimeOfDay(hour: int.parse(timeParts[0]), minute: int.parse(timeParts[1]));
     } else {
       _selectedDayOfWeek = 0;
       _selectedTime = const TimeOfDay(hour: 18, minute: 0);
@@ -50,39 +47,17 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
         margin: const EdgeInsets.all(24),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: PlatformDetection.isIOS
-              ? CupertinoColors.systemBackground.resolveFrom(context)
-              : AppStyles.cardBackgroundColor,
-          borderRadius: BorderRadius.circular(
-            PlatformDetection.isIOS ? 14 : 12,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppStyles.colorWithOpacity(AppStyles.black87, 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: PlatformDetection.isIOS ? CupertinoColors.systemBackground.resolveFrom(context) : AppStyles.cardBackgroundColor,
+          borderRadius: BorderRadius.circular(PlatformDetection.isIOS ? 14 : 12),
+          boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black87, 0.2), blurRadius: 8, offset: const Offset(0, 4))],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.pattern == null
-                  ? context.l10n.addPattern
-                  : context.l10n.editPattern,
-              style: PlatformDetection.isIOS
-                  ? AppStyles.cardTitle.copyWith(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: CupertinoColors.label.resolveFrom(context),
-                    )
-                  : AppStyles.cardTitle.copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: AppStyles.black87,
-                    ),
+              widget.pattern == null ? context.l10n.addPattern : context.l10n.editPattern,
+              style: PlatformDetection.isIOS ? AppStyles.cardTitle.copyWith(fontSize: 17, fontWeight: FontWeight.w600, color: CupertinoColors.label.resolveFrom(context)) : AppStyles.cardTitle.copyWith(fontSize: 20, fontWeight: FontWeight.w600, color: AppStyles.black87),
             ),
 
             _buildContent(context.l10n),
@@ -97,38 +72,18 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
   }
 
   Widget _buildContent(dynamic l10n) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 16),
-        _buildDayOfWeekSelector(l10n),
-        const SizedBox(height: 24),
-        _buildTimeSelector(l10n),
-      ],
-    );
+    return Column(mainAxisSize: MainAxisSize.min, children: [const SizedBox(height: 16), _buildDayOfWeekSelector(l10n), const SizedBox(height: 24), _buildTimeSelector(l10n)]);
   }
 
   Widget _buildDayOfWeekSelector(dynamic l10n) {
-    final List<String> days = [
-      l10n.monday,
-      l10n.tuesday,
-      l10n.wednesday,
-      l10n.thursday,
-      l10n.friday,
-      l10n.saturday,
-      l10n.sunday,
-    ];
+    final List<String> days = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           context.l10n.dayOfWeek,
-          style: AppStyles.cardSubtitle.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppStyles.black87,
-          ),
+          style: AppStyles.cardSubtitle.copyWith(fontSize: 14, fontWeight: FontWeight.w600, color: AppStyles.black87),
         ),
         const SizedBox(height: 8),
 
@@ -139,9 +94,7 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
               height: 120,
               child: CupertinoPicker(
                 itemExtent: 32,
-                scrollController: FixedExtentScrollController(
-                  initialItem: _selectedDayOfWeek,
-                ),
+                scrollController: FixedExtentScrollController(initialItem: _selectedDayOfWeek),
                 onSelectedItemChanged: (index) {
                   setState(() {
                     _selectedDayOfWeek = index;
@@ -159,25 +112,16 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
                 border: Border.all(color: AppStyles.grey300),
-                borderRadius: BorderRadius.circular(
-                  AppConstants.defaultBorderRadius,
-                ),
+                borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
                 color: AppStyles.cardBackgroundColor,
               ),
               child: Row(
                 children: [
-                  PlatformWidgets.platformIcon(
-                    CupertinoIcons.calendar,
-                    color: AppStyles.primary600,
-                    size: 20,
-                  ),
+                  PlatformWidgets.platformIcon(CupertinoIcons.calendar, color: AppStyles.primary600, size: 20),
                   const SizedBox(width: 12),
                   Text(days[_selectedDayOfWeek], style: AppStyles.bodyText),
                   const Spacer(),
-                  PlatformWidgets.platformIcon(
-                    CupertinoIcons.chevron_down,
-                    color: AppStyles.grey600,
-                  ),
+                  PlatformWidgets.platformIcon(CupertinoIcons.chevron_down, color: AppStyles.grey600),
                 ],
               ),
             ),
@@ -192,11 +136,7 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
       children: [
         Text(
           l10n.time,
-          style: AppStyles.cardSubtitle.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppStyles.black87,
-          ),
+          style: AppStyles.cardSubtitle.copyWith(fontSize: 14, fontWeight: FontWeight.w600, color: AppStyles.black87),
         ),
         const SizedBox(height: 8),
 
@@ -207,18 +147,12 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             decoration: BoxDecoration(
               border: Border.all(color: AppStyles.grey300),
-              borderRadius: BorderRadius.circular(
-                AppConstants.defaultBorderRadius,
-              ),
+              borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
               color: AppStyles.cardBackgroundColor,
             ),
             child: Row(
               children: [
-                PlatformWidgets.platformIcon(
-                  CupertinoIcons.time,
-                  color: AppStyles.primary600,
-                  size: 20,
-                ),
+                PlatformWidgets.platformIcon(CupertinoIcons.time, color: AppStyles.primary600, size: 20),
                 const SizedBox(width: 12),
                 Text(_selectedTime.format(context), style: AppStyles.bodyText),
               ],
@@ -246,13 +180,7 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
                 top: false,
                 child: CupertinoDatePicker(
                   mode: CupertinoDatePickerMode.time,
-                  initialDateTime: DateTime(
-                    2024,
-                    1,
-                    1,
-                    _selectedTime.hour,
-                    _selectedTime.minute,
-                  ),
+                  initialDateTime: DateTime(2024, 1, 1, _selectedTime.hour, _selectedTime.minute),
                   onDateTimeChanged: (DateTime newDateTime) {
                     if (!mounted) {
                       return;
@@ -292,17 +220,7 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               l10n.cancel,
-              style: PlatformDetection.isIOS
-                  ? AppStyles.buttonText.copyWith(
-                      color: CupertinoColors.systemBlue.resolveFrom(context),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    )
-                  : AppStyles.bodyText.copyWith(
-                      color: AppStyles.grey600,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
+              style: PlatformDetection.isIOS ? AppStyles.buttonText.copyWith(color: CupertinoColors.systemBlue.resolveFrom(context), fontSize: 16, fontWeight: FontWeight.w500) : AppStyles.bodyText.copyWith(color: AppStyles.grey600, fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
         ),
@@ -313,19 +231,10 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
           onTap: _savePattern,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: PlatformDetection.isIOS
-                  ? CupertinoColors.systemBlue.resolveFrom(context)
-                  : AppStyles.primary600,
-              borderRadius: BorderRadius.circular(8),
-            ),
+            decoration: BoxDecoration(color: PlatformDetection.isIOS ? CupertinoColors.systemBlue.resolveFrom(context) : AppStyles.primary600, borderRadius: BorderRadius.circular(8)),
             child: Text(
               l10n.save,
-              style: AppStyles.buttonText.copyWith(
-                color: AppStyles.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppStyles.buttonText.copyWith(color: AppStyles.white, fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -342,32 +251,16 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
           margin: const EdgeInsets.all(24),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: PlatformDetection.isIOS
-                ? CupertinoColors.systemBackground.resolveFrom(context)
-                : AppStyles.cardBackgroundColor,
-            borderRadius: BorderRadius.circular(
-              PlatformDetection.isIOS ? 14 : 12,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppStyles.colorWithOpacity(AppStyles.black87, 0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            color: PlatformDetection.isIOS ? CupertinoColors.systemBackground.resolveFrom(context) : AppStyles.cardBackgroundColor,
+            borderRadius: BorderRadius.circular(PlatformDetection.isIOS ? 14 : 12),
+            boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black87, 0.2), blurRadius: 8, offset: const Offset(0, 4))],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 l10n.dayOfWeek,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: PlatformDetection.isIOS
-                      ? CupertinoColors.label.resolveFrom(context)
-                      : AppStyles.black87,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: PlatformDetection.isIOS ? CupertinoColors.label.resolveFrom(context) : AppStyles.black87),
               ),
               const SizedBox(height: 16),
               ...List.generate(
@@ -381,29 +274,10 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
                   },
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     margin: const EdgeInsets.only(bottom: 4),
-                    decoration: BoxDecoration(
-                      color: _selectedDayOfWeek == index
-                          ? AppStyles.colorWithOpacity(
-                              AppStyles.primary600,
-                              0.1,
-                            )
-                          : AppStyles.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      days[index],
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: _selectedDayOfWeek == index
-                            ? AppStyles.primary600
-                            : AppStyles.black87,
-                      ),
-                    ),
+                    decoration: BoxDecoration(color: _selectedDayOfWeek == index ? AppStyles.colorWithOpacity(AppStyles.primary600, 0.1) : AppStyles.transparent, borderRadius: BorderRadius.circular(8)),
+                    child: Text(days[index], style: TextStyle(fontSize: 16, color: _selectedDayOfWeek == index ? AppStyles.primary600 : AppStyles.black87)),
                   ),
                 ),
               ),
@@ -427,32 +301,16 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
           margin: const EdgeInsets.all(24),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: PlatformWidgets.isIOS
-                ? CupertinoColors.systemBackground.resolveFrom(context)
-                : AppStyles.white,
-            borderRadius: BorderRadius.circular(
-              PlatformWidgets.isIOS ? 14 : 12,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppStyles.colorWithOpacity(AppStyles.black87, 0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            color: PlatformWidgets.isIOS ? CupertinoColors.systemBackground.resolveFrom(context) : AppStyles.white,
+            borderRadius: BorderRadius.circular(PlatformWidgets.isIOS ? 14 : 12),
+            boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black87, 0.2), blurRadius: 8, offset: const Offset(0, 4))],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 l10n.time,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: PlatformDetection.isIOS
-                      ? CupertinoColors.label.resolveFrom(context)
-                      : AppStyles.black87,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: PlatformDetection.isIOS ? CupertinoColors.label.resolveFrom(context) : AppStyles.black87),
               ),
               const SizedBox(height: 16),
               Row(
@@ -466,31 +324,20 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
                       itemCount: 24,
                       itemBuilder: (context, hour) => GestureDetector(
                         onTap: () {
-                          selectedTime = TimeOfDay(
-                            hour: hour,
-                            minute: selectedTime?.minute ?? 0,
-                          );
+                          selectedTime = TimeOfDay(hour: hour, minute: selectedTime?.minute ?? 0);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
                             hour.toString().padLeft(2, '0'),
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: selectedTime?.hour == hour
-                                  ? AppStyles.primary600
-                                  : AppStyles.grey500,
-                            ),
+                            style: TextStyle(fontSize: 18, color: selectedTime?.hour == hour ? AppStyles.primary600 : AppStyles.grey500),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  Text(
-                    l10n.colon,
-                    style: AppStyles.headlineSmall.copyWith(fontSize: 24),
-                  ),
+                  Text(l10n.colon, style: AppStyles.headlineSmall.copyWith(fontSize: 24)),
 
                   SizedBox(
                     width: 80,
@@ -503,22 +350,14 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
                         final minute = index * 5;
                         return GestureDetector(
                           onTap: () {
-                            selectedTime = TimeOfDay(
-                              hour: selectedTime?.hour ?? 0,
-                              minute: minute,
-                            );
+                            selectedTime = TimeOfDay(hour: selectedTime?.hour ?? 0, minute: minute);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
                               minute.toString().padLeft(2, '0'),
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: selectedTime?.minute == minute
-                                    ? AppStyles.primary600
-                                    : AppStyles.grey600,
-                              ),
+                              style: TextStyle(fontSize: 18, color: selectedTime?.minute == minute ? AppStyles.primary600 : AppStyles.grey600),
                             ),
                           ),
                         );
@@ -534,38 +373,19 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        l10n.cancel,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppStyles.grey600,
-                        ),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text(l10n.cancel, style: TextStyle(fontSize: 16, color: AppStyles.grey600)),
                     ),
                   ),
                   const SizedBox(width: 12),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(selectedTime),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppStyles.primary600,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(color: AppStyles.primary600, borderRadius: BorderRadius.circular(8)),
                       child: Text(
                         l10n.save,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppStyles.white,
-                        ),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.white),
                       ),
                     ),
                   ),
@@ -586,13 +406,7 @@ class _PatternEditDialogState extends State<PatternEditDialog> {
         '${_selectedTime.hour.toString().padLeft(2, '0')}:'
         '${_selectedTime.minute.toString().padLeft(2, '0')}:00';
 
-    final pattern = RecurrencePattern(
-      id: widget.pattern?.id,
-      eventId: widget.eventId,
-      dayOfWeek: _selectedDayOfWeek,
-      time: timeString,
-      createdAt: widget.pattern?.createdAt,
-    ).ensureFiveMinuteInterval();
+    final pattern = RecurrencePattern(id: widget.pattern?.id, eventId: widget.eventId, dayOfWeek: _selectedDayOfWeek, time: timeString, createdAt: widget.pattern?.createdAt).ensureFiveMinuteInterval();
 
     Navigator.of(context).pop(pattern);
   }

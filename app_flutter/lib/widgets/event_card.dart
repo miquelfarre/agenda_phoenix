@@ -18,12 +18,7 @@ class EventCard extends ConsumerWidget {
   final VoidCallback onTap;
   final EventCardConfig config;
 
-  const EventCard({
-    super.key,
-    required this.event,
-    required this.onTap,
-    this.config = const EventCardConfig(),
-  });
+  const EventCard({super.key, required this.event, required this.onTap, this.config = const EventCardConfig()});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,19 +26,12 @@ class EventCard extends ConsumerWidget {
 
     // Get interaction from provider (source of truth for interaction state)
     final interactions = ref.watch(eventInteractionsProvider).value ?? [];
-    final interaction = interactions
-        .where((i) => i.eventId == event.id)
-        .firstOrNull;
+    final interaction = interactions.where((i) => i.eventId == event.id).firstOrNull;
 
     final participationStatus = interaction?.participationStatus;
 
     // Only show invitation status if config allows it AND there's a participation status
-    final effectiveConfig = participationStatus != null && config.showInvitationStatus
-        ? config.copyWith(
-            showInvitationStatus: true,
-            invitationStatus: participationStatus,
-          )
-        : config;
+    final effectiveConfig = participationStatus != null && config.showInvitationStatus ? config.copyWith(showInvitationStatus: true, invitationStatus: participationStatus) : config;
 
     return GestureDetector(
       onTap: onTap,
@@ -52,42 +40,21 @@ class EventCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppStyles.colorWithOpacity(AppStyles.white, 1.0),
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: AppStyles.colorWithOpacity(AppStyles.black87, 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black87, 0.03), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            EventCardHeader(
-              event: event,
-              config: effectiveConfig,
-            ),
+            EventCardHeader(event: event, config: effectiveConfig),
 
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildLeading(context),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildEventContent(
-                    context,
-                    l10n,
-                    effectiveConfig,
-                    ref,
-                  ),
-                ),
+                Expanded(child: _buildEventContent(context, l10n, effectiveConfig, ref)),
                 const SizedBox(width: 8),
-                EventCardActions(
-                  event: event,
-                  config: effectiveConfig,
-                  interaction: interaction,
-                  participationStatus: participationStatus,
-                ),
+                EventCardActions(event: event, config: effectiveConfig, interaction: interaction, participationStatus: participationStatus),
               ],
             ),
 
@@ -120,39 +87,23 @@ class EventCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.1),
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.3),
-          width: 1.5,
-        ),
+        border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.3), width: 1.5),
       ),
       child: ClipOval(
-        child: profilePicture != null && profilePicture.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: profilePicture,
-                fit: BoxFit.cover,
-                errorWidget: (context, url, error) => _buildBirthdayIcon(),
-              )
-            : _buildBirthdayIcon(),
+        child: profilePicture != null && profilePicture.isNotEmpty ? CachedNetworkImage(imageUrl: profilePicture, fit: BoxFit.cover, errorWidget: (context, url, error) => _buildBirthdayIcon()) : _buildBirthdayIcon(),
       ),
     );
   }
 
   Widget _buildBirthdayIcon() {
-    return Center(
-      child: PlatformWidgets.platformIcon(
-        CupertinoIcons.gift,
-        color: AppStyles.orange600,
-        size: 32,
-      ),
-    );
+    return Center(child: PlatformWidgets.platformIcon(CupertinoIcons.gift, color: AppStyles.orange600, size: 32));
   }
 
   Widget _buildTimeContainer(BuildContext context) {
     final eventTime = event.date;
 
     final colon = context.l10n.colon;
-    final timeStr =
-        '${eventTime.hour.toString().padLeft(2, '0')}$colon${eventTime.minute.toString().padLeft(2, '0')}';
+    final timeStr = '${eventTime.hour.toString().padLeft(2, '0')}$colon${eventTime.minute.toString().padLeft(2, '0')}';
 
     return Container(
       width: 65,
@@ -160,87 +111,46 @@ class EventCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.3),
-          width: 1.5,
-        ),
+        border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.3), width: 1.5),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             timeStr,
-            style: AppStyles.cardTitle.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppStyles.blue600,
-              letterSpacing: 0.5,
-            ),
+            style: AppStyles.cardTitle.copyWith(fontSize: 18, fontWeight: FontWeight.bold, color: AppStyles.blue600, letterSpacing: 0.5),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEventContent(
-    BuildContext context,
-    AppLocalizations l10n,
-    EventCardConfig config,
-    WidgetRef ref,
-  ) {
+  Widget _buildEventContent(BuildContext context, AppLocalizations l10n, EventCardConfig config, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          config.customTitle ?? event.title,
-          style: AppStyles.cardTitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
+        Text(config.customTitle ?? event.title, style: AppStyles.cardTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
         const SizedBox(height: 4),
-        if ((config.customSubtitle ?? event.description ?? '').isNotEmpty)
-          Text(
-            config.customSubtitle ?? event.description ?? '',
-            style: AppStyles.cardSubtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+        if ((config.customSubtitle ?? event.description ?? '').isNotEmpty) Text(config.customSubtitle ?? event.description ?? '', style: AppStyles.cardSubtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
 
-        EventCardBadges(
-          event: event,
-          config: config,
-        ),
+        EventCardBadges(event: event, config: config),
 
         if (config.customStatus != null) ...[
           const SizedBox(height: 4),
           Text(
             config.customStatus!,
-            style: AppStyles.cardSubtitle.copyWith(
-              color: AppStyles.blue600,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppStyles.cardSubtitle.copyWith(color: AppStyles.blue600, fontSize: 12, fontWeight: FontWeight.w500),
           ),
         ],
 
-        if (config.showInvitationStatus &&
-            config.invitationStatus != null &&
-            config.invitationStatus!.toLowerCase() !=
-                AppConstants.statusPending) ...[
+        if (config.showInvitationStatus && config.invitationStatus != null && config.invitationStatus!.toLowerCase() != AppConstants.statusPending) ...[
           const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: _getStatusColor(context, config.invitationStatus!),
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(color: _getStatusColor(context, config.invitationStatus!), borderRadius: BorderRadius.circular(12)),
             child: Text(
               _getStatusText(l10n, config.invitationStatus!),
-              style: AppStyles.bodyText.copyWith(
-                fontSize: 12,
-                color: AppStyles.white,
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppStyles.bodyText.copyWith(fontSize: 12, color: AppStyles.white, fontWeight: FontWeight.w500),
             ),
           ),
         ],

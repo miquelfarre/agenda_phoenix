@@ -55,9 +55,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     }
 
     setState(() {
-      _selectedCountry =
-          CountryService.getCountryByCode(countryCode ?? 'ES') ??
-          CountryService.getCountryByCode('ES')!;
+      _selectedCountry = CountryService.getCountryByCode(countryCode ?? 'ES') ?? CountryService.getCountryByCode('ES')!;
     });
   }
 
@@ -75,25 +73,11 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            PlatformWidgets.platformIcon(
-              CupertinoIcons.phone,
-              size: 80,
-              color: isIOS
-                  ? CupertinoColors.activeBlue.resolveFrom(context)
-                  : AppStyles.blue600,
-            ),
+            PlatformWidgets.platformIcon(CupertinoIcons.phone, size: 80, color: isIOS ? CupertinoColors.activeBlue.resolveFrom(context) : AppStyles.blue600),
             const SizedBox(height: 20),
             Text(
               l10n.loginWithPhone,
-              style: isIOS
-                  ? AppStyles.headlineSmall.copyWith(
-                      color: CupertinoColors.label.resolveFrom(context),
-                      fontSize: 24,
-                    )
-                  : AppStyles.headlineSmall.copyWith(
-                      color: AppStyles.black87,
-                      fontSize: 24,
-                    ),
+              style: isIOS ? AppStyles.headlineSmall.copyWith(color: CupertinoColors.label.resolveFrom(context), fontSize: 24) : AppStyles.headlineSmall.copyWith(color: AppStyles.black87, fontSize: 24),
             ),
             const SizedBox(height: 30),
 
@@ -104,41 +88,19 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                     key: const Key('phone_login_country_selector'),
                     onTap: _showCountryPicker,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: isIOS
-                              ? CupertinoColors.systemGrey4.resolveFrom(context)
-                              : AppStyles.grey300,
-                        ),
+                        border: Border.all(color: isIOS ? CupertinoColors.systemGrey4.resolveFrom(context) : AppStyles.grey300),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            _selectedCountry.flag,
-                            style: const TextStyle(fontSize: 24),
-                          ),
+                          Text(_selectedCountry.flag, style: const TextStyle(fontSize: 24)),
                           const SizedBox(width: 4),
-                          Text(
-                            _selectedCountry.dialCode,
-                            style: isIOS
-                                ? AppStyles.bodyText.copyWith(
-                                    color: CupertinoColors.label.resolveFrom(
-                                      context,
-                                    ),
-                                  )
-                                : AppStyles.bodyText,
-                          ),
+                          Text(_selectedCountry.dialCode, style: isIOS ? AppStyles.bodyText.copyWith(color: CupertinoColors.label.resolveFrom(context)) : AppStyles.bodyText),
                           const SizedBox(width: 4),
-                          PlatformWidgets.platformIcon(
-                            CupertinoIcons.chevron_down,
-                            size: 16,
-                          ),
+                          PlatformWidgets.platformIcon(CupertinoIcons.chevron_down, size: 16),
                         ],
                       ),
                     ),
@@ -146,62 +108,26 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                   const SizedBox(width: 8),
 
                   Expanded(
-                    child: PlatformWidgets.platformTextField(
-                      controller: _phoneController,
-                      placeholder: l10n.phone,
-                      hintText: '626034421',
-                      keyboardType: TextInputType.phone,
-                    ),
+                    child: PlatformWidgets.platformTextField(controller: _phoneController, placeholder: l10n.phone, hintText: '626034421', keyboardType: TextInputType.phone),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                child: AdaptiveButton(
-                  key: const Key('phone_login_send_sms_button'),
-                  config: AdaptiveButtonConfigExtended.submit(),
-                  text: l10n.sendSmsCode,
-                  isLoading: _isLoading,
-                  onPressed: _isLoading ? null : _sendOTP,
-                ),
+                child: AdaptiveButton(key: const Key('phone_login_send_sms_button'), config: AdaptiveButtonConfigExtended.submit(), text: l10n.sendSmsCode, isLoading: _isLoading, onPressed: _isLoading ? null : _sendOTP),
               ),
             ] else ...[
               Text(
-                l10n.codeSentTo(
-                  '${_selectedCountry.dialCode}${_phoneController.text}',
-                ),
-                style: isIOS
-                    ? AppStyles.bodyText.copyWith(
-                        color: CupertinoColors.secondaryLabel.resolveFrom(
-                          context,
-                        ),
-                        fontSize: 16,
-                      )
-                    : AppStyles.bodyText.copyWith(
-                        color: AppStyles.grey600,
-                        fontSize: 16,
-                      ),
+                l10n.codeSentTo('${_selectedCountry.dialCode}${_phoneController.text}'),
+                style: isIOS ? AppStyles.bodyText.copyWith(color: CupertinoColors.secondaryLabel.resolveFrom(context), fontSize: 16) : AppStyles.bodyText.copyWith(color: AppStyles.grey600, fontSize: 16),
               ),
               const SizedBox(height: 20),
-              PlatformWidgets.platformTextField(
-                controller: _codeController,
-                placeholder: l10n.smsCode,
-                hintText: l10n.smsCodeHintExample,
-                prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.lock),
-                keyboardType: TextInputType.number,
-                maxLines: 1,
-              ),
+              PlatformWidgets.platformTextField(controller: _codeController, placeholder: l10n.smsCode, hintText: l10n.smsCodeHintExample, prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.lock), keyboardType: TextInputType.number, maxLines: 1),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                child: AdaptiveButton(
-                  key: const Key('phone_login_verify_code_button'),
-                  config: AdaptiveButtonConfigExtended.submit(),
-                  text: l10n.verifyCode,
-                  isLoading: _isLoading,
-                  onPressed: _isLoading ? null : _verifyOTP,
-                ),
+                child: AdaptiveButton(key: const Key('phone_login_verify_code_button'), config: AdaptiveButtonConfigExtended.submit(), text: l10n.verifyCode, isLoading: _isLoading, onPressed: _isLoading ? null : _verifyOTP),
               ),
               AdaptiveButton(
                 key: const Key('phone_login_change_number_button'),
@@ -245,25 +171,16 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   Future<void> _sendOTP() async {
     setState(() => _isLoading = true);
 
-    final phoneNumber =
-        '${_selectedCountry.dialCode}${_phoneController.text.trim()}';
+    final phoneNumber = '${_selectedCountry.dialCode}${_phoneController.text.trim()}';
 
-    final isIOSSimulator =
-        PlatformDetection.isIOS &&
-        (const bool.fromEnvironment('dart.vm.product') != true);
+    final isIOSSimulator = PlatformDetection.isIOS && (const bool.fromEnvironment('dart.vm.product') != true);
 
     if (isIOSSimulator) {
       if (!mounted) return;
 
       final l10n = context.l10n;
 
-      final result = await PlatformDialogHelpers.showPlatformConfirmDialog(
-        context,
-        title: l10n.iosSimulatorDetected,
-        message: l10n.phoneAuthLimitationMessage,
-        confirmText: l10n.continueAction,
-        cancelText: l10n.cancel,
-      );
+      final result = await PlatformDialogHelpers.showPlatformConfirmDialog(context, title: l10n.iosSimulatorDetected, message: l10n.phoneAuthLimitationMessage, confirmText: l10n.continueAction, cancelText: l10n.cancel);
 
       if (result == true) {
         await _performTestAuthentication();
@@ -282,10 +199,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
           });
           if (mounted && context.mounted) {
             final l10n = context.l10n;
-            PlatformDialogHelpers.showSnackBar(
-              context: context,
-              message: l10n.smsCodeSentTo(_phoneController.text),
-            );
+            PlatformDialogHelpers.showSnackBar(context: context, message: l10n.smsCodeSentTo(_phoneController.text));
           }
         },
         onError: (String error) {
@@ -293,21 +207,15 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
           final l10n = context.l10n;
           String errorMessage = l10n.verificationError;
 
-          if (error.contains('invalid-phone-number') ||
-              error.contains('Invalid phone')) {
+          if (error.contains('invalid-phone-number') || error.contains('Invalid phone')) {
             errorMessage = l10n.invalidPhone;
-          } else if (error.contains('too-many-requests') ||
-              error.contains('rate limit')) {
+          } else if (error.contains('too-many-requests') || error.contains('rate limit')) {
             errorMessage = l10n.tooManyRequests;
           } else {
             errorMessage = error;
           }
 
-          PlatformDialogHelpers.showSnackBar(
-            context: context,
-            message: errorMessage,
-            isError: true,
-          );
+          PlatformDialogHelpers.showSnackBar(context: context, message: errorMessage, isError: true);
         },
       );
     } catch (e) {
@@ -315,11 +223,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
       final l10n = context.l10n;
       String errorMessage = l10n.errorSendingCode;
 
-      PlatformDialogHelpers.showSnackBar(
-        context: context,
-        message: '$errorMessage: ${e.toString()}',
-        isError: true,
-      );
+      PlatformDialogHelpers.showSnackBar(context: context, message: '$errorMessage: ${e.toString()}', isError: true);
     }
 
     setState(() => _isLoading = false);
@@ -328,14 +232,10 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   Future<void> _verifyOTP() async {
     setState(() => _isLoading = true);
 
-    final phoneNumber =
-        '${_selectedCountry.dialCode}${_phoneController.text.trim()}';
+    final phoneNumber = '${_selectedCountry.dialCode}${_phoneController.text.trim()}';
 
     try {
-      await SupabaseAuthService.verifyOTP(
-        phoneNumber: phoneNumber,
-        token: _codeController.text.trim(),
-      );
+      await SupabaseAuthService.verifyOTP(phoneNumber: phoneNumber, token: _codeController.text.trim());
 
       await _onAuthSuccess(ref);
     } catch (e) {
@@ -343,8 +243,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
       final l10n = context.l10n;
       String errorMessage = l10n.incorrectCode;
 
-      if (e.toString().contains('invalid') ||
-          e.toString().contains('Invalid')) {
+      if (e.toString().contains('invalid') || e.toString().contains('Invalid')) {
         errorMessage = l10n.invalidVerificationCode;
       } else if (e.toString().contains('expired')) {
         errorMessage = l10n.sessionExpired;
@@ -352,11 +251,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
         errorMessage = l10n.errorVerifyingCode;
       }
 
-      PlatformDialogHelpers.showSnackBar(
-        context: context,
-        message: errorMessage,
-        isError: true,
-      );
+      PlatformDialogHelpers.showSnackBar(context: context, message: errorMessage, isError: true);
     }
 
     setState(() => _isLoading = false);
@@ -380,13 +275,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
 
       // Update user online status
       try {
-        await ApiClientFactory.instance.put(
-          '/api/v1/users/${user.id}',
-          body: {
-            'is_online': true,
-            'last_seen': DateTime.now().toIso8601String(),
-          },
-        );
+        await ApiClientFactory.instance.put('/api/v1/users/${user.id}', body: {'is_online': true, 'last_seen': DateTime.now().toIso8601String()});
       } catch (e) {
         // Ignore error
       }
@@ -405,21 +294,14 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     } catch (e) {
       if (mounted && context.mounted) {
         final l10n = context.l10n;
-        PlatformDialogHelpers.showSnackBar(
-          context: context,
-          message: l10n.errorCompletingRegistrationWithMessage(e.toString()),
-          isError: true,
-        );
+        PlatformDialogHelpers.showSnackBar(context: context, message: l10n.errorCompletingRegistrationWithMessage(e.toString()), isError: true);
       }
     }
   }
 
   Future<void> _performTestAuthentication() async {
     try {
-      const int testUserId = int.fromEnvironment(
-        'TEST_USER_ID',
-        defaultValue: 24,
-      );
+      const int testUserId = int.fromEnvironment('TEST_USER_ID', defaultValue: 24);
 
       ConfigService.instance.enableTestMode();
 
@@ -428,11 +310,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
       await _onAuthSuccess(ref);
     } catch (e) {
       if (mounted && context.mounted) {
-        PlatformDialogHelpers.showSnackBar(
-          context: context,
-          message: 'Test authentication failed: ${e.toString()}',
-          isError: true,
-        );
+        PlatformDialogHelpers.showSnackBar(context: context, message: 'Test authentication failed: ${e.toString()}', isError: true);
       }
     }
   }

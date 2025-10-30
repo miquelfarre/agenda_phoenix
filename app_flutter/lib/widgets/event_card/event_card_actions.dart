@@ -16,13 +16,7 @@ class EventCardActions extends ConsumerWidget {
   final EventInteraction? interaction;
   final String? participationStatus;
 
-  const EventCardActions({
-    super.key,
-    required this.event,
-    required this.config,
-    this.interaction,
-    this.participationStatus,
-  });
+  const EventCardActions({super.key, required this.event, required this.config, this.interaction, this.participationStatus});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,11 +46,7 @@ class EventCardActions extends ConsumerWidget {
 
     // Default: show chevron or nothing
     if (config.showChevron) {
-      return PlatformWidgets.platformIcon(
-        CupertinoIcons.chevron_right,
-        color: AppStyles.grey400,
-        size: 20,
-      );
+      return PlatformWidgets.platformIcon(CupertinoIcons.chevron_right, color: AppStyles.grey400, size: 20);
     }
 
     return const SizedBox.shrink();
@@ -72,28 +62,17 @@ class EventCardActions extends ConsumerWidget {
       children: [
         _actionCircle(
           context: context,
-          icon: isCurrentlyAccepted
-              ? CupertinoIcons.heart_fill
-              : CupertinoIcons.heart,
+          icon: isCurrentlyAccepted ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
           color: AppStyles.green600,
           tooltip: context.l10n.accept,
           onTap: () async {
             if (event.id != null) {
               try {
                 final newStatus = isCurrentlyAccepted ? 'pending' : 'accepted';
-                await ref
-                    .read(eventInteractionRepositoryProvider)
-                    .updateParticipationStatus(
-                      event.id!,
-                      newStatus,
-                      isAttending: false,
-                    );
+                await ref.read(eventInteractionRepositoryProvider).updateParticipationStatus(event.id!, newStatus, isAttending: false);
               } catch (e) {
                 if (!context.mounted) return;
-                PlatformWidgets.showSnackBar(
-                  message: context.l10n.errorAcceptingInvitation,
-                  isError: true,
-                );
+                PlatformWidgets.showSnackBar(message: context.l10n.errorAcceptingInvitation, isError: true);
               }
             }
           },
@@ -101,28 +80,17 @@ class EventCardActions extends ConsumerWidget {
         const SizedBox(width: 8),
         _actionCircle(
           context: context,
-          icon: isCurrentlyRejected
-              ? CupertinoIcons.xmark_circle_fill
-              : CupertinoIcons.xmark,
+          icon: isCurrentlyRejected ? CupertinoIcons.xmark_circle_fill : CupertinoIcons.xmark,
           color: AppStyles.red600,
           tooltip: context.l10n.decline,
           onTap: () async {
             if (event.id == null) return;
             try {
               final newStatus = isCurrentlyRejected ? 'pending' : 'rejected';
-              await ref
-                  .read(eventInteractionRepositoryProvider)
-                  .updateParticipationStatus(
-                    event.id!,
-                    newStatus,
-                    isAttending: false,
-                  );
+              await ref.read(eventInteractionRepositoryProvider).updateParticipationStatus(event.id!, newStatus, isAttending: false);
             } catch (e) {
               if (!context.mounted) return;
-              PlatformWidgets.showSnackBar(
-                message: context.l10n.errorRejectingInvitation,
-                isError: true,
-              );
+              PlatformWidgets.showSnackBar(message: context.l10n.errorRejectingInvitation, isError: true);
             }
           },
         ),
@@ -142,10 +110,7 @@ class EventCardActions extends ConsumerWidget {
           onTap: () async {
             if (config.onDelete != null) {
               try {
-                await config.onDelete!(
-                  event,
-                  shouldNavigate: config.navigateAfterDelete,
-                );
+                await config.onDelete!(event, shouldNavigate: config.navigateAfterDelete);
               } catch (_) {}
             }
           },
@@ -166,10 +131,7 @@ class EventCardActions extends ConsumerWidget {
           onTap: () async {
             if (config.onDelete != null) {
               try {
-                await config.onDelete!(
-                  event,
-                  shouldNavigate: config.navigateAfterDelete,
-                );
+                await config.onDelete!(event, shouldNavigate: config.navigateAfterDelete);
               } catch (_) {}
             }
           },
@@ -178,13 +140,7 @@ class EventCardActions extends ConsumerWidget {
     );
   }
 
-  Widget _actionCircle({
-    required BuildContext context,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-    String? tooltip,
-  }) {
+  Widget _actionCircle({required BuildContext context, required IconData icon, required Color color, required VoidCallback onTap, String? tooltip}) {
     return GestureDetector(
       onTap: onTap,
       child: Semantics(
@@ -195,14 +151,9 @@ class EventCardActions extends ConsumerWidget {
           decoration: BoxDecoration(
             color: AppStyles.colorWithOpacity(color, 0.1),
             shape: BoxShape.circle,
-            border: Border.all(
-              color: AppStyles.colorWithOpacity(color, 0.25),
-              width: 1,
-            ),
+            border: Border.all(color: AppStyles.colorWithOpacity(color, 0.25), width: 1),
           ),
-          child: Center(
-            child: PlatformWidgets.platformIcon(icon, color: color, size: 16),
-          ),
+          child: Center(child: PlatformWidgets.platformIcon(icon, color: color, size: 16)),
         ),
       ),
     );

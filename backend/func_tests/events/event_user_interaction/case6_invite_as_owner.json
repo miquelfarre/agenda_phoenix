@@ -34,14 +34,15 @@
   "expected": {
     "status_code": 201,
     "body": {
-      "id": "{{ID}}",
-      "event_id": "{{ID}}",
-      "user_id": "{{ID}}",
       "interaction_type": "invited",
       "status": "pending",
       "role": null,
       "note": "Join us!",
       "rejection_message": null,
+      "is_attending": false,
+      "id": "{{ID}}",
+      "event_id": "{{ID}}",
+      "user_id": "{{ID}}",
       "invited_by_user_id": null,
       "invited_via_group_id": null,
       "read_at": null,

@@ -5,13 +5,11 @@ import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 
-
 class UserBlockingRepository {
   final _apiClient = ApiClient();
   final _supabaseService = SupabaseService.instance;
 
-  final StreamController<List<User>> _blockedUsersController =
-      StreamController<List<User>>.broadcast();
+  final StreamController<List<User>> _blockedUsersController = StreamController<List<User>>.broadcast();
   List<User> _cachedBlockedUsers = [];
   RealtimeChannel? _realtimeChannel;
 
@@ -29,19 +27,9 @@ class UserBlockingRepository {
     try {
       print('📡 [UserBlockingRepository] Fetching blocked users from API...');
       final currentUserId = ConfigService.instance.currentUserId;
-      final blocks = await _apiClient.fetchUserBlocks(
-        blockerUserId: currentUserId,
-      );
+      final blocks = await _apiClient.fetchUserBlocks(blockerUserId: currentUserId);
 
-      _cachedBlockedUsers = blocks
-          .map(
-            (block) => User(
-              id: block['blocked_user_id'] as int,
-              isPublic: false,
-              fullName: 'Blocked User ${block['blocked_user_id']}',
-            ),
-          )
-          .toList();
+      _cachedBlockedUsers = blocks.map((block) => User(id: block['blocked_user_id'] as int, isPublic: false, fullName: 'Blocked User ${block['blocked_user_id']}')).toList();
       _emitBlockedUsers();
       print('✅ [UserBlockingRepository] Fetched ${_cachedBlockedUsers.length} blocked users');
     } catch (e) {
@@ -53,10 +41,7 @@ class UserBlockingRepository {
     try {
       print('🚫 [UserBlockingRepository] Blocking user $userId');
       final currentUserId = ConfigService.instance.currentUserId;
-      await _apiClient.createUserBlock({
-        'blocker_user_id': currentUserId,
-        'blocked_user_id': userId,
-      });
+      await _apiClient.createUserBlock({'blocker_user_id': currentUserId, 'blocked_user_id': userId});
       await _fetchAndSync();
       print('✅ [UserBlockingRepository] User $userId blocked');
     } catch (e, stackTrace) {
@@ -70,10 +55,7 @@ class UserBlockingRepository {
     try {
       print('✅ [UserBlockingRepository] Unblocking user $userId');
       final currentUserId = ConfigService.instance.currentUserId;
-      final blocks = await _apiClient.fetchUserBlocks(
-        blockerUserId: currentUserId,
-        blockedUserId: userId,
-      );
+      final blocks = await _apiClient.fetchUserBlocks(blockerUserId: currentUserId, blockedUserId: userId);
 
       if (blocks.isNotEmpty) {
         final blockId = blocks.first['id'] as int;
@@ -100,11 +82,7 @@ class UserBlockingRepository {
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'user_blocks',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'blocker_user_id',
-            value: userId.toString(),
-          ),
+          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'blocker_user_id', value: userId.toString()),
           callback: (payload) {
             // A block changed, refetch all blocked users
             _fetchAndSync();

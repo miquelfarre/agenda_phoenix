@@ -18,12 +18,10 @@ class SubscriptionDetailScreen extends ConsumerStatefulWidget {
   const SubscriptionDetailScreen({super.key, required this.subscription});
 
   @override
-  ConsumerState<SubscriptionDetailScreen> createState() =>
-      _SubscriptionDetailScreenState();
+  ConsumerState<SubscriptionDetailScreen> createState() => _SubscriptionDetailScreenState();
 }
 
-class _SubscriptionDetailScreenState
-    extends ConsumerState<SubscriptionDetailScreen> {
+class _SubscriptionDetailScreenState extends ConsumerState<SubscriptionDetailScreen> {
   List<Event> _events = [];
   bool _isLoading = false;
   String? _error;
@@ -42,24 +40,18 @@ class _SubscriptionDetailScreenState
     });
 
     try {
-      print(
-        '🔵 [SubscriptionDetailScreen] Calling Backend API for user events...',
-      );
+      print('🔵 [SubscriptionDetailScreen] Calling Backend API for user events...');
       final publicUserId = widget.subscription.subscribedToId;
       final eventsData = await ApiClient().fetchUserEvents(publicUserId);
       final events = eventsData.map((e) => Event.fromJson(e)).toList();
-      print(
-        '🔵 [SubscriptionDetailScreen] Backend API completed, events count: ${events.length}',
-      );
+      print('🔵 [SubscriptionDetailScreen] Backend API completed, events count: ${events.length}');
 
       if (mounted) {
         setState(() {
           _events = events;
           _isLoading = false;
         });
-        print(
-          '🔵 [SubscriptionDetailScreen] setState completed, _isLoading=false',
-        );
+        print('🔵 [SubscriptionDetailScreen] setState completed, _isLoading=false');
       }
     } catch (e) {
       print('🔴 [SubscriptionDetailScreen] ERROR: $e');
@@ -75,11 +67,7 @@ class _SubscriptionDetailScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final title = widget.subscription.subscribed?.displayName.isNotEmpty == true
-        ? widget.subscription.subscribed!.displayName
-        : (widget.subscription.subscribed?.fullName ??
-              widget.subscription.subscribed?.instagramName ??
-              l10n.unknownUser);
+    final title = widget.subscription.subscribed?.displayName.isNotEmpty == true ? widget.subscription.subscribed!.displayName : (widget.subscription.subscribed?.fullName ?? widget.subscription.subscribed?.instagramName ?? l10n.unknownUser);
 
     return AdaptivePageScaffold(
       title: title,
@@ -91,9 +79,7 @@ class _SubscriptionDetailScreenState
     final l10n = context.l10n;
 
     if (_isLoading) {
-      return Center(
-        child: PlatformWidgets.platformLoadingIndicator(radius: 16),
-      );
+      return Center(child: PlatformWidgets.platformLoadingIndicator(radius: 16));
     }
 
     if (_error != null) {
@@ -103,11 +89,7 @@ class _SubscriptionDetailScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              PlatformWidgets.platformIcon(
-                CupertinoIcons.exclamationmark_triangle,
-                color: AppStyles.grey500,
-                size: 48,
-              ),
+              PlatformWidgets.platformIcon(CupertinoIcons.exclamationmark_triangle, color: AppStyles.grey500, size: 48),
               const SizedBox(height: 12),
               Text(
                 _error!.replaceFirst('Exception: ', ''),
@@ -138,11 +120,7 @@ class _SubscriptionDetailScreenState
   void _openEventDetail(Event event) async {
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      PlatformNavigation.platformPageRoute(
-        builder: (_) => EventDetailScreen(event: event),
-      ),
-    );
+    await Navigator.of(context).push(PlatformNavigation.platformPageRoute(builder: (_) => EventDetailScreen(event: event)));
 
     if (!mounted) return;
 

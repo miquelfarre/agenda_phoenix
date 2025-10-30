@@ -1,10 +1,7 @@
 import 'dart:io' show Platform;
 
 class AppConfig {
-  static const String env = String.fromEnvironment(
-    'ENV',
-    defaultValue: 'development',
-  );
+  static const String env = String.fromEnvironment('ENV', defaultValue: 'development');
 
   static String get baseUrl {
     final defined = const String.fromEnvironment('BASE_URL');
@@ -32,10 +29,6 @@ class AppConfig {
   }
 
   static String get supabaseAnonKey {
-    return const String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-      defaultValue:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIiwiYXVkIjoiYXV0aGVudGljYXRlZCIsImV4cCI6MTk4MzgxMjk5Nn0.VZkz5UpquChN3tfC9v5FyuE7_k6cqyrOXpIpajpGVsw',
-    );
+    return const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIiwiYXVkIjoiYXV0aGVudGljYXRlZCIsImV4cCI6MTk4MzgxMjk5Nn0.VZkz5UpquChN3tfC9v5FyuE7_k6cqyrOXpIpajpGVsw');
   }
 }

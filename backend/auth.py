@@ -177,6 +177,7 @@ async def get_current_user(
 
 async def get_current_user_id_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    x_test_user_id: Optional[str] = Header(None),
 ) -> Optional[int]:
     """
     Optional JWT authentication - returns user ID if token present, None otherwise.
@@ -205,6 +206,16 @@ async def get_current_user_id_optional(
     """
     from dependencies import get_db as _get_db
     from models import User
+    import os
+
+    # Check for test mode header (only in non-production environments)
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+    if environment != "production" and x_test_user_id:
+        # Test mode: return test user ID directly
+        try:
+            return int(x_test_user_id)
+        except ValueError:
+            return None
 
     if credentials is None:
         return None

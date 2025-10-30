@@ -312,6 +312,21 @@ def insert_sample_data():
     try:
         now = datetime.now()
 
+        # Date references - all events will be in the future starting from tomorrow
+        tomorrow = now + timedelta(days=1)
+        in_2_days = now + timedelta(days=2)
+        in_3_days = now + timedelta(days=3)
+        in_5_days = now + timedelta(days=5)
+        in_7_days = now + timedelta(days=7)
+        in_10_days = now + timedelta(days=10)
+        in_14_days = now + timedelta(days=14)
+        in_21_days = now + timedelta(days=21)
+        in_30_days = now + timedelta(days=30)
+        in_45_days = now + timedelta(days=45)
+        in_60_days = now + timedelta(days=60)
+        in_90_days = now + timedelta(days=90)
+        in_120_days = now + timedelta(days=120)
+
         # 1. Create contacts
         contact_sonia = Contact(name="Sonia", phone="+34606014680")
         contact_miquel = Contact(name="Miquel", phone="+34626034421")
@@ -428,7 +443,7 @@ def insert_sample_data():
         # 3. Create calendars
         cal_family = Calendar(owner_id=sonia.id, name="Family")
         cal_birthdays = Calendar(owner_id=sonia.id, name="Cumpleaños Family")
-        cal_esqui_temporal = Calendar(owner_id=sonia.id, name="Temporada Esquí 2025-2026", start_date=datetime(2025, 12, 1), end_date=datetime(2026, 3, 31))
+        cal_esqui_temporal = Calendar(owner_id=sonia.id, name="Temporada Esquí 2025-2026", start_date=in_30_days, end_date=in_120_days)
 
         db.add_all([cal_family, cal_birthdays, cal_esqui_temporal])
         db.flush()
@@ -471,7 +486,7 @@ def insert_sample_data():
         recurring_sincro = Event(
             name="Sincro",
             description="Evento recurrente Sincro",
-            start_date=datetime(2025, 11, 3, 17, 30),
+            start_date=in_10_days.replace(hour=17, minute=30),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -479,7 +494,7 @@ def insert_sample_data():
         recurring_dj = Event(
             name="DJ",
             description="Evento recurrente DJ",
-            start_date=datetime(2025, 11, 3, 17, 30),
+            start_date=in_10_days.replace(hour=17, minute=30),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -487,7 +502,7 @@ def insert_sample_data():
         recurring_baile = Event(
             name="Baile KDN",
             description="Evento recurrente Baile KDN",
-            start_date=datetime(2025, 11, 3, 17, 30),
+            start_date=in_10_days.replace(hour=17, minute=30),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -495,7 +510,7 @@ def insert_sample_data():
         recurring_esqui = Event(
             name="Esquí temporada 2025-2026",
             description="Esquí semanal temporada 2025-2026",
-            start_date=datetime(2025, 12, 13, 8, 0),
+            start_date=(in_30_days + timedelta(days=13)).replace(hour=8, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_esqui_temporal.id,  # Usar calendario temporal
@@ -598,7 +613,7 @@ def insert_sample_data():
         bday_miquel = Event(
             name="Cumpleaños de Miquel",
             description="Cumpleaños de Miquel (30 de abril)",
-            start_date=datetime(2026, 4, 30, 0, 0),
+            start_date=in_120_days.replace(hour=0, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_birthdays.id,
@@ -606,7 +621,7 @@ def insert_sample_data():
         bday_ada = Event(
             name="Cumpleaños de Ada",
             description="Cumpleaños de Ada (6 de septiembre)",
-            start_date=datetime(2026, 9, 6, 0, 0),
+            start_date=(in_120_days + timedelta(days=120)).replace(hour=0, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_birthdays.id,
@@ -614,7 +629,7 @@ def insert_sample_data():
         bday_sonia = Event(
             name="Cumpleaños de Sonia",
             description="Cumpleaños de Sonia (31 de enero)",
-            start_date=datetime(2026, 1, 31, 0, 0),
+            start_date=in_90_days.replace(hour=0, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_birthdays.id,
@@ -622,7 +637,7 @@ def insert_sample_data():
         bday_sara = Event(
             name="Cumpleaños de Sara",
             description="Cumpleaños de Sara (2 de diciembre)",
-            start_date=datetime(2026, 12, 2, 0, 0),
+            start_date=(in_120_days + timedelta(days=240)).replace(hour=0, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_birthdays.id,
@@ -667,7 +682,7 @@ def insert_sample_data():
         recurring_medicacion = Event(
             name="Tomar medicación",
             description="Recordatorio diario de medicación",
-            start_date=datetime(2025, 11, 1, 9, 0),
+            start_date=in_7_days.replace(hour=9, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -677,7 +692,7 @@ def insert_sample_data():
         recurring_alquiler = Event(
             name="Pago de alquiler",
             description="Pago mensual del alquiler",
-            start_date=datetime(2025, 11, 1, 10, 0),
+            start_date=in_7_days.replace(hour=10, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -687,7 +702,7 @@ def insert_sample_data():
         recurring_reunion = Event(
             name="Reunión de equipo",
             description="Reuniones quincenales del equipo",
-            start_date=datetime(2025, 11, 5, 15, 0),
+            start_date=in_14_days.replace(hour=15, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -697,7 +712,7 @@ def insert_sample_data():
         recurring_navidad = Event(
             name="Navidad",
             description="Celebración de Navidad",
-            start_date=datetime(2025, 12, 25, 0, 0),
+            start_date=(in_30_days + timedelta(days=25)).replace(hour=0, minute=0),
             event_type="recurring",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -744,7 +759,7 @@ def insert_sample_data():
         event_katy_perry = Event(
             name="Concierto de Katy Perry",
             description="Lugar: Palau Sant Jordi, Barcelona",
-            start_date=datetime(2025, 11, 9, 20, 0),
+            start_date=in_21_days.replace(hour=20, minute=0),
             event_type="regular",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -752,7 +767,7 @@ def insert_sample_data():
         event_festa_codony = Event(
             name="Festa del Codony",
             description="Lugar: Tremp",
-            start_date=datetime(2025, 11, 1, 9, 0),
+            start_date=in_7_days.replace(hour=9, minute=0),
             event_type="regular",
             owner_id=sonia.id,
             calendar_id=cal_family.id,
@@ -763,27 +778,36 @@ def insert_sample_data():
         logger.info(f"  ✓ Inserted 2 regular events")
 
         # 10. Create FC Barcelona match events with descriptions
+        # El Clásico - saved as variable for later reference in invitations
+        fcb_el_clasico = Event(
+            name="Real Madrid vs FC Barcelona",
+            description="🏟️ Santiago Bernabéu • LaLiga EA Sports • El Clásico",
+            start_date=in_3_days.replace(hour=16, minute=15),
+            event_type="regular",
+            owner_id=fcbarcelona.id
+        )
+
         fcb_matches = [
-            Event(name="FC Barcelona vs Girona", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2025, 10, 18, 16, 15), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Olympiakos", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=datetime(2025, 10, 21, 18, 45), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Real Madrid vs FC Barcelona", description="🏟️ Santiago Bernabéu • LaLiga EA Sports • El Clásico", start_date=datetime(2025, 10, 26, 16, 15), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Elche", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=datetime(2025, 11, 2, 18, 30), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Club Brugge vs FC Barcelona", description="🏟️ Jan Breydel Stadium • UEFA Champions League", start_date=datetime(2025, 11, 5, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Celta de Vigo vs FC Barcelona", description="🏟️ Estadio de Balaídos • LaLiga EA Sports", start_date=datetime(2025, 11, 9, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2025, 11, 23, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Chelsea vs FC Barcelona", description="🏟️ Stamford Bridge • UEFA Champions League", start_date=datetime(2025, 11, 25, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Alavés", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2025, 11, 30, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Real Betis vs FC Barcelona", description="🏟️ Benito Villamarín • LaLiga EA Sports", start_date=datetime(2025, 12, 7, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Eintracht Frankfurt", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=datetime(2025, 12, 9, 21, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Osasuna", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2025, 12, 14, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Villarreal vs FC Barcelona", description="🏟️ Estadio de la Cerámica • LaLiga EA Sports", start_date=datetime(2025, 12, 21, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Espanyol vs FC Barcelona", description="🏟️ RCDE Stadium • LaLiga EA Sports • Derby Barceloní", start_date=datetime(2026, 1, 4, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=datetime(2026, 1, 7, 20, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Atlético Madrid", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=datetime(2026, 1, 11, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Real Sociedad vs FC Barcelona", description="🏟️ Reale Arena • LaLiga EA Sports", start_date=datetime(2026, 1, 18, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Real Oviedo", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=datetime(2026, 1, 25, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Slavia Prague vs FC Barcelona", description="🏟️ Fortuna Arena • UEFA Champions League", start_date=datetime(2026, 1, 21, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs FC København", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=datetime(2026, 1, 28, 18, 0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Girona", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=tomorrow.replace(hour=16, minute=15), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Olympiakos", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=in_2_days.replace(hour=18, minute=45), event_type="regular", owner_id=fcbarcelona.id),
+            fcb_el_clasico,
+            Event(name="FC Barcelona vs Elche", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=in_5_days.replace(hour=18, minute=30), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Club Brugge vs FC Barcelona", description="🏟️ Jan Breydel Stadium • UEFA Champions League", start_date=in_7_days.replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Celta de Vigo vs FC Barcelona", description="🏟️ Estadio de Balaídos • LaLiga EA Sports", start_date=in_10_days.replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=in_21_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Chelsea vs FC Barcelona", description="🏟️ Stamford Bridge • UEFA Champions League", start_date=(in_21_days + timedelta(days=2)).replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Alavés", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=in_30_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Real Betis vs FC Barcelona", description="🏟️ Benito Villamarín • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=7)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Eintracht Frankfurt", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=(in_30_days + timedelta(days=9)).replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Osasuna", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=14)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Villarreal vs FC Barcelona", description="🏟️ Estadio de la Cerámica • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=21)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Espanyol vs FC Barcelona", description="🏟️ RCDE Stadium • LaLiga EA Sports • Derby Barceloní", start_date=in_60_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=(in_60_days + timedelta(days=3)).replace(hour=20, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Atlético Madrid", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=(in_60_days + timedelta(days=7)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Real Sociedad vs FC Barcelona", description="🏟️ Reale Arena • LaLiga EA Sports", start_date=(in_60_days + timedelta(days=14)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Real Oviedo", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=(in_60_days + timedelta(days=21)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="Slavia Prague vs FC Barcelona", description="🏟️ Fortuna Arena • UEFA Champions League", start_date=(in_60_days + timedelta(days=17)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs FC København", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=(in_60_days + timedelta(days=24)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
         ]
         db.add_all(fcb_matches)
         db.flush()
@@ -893,7 +917,7 @@ def insert_sample_data():
         ada_ballet = Event(
             name="Clase de ballet",
             description="Clase de ballet clásico",
-            start_date=datetime(2025, 11, 2, 17, 0),
+            start_date=in_7_days.replace(hour=17, minute=0),
             event_type="regular",
             owner_id=ada.id,
         )
@@ -907,14 +931,14 @@ def insert_sample_data():
         ada_swimming = Event(
             name="Natación",
             description="Entrenamiento de natación",
-            start_date=datetime(2025, 11, 7, 16, 30),
+            start_date=in_14_days.replace(hour=16, minute=30),
             event_type="regular",
             owner_id=ada.id,
         )
         ada_movie = Event(
             name="Cine con familia",
             description="Ver nueva película de animación",
-            start_date=datetime(2025, 11, 10, 17, 30),
+            start_date=in_21_days.replace(hour=17, minute=30),
             event_type="regular",
             owner_id=ada.id,
         )
@@ -990,7 +1014,14 @@ def insert_sample_data():
         gym_pilates = Event(
             name="Pilates para principiantes",
             description="Introducción al método Pilates",
-            start_date=datetime(2025, 11, 14, 10, 0),
+            start_date=in_30_days.replace(hour=10, minute=0),
+            event_type="regular",
+            owner_id=gym_fitzone.id,
+        )
+        gym_zumba = Event(
+            name="Zumba Party - Edición Especial",
+            description="Clase especial de Zumba con DJ en vivo. ¡Ven a bailar y sudar! Abierto a todos los niveles.",
+            start_date=in_14_days.replace(hour=19, minute=30),
             event_type="regular",
             owner_id=gym_fitzone.id,
         )
@@ -1006,14 +1037,14 @@ def insert_sample_data():
         restaurant_cooking = Event(
             name="Taller de cocina mediterránea",
             description="Aprende a cocinar platos mediterráneos tradicionales",
-            start_date=datetime(2025, 11, 6, 18, 30),
+            start_date=in_14_days.replace(hour=18, minute=30),
             event_type="regular",
             owner_id=restaurant_sabor.id,
         )
         restaurant_brunch = Event(
             name="Brunch especial domingo",
             description="Brunch buffet con opciones veganas y sin gluten",
-            start_date=datetime(2025, 11, 10, 11, 0),
+            start_date=in_21_days.replace(hour=11, minute=0),
             event_type="regular",
             owner_id=restaurant_sabor.id,
         )
@@ -1022,59 +1053,59 @@ def insert_sample_data():
         cultural_concert = Event(
             name="Concierto de jazz",
             description="Trio de jazz en vivo - Entrada libre",
-            start_date=datetime(2025, 11, 1, 20, 30),
+            start_date=in_7_days.replace(hour=20, minute=30),
             event_type="regular",
             owner_id=cultural_llotja.id,
         )
         cultural_expo = Event(
             name="Exposición de arte contemporáneo",
             description="Inauguración: Artistas emergentes de Barcelona",
-            start_date=datetime(2025, 11, 7, 19, 0),
+            start_date=in_14_days.replace(hour=19, minute=0),
             event_type="regular",
             owner_id=cultural_llotja.id,
         )
         cultural_theater = Event(
             name="Obra de teatro: Hamlet",
             description="Adaptación moderna del clásico de Shakespeare",
-            start_date=datetime(2025, 11, 15, 21, 0),
+            start_date=in_30_days.replace(hour=21, minute=0),
             event_type="regular",
             owner_id=cultural_llotja.id,
         )
         cultural_workshop = Event(
             name="Taller de fotografía",
             description="Técnicas básicas de fotografía urbana",
-            start_date=datetime(2025, 11, 20, 17, 0),
+            start_date=in_45_days.replace(hour=17, minute=0),
             event_type="regular",
             owner_id=cultural_llotja.id,
         )
 
         db.add_all([
-            gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates,
+            gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba,
             restaurant_tasting, restaurant_cooking, restaurant_brunch,
             cultural_concert, cultural_expo, cultural_theater, cultural_workshop
         ])
         db.flush()
-        logger.info(f"  ✓ Inserted 11 events for public venues (4 gym, 3 restaurant, 4 cultural)")
+        logger.info(f"  ✓ Inserted 12 events for public venues (5 gym, 3 restaurant, 4 cultural)")
 
         # 16. Create shared family events
         family_dinner = Event(
             name="Cena familiar",
             description="Cena mensual en casa de los abuelos",
-            start_date=datetime(2025, 11, 9, 20, 0),
+            start_date=in_21_days.replace(hour=20, minute=0),
             event_type="regular",
             owner_id=sonia.id,
         )
         family_picnic = Event(
             name="Picnic familiar",
             description="Picnic en el parque",
-            start_date=datetime(2025, 11, 11, 12, 0),
+            start_date=in_21_days.replace(hour=12, minute=0),
             event_type="regular",
             owner_id=miquel.id,
         )
         family_trip = Event(
             name="Viaje familiar a la playa",
             description="Fin de semana en la costa",
-            start_date=datetime(2025, 11, 22, 10, 0),
+            start_date=in_60_days.replace(hour=10, minute=0),
             event_type="regular",
             owner_id=sonia.id,
         )
@@ -1437,7 +1468,7 @@ def insert_sample_data():
         # === PUBLIC VENUES INTERACTIONS ===
 
         # Gym FitZone owns their events
-        for event in [gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates]:
+        for event in [gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba]:
             interactions.append(
                 EventInteraction(
                     event_id=event.id,
@@ -1473,7 +1504,7 @@ def insert_sample_data():
             )
 
         # Sonia subscribed to Gym FitZone events
-        for event in [gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates]:
+        for event in [gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba]:
             interactions.append(
                 EventInteraction(
                     event_id=event.id,
@@ -1527,6 +1558,20 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="pending",
                 invited_by_user_id=miquel.id,
+            )
+        )
+
+        # Miquel invites Sonia to El Clásico (FC Barcelona event - public user event)
+        # This tests "Attend Independently" button: Sonia can reject Miquel's invitation
+        # but still attend the FC Barcelona event on her own
+        interactions.append(
+            EventInteraction(
+                event_id=fcb_el_clasico.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=miquel.id,
+                note="¡Vamos juntos al Clásico! Tengo entradas 🎫⚽",
             )
         )
 

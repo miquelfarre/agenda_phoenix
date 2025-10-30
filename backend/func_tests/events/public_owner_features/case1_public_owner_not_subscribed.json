@@ -62,6 +62,21 @@
       "created_at": "{{TIMESTAMP}}",
       "updated_at": "{{TIMESTAMP}}",
       "interaction": null,
+      "interactions": [
+        {
+          "id": "{{ID}}",
+          "user_id": "{{ID}}",
+          "event_id": "{{ID}}",
+          "interaction_type": "invited",
+          "status": "pending",
+          "role": null,
+          "invited_by_user_id": null,
+          "note": null,
+          "is_attending": false,
+          "read_at": null,
+          "inviter": null
+        }
+      ],
       "owner_name": null,
       "owner_profile_picture": null,
       "is_owner_public": true,
@@ -90,7 +105,7 @@
       "calendar_name": null,
       "calendar_color": null,
       "is_birthday": null,
-      "attendees": null,
+      "attendees": [],
       "invitation_stats": null
     }
   }

@@ -32,9 +32,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
     final l10n = context.l10n;
     final isIOS = PlatformDetection.isIOS;
 
-    Widget body = _showingPublicCalendars
-        ? _buildPublicCalendarsView()
-        : _buildMyCalendarsView();
+    Widget body = _showingPublicCalendars ? _buildPublicCalendarsView() : _buildMyCalendarsView();
 
     if (isIOS && !_showingPublicCalendars) {
       body = Stack(
@@ -44,12 +42,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
             bottom: 100,
             right: 20,
             child: AdaptiveButton(
-              config: const AdaptiveButtonConfig(
-                variant: ButtonVariant.fab,
-                size: ButtonSize.medium,
-                fullWidth: false,
-                iconPosition: IconPosition.only,
-              ),
+              config: const AdaptiveButtonConfig(variant: ButtonVariant.fab, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
               icon: CupertinoIcons.add,
               onPressed: () => context.push('/communities/create'),
             ),
@@ -58,10 +51,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       );
     }
 
-    return AdaptivePageScaffold(
-      title: isIOS ? null : l10n.communities,
-      body: body,
-    );
+    return AdaptivePageScaffold(title: isIOS ? null : l10n.communities, body: body);
   }
 
   Widget _buildMyCalendarsView() {
@@ -70,14 +60,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
     return calendarsAsync.when(
       data: (calendars) {
         if (calendars.isEmpty) {
-          return EmptyState(
-            icon: CupertinoIcons.rectangle_stack_person_crop,
-            message: context.l10n.noCalendarsYet,
-            subtitle:
-                'Organize your events by creating calendars or subscribe to public ones',
-            actionLabel: 'Create Calendar',
-            onAction: () => context.push('/communities/create'),
-          );
+          return EmptyState(icon: CupertinoIcons.rectangle_stack_person_crop, message: context.l10n.noCalendarsYet, subtitle: 'Organize your events by creating calendars or subscribe to public ones', actionLabel: 'Create Calendar', onAction: () => context.push('/communities/create'));
         }
 
         return Column(
@@ -100,21 +83,14 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       },
       loading: () => const Center(child: CupertinoActivityIndicator()),
       error: (error, stack) {
-        return EmptyState(
-          icon: CupertinoIcons.exclamationmark_triangle,
-          message: error.toString(),
-        );
+        return EmptyState(icon: CupertinoIcons.exclamationmark_triangle, message: error.toString());
       },
     );
   }
 
   Widget _buildPublicCalendarsView() {
-    final searchQuery = _searchController.text.isEmpty
-        ? null
-        : _searchController.text;
-    final publicCalendarsAsync = ref.watch(
-      publicCalendarsProvider(searchQuery),
-    );
+    final searchQuery = _searchController.text.isEmpty ? null : _searchController.text;
+    final publicCalendarsAsync = ref.watch(publicCalendarsProvider(searchQuery));
 
     return Column(
       children: [
@@ -124,15 +100,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
           child: publicCalendarsAsync.when(
             data: (calendars) {
               if (calendars.isEmpty) {
-                return EmptyState(
-                  icon: CupertinoIcons.search,
-                  message: searchQuery != null
-                      ? 'No calendars found'
-                      : 'No public calendars available',
-                  subtitle: searchQuery != null
-                      ? 'Try searching for a different name or keyword'
-                      : 'Public calendars will appear here when available',
-                );
+                return EmptyState(icon: CupertinoIcons.search, message: searchQuery != null ? 'No calendars found' : 'No public calendars available', subtitle: searchQuery != null ? 'Try searching for a different name or keyword' : 'Public calendars will appear here when available');
               }
 
               return ListView.builder(
@@ -144,10 +112,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
               );
             },
             loading: () => const Center(child: CupertinoActivityIndicator()),
-            error: (error, stack) => EmptyState(
-              icon: CupertinoIcons.exclamationmark_triangle,
-              message: error.toString(),
-            ),
+            error: (error, stack) => EmptyState(icon: CupertinoIcons.exclamationmark_triangle, message: error.toString()),
           ),
         ),
       ],
@@ -159,9 +124,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       padding: const EdgeInsets.all(16.0),
       child: CupertinoSearchTextField(
         controller: _searchController,
-        placeholder: _showingPublicCalendars
-            ? context.l10n.searchPublicCalendars
-            : 'Search calendars',
+        placeholder: _showingPublicCalendars ? context.l10n.searchPublicCalendars : 'Search calendars',
         onChanged: (value) {
           setState(() {});
         },
@@ -194,13 +157,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
             _searchController.clear();
           });
         },
-        child: Row(
-          children: [
-            const Icon(CupertinoIcons.back, size: 20),
-            const SizedBox(width: 8),
-            Text(context.l10n.myCalendars),
-          ],
-        ),
+        child: Row(children: [const Icon(CupertinoIcons.back, size: 20), const SizedBox(width: 8), Text(context.l10n.myCalendars)]),
       ),
     );
   }
@@ -211,48 +168,26 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       leading: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
-          color: _parseColor(calendar.color),
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: _parseColor(calendar.color), shape: BoxShape.circle),
       ),
       title: Text(calendar.name),
-      subtitle: calendar.description != null
-          ? Text(
-              calendar.description!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            )
-          : null,
+      subtitle: calendar.description != null ? Text(calendar.description!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
       trailing: const Icon(CupertinoIcons.chevron_right),
     );
   }
 
   Widget _buildPublicCalendarItem(Calendar calendar) {
-    final subscriptionNotifier = ref.watch(
-      calendarSubscriptionNotifierProvider.notifier,
-    );
-    final isSubscribed = subscriptionNotifier.isSubscribed(
-      int.parse(calendar.id),
-    );
+    final subscriptionNotifier = ref.watch(calendarSubscriptionNotifierProvider.notifier);
+    final isSubscribed = subscriptionNotifier.isSubscribed(int.parse(calendar.id));
 
     return CupertinoListTile(
       leading: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
-          color: _parseColor(calendar.color),
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: _parseColor(calendar.color), shape: BoxShape.circle),
       ),
       title: Text(calendar.name),
-      subtitle: calendar.description != null
-          ? Text(
-              calendar.description!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            )
-          : null,
+      subtitle: calendar.description != null ? Text(calendar.description!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
       trailing: CupertinoButton(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         onPressed: () async {
@@ -265,18 +200,12 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
               _showSuccess('Subscribed to ${calendar.name}');
             }
           } catch (e) {
-            final operation = isSubscribed
-                ? 'unsubscribe from'
-                : 'subscribe to';
+            final operation = isSubscribed ? 'unsubscribe from' : 'subscribe to';
             final errorMessage = _parseErrorMessage(e, operation);
             _showError(errorMessage);
           }
         },
-        child: Text(
-          isSubscribed
-              ? context.l10n.unsubscribeFromCalendar
-              : context.l10n.subscribeToCalendar,
-        ),
+        child: Text(isSubscribed ? context.l10n.unsubscribeFromCalendar : context.l10n.subscribeToCalendar),
       ),
     );
   }
@@ -293,9 +222,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
   String _parseErrorMessage(dynamic error, String operation) {
     final errorStr = error.toString().toLowerCase();
 
-    if (errorStr.contains('socket') ||
-        errorStr.contains('network') ||
-        errorStr.contains('connection')) {
+    if (errorStr.contains('socket') || errorStr.contains('network') || errorStr.contains('connection')) {
       return 'No internet connection. Please check your network and try again.';
     }
 
@@ -339,26 +266,13 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       builder: (context) => CupertinoAlertDialog(
         title: Row(
           children: const [
-            Icon(
-              CupertinoIcons.exclamationmark_triangle,
-              color: CupertinoColors.systemRed,
-              size: 20,
-            ),
+            Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
             SizedBox(width: 8),
             Text('Error'),
           ],
         ),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(message),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [CupertinoDialogAction(isDefaultAction: true, child: const Text('OK'), onPressed: () => Navigator.of(context).pop())],
       ),
     );
   }
@@ -372,26 +286,13 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       builder: (context) => CupertinoAlertDialog(
         title: Row(
           children: const [
-            Icon(
-              CupertinoIcons.checkmark_circle,
-              color: CupertinoColors.systemGreen,
-              size: 20,
-            ),
+            Icon(CupertinoIcons.checkmark_circle, color: CupertinoColors.systemGreen, size: 20),
             SizedBox(width: 8),
             Text('Success'),
           ],
         ),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(message),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [CupertinoDialogAction(isDefaultAction: true, child: const Text('OK'), onPressed: () => Navigator.of(context).pop())],
       ),
     );
   }

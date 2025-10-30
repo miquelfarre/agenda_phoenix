@@ -390,10 +390,12 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
                 "color": getattr(cal, 'color', None) if hasattr(cal, 'color') else None
             }
 
-    # Fetch attendees for all events (users with accepted interactions)
+    # Fetch attendees for all events (users with accepted interactions OR rejected with is_attending=True)
+    # Exclude public users (they don't attend their own events)
     event_ids = [e.id for e in events]
     attendees_map = {}  # event_id -> [user_dict]
     if event_ids:
+        from sqlalchemy import and_, or_
         attendees_query = db.query(
             models.EventInteraction.event_id,
             models.User,
@@ -404,7 +406,14 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
             models.Contact, models.User.contact_id == models.Contact.id, isouter=True
         ).filter(
             models.EventInteraction.event_id.in_(event_ids),
-            models.EventInteraction.status == "accepted"
+            or_(
+                models.EventInteraction.status == "accepted",
+                and_(
+                    models.EventInteraction.status == "rejected",
+                    models.EventInteraction.is_attending == True
+                )
+            ),
+            models.User.is_public == False  # Exclude public users
         ).all()
 
         for event_id, user_obj, contact_obj in attendees_query:
@@ -491,7 +500,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         interaction_user_id = current_user_id if current_user_id is not None else user_id
         interactions = event_interaction.get_by_event_ids_and_user(db, event_ids=visible_event_ids, user_id=interaction_user_id)
         for interaction in interactions:
-            user_interactions[interaction.event_id] = {"id": interaction.id, "interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note, "read_at": interaction.read_at.isoformat() if interaction.read_at else None, "is_new": interaction.is_new}
+            user_interactions[interaction.event_id] = {"id": interaction.id, "interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note, "is_attending": interaction.is_attending, "read_at": interaction.read_at.isoformat() if interaction.read_at else None, "is_new": interaction.is_new}
 
     # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)

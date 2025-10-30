@@ -76,8 +76,7 @@ class EventInteraction {
 
   bool get hasDecided => isAccepted || isDeclined;
 
-  bool get hasAnyInteraction =>
-      wasInvited || viewed || hasNote || hidden;
+  bool get hasAnyInteraction => wasInvited || viewed || hasNote || hidden;
 
   factory EventInteraction.fromJson(Map<String, dynamic> json) {
     final role = json['role'];
@@ -93,36 +92,22 @@ class EventInteraction {
       inviterId: json['invited_by_user_id'],
       inviter: json['inviter'] != null ? User.fromJson(json['inviter']) : null,
       invitationMessage: json['note'],
-      invitedAt: json['created_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['created_at'])
-          : null,
+      invitedAt: json['created_at'] != null ? DateTimeUtils.parseAndNormalize(json['created_at']) : null,
       participationStatus: json['status'],
-      participationDecidedAt: json['updated_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
-          : null,
+      participationDecidedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : null,
       decisionMessage: json['rejection_message'],
       postponeUntil: null,
-      isAttending: false,
+      isAttending: json['is_attending'] == true,
       isEventAdmin: isAdmin,
       viewed: isViewed,
-      firstViewedAt: readAt != null
-          ? DateTimeUtils.parseAndNormalize(readAt)
-          : null,
-      lastViewedAt: readAt != null
-          ? DateTimeUtils.parseAndNormalize(readAt)
-          : null,
+      firstViewedAt: readAt != null ? DateTimeUtils.parseAndNormalize(readAt) : null,
+      lastViewedAt: readAt != null ? DateTimeUtils.parseAndNormalize(readAt) : null,
       personalNote: json['note'],
-      noteUpdatedAt: json['updated_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
-          : null,
+      noteUpdatedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : null,
       hidden: false,
       hiddenAt: null,
-      createdAt: json['created_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['created_at'])
-          : DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
-          : DateTime.now(),
+      createdAt: json['created_at'] != null ? DateTimeUtils.parseAndNormalize(json['created_at']) : DateTime.now(),
+      updatedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : DateTime.now(),
     );
   }
 
@@ -189,8 +174,7 @@ class EventInteraction {
       invitationMessage: invitationMessage ?? this.invitationMessage,
       invitedAt: invitedAt ?? this.invitedAt,
       participationStatus: participationStatus ?? this.participationStatus,
-      participationDecidedAt:
-          participationDecidedAt ?? this.participationDecidedAt,
+      participationDecidedAt: participationDecidedAt ?? this.participationDecidedAt,
       decisionMessage: decisionMessage ?? this.decisionMessage,
       postponeUntil: postponeUntil ?? this.postponeUntil,
       isAttending: isAttending ?? this.isAttending,

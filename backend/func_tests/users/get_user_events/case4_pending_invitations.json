@@ -57,6 +57,7 @@
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
         "interaction": null,
+        "interactions": null,
         "owner_name": "Alice",
         "owner_profile_picture": null,
         "is_owner_public": false,
@@ -87,8 +88,10 @@
           "role": null,
           "invited_by_user_id": "{{ID}}",
           "note": null,
+          "read_at": null,
           "is_new": true
         },
+        "interactions": null,
         "owner_name": "Bob",
         "owner_profile_picture": null,
         "is_owner_public": false,

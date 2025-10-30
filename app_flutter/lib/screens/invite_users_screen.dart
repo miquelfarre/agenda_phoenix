@@ -23,8 +23,7 @@ class InviteUsersScreen extends ConsumerStatefulWidget {
   ConsumerState<InviteUsersScreen> createState() => _InviteUsersScreenState();
 }
 
-class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
-    with WidgetsBindingObserver {
+class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with WidgetsBindingObserver {
   List<User> _availableUsers = [];
   List<Group> _groups = [];
   final Set<int> _recentlyInvitedUserIds = {};
@@ -88,9 +87,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
       print('🔵 [InviteUsersScreen] Calling fetchAvailableInvitees...');
       final users = await ApiClient().fetchAvailableInvitees(eventId);
-      print(
-        '🔵 [InviteUsersScreen] fetchAvailableInvitees completed, available users: ${users.length}',
-      );
+      print('🔵 [InviteUsersScreen] fetchAvailableInvitees completed, available users: ${users.length}');
 
       if (mounted) {
         setState(() {
@@ -113,17 +110,13 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
   void _toggleUser(int userId) {
     setState(() {
-      selectedUserIds.contains(userId)
-          ? selectedUserIds.remove(userId)
-          : selectedUserIds.add(userId);
+      selectedUserIds.contains(userId) ? selectedUserIds.remove(userId) : selectedUserIds.add(userId);
     });
   }
 
   void _toggleGroup(int groupId) {
     setState(() {
-      selectedGroupIds.contains(groupId)
-          ? selectedGroupIds.remove(groupId)
-          : selectedGroupIds.add(groupId);
+      selectedGroupIds.contains(groupId) ? selectedGroupIds.remove(groupId) : selectedGroupIds.add(groupId);
     });
   }
 
@@ -136,8 +129,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
     final query = searchQuery.toLowerCase();
     return filteredUsers.where((user) {
-      return user.displayName.toLowerCase().contains(query) ||
-          (user.displaySubtitle?.toLowerCase().contains(query) ?? false);
+      return user.displayName.toLowerCase().contains(query) || (user.displaySubtitle?.toLowerCase().contains(query) ?? false);
     }).toList();
   }
 
@@ -146,8 +138,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
     final query = searchQuery.toLowerCase();
     return _groups.where((group) {
-      return group.name.toLowerCase().contains(query) ||
-          group.description.toLowerCase().contains(query);
+      return group.name.toLowerCase().contains(query) || group.description.toLowerCase().contains(query);
     }).toList();
   }
 
@@ -176,9 +167,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
   Widget _buildContent() {
     final l10n = context.l10n;
     if (_isLoading) {
-      return Center(
-        child: PlatformWidgets.platformLoadingIndicator(radius: 16),
-      );
+      return Center(child: PlatformWidgets.platformLoadingIndicator(radius: 16));
     }
 
     if (_error != null) {
@@ -186,16 +175,9 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PlatformWidgets.platformIcon(
-              CupertinoIcons.exclamationmark_triangle,
-              size: 48,
-              color: AppStyles.grey500,
-            ),
+            PlatformWidgets.platformIcon(CupertinoIcons.exclamationmark_triangle, size: 48, color: AppStyles.grey500),
             const SizedBox(height: 16),
-            Text(
-              l10n.appErrorLoadingData,
-              style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700),
-            ),
+            Text(l10n.appErrorLoadingData, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700)),
             const SizedBox(height: 8),
             Text(
               _error!.replaceFirst('Exception: ', ''),
@@ -203,10 +185,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
               style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.grey600),
             ),
             const SizedBox(height: 24),
-            PlatformWidgets.platformButton(
-              onPressed: _loadData,
-              child: Text(l10n.retry),
-            ),
+            PlatformWidgets.platformButton(onPressed: _loadData, child: Text(l10n.retry)),
           ],
         ),
       );
@@ -216,10 +195,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
     final groups = _getFilteredGroups();
 
     if (users.isEmpty && groups.isEmpty && searchQuery.isEmpty) {
-      return EmptyState(
-        message: l10n.noUsersOrGroupsAvailable,
-        icon: CupertinoIcons.person_badge_plus,
-      );
+      return EmptyState(message: l10n.noUsersOrGroupsAvailable, icon: CupertinoIcons.person_badge_plus);
     }
 
     return ListView(
@@ -230,63 +206,31 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
         if (searchQuery.isNotEmpty && users.isEmpty && groups.isEmpty) ...[
           Padding(
             padding: const EdgeInsets.all(32.0),
-            child: EmptyState(
-              message: l10n.noSearchResults,
-              icon: CupertinoIcons.search,
-            ),
+            child: EmptyState(message: l10n.noSearchResults, icon: CupertinoIcons.search),
           ),
         ],
         if (users.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 8.0,
-              horizontal: 16.0,
-            ),
-            child: Text(
-              l10n.users,
-              style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700),
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Text(l10n.users, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700)),
           ),
           ...users.map((user) {
             final isSelected = selectedUserIds.contains(user.id);
-            return SelectableCard(
-              title: user.displayName,
-              subtitle: user.displaySubtitle,
-              icon: CupertinoIcons.person,
-              color: AppStyles.blue600,
-              selected: isSelected,
-              onTap: () => _toggleUser(user.id),
-              onChanged: (_) => _toggleUser(user.id),
-            );
+            return SelectableCard(title: user.displayName, subtitle: user.displaySubtitle, icon: CupertinoIcons.person, color: AppStyles.blue600, selected: isSelected, onTap: () => _toggleUser(user.id), onChanged: (_) => _toggleUser(user.id));
           }),
         ],
         if (groups.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 8.0,
-              horizontal: 16.0,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             child: Text(
               l10n.groups,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                decoration: TextDecoration.none,
-              ).copyWith(color: AppStyles.grey700),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, decoration: TextDecoration.none).copyWith(color: AppStyles.grey700),
             ),
           ),
           ...groups.map((group) {
             final isSelected = selectedGroupIds.contains(group.id);
 
-            return SelectableCard(
-              title: group.name,
-              subtitle: group.description,
-              icon: CupertinoIcons.person_2,
-              color: AppStyles.blue600,
-              selected: isSelected,
-              onTap: () => _toggleGroup(group.id),
-              onChanged: (_) => _toggleGroup(group.id),
-            );
+            return SelectableCard(title: group.name, subtitle: group.description, icon: CupertinoIcons.person_2, color: AppStyles.blue600, selected: isSelected, onTap: () => _toggleGroup(group.id), onChanged: (_) => _toggleGroup(group.id));
           }),
         ],
       ],
@@ -348,17 +292,11 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
         final l10n = context.l10n;
         if (successCount > 0) {
-          PlatformWidgets.showSnackBar(
-            message: '$successCount ${l10n.invitationsSent}',
-            isError: false,
-          );
+          PlatformWidgets.showSnackBar(message: '$successCount ${l10n.invitationsSent}', isError: false);
         }
 
         if (errorCount > 0) {
-          PlatformWidgets.showSnackBar(
-            message: '$errorCount invitations failed',
-            isError: true,
-          );
+          PlatformWidgets.showSnackBar(message: '$errorCount invitations failed', isError: true);
         }
 
         if (successCount > 0 && errorCount == 0) {
@@ -371,10 +309,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
           isSending = false;
         });
 
-        PlatformWidgets.showSnackBar(
-          message: 'Error sending invitations: $e',
-          isError: true,
-        );
+        PlatformWidgets.showSnackBar(message: 'Error sending invitations: $e', isError: true);
       }
     }
   }
@@ -382,11 +317,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AdaptivePageScaffold(
-      title: l10n.inviteToEvent,
-      actions: _buildActions(),
-      body: _buildBody(context),
-    );
+    return AdaptivePageScaffold(title: l10n.inviteToEvent, actions: _buildActions(), body: _buildBody(context));
   }
 
   List<Widget> _buildActions() {
@@ -395,14 +326,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
       return [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: PlatformWidgets.platformLoadingIndicator(
-              radius: 10,
-              color: AppStyles.white,
-            ),
-          ),
+          child: SizedBox(width: 20, height: 20, child: PlatformWidgets.platformLoadingIndicator(radius: 10, color: AppStyles.white)),
         ),
       ];
     }
@@ -415,12 +339,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
       Tooltip(
         message: l10n.sendInvitations,
         child: AdaptiveButton(
-          config: const AdaptiveButtonConfig(
-            variant: ButtonVariant.text,
-            size: ButtonSize.medium,
-            fullWidth: false,
-            iconPosition: IconPosition.leading,
-          ),
+          config: const AdaptiveButtonConfig(variant: ButtonVariant.text, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.leading),
           text: PlatformWidgets.isIOS ? l10n.send : null,
           icon: PlatformWidgets.isIOS ? null : CupertinoIcons.paperplane,
           onPressed: _sendInvitations,

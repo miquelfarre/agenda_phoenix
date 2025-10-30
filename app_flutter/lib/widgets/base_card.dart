@@ -10,31 +10,19 @@ class BaseCard extends StatelessWidget {
   final double? elevation;
   final Color? backgroundColor;
 
-  const BaseCard({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.margin,
-    this.padding,
-    this.elevation,
-    this.backgroundColor,
-  });
+  const BaseCard({super.key, required this.child, this.onTap, this.margin, this.padding, this.elevation, this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
     final isIOS = PlatformWidgets.isIOS;
 
-    final cardMargin =
-        margin ??
-        EdgeInsets.symmetric(horizontal: isIOS ? 16.0 : 8.0, vertical: 4.0);
+    final cardMargin = margin ?? EdgeInsets.symmetric(horizontal: isIOS ? 16.0 : 8.0, vertical: 4.0);
 
     final cardPadding = padding ?? AppStyles.cardPadding;
 
     return Container(
       margin: cardMargin,
-      decoration: AppStyles.cardDecoration.copyWith(
-        color: backgroundColor ?? AppStyles.cardDecoration.color,
-      ),
+      decoration: AppStyles.cardDecoration.copyWith(color: backgroundColor ?? AppStyles.cardDecoration.color),
       child: GestureDetector(
         key: key != null ? Key('${key.toString()}_gesture') : null,
         onTap: onTap,
@@ -50,25 +38,12 @@ class AdaptiveContainer extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final Color? backgroundColor;
 
-  const AdaptiveContainer({
-    super.key,
-    required this.child,
-    this.padding,
-    this.margin,
-    this.backgroundColor,
-  });
+  const AdaptiveContainer({super.key, required this.child, this.padding, this.margin, this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
     final isIOS = PlatformWidgets.isIOS;
 
-    return Container(
-      padding: padding ?? AppStyles.cardPadding,
-      margin: margin,
-      decoration: isIOS
-          ? AppStyles.iOSCardDecoration
-          : AppStyles.cardDecoration,
-      child: child,
-    );
+    return Container(padding: padding ?? AppStyles.cardPadding, margin: margin, decoration: isIOS ? AppStyles.iOSCardDecoration : AppStyles.cardDecoration, child: child);
   }
 }

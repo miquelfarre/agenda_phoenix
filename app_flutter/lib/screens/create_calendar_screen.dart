@@ -9,8 +9,7 @@ class CreateCalendarScreen extends ConsumerStatefulWidget {
   const CreateCalendarScreen({super.key});
 
   @override
-  ConsumerState<CreateCalendarScreen> createState() =>
-      _CreateCalendarScreenState();
+  ConsumerState<CreateCalendarScreen> createState() => _CreateCalendarScreenState();
 }
 
 class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
@@ -22,16 +21,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
   bool _deleteAssociatedEvents = false;
   bool _isLoading = false;
 
-  final List<String> _colors = [
-    '#2196F3',
-    '#4CAF50',
-    '#FF5722',
-    '#FFC107',
-    '#9C27B0',
-    '#00BCD4',
-    '#FF9800',
-    '#795548',
-  ];
+  final List<String> _colors = ['#2196F3', '#4CAF50', '#FF5722', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548'];
 
   @override
   void dispose() {
@@ -64,14 +54,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     });
 
     try {
-      await ref
-          .read(calendarRepositoryProvider)
-          .createCalendar(
-            name: name,
-            description: description.isEmpty ? null : description,
-            color: _selectedColor,
-            isPublic: _isPublic,
-          );
+      await ref.read(calendarRepositoryProvider).createCalendar(name: name, description: description.isEmpty ? null : description, color: _selectedColor, isPublic: _isPublic);
 
       // Realtime handles refresh automatically via CalendarRepository
 
@@ -96,9 +79,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     final errorStr = error.toString().toLowerCase();
     final l10n = context.l10n;
 
-    if (errorStr.contains('socket') ||
-        errorStr.contains('network') ||
-        errorStr.contains('connection')) {
+    if (errorStr.contains('socket') || errorStr.contains('network') || errorStr.contains('connection')) {
       return l10n.noInternetCheckNetwork;
     }
 
@@ -132,26 +113,13 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
       builder: (context) => CupertinoAlertDialog(
         title: Row(
           children: [
-            const Icon(
-              CupertinoIcons.exclamationmark_triangle,
-              color: CupertinoColors.systemRed,
-              size: 20,
-            ),
+            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
             const SizedBox(width: 8),
             Text(context.l10n.error),
           ],
         ),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(message),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: Text(context.l10n.ok),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [CupertinoDialogAction(isDefaultAction: true, child: Text(context.l10n.ok), onPressed: () => Navigator.of(context).pop())],
       ),
     );
   }
@@ -162,44 +130,18 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
 
     return AdaptivePageScaffold(
       title: l10n.createCalendar,
-      leading: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: () => context.pop(),
-        child: Text(l10n.cancel),
-      ),
-      actions: [
-        CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _isLoading ? null : _createCalendar,
-          child: _isLoading
-              ? const CupertinoActivityIndicator()
-              : Text(l10n.create),
-        ),
-      ],
+      leading: CupertinoButton(padding: EdgeInsets.zero, onPressed: () => context.pop(), child: Text(l10n.cancel)),
+      actions: [CupertinoButton(padding: EdgeInsets.zero, onPressed: _isLoading ? null : _createCalendar, child: _isLoading ? const CupertinoActivityIndicator() : Text(l10n.create))],
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          CupertinoTextField(
-            controller: _nameController,
-            placeholder: l10n.calendarName,
-            maxLength: 100,
-            enabled: !_isLoading,
-          ),
+          CupertinoTextField(controller: _nameController, placeholder: l10n.calendarName, maxLength: 100, enabled: !_isLoading),
           const SizedBox(height: 16),
 
-          CupertinoTextField(
-            controller: _descriptionController,
-            placeholder: l10n.calendarDescription,
-            maxLines: 3,
-            maxLength: 500,
-            enabled: !_isLoading,
-          ),
+          CupertinoTextField(controller: _descriptionController, placeholder: l10n.calendarDescription, maxLines: 3, maxLength: 500, enabled: !_isLoading),
           const SizedBox(height: 24),
 
-          Text(
-            l10n.calendarColor,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+          Text(l10n.calendarColor, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -220,12 +162,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
                   decoration: BoxDecoration(
                     color: _parseColor(color),
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected
-                          ? CupertinoColors.activeBlue
-                          : CupertinoColors.systemGrey,
-                      width: isSelected ? 3 : 1,
-                    ),
+                    border: Border.all(color: isSelected ? CupertinoColors.activeBlue : CupertinoColors.systemGrey, width: isSelected ? 3 : 1),
                   ),
                 ),
               );

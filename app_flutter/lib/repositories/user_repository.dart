@@ -8,8 +8,7 @@ import '../utils/app_exceptions.dart' as exceptions;
 class UserRepository {
   final _apiClient = ApiClient();
 
-  final StreamController<User?> _currentUserController =
-      StreamController<User?>.broadcast();
+  final StreamController<User?> _currentUserController = StreamController<User?>.broadcast();
   User? _cachedCurrentUser;
 
   final Completer<void> _initCompleter = Completer<void>();

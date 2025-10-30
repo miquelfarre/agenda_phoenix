@@ -7,20 +7,10 @@ class OwnerStub {
   final bool isPublic;
   final String? profilePicture;
 
-  OwnerStub({
-    required this.id,
-    this.fullName,
-    this.isPublic = false,
-    this.profilePicture,
-  });
+  OwnerStub({required this.id, this.fullName, this.isPublic = false, this.profilePicture});
 
   User toUser() {
-    return User(
-      id: id,
-      fullName: fullName ?? 'Unknown',
-      isPublic: isPublic,
-      profilePicture: profilePicture,
-    );
+    return User(id: id, fullName: fullName ?? 'Unknown', isPublic: isPublic, profilePicture: profilePicture);
   }
 }
 
@@ -45,8 +35,7 @@ class Event {
   final bool? isBirthdayEvent;
   final List<dynamic>? attendeesList;
   final Map<String, dynamic>? interactionData; // Interaction data from backend
-  final String?
-  personalNote; // Personal note (local, different from interaction note)
+  final String? personalNote; // Personal note (local, different from interaction note)
   final String? clientTempId;
 
   const Event({
@@ -80,20 +69,14 @@ class Event {
   bool get isBirthday => isBirthdayEvent ?? false;
   bool get isRecurringEvent => isRecurring;
 
-  OwnerStub? get owner => OwnerStub(
-    id: ownerId,
-    fullName: ownerName,
-    isPublic: isOwnerPublic ?? false,
-    profilePicture: ownerProfilePicture,
-  );
+  OwnerStub? get owner => OwnerStub(id: ownerId, fullName: ownerName, isPublic: isOwnerPublic ?? false, profilePicture: ownerProfilePicture);
 
   List<dynamic> get attendees => attendeesList ?? [];
   bool get canInviteUsers => true;
   List<dynamic> get recurrencePatterns => [];
 
   // Interaction getters (from backend data)
-  String? get interactionType =>
-      interactionData?['interaction_type'] as String?;
+  String? get interactionType => interactionData?['interaction_type'] as String?;
   String? get interactionStatus => interactionData?['status'] as String?;
   String? get interactionRole => interactionData?['role'] as String?;
   int? get invitedByUserId => interactionData?['invited_by_user_id'] as int?;
@@ -103,10 +86,8 @@ class Event {
   // Convenience getters
   bool get wasInvited => interactionType == 'invited';
   bool get isInvitationPending => wasInvited && interactionStatus == 'pending';
-  bool get isInvitationAccepted =>
-      wasInvited && interactionStatus == 'accepted';
-  bool get isInvitationRejected =>
-      wasInvited && interactionStatus == 'rejected';
+  bool get isInvitationAccepted => wasInvited && interactionStatus == 'accepted';
+  bool get isInvitationRejected => wasInvited && interactionStatus == 'rejected';
   bool get isSubscribedEvent => interactionType == 'subscribed';
   bool get isJoinedEvent => interactionType == 'joined';
 
@@ -120,12 +101,8 @@ class Event {
       ownerId: json['owner_id'] as int,
       calendarId: json['calendar_id'] as int?,
       parentRecurringEventId: json['parent_recurring_event_id'] as int?,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : null,
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
       ownerName: json['owner_name'] as String?,
       ownerProfilePicture: json['owner_profile_picture'] as String?,
       isOwnerPublic: json['is_owner_public'] as bool?,
@@ -146,8 +123,7 @@ class Event {
       'event_type': eventType,
       'owner_id': ownerId,
       if (calendarId != null) 'calendar_id': calendarId,
-      if (parentRecurringEventId != null)
-        'parent_recurring_event_id': parentRecurringEventId,
+      if (parentRecurringEventId != null) 'parent_recurring_event_id': parentRecurringEventId,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
@@ -183,8 +159,7 @@ class Event {
       eventType: eventType ?? this.eventType,
       ownerId: ownerId ?? this.ownerId,
       calendarId: calendarId ?? this.calendarId,
-      parentRecurringEventId:
-          parentRecurringEventId ?? this.parentRecurringEventId,
+      parentRecurringEventId: parentRecurringEventId ?? this.parentRecurringEventId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       ownerName: ownerName ?? this.ownerName,
@@ -203,11 +178,7 @@ class Event {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is Event &&
-        other.id == id &&
-        other.name == name &&
-        other.startDate == startDate &&
-        other.ownerId == ownerId;
+    return other is Event && other.id == id && other.name == name && other.startDate == startDate && other.ownerId == ownerId;
   }
 
   @override

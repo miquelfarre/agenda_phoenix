@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/event.dart';
 import '../../models/user.dart';
@@ -92,7 +91,6 @@ final logoPathProvider = FutureProvider.family<String?, int>((ref, userId) async
   return await LogoService.instance.getLogoPath(userId);
 });
 
-
 // --- Data Streams ---
 
 final eventsStreamProvider = StreamProvider<List<Event>>((ref) {
@@ -135,7 +133,6 @@ final eventInteractionsProvider = eventInteractionsStreamProvider;
 final subscriptionsProvider = subscriptionsStreamProvider;
 final eventServiceProvider = eventRepositoryProvider;
 final eventInteractionRepositoryProvider = eventRepositoryProvider;
-
 
 // --- Notifications (example, might need its own repository) ---
 

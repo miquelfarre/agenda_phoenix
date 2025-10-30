@@ -4,18 +4,12 @@ import '../../repositories/calendar_repository.dart';
 import '../state/app_state.dart';
 import '../../services/config_service.dart';
 
-final publicCalendarsProvider = FutureProvider.family<List<Calendar>, String?>((
-  ref,
-  search,
-) async {
+final publicCalendarsProvider = FutureProvider.family<List<Calendar>, String?>((ref, search) async {
   final calendars = await ref.read(calendarRepositoryProvider).fetchPublicCalendars(search: search);
   return calendars;
 });
 
-final calendarSubscriptionNotifierProvider =
-    NotifierProvider<CalendarSubscriptionNotifier, AsyncValue<Set<int>>>(
-      CalendarSubscriptionNotifier.new,
-    );
+final calendarSubscriptionNotifierProvider = NotifierProvider<CalendarSubscriptionNotifier, AsyncValue<Set<int>>>(CalendarSubscriptionNotifier.new);
 
 class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
   late final CalendarRepository _repo;
@@ -33,10 +27,7 @@ class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
       final calendars = await _repo.calendarsStream.first;
       final ownCalendars = calendars.where((c) => c.isOwnedBy(ConfigService.instance.currentUserId.toString())).toList();
       final ownIds = ownCalendars.map((c) => int.parse(c.id)).toSet();
-      final subscribedIds = calendars
-          .map((c) => int.parse(c.id))
-          .where((id) => !ownIds.contains(id))
-          .toSet();
+      final subscribedIds = calendars.map((c) => int.parse(c.id)).where((id) => !ownIds.contains(id)).toSet();
 
       state = AsyncValue.data(subscribedIds);
     } catch (error, stack) {
@@ -71,10 +62,7 @@ class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
   }
 
   bool isSubscribed(int calendarId) {
-    return state.maybeWhen(
-      data: (subscribedIds) => subscribedIds.contains(calendarId),
-      orElse: () => false,
-    );
+    return state.maybeWhen(data: (subscribedIds) => subscribedIds.contains(calendarId), orElse: () => false);
   }
 
   Future<void> refresh() => _loadSubscribedCalendarIds();
