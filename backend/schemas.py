@@ -284,6 +284,12 @@ class CalendarCreate(CalendarBase):
 class CalendarResponse(CalendarBase):
     id: int
     owner_id: int
+    is_public: bool = False
+    is_discoverable: bool = True
+    description: Optional[str] = None
+    category: Optional[str] = None
+    share_hash: Optional[str] = None
+    subscriber_count: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -338,6 +344,47 @@ class CalendarMembershipEnrichedResponse(CalendarMembershipBase):
     # Calendar information
     calendar_name: str
     calendar_owner_id: int  # Calendar owner
+
+
+# ============================================================================
+# CALENDAR SUBSCRIPTION SCHEMAS
+# ============================================================================
+
+
+class CalendarSubscriptionBase(BaseModel):
+    status: str = "active"  # 'active', 'paused'
+
+
+class CalendarSubscriptionCreate(CalendarSubscriptionBase):
+    calendar_id: int
+    user_id: int
+
+
+class CalendarSubscriptionResponse(CalendarSubscriptionBase):
+    id: int
+    calendar_id: int
+    user_id: int
+    subscribed_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CalendarSubscriptionEnrichedResponse(CalendarSubscriptionBase):
+    """Calendar subscription with enriched calendar information"""
+
+    id: int
+    calendar_id: int
+    user_id: int
+    subscribed_at: datetime
+    updated_at: datetime
+    # Calendar information
+    calendar_name: str
+    calendar_description: Optional[str]
+    calendar_category: Optional[str]
+    calendar_owner_id: int
+    calendar_owner_name: str  # Display name of calendar owner
+    calendar_subscriber_count: int
 
 
 # ============================================================================

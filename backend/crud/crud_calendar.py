@@ -13,6 +13,19 @@ from schemas import CalendarBase, CalendarCreate, CalendarMembershipBase, Calend
 class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
     """CRUD operations for Calendar model with specific methods"""
 
+    def get_by_share_hash(self, db: Session, *, share_hash: str) -> Optional[Calendar]:
+        """
+        Get a calendar by its share_hash.
+
+        Args:
+            db: Database session
+            share_hash: The unique 8-character share hash
+
+        Returns:
+            Calendar or None if not found
+        """
+        return db.query(Calendar).filter(Calendar.share_hash == share_hash).first()
+
     def get_by_owner(self, db: Session, *, owner_id: int, skip: int = 0, limit: int = 100) -> List[Calendar]:
         """
         Get calendars owned by a specific user.

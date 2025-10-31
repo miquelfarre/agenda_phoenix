@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from auth import get_current_user_id, get_current_user_id_optional
 from crud import calendar_membership, contact, event, event_interaction, recurring_config, user, user_block
+from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import check_user_not_banned, get_db
 import models
 from models import EventInteraction
@@ -234,6 +235,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     - Subscribed events (via EventInteraction type='subscribed')
     - Invited events (via EventInteraction type='invited')
     - Calendar events (via CalendarMembership with role owner/admin)
+    - Subscribed calendar events (via CalendarSubscription to public calendars)
 
     Recurring events logic:
     - For owned/calendar/accepted events: show instances, hide base
@@ -317,7 +319,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         if event_id not in event_sources:
             event_sources[event_id] = "invited"
 
-    # Calendar events (lowest priority)
+    # Calendar events (via CalendarMembership - low priority)
     calendar_ids = calendar_membership.get_calendar_ids_by_user(db, user_id=user_id, status="accepted", roles=["owner", "admin"])
 
     if calendar_ids:
@@ -325,6 +327,19 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         for event_id in calendar_event_ids:
             if event_id not in event_sources:
                 event_sources[event_id] = "calendar"
+
+    # Subscribed calendar events (via CalendarSubscription - lowest priority)
+    subscribed_calendar_ids = calendar_subscription.get_calendar_ids_by_user(
+        db,
+        user_id=user_id,
+        status="active"
+    )
+
+    if subscribed_calendar_ids:
+        subscribed_calendar_event_ids = event.get_event_ids_by_calendars(db, calendar_ids=subscribed_calendar_ids)
+        for event_id in subscribed_calendar_event_ids:
+            if event_id not in event_sources:
+                event_sources[event_id] = "subscribed_calendar"
 
     if not event_sources:
         return []
@@ -568,6 +583,47 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         result = result[start_idx:end_idx]
 
     return result
+
+
+@router.get("/{user_id}/accessible-calendar-ids", response_model=List[int])
+async def get_accessible_calendar_ids(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all calendar IDs accessible to a user.
+
+    Returns IDs of calendars that the user can see events from:
+    - Calendars owned by the user
+    - Calendars where user is a member (via CalendarMembership with status='accepted')
+    - Public calendars user is subscribed to (via CalendarSubscription with status='active')
+
+    This is useful for filtering events and for realtime subscriptions.
+    """
+    from crud import calendar
+
+    # Get calendars owned by user
+    owned_calendars = calendar.get_by_owner(db, owner_id=user_id)
+    owned_calendar_ids = [cal.id for cal in owned_calendars]
+
+    # Get calendars where user is a member (accepted memberships)
+    member_calendar_ids = calendar_membership.get_calendar_ids_by_user(
+        db,
+        user_id=user_id,
+        status="accepted"
+    )
+
+    # Get subscribed public calendars (active subscriptions)
+    subscribed_calendar_ids = calendar_subscription.get_calendar_ids_by_user(
+        db,
+        user_id=user_id,
+        status="active"
+    )
+
+    # Combine all IDs (use set to avoid duplicates)
+    all_calendar_ids = list(set(owned_calendar_ids + member_calendar_ids + subscribed_calendar_ids))
+
+    return sorted(all_calendar_ids)
 
 
 @router.post("/{target_user_id}/subscribe")

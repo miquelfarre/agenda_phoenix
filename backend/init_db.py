@@ -11,6 +11,8 @@ Pure SQLAlchemy - NO RAW SQL!
 
 import logging
 import os
+import secrets
+import string
 from datetime import datetime, timedelta
 
 from sqlalchemy import inspect, text
@@ -29,6 +31,21 @@ from models import Calendar, CalendarMembership, Contact, Event, EventBan, Event
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def generate_share_hash(length: int = 8) -> str:
+    """
+    Generate a random share hash for public calendars.
+    Uses base62 (a-z, A-Z, 0-9) for URL-safe identifiers.
+
+    Args:
+        length: Length of the hash (default 8 chars)
+
+    Returns:
+        Random string of specified length using base62 characters
+    """
+    alphabet = string.ascii_letters + string.digits  # a-z, A-Z, 0-9 (base62)
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
 def drop_all_tables():
@@ -285,6 +302,75 @@ def create_subscription_stats_triggers():
         raise
 
 
+
+def create_calendar_subscription_triggers():
+    """
+    Create triggers to automatically update calendar.subscriber_count
+    when users subscribe/unsubscribe to public calendars.
+    """
+    logger.info("⚙️  Creating calendar subscription triggers...")
+
+    try:
+        with engine.connect() as conn:
+            # TRIGGER: Update subscriber_count on INSERT/DELETE/UPDATE
+            conn.execute(text("""
+                CREATE OR REPLACE FUNCTION update_calendar_subscriber_count()
+                RETURNS TRIGGER AS $$
+                BEGIN
+                    IF TG_OP = 'INSERT' THEN
+                        -- Increment count when new subscription is created
+                        UPDATE calendars
+                        SET subscriber_count = subscriber_count + 1
+                        WHERE id = NEW.calendar_id;
+                        RETURN NEW;
+
+                    ELSIF TG_OP = 'DELETE' THEN
+                        -- Decrement count when subscription is deleted
+                        UPDATE calendars
+                        SET subscriber_count = GREATEST(subscriber_count - 1, 0)
+                        WHERE id = OLD.calendar_id;
+                        RETURN OLD;
+
+                    ELSIF TG_OP = 'UPDATE' THEN
+                        -- If calendar_id changed (unlikely but handle it)
+                        IF OLD.calendar_id != NEW.calendar_id THEN
+                            UPDATE calendars
+                            SET subscriber_count = GREATEST(subscriber_count - 1, 0)
+                            WHERE id = OLD.calendar_id;
+
+                            UPDATE calendars
+                            SET subscriber_count = subscriber_count + 1
+                            WHERE id = NEW.calendar_id;
+                        END IF;
+                        RETURN NEW;
+                    END IF;
+
+                    RETURN NULL;
+                END;
+                $$ LANGUAGE plpgsql;
+
+                DROP TRIGGER IF EXISTS calendar_subscription_count_trigger ON calendar_subscriptions;
+                CREATE TRIGGER calendar_subscription_count_trigger
+                AFTER INSERT OR DELETE OR UPDATE ON calendar_subscriptions
+                FOR EACH ROW
+                EXECUTE FUNCTION update_calendar_subscriber_count();
+            """))
+            logger.info("  ✓ Created calendar_subscription_count_trigger")
+
+            # Enable REPLICA IDENTITY for realtime
+            conn.execute(text("""
+                ALTER TABLE calendar_subscriptions REPLICA IDENTITY FULL;
+            """))
+            logger.info("  ✓ Enabled REPLICA IDENTITY FULL for calendar_subscriptions")
+
+            conn.commit()
+
+        logger.info("✅ Calendar subscription triggers created successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Error creating calendar subscription triggers: {e}")
+        raise
+
 def grant_supabase_permissions():
     """
     Grant necessary permissions to postgres user on Supabase-managed schemas.
@@ -441,13 +527,61 @@ def insert_sample_data():
         logger.info(f"  ✓ Inserted 10 users (3 public venues)")
 
         # 3. Create calendars
+        # Private calendars
         cal_family = Calendar(owner_id=sonia.id, name="Family")
         cal_birthdays = Calendar(owner_id=sonia.id, name="Cumpleaños Family")
         cal_esqui_temporal = Calendar(owner_id=sonia.id, name="Temporada Esquí 2025-2026", start_date=in_30_days, end_date=in_120_days)
 
-        db.add_all([cal_family, cal_birthdays, cal_esqui_temporal])
+        # Public user calendars (NO share_hash - accessible via user subscription)
+        cal_fcbarcelona = Calendar(
+            owner_id=fcbarcelona.id,
+            name="Partidos FC Barcelona",
+            description="Calendario oficial de partidos del FC Barcelona - Liga, Champions y Copa",
+            category="sports",
+            is_public=True,
+            is_discoverable=True
+        )
+        cal_gym_classes = Calendar(
+            owner_id=gym_fitzone.id,
+            name="Clases FitZone",
+            description="Horario de clases grupales del gimnasio FitZone - Spinning, Yoga, Pilates",
+            category="sports",
+            is_public=True,
+            is_discoverable=True
+        )
+        cal_restaurant_events = Calendar(
+            owner_id=restaurant_sabor.id,
+            name="Eventos Restaurante Sabor",
+            description="Catas de vino, menús especiales y eventos culinarios",
+            category="food",
+            is_public=True,
+            is_discoverable=True
+        )
+        cal_cultural = Calendar(
+            owner_id=cultural_llotja.id,
+            name="Programación Llotja",
+            description="Exposiciones, conciertos y eventos culturales en La Llotja",
+            category="culture",
+            is_public=True,
+            is_discoverable=True
+        )
+        # Create a public calendar owned by a private user (RandomUser scenario from datos.txt)
+        cal_festivos_bcn = Calendar(
+            owner_id=sara.id,  # Sara creates this public calendar
+            name="Festivos Barcelona 2025",
+            description="Calendario de festivos oficiales de Barcelona y Catalunya",
+            category="holidays",
+            is_public=True,
+            is_discoverable=True,
+            share_hash=generate_share_hash()
+        )
+
+        db.add_all([
+            cal_family, cal_birthdays, cal_esqui_temporal,
+            cal_fcbarcelona, cal_gym_classes, cal_restaurant_events, cal_cultural, cal_festivos_bcn
+        ])
         db.flush()
-        logger.info(f"  ✓ Inserted 3 calendars (2 permanent, 1 temporal)")
+        logger.info(f"  ✓ Inserted 8 calendars (3 private, 5 public)")
 
         # 4. Create calendar memberships
         membership_sonia_family = CalendarMembership(
@@ -480,6 +614,86 @@ def insert_sample_data():
         db.add_all([membership_sonia_family, membership_sonia_birthdays, membership_miquel_birthdays, membership_miquel_family])
         db.flush()
         logger.info(f"  ✓ Inserted 4 calendar memberships")
+
+        # 4.5. Create calendar subscriptions (to public calendars)
+        from models import CalendarSubscription
+
+        # Sonia subscribes to FC Barcelona matches and gym classes
+        sub_sonia_fcb = CalendarSubscription(
+            calendar_id=cal_fcbarcelona.id,
+            user_id=sonia.id,
+            status="active"
+        )
+        sub_sonia_gym = CalendarSubscription(
+            calendar_id=cal_gym_classes.id,
+            user_id=sonia.id,
+            status="active"
+        )
+
+        # Miquel subscribes to FC Barcelona, restaurant events, and cultural events
+        sub_miquel_fcb = CalendarSubscription(
+            calendar_id=cal_fcbarcelona.id,
+            user_id=miquel.id,
+            status="active"
+        )
+        sub_miquel_restaurant = CalendarSubscription(
+            calendar_id=cal_restaurant_events.id,
+            user_id=miquel.id,
+            status="active"
+        )
+        sub_miquel_cultural = CalendarSubscription(
+            calendar_id=cal_cultural.id,
+            user_id=miquel.id,
+            status="active"
+        )
+
+        # Ada subscribes to gym and cultural events
+        sub_ada_gym = CalendarSubscription(
+            calendar_id=cal_gym_classes.id,
+            user_id=ada.id,
+            status="active"
+        )
+        sub_ada_cultural = CalendarSubscription(
+            calendar_id=cal_cultural.id,
+            user_id=ada.id,
+            status="active"
+        )
+
+        # Everyone subscribes to Barcelona holidays
+        sub_sonia_festivos = CalendarSubscription(
+            calendar_id=cal_festivos_bcn.id,
+            user_id=sonia.id,
+            status="active"
+        )
+        sub_miquel_festivos = CalendarSubscription(
+            calendar_id=cal_festivos_bcn.id,
+            user_id=miquel.id,
+            status="active"
+        )
+        sub_ada_festivos = CalendarSubscription(
+            calendar_id=cal_festivos_bcn.id,
+            user_id=ada.id,
+            status="active"
+        )
+        sub_tdb_festivos = CalendarSubscription(
+            calendar_id=cal_festivos_bcn.id,
+            user_id=tdb.id,
+            status="active"
+        )
+        sub_polr_festivos = CalendarSubscription(
+            calendar_id=cal_festivos_bcn.id,
+            user_id=polr.id,
+            status="active"
+        )
+
+        db.add_all([
+            sub_sonia_fcb, sub_sonia_gym, sub_sonia_festivos,
+            sub_miquel_fcb, sub_miquel_restaurant, sub_miquel_cultural, sub_miquel_festivos,
+            sub_ada_gym, sub_ada_cultural, sub_ada_festivos,
+            sub_tdb_festivos, sub_polr_festivos
+        ])
+        db.flush()
+        logger.info(f"  ✓ Inserted 12 calendar subscriptions")
 
         # 5. Create recurring event configs (base events)
         # These are the "template" events for recurring series
@@ -784,34 +998,71 @@ def insert_sample_data():
             description="🏟️ Santiago Bernabéu • LaLiga EA Sports • El Clásico",
             start_date=in_3_days.replace(hour=16, minute=15),
             event_type="regular",
-            owner_id=fcbarcelona.id
+            owner_id=fcbarcelona.id,
+            calendar_id=cal_fcbarcelona.id
         )
 
         fcb_matches = [
-            Event(name="FC Barcelona vs Girona", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=tomorrow.replace(hour=16, minute=15), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Olympiakos", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=in_2_days.replace(hour=18, minute=45), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Girona", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=tomorrow.replace(hour=16, minute=15), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs Olympiakos", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=in_2_days.replace(hour=18, minute=45), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
             fcb_el_clasico,
-            Event(name="FC Barcelona vs Elche", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=in_5_days.replace(hour=18, minute=30), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Club Brugge vs FC Barcelona", description="🏟️ Jan Breydel Stadium • UEFA Champions League", start_date=in_7_days.replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Celta de Vigo vs FC Barcelona", description="🏟️ Estadio de Balaídos • LaLiga EA Sports", start_date=in_10_days.replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=in_21_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Chelsea vs FC Barcelona", description="🏟️ Stamford Bridge • UEFA Champions League", start_date=(in_21_days + timedelta(days=2)).replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Alavés", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=in_30_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Real Betis vs FC Barcelona", description="🏟️ Benito Villamarín • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=7)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Eintracht Frankfurt", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=(in_30_days + timedelta(days=9)).replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Osasuna", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=14)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Villarreal vs FC Barcelona", description="🏟️ Estadio de la Cerámica • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=21)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Espanyol vs FC Barcelona", description="🏟️ RCDE Stadium • LaLiga EA Sports • Derby Barceloní", start_date=in_60_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=(in_60_days + timedelta(days=3)).replace(hour=20, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Atlético Madrid", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=(in_60_days + timedelta(days=7)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Real Sociedad vs FC Barcelona", description="🏟️ Reale Arena • LaLiga EA Sports", start_date=(in_60_days + timedelta(days=14)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs Real Oviedo", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=(in_60_days + timedelta(days=21)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="Slavia Prague vs FC Barcelona", description="🏟️ Fortuna Arena • UEFA Champions League", start_date=(in_60_days + timedelta(days=17)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
-            Event(name="FC Barcelona vs FC København", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=(in_60_days + timedelta(days=24)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id),
+            Event(name="FC Barcelona vs Elche", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=in_5_days.replace(hour=18, minute=30), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="Club Brugge vs FC Barcelona", description="🏟️ Jan Breydel Stadium • UEFA Champions League", start_date=in_7_days.replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="Celta de Vigo vs FC Barcelona", description="🏟️ Estadio de Balaídos • LaLiga EA Sports", start_date=in_10_days.replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=in_21_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="Chelsea vs FC Barcelona", description="🏟️ Stamford Bridge • UEFA Champions League", start_date=(in_21_days + timedelta(days=2)).replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs Alavés", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=in_30_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="Real Betis vs FC Barcelona", description="🏟️ Benito Villamarín • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=7)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs Eintracht Frankfurt", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=(in_30_days + timedelta(days=9)).replace(hour=21, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs Osasuna", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=14)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="Villarreal vs FC Barcelona", description="🏟️ Estadio de la Cerámica • LaLiga EA Sports", start_date=(in_30_days + timedelta(days=21)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="Espanyol vs FC Barcelona", description="🏟️ RCDE Stadium • LaLiga EA Sports • Derby Barceloní", start_date=in_60_days.replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs Athletic Club", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=(in_60_days + timedelta(days=3)).replace(hour=20, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs Atlético Madrid", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=(in_60_days + timedelta(days=7)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="Real Sociedad vs FC Barcelona", description="🏟️ Reale Arena • LaLiga EA Sports", start_date=(in_60_days + timedelta(days=14)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs Real Oviedo", description="🏟️ Spotify Camp Nou • Copa del Rey", start_date=(in_60_days + timedelta(days=21)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="Slavia Prague vs FC Barcelona", description="🏟️ Fortuna Arena • UEFA Champions League", start_date=(in_60_days + timedelta(days=17)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
+            Event(name="FC Barcelona vs FC København", description="🏟️ Spotify Camp Nou • UEFA Champions League", start_date=(in_60_days + timedelta(days=24)).replace(hour=18, minute=0), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
         ]
         db.add_all(fcb_matches)
         db.flush()
         logger.info(f"  ✓ Inserted 20 FC Barcelona match events")
+
+        # 10.5. Create events for other public calendars
+        # Gym classes
+        gym_events = [
+            Event(name="Spinning Morning", description="Clase de spinning de alta intensidad", start_date=tomorrow.replace(hour=7, minute=0), event_type="regular", owner_id=gym_fitzone.id, calendar_id=cal_gym_classes.id),
+            Event(name="Yoga Sunrise", description="Yoga matinal para empezar el día", start_date=tomorrow.replace(hour=8, minute=30), event_type="regular", owner_id=gym_fitzone.id, calendar_id=cal_gym_classes.id),
+            Event(name="Pilates", description="Clase de pilates nivel intermedio", start_date=in_2_days.replace(hour=18, minute=0), event_type="regular", owner_id=gym_fitzone.id, calendar_id=cal_gym_classes.id),
+            Event(name="CrossFit", description="Entrenamiento funcional de alta intensidad", start_date=in_3_days.replace(hour=19, minute=0), event_type="regular", owner_id=gym_fitzone.id, calendar_id=cal_gym_classes.id),
+            Event(name="Zumba", description="Baile fitness latino", start_date=in_5_days.replace(hour=20, minute=0), event_type="regular", owner_id=gym_fitzone.id, calendar_id=cal_gym_classes.id),
+        ]
+
+        # Restaurant events
+        restaurant_events = [
+            Event(name="Cata de Vinos Rioja", description="Degustación de vinos de La Rioja con maridaje", start_date=in_7_days.replace(hour=20, minute=0), event_type="regular", owner_id=restaurant_sabor.id, calendar_id=cal_restaurant_events.id),
+            Event(name="Menú Degustación", description="Menú especial del chef con productos de temporada", start_date=in_14_days.replace(hour=21, minute=0), event_type="regular", owner_id=restaurant_sabor.id, calendar_id=cal_restaurant_events.id),
+            Event(name="Noche de Tapas", description="Tapas tradicionales catalanas", start_date=in_21_days.replace(hour=19, minute=30), event_type="regular", owner_id=restaurant_sabor.id, calendar_id=cal_restaurant_events.id),
+        ]
+
+        # Cultural events
+        cultural_events = [
+            Event(name="Exposición: Arte Moderno", description="Nueva exposición de arte moderno catalán", start_date=in_5_days.replace(hour=10, minute=0), event_type="regular", owner_id=cultural_llotja.id, calendar_id=cal_cultural.id),
+            Event(name="Concierto de Jazz", description="Trio de jazz en directo", start_date=in_10_days.replace(hour=21, minute=0), event_type="regular", owner_id=cultural_llotja.id, calendar_id=cal_cultural.id),
+            Event(name="Conferencia: Historia de Barcelona", description="Charla sobre la historia medieval de Barcelona", start_date=in_14_days.replace(hour=19, minute=0), event_type="regular", owner_id=cultural_llotja.id, calendar_id=cal_cultural.id),
+        ]
+
+        # Barcelona holidays
+        festivos_events = [
+            Event(name="Reyes", description="Día de Reyes", start_date=(tomorrow + timedelta(days=30)).replace(hour=0, minute=0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Sant Jordi", description="Día de Sant Jordi - Patrón de Catalunya", start_date=(tomorrow + timedelta(days=100)).replace(hour=0, minute=0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Diada de Catalunya", description="Fiesta Nacional de Catalunya", start_date=(tomorrow + timedelta(days=250)).replace(hour=0, minute=0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="La Mercè", description="Fiestas de La Mercè - Patrona de Barcelona", start_date=(tomorrow + timedelta(days=260)).replace(hour=0, minute=0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+        ]
+
+        db.add_all(gym_events + restaurant_events + cultural_events + festivos_events)
+        db.flush()
+        logger.info(f"  ✓ Inserted 15 public calendar events (5 gym, 3 restaurant, 3 cultural, 4 holidays)")
 
         # 11. Create Sonia's additional events
         event_cumple_sara_clase = Event(
@@ -2184,6 +2435,8 @@ def create_supabase_auth_users():
     try:
         # Create Supabase admin client (using service_role key to bypass RLS)
         supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+        # Step 3.5: Create calendar subscription triggers
+        create_calendar_subscription_triggers()
 
         # Test users to create
         test_users = [

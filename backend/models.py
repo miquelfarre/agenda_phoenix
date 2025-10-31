@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -98,6 +98,8 @@ class Calendar(Base):
     Calendars can be:
     - Permanent (no start_date/end_date): e.g., "Personal", "Work"
     - Temporal (with start_date/end_date): e.g., "Summer Course 2025", "Project Q1 2025"
+    - Private (shared via CalendarMembership): e.g., "Family Birthdays"
+    - Public (discoverable via search): e.g., "Festivos Barcelona", "FC Barcelona Matches"
     """
 
     __tablename__ = "calendars"
@@ -107,6 +109,15 @@ class Calendar(Base):
     name = Column(String(255), nullable=False)
     start_date = Column(TIMESTAMP(timezone=True), nullable=True)  # Optional: for temporal calendars
     end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # Optional: for temporal calendars
+
+    # Public calendar fields
+    is_public = Column(Boolean, default=False, nullable=False, index=True)  # If True, calendar is discoverable
+    is_discoverable = Column(Boolean, default=True, nullable=False)  # If False, public but not in search results
+    description = Column(Text, nullable=True)  # Description for search/discovery
+    category = Column(String(100), nullable=True, index=True)  # "holidays", "sports", "cultural", etc.
+    share_hash = Column(String(8), unique=True, nullable=True, index=True)  # Unique 8-char hash for sharing public calendars
+    subscriber_count = Column(Integer, default=0, nullable=False)  # Cached count of subscriptions
+
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -125,6 +136,12 @@ class Calendar(Base):
             "name": self.name,
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
+            "is_public": self.is_public,
+            "is_discoverable": self.is_discoverable,
+            "share_hash": self.share_hash,
+            "description": self.description,
+            "category": self.category,
+            "subscriber_count": self.subscriber_count,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -167,6 +184,54 @@ class CalendarMembership(Base):
             "status": self.status,
             "invited_by_user_id": self.invited_by_user_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class CalendarSubscription(Base):
+    """
+    CalendarSubscription model - Suscripciones a calendarios públicos.
+
+    A diferencia de CalendarMembership (calendarios privados compartidos via invitación),
+    CalendarSubscription permite a cualquier usuario suscribirse a calendarios públicos
+    sin necesidad de invitación o aprobación del owner.
+
+    Ejemplos:
+    - "Festivos Barcelona 2025-2026" (owner: RandomUser, suscriptores: miles de usuarios)
+    - "FC Barcelona - Primera División" (owner: FCBarcelona, suscriptores: fans)
+    """
+
+    __tablename__ = "calendar_subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    status = Column(String(50), nullable=False, default="active")  # 'active', 'paused'
+    subscribed_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Unique constraint: un usuario solo puede tener una suscripción por calendar
+    __table_args__ = (
+        UniqueConstraint("calendar_id", "user_id", name="uq_calendar_user_subscription"),
+        Index('idx_calendar_subscriptions_calendar', 'calendar_id'),
+        Index('idx_calendar_subscriptions_user', 'user_id'),
+        Index('idx_calendar_subscriptions_status', 'status'),
+    )
+
+    # Relationships
+    calendar = relationship("Calendar")
+    user = relationship("User")
+
+    def __repr__(self):
+        return f"<CalendarSubscription(id={self.id}, calendar_id={self.calendar_id}, user_id={self.user_id}, status='{self.status}')>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "calendar_id": self.calendar_id,
+            "user_id": self.user_id,
+            "status": self.status,
+            "subscribed_at": self.subscribed_at.isoformat() if self.subscribed_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 

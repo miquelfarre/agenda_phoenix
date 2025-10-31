@@ -1,0 +1,44 @@
+Te doy un ejemplo de lo que me gustaria solo para que veas lo que me interesa.
+Quiero que mi programa soporte los siguientes escenarios.
+
+- 4 usuarios privados. Sara, Ada, Miquel y Sonia.
+- 3 usuarios publicos. FC Barcelona, Primavera Sound, Sonar.
+- Otros usuarios privados: Rosa DJ Kids, Kallipolis, RandomUser
+- Calendario de cumpleaños: Owner es Sonia, Admins el resto.
+    - Cumpleaños Ada: 6 de Septiembre
+    - Cumpleaños Miquel: 30 de Abril.
+    - Cumpleaños Sonia: 31 de enero.
+    - Cumpleaños Sara: 2 de diciembre.
+- Calendario de extraescolar de Rosa DJ Kids.
+    - El calendario tiene un evento recurrente: Cada viernes Hay clase de DJ a las 17:30h.
+- Calendario de festivos de Barcelona ciudad para 2025 y 2026.
+    - El propietario del calendario es RandomUser.
+    - Rellena los dias que son festivos de informacion sacada por internet por favor.
+- FC Barcelona
+    - Tiene el calendario de los partidos del barcelona de primera división.
+    - Tiene el calendario de los partidos del barcelona atletico.
+    - Tiene el calendario de los partidos de baloncesto.
+    - Tiene el calendario de los partidos de balonmano.
+    - Tiene el calendario de los partidos de hockey patines.
+    - Tiene el calendario de los partidos del juvenil a.
+    - Tiene el evento suelto de la fecha de reunion de compromisarios.
+
+Asumiendo que yo soy Sonia, para este ejemplo, Rosa y Kallipolis están en mi lista de contactos, así como todos los usuarios privados menos RandomUser.
+RandomUser no es mi contacto.
+Pero RandomUser tiene un caledario que a mi me interesa.
+Calendario de festivos de Barcelona solo lo puede actualizar y editar RandomUser, pero lo quiere compartir con el mundo.
+Como RandomUser, cientos de usuarios quieren compartir su calendario con desconocidos.
+
+Es decir, necesito crear un concepto de:
+- Calendario privado compartible solo con usuarios: Via invitacion o via joined admin.
+- Calendario publico compartible de forma pública.
+
+Como podriamos crear la segunda a nivel de API ?
+
+Necesitariamos:
+- Que un usuario privado pueda crear calendarios publicos compartibles con otros desconocidos.
+- Que un usuario privado pueda buscar calendarios publicos de otros usuarios privados.
+- Que un usuario privado pueda compartir estos calendarios con usuarios privados.
+- Poder clasificarlos, por ejemplo, por numero de gente suscrita a estos calendarios. Diferenciar esto de suscripciones, esto sería solo suscribirme a un calendario publico de un usuario privado desconocido, no tiene nada que ver con el concepto actual de suscripciones.
+
+Me puedes ayudar a diseñarlo ?
