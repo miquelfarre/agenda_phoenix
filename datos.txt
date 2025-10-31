@@ -30,8 +30,19 @@ Calendario de festivos de Barcelona solo lo puede actualizar y editar RandomUser
 Como RandomUser, cientos de usuarios quieren compartir su calendario con desconocidos.
 
 Es decir, necesito crear un concepto de:
-- Calendario privado compartible solo con usuarios: Via invitacion o via joined admin.
-- Calendario publico compartible de forma pública.
+Los dos tienen shared.
+- Calendario privado de usuario privado compartible solo con usuarios privados: Via invitacion o via joined admin.
+- Calendario publico de usuario privado compartible con otros usuarios privados via suscripcion al calendario.
+- Calendario publico de usuario publico compartible con otros usuarios privados via suscripcion al usuario publico.
+
+Listados en el listado de calendarios:
+- Calendario privado de usuario privado compartible solo con usuarios privados: Via invitacion o via joined admin.
+Buscables/Filtrables en el listado de calendarios:
+- Calendario privado de usuario privado compartible solo con usuarios privados: Via invitacion o via joined admin.
+- Calendario publico de usuario privado compartible con otros usuarios privados via suscripcion al calendario.
+Ignorar en la zona de calendarios:
+- Calendario publico de usuario publico compartible con otros usuarios privados via suscripcion al usuario publico.
+
 
 Como podriamos crear la segunda a nivel de API ?
 

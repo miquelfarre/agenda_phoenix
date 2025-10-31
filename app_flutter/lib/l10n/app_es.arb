@@ -1645,6 +1645,149 @@
   "noEventsInSeries": "No hay eventos en esta serie",
   "@noEventsInSeries": {
     "description": "Mensaje mostrado cuando no hay eventos en la serie recurrente"
+  },
+
+  "@_ADDITIONAL_TRANSLATIONS": {
+    "description": "Traducciones adicionales identificadas en auditoría de literales"
+  },
+  "form": "Formulario",
+  "@form": {
+    "description": "Título genérico para formularios"
+  },
+  "unsavedChangesWarning": "Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?",
+  "@unsavedChangesWarning": {
+    "description": "Advertencia cuando el usuario intenta salir con cambios sin guardar"
+  },
+  "selectLabel": "Seleccionar {label}",
+  "@selectLabel": {
+    "description": "Texto para seleccionar un elemento con etiqueta dinámica",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeEventsHint": "Organiza tus eventos creando calendarios o suscríbete a calendarios públicos",
+  "@organizeEventsHint": {
+    "description": "Texto de ayuda para organizar eventos con calendarios"
+  },
+  "noPublicCalendarsAvailable": "No hay calendarios públicos disponibles",
+  "@noPublicCalendarsAvailable": {
+    "description": "Mensaje cuando no hay calendarios públicos"
+  },
+  "tryDifferentSearch": "Intenta buscar con un nombre o palabra clave diferente",
+  "@tryDifferentSearch": {
+    "description": "Sugerencia para intentar una búsqueda diferente"
+  },
+  "publicCalendarsWillAppearHere": "Los calendarios públicos aparecerán aquí cuando estén disponibles",
+  "@publicCalendarsWillAppearHere": {
+    "description": "Mensaje de estado vacío para calendarios públicos"
+  },
+  "unsubscribedFrom": "Desuscrito de {calendarName}",
+  "@unsubscribedFrom": {
+    "description": "Mensaje de confirmación al desuscribirse de un calendario",
+    "placeholders": {
+      "calendarName": {
+        "type": "String"
+      }
+    }
+  },
+  "subscribedTo": "Suscrito a {calendarName}",
+  "@subscribedTo": {
+    "description": "Mensaje de confirmación al suscribirse a un calendario",
+    "placeholders": {
+      "calendarName": {
+        "type": "String"
+      }
+    }
+  },
+  "noPermissionToOperation": "No tienes permiso para {operation} este calendario.",
+  "@noPermissionToOperation": {
+    "description": "Mensaje de error de permisos con operación dinámica",
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarNotFoundDeleted": "Calendario no encontrado. Puede haber sido eliminado.",
+  "@calendarNotFoundDeleted": {
+    "description": "Mensaje cuando un calendario no se encuentra"
+  },
+  "alreadySubscribed": "Ya estás suscrito a este calendario.",
+  "@alreadySubscribed": {
+    "description": "Mensaje cuando el usuario ya está suscrito"
+  },
+  "notSubscribed": "No estás suscrito a este calendario.",
+  "@notSubscribed": {
+    "description": "Mensaje cuando el usuario no está suscrito"
+  },
+  "failedToOperationCalendar": "Error al {operation} calendario. Por favor, inténtalo de nuevo.",
+  "@failedToOperationCalendar": {
+    "description": "Mensaje de error al operar con calendario",
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailed": "invitaciones fallidas",
+  "@invitationsFailed": {
+    "description": "Texto para indicar invitaciones que fallaron"
+  },
+  "useCustomTimezone": "Usar zona horaria personalizada",
+  "@useCustomTimezone": {
+    "description": "Opción para usar una zona horaria personalizada"
+  },
+  "errorLoadingCalendarsDetail": "Error al cargar calendarios: {error}",
+  "@errorLoadingCalendarsDetail": {
+    "description": "Mensaje de error detallado al cargar calendarios",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventIdMissing": "El ID del evento falta",
+  "@eventIdMissing": {
+    "description": "Error cuando falta el ID del evento"
+  },
+  "testAuthFailed": "Error en la autenticación de prueba: {error}",
+  "@testAuthFailed": {
+    "description": "Mensaje de error en autenticación de prueba",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLeavingEvent": "Error al salir del evento",
+  "@errorLeavingEvent": {
+    "description": "Mensaje de error al salir de un evento"
+  },
+  "loadingEventSeries": "Cargando serie de eventos...",
+  "@loadingEventSeries": {
+    "description": "Mensaje de carga para series de eventos"
+  },
+  "errorLoadingEventSeries": "Error al cargar la serie de eventos",
+  "@errorLoadingEventSeries": {
+    "description": "Mensaje de error al cargar series de eventos"
+  },
+  "partiallyInvited": "{partiallyInvitedCount}/{totalMembers} invitados",
+  "@partiallyInvited": {
+    "description": "Muestra cuántos miembros han sido invitados del total",
+    "placeholders": {
+      "partiallyInvitedCount": {
+        "type": "int"
+      },
+      "totalMembers": {
+        "type": "int"
+      }
+    }
+  },
+  "noItemsAvailable": "No hay elementos disponibles",
+  "@noItemsAvailable": {
+    "description": "Mensaje cuando no hay elementos disponibles en un selector"
   }
 }
 

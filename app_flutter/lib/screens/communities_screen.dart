@@ -60,7 +60,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
     return calendarsAsync.when(
       data: (calendars) {
         if (calendars.isEmpty) {
-          return EmptyState(icon: CupertinoIcons.rectangle_stack_person_crop, message: context.l10n.noCalendarsYet, subtitle: 'Organize your events by creating calendars or subscribe to public ones', actionLabel: 'Create Calendar', onAction: () => context.push('/communities/create'));
+          return EmptyState(icon: CupertinoIcons.rectangle_stack_person_crop, message: context.l10n.noCalendarsYet, subtitle: context.l10n.organizeEventsHint, actionLabel: context.l10n.createCalendar, onAction: () => context.push('/communities/create'));
         }
 
         return Column(
@@ -100,7 +100,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
           child: publicCalendarsAsync.when(
             data: (calendars) {
               if (calendars.isEmpty) {
-                return EmptyState(icon: CupertinoIcons.search, message: searchQuery != null ? 'No calendars found' : 'No public calendars available', subtitle: searchQuery != null ? 'Try searching for a different name or keyword' : 'Public calendars will appear here when available');
+                return EmptyState(icon: CupertinoIcons.search, message: searchQuery != null ? context.l10n.noCalendarsFound : context.l10n.noPublicCalendarsAvailable, subtitle: searchQuery != null ? context.l10n.tryDifferentSearch : context.l10n.publicCalendarsWillAppearHere);
               }
 
               return ListView.builder(
@@ -124,7 +124,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       padding: const EdgeInsets.all(16.0),
       child: CupertinoSearchTextField(
         controller: _searchController,
-        placeholder: _showingPublicCalendars ? context.l10n.searchPublicCalendars : 'Search calendars',
+        placeholder: _showingPublicCalendars ? context.l10n.searchPublicCalendars : context.l10n.searchCalendars,
         onChanged: (value) {
           setState(() {});
         },
@@ -194,10 +194,10 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
           try {
             if (isSubscribed) {
               await subscriptionNotifier.unsubscribe(int.parse(calendar.id));
-              _showSuccess('Unsubscribed from ${calendar.name}');
+              _showSuccess(context.l10n.unsubscribedFrom(calendar.name));
             } else {
               await subscriptionNotifier.subscribe(int.parse(calendar.id));
-              _showSuccess('Subscribed to ${calendar.name}');
+              _showSuccess(context.l10n.subscribedTo(calendar.name));
             }
           } catch (e) {
             final operation = isSubscribed ? 'unsubscribe from' : 'subscribe to';
@@ -221,40 +221,41 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
 
   String _parseErrorMessage(dynamic error, String operation) {
     final errorStr = error.toString().toLowerCase();
+    final l10n = context.l10n;
 
     if (errorStr.contains('socket') || errorStr.contains('network') || errorStr.contains('connection')) {
-      return 'No internet connection. Please check your network and try again.';
+      return l10n.noInternetConnection;
     }
 
     if (errorStr.contains('timeout')) {
-      return 'Request timed out. Please try again.';
+      return l10n.requestTimedOut;
     }
 
     if (errorStr.contains('500') || errorStr.contains('server error')) {
-      return 'Server error. Please try again later.';
+      return l10n.serverError;
     }
 
     if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
-      return 'Session expired. Please login again.';
+      return l10n.sessionExpired;
     }
 
     if (errorStr.contains('forbidden') || errorStr.contains('403')) {
-      return 'You don\'t have permission to $operation this calendar.';
+      return l10n.noPermissionToOperation(operation);
     }
 
     if (errorStr.contains('not found') || errorStr.contains('404')) {
-      return 'Calendar not found. It may have been deleted.';
+      return l10n.calendarNotFoundDeleted;
     }
 
     if (errorStr.contains('already subscribed')) {
-      return 'You are already subscribed to this calendar.';
+      return l10n.alreadySubscribed;
     }
 
     if (errorStr.contains('not subscribed')) {
-      return 'You are not subscribed to this calendar.';
+      return l10n.notSubscribed;
     }
 
-    return 'Failed to $operation calendar. Please try again.';
+    return l10n.failedToOperationCalendar(operation);
   }
 
   void _showError(String message) {
@@ -265,10 +266,10 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       barrierDismissible: false,
       builder: (context) => CupertinoAlertDialog(
         title: Row(
-          children: const [
-            Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
-            SizedBox(width: 8),
-            Text('Error'),
+          children: [
+            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
+            const SizedBox(width: 8),
+            Text(context.l10n.error),
           ],
         ),
         content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
@@ -285,10 +286,10 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       barrierDismissible: true,
       builder: (context) => CupertinoAlertDialog(
         title: Row(
-          children: const [
-            Icon(CupertinoIcons.checkmark_circle, color: CupertinoColors.systemGreen, size: 20),
-            SizedBox(width: 8),
-            Text('Success'),
+          children: [
+            const Icon(CupertinoIcons.checkmark_circle, color: CupertinoColors.systemGreen, size: 20),
+            const SizedBox(width: 8),
+            Text(context.l10n.success),
           ],
         ),
         content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),

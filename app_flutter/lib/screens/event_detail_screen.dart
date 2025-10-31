@@ -552,7 +552,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
               PlatformWidgets.platformIcon(CupertinoIcons.person_3, color: AppStyles.blue600, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Attendees',
+                l10n.attendees,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.grey700),
               ),
               const SizedBox(width: 8),
@@ -711,7 +711,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
     } catch (e) {
       print('❌ [EventDetail] Error leaving event: $e');
       if (mounted) {
-        _showEphemeralMessage('Error al salir del evento', color: AppStyles.errorColor);
+        _showEphemeralMessage(l10n.errorLeavingEvent, color: AppStyles.errorColor);
       }
       rethrow;
     }
@@ -1012,7 +1012,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
     try {
       // Show loading indicator
       if (mounted) {
-        _showEphemeralMessage('Cargando serie de eventos...', color: AppStyles.blue600);
+        _showEphemeralMessage(l10n.loadingEventSeries, color: AppStyles.blue600);
       }
 
       final userId = ConfigService.instance.currentUserId;
@@ -1025,7 +1025,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
 
       if (mounted) {
         if (seriesEvents.isEmpty) {
-          _showEphemeralMessage('No se encontraron eventos en esta serie', color: AppStyles.orange600);
+          _showEphemeralMessage(l10n.noEventsInSeries, color: AppStyles.orange600);
           return;
         }
 
@@ -1039,7 +1039,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
     } catch (e) {
       print('🔴 [EventDetail] Error loading event series: $e');
       if (mounted) {
-        _showEphemeralMessage('Error al cargar la serie de eventos', color: AppStyles.errorColor);
+        _showEphemeralMessage(l10n.errorLoadingEventSeries, color: AppStyles.errorColor);
       }
     }
   }

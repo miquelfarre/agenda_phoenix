@@ -78,8 +78,9 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
 
       final eventId = widget.event.id;
       if (eventId == null) {
+        final l10n = context.l10n;
         setState(() {
-          _error = 'Event ID is missing';
+          _error = l10n.eventIdMissing;
           _isLoading = false;
         });
         return;
@@ -296,7 +297,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
         }
 
         if (errorCount > 0) {
-          PlatformWidgets.showSnackBar(message: '$errorCount invitations failed', isError: true);
+          PlatformWidgets.showSnackBar(message: '$errorCount ${l10n.invitationsFailed}', isError: true);
         }
 
         if (successCount > 0 && errorCount == 0) {

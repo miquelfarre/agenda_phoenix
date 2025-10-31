@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/group.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 class GroupCard extends StatelessWidget {
   final Group group;
@@ -64,7 +65,7 @@ class GroupCard extends StatelessWidget {
       final totalMembers = group.members.length;
       return Badge(
         label: Text(
-          '$partiallyInvitedCount/$totalMembers invitados',
+          context.l10n.partiallyInvited(partiallyInvitedCount!, totalMembers),
           style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSecondaryContainer, fontWeight: FontWeight.w600),
         ),
         backgroundColor: theme.colorScheme.secondaryContainer,

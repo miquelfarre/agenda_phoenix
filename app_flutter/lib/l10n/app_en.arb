@@ -1895,5 +1895,148 @@
   "noEventsInSeries": "No events in this series",
   "@noEventsInSeries": {
     "description": "Message shown when there are no events in the recurring series"
+  },
+
+  "@_ADDITIONAL_TRANSLATIONS": {
+    "description": "Additional translations identified in string literal audit"
+  },
+  "form": "Form",
+  "@form": {
+    "description": "Generic title for forms"
+  },
+  "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave?",
+  "@unsavedChangesWarning": {
+    "description": "Warning when user tries to leave with unsaved changes"
+  },
+  "selectLabel": "Select {label}",
+  "@selectLabel": {
+    "description": "Text to select an item with dynamic label",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeEventsHint": "Organize your events by creating calendars or subscribe to public ones",
+  "@organizeEventsHint": {
+    "description": "Help text for organizing events with calendars"
+  },
+  "noPublicCalendarsAvailable": "No public calendars available",
+  "@noPublicCalendarsAvailable": {
+    "description": "Message when there are no public calendars"
+  },
+  "tryDifferentSearch": "Try searching for a different name or keyword",
+  "@tryDifferentSearch": {
+    "description": "Suggestion to try a different search"
+  },
+  "publicCalendarsWillAppearHere": "Public calendars will appear here when available",
+  "@publicCalendarsWillAppearHere": {
+    "description": "Empty state message for public calendars"
+  },
+  "unsubscribedFrom": "Unsubscribed from {calendarName}",
+  "@unsubscribedFrom": {
+    "description": "Confirmation message when unsubscribing from a calendar",
+    "placeholders": {
+      "calendarName": {
+        "type": "String"
+      }
+    }
+  },
+  "subscribedTo": "Subscribed to {calendarName}",
+  "@subscribedTo": {
+    "description": "Confirmation message when subscribing to a calendar",
+    "placeholders": {
+      "calendarName": {
+        "type": "String"
+      }
+    }
+  },
+  "noPermissionToOperation": "You don't have permission to {operation} this calendar.",
+  "@noPermissionToOperation": {
+    "description": "Permission error message with dynamic operation",
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarNotFoundDeleted": "Calendar not found. It may have been deleted.",
+  "@calendarNotFoundDeleted": {
+    "description": "Message when a calendar is not found"
+  },
+  "alreadySubscribed": "You are already subscribed to this calendar.",
+  "@alreadySubscribed": {
+    "description": "Message when user is already subscribed"
+  },
+  "notSubscribed": "You are not subscribed to this calendar.",
+  "@notSubscribed": {
+    "description": "Message when user is not subscribed"
+  },
+  "failedToOperationCalendar": "Failed to {operation} calendar. Please try again.",
+  "@failedToOperationCalendar": {
+    "description": "Error message when operating on calendar",
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationsFailed": "invitations failed",
+  "@invitationsFailed": {
+    "description": "Text indicating failed invitations"
+  },
+  "useCustomTimezone": "Use custom timezone",
+  "@useCustomTimezone": {
+    "description": "Option to use a custom timezone"
+  },
+  "errorLoadingCalendarsDetail": "Error loading calendars: {error}",
+  "@errorLoadingCalendarsDetail": {
+    "description": "Detailed error message when loading calendars",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventIdMissing": "Event ID is missing",
+  "@eventIdMissing": {
+    "description": "Error when event ID is missing"
+  },
+  "testAuthFailed": "Test authentication failed: {error}",
+  "@testAuthFailed": {
+    "description": "Error message for test authentication",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLeavingEvent": "Error leaving event",
+  "@errorLeavingEvent": {
+    "description": "Error message when leaving an event"
+  },
+  "loadingEventSeries": "Loading event series...",
+  "@loadingEventSeries": {
+    "description": "Loading message for event series"
+  },
+  "errorLoadingEventSeries": "Error loading event series",
+  "@errorLoadingEventSeries": {
+    "description": "Error message when loading event series"
+  },
+  "partiallyInvited": "{partiallyInvitedCount}/{totalMembers} invited",
+  "@partiallyInvited": {
+    "description": "Shows how many members have been invited out of total",
+    "placeholders": {
+      "partiallyInvitedCount": {
+        "type": "int"
+      },
+      "totalMembers": {
+        "type": "int"
+      }
+    }
+  },
+  "noItemsAvailable": "No items available",
+  "@noItemsAvailable": {
+    "description": "Message when no items are available in a selector"
   }
 }

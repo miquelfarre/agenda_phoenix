@@ -309,7 +309,7 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
               },
             ),
             const SizedBox(width: 12),
-            Text('Usar zona horaria personalizada', style: AppStyles.bodyText.copyWith(fontSize: 16)),
+            Text(l10n.useCustomTimezone, style: AppStyles.bodyText.copyWith(fontSize: 16)),
           ],
         ),
         const SizedBox(height: 16),
@@ -379,7 +379,7 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                     children: [
                       const Icon(CupertinoIcons.calendar, size: 20),
                       const SizedBox(width: 8),
-                      Text('Fecha de inicio', style: AppStyles.bodyText.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Text(l10n.startDate, style: AppStyles.bodyText.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
                     ],
                   ),
 
@@ -667,7 +667,7 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
     }
 
     if (calendarsAsync.hasError) {
-      return Text('Error loading calendars: ${calendarsAsync.error}', style: const TextStyle(color: CupertinoColors.systemRed));
+      return Text(l10n.errorLoadingCalendarsDetail(calendarsAsync.error.toString()), style: const TextStyle(color: CupertinoColors.systemRed));
     }
 
     if (!calendarsAsync.hasValue) {
@@ -698,7 +698,7 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                 },
               ),
               const SizedBox(width: 12),
-              Text('Asociar con calendario', style: AppStyles.bodyText.copyWith(fontSize: 16)),
+              Text(l10n.associateWithCalendar, style: AppStyles.bodyText.copyWith(fontSize: 16)),
             ],
           ),
           const SizedBox(height: 16),

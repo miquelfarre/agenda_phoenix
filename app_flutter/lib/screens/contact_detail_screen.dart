@@ -221,7 +221,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> with 
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Error loading data', style: TextStyle(color: AppStyles.grey600, fontSize: 16)),
+                      Text(l10n.errorLoadingData, style: TextStyle(color: AppStyles.grey600, fontSize: 16)),
                       const SizedBox(height: 16),
                       CupertinoButton(onPressed: _loadContactDetail, child: Text(l10n.retry)),
                     ],

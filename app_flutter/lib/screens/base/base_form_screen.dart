@@ -37,11 +37,11 @@ abstract class BaseFormScreenState<W extends BaseFormScreen> extends ConsumerSta
 
   List<Widget> buildFormFields();
 
-  String get screenTitle => 'Form';
+  String get screenTitle => context.l10n.form;
 
-  String get submitButtonText => 'Save';
+  String get submitButtonText => context.l10n.save;
 
-  String get cancelButtonText => 'Cancel';
+  String get cancelButtonText => context.l10n.cancel;
 
   bool get showCancelButton => true;
 
@@ -49,7 +49,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen> extends ConsumerSta
 
   bool get confirmCancelIfDirty => true;
 
-  String get unsavedChangesMessage => 'You have unsaved changes. Are you sure you want to leave?';
+  String get unsavedChangesMessage => context.l10n.unsavedChangesWarning;
 
   void setFieldValue(String fieldName, dynamic value) {
     if (_formData[fieldName] != value) {
@@ -273,7 +273,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen> extends ConsumerSta
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(value != null ? getOptionLabel(value) : (placeholder ?? 'Select $label'), style: TextStyle(color: value != null ? CupertinoColors.label : CupertinoColors.placeholderText)),
+                Text(value != null ? getOptionLabel(value) : (placeholder ?? context.l10n.selectLabel(label)), style: TextStyle(color: value != null ? CupertinoColors.label : CupertinoColors.placeholderText)),
                 const Icon(CupertinoIcons.chevron_down, color: CupertinoColors.separator),
               ],
             ),

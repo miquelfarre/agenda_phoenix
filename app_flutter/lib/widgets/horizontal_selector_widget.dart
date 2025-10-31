@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/selector_option.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 class HorizontalSelectorWidget<T> extends StatefulWidget {
   final List<SelectorOption<T>> options;
@@ -93,7 +94,7 @@ class _HorizontalSelectorWidgetState<T> extends State<HorizontalSelectorWidget<T
       height: widget.itemHeight,
       padding: const EdgeInsets.all(16),
       child: Center(
-        child: Text(widget.emptyMessage ?? 'No items available', style: const TextStyle(color: Colors.grey)),
+        child: Text(widget.emptyMessage ?? context.l10n.noItemsAvailable, style: const TextStyle(color: Colors.grey)),
       ),
     );
   }
