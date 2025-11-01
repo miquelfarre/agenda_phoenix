@@ -1,12 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
 import '../models/event.dart';
+import '../models/calendar.dart';
 import '../core/state/app_state.dart';
 import '../widgets/event_list_item.dart';
 import 'event_detail_screen.dart';
 import '../ui/styles/app_styles.dart';
 import '../services/config_service.dart';
+import '../ui/helpers/l10n/l10n_helpers.dart';
 
 class CalendarEventsScreen extends ConsumerStatefulWidget {
   final int calendarId;
@@ -47,6 +50,33 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
     }).toList();
   }
 
+  Calendar? get _calendar {
+    final calendarsAsync = ref.watch(calendarsStreamProvider);
+    return calendarsAsync.maybeWhen(
+      data: (calendars) => calendars.firstWhere(
+        (cal) => cal.id == widget.calendarId.toString(),
+        orElse: () => Calendar(
+          id: widget.calendarId.toString(),
+          name: widget.calendarName,
+          color: widget.calendarColor ?? '#2196F3',
+          ownerId: '',
+          isPublic: false,
+          isDefault: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      ),
+      orElse: () => null,
+    );
+  }
+
+  bool get _isOwner {
+    final calendar = _calendar;
+    if (calendar == null) return false;
+    final userId = ConfigService.instance.currentUserId;
+    return calendar.ownerId == userId.toString();
+  }
+
   Color _parseCalendarColor() {
     if (widget.calendarColor == null) return AppStyles.blue600;
 
@@ -59,6 +89,145 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
     } catch (e) {
       return AppStyles.blue600;
     }
+  }
+
+  void _showCalendarOptions() {
+    final l10n = context.l10n;
+    final calendar = _calendar;
+    if (calendar == null) return;
+
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push('/calendars/${widget.calendarId}/edit');
+            },
+            child: Text(l10n.editCalendar),
+          ),
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteOrLeaveCalendar(calendar);
+            },
+            child: Text(_isOwner ? l10n.deleteCalendar : l10n.leaveCalendar),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteOrLeaveCalendar(Calendar calendar) async {
+    final l10n = context.l10n;
+    final userId = ConfigService.instance.currentUserId;
+    final isOwner = calendar.ownerId == userId.toString();
+
+    // Mostrar confirmación diferente según sea owner o no
+    final shouldDelete = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(isOwner ? l10n.deleteCalendar : l10n.leaveCalendar),
+        content: Text(isOwner ? l10n.confirmDeleteCalendarWithEvents : l10n.confirmLeaveCalendar),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(isOwner ? l10n.delete : l10n.leave),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true) return;
+
+    try {
+      final repository = ref.read(calendarRepositoryProvider);
+
+      if (isOwner) {
+        // Owner: eliminar el calendario completo
+        await repository.deleteCalendar(int.parse(calendar.id));
+        if (mounted) {
+          _showSuccess(l10n.success);
+          context.pop(); // Volver a la lista de calendarios
+        }
+      } else {
+        // No owner: dejar el calendario
+        if (calendar.shareHash != null) {
+          await repository.unsubscribeByShareHash(calendar.shareHash!);
+        } else {
+          await repository.unsubscribeFromCalendar(int.parse(calendar.id));
+        }
+        if (mounted) {
+          _showSuccess(l10n.calendarLeft);
+          context.pop(); // Volver a la lista de calendarios
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError(l10n.error);
+      }
+    }
+  }
+
+  void _showSuccess(String message) {
+    showCupertinoDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => CupertinoAlertDialog(
+        title: Row(
+          children: [
+            const Icon(CupertinoIcons.checkmark_circle, color: CupertinoColors.systemGreen, size: 20),
+            const SizedBox(width: 8),
+            Text(context.l10n.success),
+          ],
+        ),
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    showCupertinoDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CupertinoAlertDialog(
+        title: Row(
+          children: [
+            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
+            const SizedBox(width: 8),
+            Text(context.l10n.error),
+          ],
+        ),
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
+      ),
+    );
   }
 
   @override
@@ -90,6 +259,11 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
               child: Text(widget.calendarName, style: const TextStyle(fontSize: 16), overflow: TextOverflow.ellipsis),
             ),
           ],
+        ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: _showCalendarOptions,
+          child: const Icon(CupertinoIcons.ellipsis_circle, size: 28),
         ),
       ),
       child: SafeArea(child: _buildContent(eventsToShow)),
@@ -149,6 +323,7 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
                     Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => EventDetailScreen(event: event)));
                   },
                   onDelete: _deleteEvent,
+                  showDate: true,
                 ),
               );
             }, childCount: eventsToShow.length),

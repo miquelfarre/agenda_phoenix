@@ -1052,17 +1052,28 @@ def insert_sample_data():
             Event(name="Conferencia: Historia de Barcelona", description="Charla sobre la historia medieval de Barcelona", start_date=in_14_days.replace(hour=19, minute=0), event_type="regular", owner_id=cultural_llotja.id, calendar_id=cal_cultural.id),
         ]
 
-        # Barcelona holidays
+        # Barcelona holidays - Festivos oficiales 2025
         festivos_events = [
-            Event(name="Reyes", description="Día de Reyes", start_date=(tomorrow + timedelta(days=30)).replace(hour=0, minute=0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
-            Event(name="Sant Jordi", description="Día de Sant Jordi - Patrón de Catalunya", start_date=(tomorrow + timedelta(days=100)).replace(hour=0, minute=0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
-            Event(name="Diada de Catalunya", description="Fiesta Nacional de Catalunya", start_date=(tomorrow + timedelta(days=250)).replace(hour=0, minute=0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
-            Event(name="La Mercè", description="Fiestas de La Mercè - Patrona de Barcelona", start_date=(tomorrow + timedelta(days=260)).replace(hour=0, minute=0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Año Nuevo", description="Año Nuevo", start_date=datetime(2025, 1, 1, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Reyes", description="Día de Reyes", start_date=datetime(2025, 1, 6, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Viernes Santo", description="Viernes Santo", start_date=datetime(2025, 4, 18, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Lunes de Pascua", description="Lunes de Pascua", start_date=datetime(2025, 4, 21, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Día del Trabajador", description="Fiesta del Trabajo", start_date=datetime(2025, 5, 1, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Sant Joan", description="Verbena de Sant Joan", start_date=datetime(2025, 6, 24, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Asunción", description="Asunción de la Virgen", start_date=datetime(2025, 8, 15, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Diada de Catalunya", description="Fiesta Nacional de Catalunya", start_date=datetime(2025, 9, 11, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="La Mercè", description="Fiestas de La Mercè - Patrona de Barcelona", start_date=datetime(2025, 9, 24, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Fiesta Nacional", description="Fiesta Nacional de España", start_date=datetime(2025, 10, 12, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Todos los Santos", description="Día de Todos los Santos", start_date=datetime(2025, 11, 1, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Día de la Constitución", description="Día de la Constitución Española", start_date=datetime(2025, 12, 6, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Inmaculada Concepción", description="Inmaculada Concepción", start_date=datetime(2025, 12, 8, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="Navidad", description="Día de Navidad", start_date=datetime(2025, 12, 25, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
+            Event(name="San Esteban", description="Sant Esteve", start_date=datetime(2025, 12, 26, 0, 0), event_type="regular", owner_id=sara.id, calendar_id=cal_festivos_bcn.id),
         ]
 
         db.add_all(gym_events + restaurant_events + cultural_events + festivos_events)
         db.flush()
-        logger.info(f"  ✓ Inserted 15 public calendar events (5 gym, 3 restaurant, 3 cultural, 4 holidays)")
+        logger.info(f"  ✓ Inserted 28 public calendar events (5 gym, 3 restaurant, 3 cultural, 15 holidays)")
 
         # 11. Create Sonia's additional events
         event_cumple_sara_clase = Event(

@@ -1,11 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../l10n/app_localizations.dart';
-import '../models/calendar.dart';
+import 'package:go_router/go_router.dart';
+import '../ui/helpers/l10n/l10n_helpers.dart';
+import '../ui/helpers/platform/platform_detection.dart';
+import '../widgets/adaptive_scaffold.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/adaptive/adaptive_button.dart';
 import '../core/state/app_state.dart';
+import '../models/calendar.dart';
+import '../services/config_service.dart';
 import 'calendar_events_screen.dart';
-import 'create_calendar_screen.dart';
-import '../ui/styles/app_styles.dart';
 
 class CalendarsScreen extends ConsumerStatefulWidget {
   const CalendarsScreen({super.key});
@@ -16,12 +20,10 @@ class CalendarsScreen extends ConsumerStatefulWidget {
 
 class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(_filterCalendars);
-  }
+  bool _searchingByHash = false;
+  bool _loadingHashSearch = false;
+  Calendar? _hashSearchResult;
+  String? _hashSearchError;
 
   @override
   void dispose() {
@@ -29,195 +31,536 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     super.dispose();
   }
 
-  void _filterCalendars() {
-    if (mounted) setState(() {});
-  }
+  void _onSearchChanged(String value) {
+    setState(() {
+      _hashSearchResult = null;
+      _hashSearchError = null;
 
-  List<Calendar> _applySearchFilter(List<Calendar> calendars) {
-    final query = _searchController.text.trim().toLowerCase();
-    if (query.isEmpty) return calendars;
+      if (value.startsWith('#')) {
+        _searchingByHash = true;
+        final hash = value.substring(1).trim();
 
-    return calendars.where((calendar) {
-      return calendar.name.toLowerCase().contains(query) || (calendar.description?.toLowerCase().contains(query) ?? false);
-    }).toList();
-  }
-
-  Color _parseCalendarColor(String colorHex) {
-    try {
-      String hexColor = colorHex.replaceAll('#', '');
-      if (hexColor.length == 6) {
-        hexColor = 'FF$hexColor';
+        if (hash.length >= 3) {
+          _searchByHash(hash);
+        }
+      } else {
+        _searchingByHash = false;
+        _loadingHashSearch = false;
       }
-      return Color(int.parse(hexColor, radix: 16));
+    });
+  }
+
+  Future<void> _searchByHash(String hash) async {
+    if (_loadingHashSearch) return;
+
+    setState(() {
+      _loadingHashSearch = true;
+      _hashSearchError = null;
+    });
+
+    try {
+      final repository = ref.read(calendarRepositoryProvider);
+      final calendar = await repository.searchByShareHash(hash);
+
+      if (mounted) {
+        setState(() {
+          _loadingHashSearch = false;
+          if (calendar != null) {
+            _hashSearchResult = calendar;
+          } else {
+            _hashSearchError = context.l10n.calendarNotFoundByHash;
+          }
+        });
+      }
     } catch (e) {
-      return AppStyles.blue600;
+      if (mounted) {
+        setState(() {
+          _loadingHashSearch = false;
+          _hashSearchError = context.l10n.error;
+        });
+      }
     }
   }
 
-  int _getEventCountForCalendar(int calendarId) {
-    final allEventsAsync = ref.watch(eventsStreamProvider);
-    return allEventsAsync.when(data: (events) => events.where((event) => event.calendarId == calendarId).length, loading: () => 0, error: (error, stack) => 0);
+  Future<void> _subscribeToCalendar(Calendar calendar) async {
+    if (calendar.shareHash == null) return;
+
+    try {
+      final repository = ref.read(calendarRepositoryProvider);
+      await repository.subscribeByShareHash(calendar.shareHash!);
+
+      if (mounted) {
+        _showSuccess(context.l10n.subscribedTo(calendar.name));
+        _searchController.clear();
+        setState(() {
+          _searchingByHash = false;
+          _hashSearchResult = null;
+        });
+
+        // Realtime will automatically update the calendars list
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError(_parseErrorMessage(e, 'subscribe to'));
+      }
+    }
+  }
+
+  Future<void> _deleteOrLeaveCalendar(Calendar calendar) async {
+    final l10n = context.l10n;
+    final userId = ConfigService.instance.currentUserId;
+    final isOwner = calendar.ownerId == userId.toString();
+
+    // Mostrar confirmación diferente según sea owner o no
+    final shouldDelete = await _showConfirmDialog(
+      title: isOwner ? l10n.deleteCalendar : l10n.leaveCalendar,
+      message: isOwner ? l10n.confirmDeleteCalendarWithEvents : l10n.confirmLeaveCalendar,
+    );
+
+    if (shouldDelete != true) return;
+
+    try {
+      final repository = ref.read(calendarRepositoryProvider);
+
+      if (isOwner) {
+        // Owner: eliminar el calendario completo (esto eliminará todos los eventos del calendario)
+        await repository.deleteCalendar(int.parse(calendar.id));
+        if (mounted) {
+          _showSuccess(l10n.success);
+        }
+      } else {
+        // No owner: dejar el calendario (unsubscribe/leave)
+        if (calendar.shareHash != null) {
+          // Tipo 2: Calendario público - desuscribirse por share_hash
+          await repository.unsubscribeByShareHash(calendar.shareHash!);
+        } else {
+          // Tipo 1: Calendario privado - eliminar membresía
+          await repository.unsubscribeFromCalendar(int.parse(calendar.id));
+        }
+        if (mounted) {
+          _showSuccess(l10n.calendarLeft);
+        }
+      }
+
+      // Realtime will automatically update the calendars list
+    } catch (e) {
+      if (mounted) {
+        _showError(l10n.error);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final calendarsAsync = ref.watch(calendarsStreamProvider);
+    final l10n = context.l10n;
+    final isIOS = PlatformDetection.isIOS;
 
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
-        middle: Text(AppLocalizations.of(context)!.calendars, style: const TextStyle(fontSize: 16)),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: () {
-            Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => const CreateCalendarScreen()));
-          },
-          child: const Icon(CupertinoIcons.add, size: 28),
-        ),
-      ),
-      child: SafeArea(
-        child: calendarsAsync.when(
-          data: (calendars) => _buildContent(calendars),
-          loading: () => const Center(child: CupertinoActivityIndicator()),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(CupertinoIcons.exclamationmark_triangle, size: 64, color: CupertinoColors.systemRed),
-                const SizedBox(height: 16),
-                Text(AppLocalizations.of(context)!.errorLoadingData, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 16)),
-              ],
+    Widget body = _buildCalendarsView();
+
+    if (isIOS) {
+      body = Stack(
+        children: [
+          body,
+          Positioned(
+            bottom: 100,
+            right: 20,
+            child: AdaptiveButton(
+              config: const AdaptiveButtonConfig(
+                variant: ButtonVariant.fab,
+                size: ButtonSize.medium,
+                fullWidth: false,
+                iconPosition: IconPosition.only,
+              ),
+              icon: CupertinoIcons.add,
+              onPressed: () => context.push('/calendars/create'),
             ),
           ),
+        ],
+      );
+    }
+
+    return AdaptivePageScaffold(
+      title: isIOS ? null : l10n.calendars,
+      body: body,
+    );
+  }
+
+  Widget _buildCalendarsView() {
+    return Column(
+      children: [
+        _buildSearchBar(),
+        Expanded(
+          child: _searchingByHash ? _buildHashSearchResults() : _buildMyCalendarsList(),
         ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    final l10n = context.l10n;
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CupertinoSearchTextField(
+            controller: _searchController,
+            placeholder: l10n.searchByNameOrCode,
+            onChanged: _onSearchChanged,
+          ),
+          if (_searchController.text.startsWith('#')) ...[
+            const SizedBox(height: 8),
+            Text(
+              l10n.enterCodePrecededByHash,
+              style: const TextStyle(fontSize: 12, color: CupertinoColors.systemGrey),
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _buildContent(List<Calendar> calendars) {
-    final calendarsToShow = _applySearchFilter(calendars);
+  Widget _buildHashSearchResults() {
+    final l10n = context.l10n;
 
-    return CustomScrollView(
-      physics: const ClampingScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(controller: _searchController, placeholder: AppLocalizations.of(context)!.searchCalendars, backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context)),
-          ),
-        ),
+    if (_loadingHashSearch) {
+      return const Center(child: CupertinoActivityIndicator());
+    }
 
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                Text(
-                  '${calendarsToShow.length} ${calendarsToShow.length == 1 ? AppLocalizations.of(context)!.calendar : AppLocalizations.of(context)!.calendars}',
-                  style: TextStyle(fontSize: 14, color: AppStyles.grey600, fontWeight: FontWeight.w500),
+    if (_hashSearchError != null) {
+      return EmptyState(
+        icon: CupertinoIcons.search,
+        message: _hashSearchError!,
+      );
+    }
+
+    if (_hashSearchResult != null) {
+      return ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _buildHashResultCard(_hashSearchResult!),
+        ],
+      );
+    }
+
+    return EmptyState(
+      icon: CupertinoIcons.search,
+      message: l10n.enterCodePrecededByHash,
+    );
+  }
+
+  Widget _buildHashResultCard(Calendar calendar) {
+    final l10n = context.l10n;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: CupertinoColors.systemGrey5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _parseColor(calendar.color),
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
-          ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-        if (calendarsToShow.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(CupertinoIcons.calendar, size: 64, color: CupertinoColors.systemGrey),
-                  const SizedBox(height: 16),
-                  Text(_searchController.text.isNotEmpty ? AppLocalizations.of(context)!.noCalendarsFound : AppLocalizations.of(context)!.noCalendars, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 16)),
-                ],
               ),
-            ),
-          )
-        else
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final calendar = calendarsToShow[index];
-              final eventCount = _getEventCountForCalendar(int.parse(calendar.id));
-              final calendarColor = _parseCalendarColor(calendar.color);
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      CupertinoPageRoute<void>(
-                        builder: (_) => CalendarEventsScreen(calendarId: int.parse(calendar.id), calendarName: calendar.name, calendarColor: calendar.color),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      calendar.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: CupertinoColors.systemBackground.resolveFrom(context),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: CupertinoColors.systemGrey5.resolveFrom(context)),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(color: calendarColor.withValues(alpha: 0.2), shape: BoxShape.circle),
-                          child: Center(
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(color: calendarColor, shape: BoxShape.circle),
-                            ),
-                          ),
+                    if (calendar.description != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        calendar.description!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: CupertinoColors.systemGrey,
                         ),
-                        const SizedBox(width: 16),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      calendar.name,
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: CupertinoColors.label),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  if (calendar.isDefault) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(color: AppStyles.blue600.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-                                      child: Text(
-                                        AppLocalizations.of(context)!.defaultCalendar,
-                                        style: TextStyle(fontSize: 10, color: AppStyles.blue600, fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text('$eventCount ${eventCount == 1 ? AppLocalizations.of(context)!.event : AppLocalizations.of(context)!.events}', style: TextStyle(fontSize: 14, color: AppStyles.grey600)),
-                            ],
-                          ),
-                        ),
-
-                        const Icon(CupertinoIcons.chevron_right, color: CupertinoColors.systemGrey, size: 20),
-                      ],
-                    ),
-                  ),
+                      ),
+                    ],
+                  ],
                 ),
-              );
-            }, childCount: calendarsToShow.length),
+              ),
+            ],
           ),
-      ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Icon(CupertinoIcons.person_2, size: 16, color: CupertinoColors.systemGrey),
+              const SizedBox(width: 4),
+              Text(
+                '${calendar.subscriberCount} ${calendar.subscriberCount == 1 ? l10n.subscriber : l10n.subscriber}s',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: CupertinoColors.systemGrey,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoButton.filled(
+              onPressed: () => _subscribeToCalendar(calendar),
+              child: Text(l10n.subscribe),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyCalendarsList() {
+    final calendarsAsync = ref.watch(calendarsStreamProvider);
+    final searchQuery = _searchController.text.toLowerCase();
+
+    return calendarsAsync.when(
+      data: (calendars) {
+        // Filtrar calendarios por nombre si hay búsqueda
+        final filteredCalendars = searchQuery.isEmpty
+            ? calendars
+            : calendars.where((cal) => cal.name.toLowerCase().contains(searchQuery)).toList();
+
+        if (calendars.isEmpty) {
+          return EmptyState(
+            icon: CupertinoIcons.calendar,
+            message: context.l10n.noCalendarsYet,
+            subtitle: context.l10n.noCalendarsSearchByCode,
+            actionLabel: context.l10n.createCalendar,
+            onAction: () => context.push('/calendars/create'),
+          );
+        }
+
+        if (filteredCalendars.isEmpty && searchQuery.isNotEmpty) {
+          return EmptyState(
+            icon: CupertinoIcons.search,
+            message: context.l10n.noCalendarsFound,
+          );
+        }
+
+        return ListView.separated(
+          physics: const ClampingScrollPhysics(),
+          itemCount: filteredCalendars.length,
+          itemBuilder: (context, index) {
+            return _buildCalendarItem(filteredCalendars[index]);
+          },
+          separatorBuilder: (context, index) {
+            return Container(
+              height: 0.5,
+              margin: const EdgeInsets.only(left: 72),
+              color: CupertinoColors.separator,
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CupertinoActivityIndicator()),
+      error: (error, stack) {
+        return EmptyState(
+          icon: CupertinoIcons.exclamationmark_triangle,
+          message: error.toString(),
+        );
+      },
+    );
+  }
+
+  Widget _buildCalendarItem(Calendar calendar) {
+    final l10n = context.l10n;
+    final userId = ConfigService.instance.currentUserId;
+    final isOwner = calendar.ownerId == userId.toString();
+
+    return CupertinoListTile(
+      onTap: () {
+        Navigator.of(context).push(
+          CupertinoPageRoute(
+            builder: (context) => CalendarEventsScreen(
+              calendarId: int.parse(calendar.id),
+              calendarName: calendar.name,
+              calendarColor: calendar.color,
+            ),
+          ),
+        );
+      },
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: _parseColor(calendar.color),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          calendar.isPublic ? CupertinoIcons.globe : CupertinoIcons.lock,
+          color: CupertinoColors.white,
+          size: 20,
+        ),
+      ),
+      title: Text(calendar.name),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (calendar.description != null)
+            Text(
+              calendar.description!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          Text(
+            isOwner ? l10n.owner : (calendar.shareHash != null ? l10n.subscriber : l10n.member),
+            style: const TextStyle(
+              fontSize: 12,
+              color: CupertinoColors.systemGrey,
+            ),
+          ),
+        ],
+      ),
+      trailing: CupertinoButton(
+        padding: EdgeInsets.zero,
+        child: const Icon(
+          CupertinoIcons.trash,
+          color: CupertinoColors.systemRed,
+          size: 20,
+        ),
+        onPressed: () => _deleteOrLeaveCalendar(calendar),
+      ),
+    );
+  }
+
+  Color _parseColor(String colorString) {
+    try {
+      final hex = colorString.replaceAll('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (e) {
+      return CupertinoColors.systemBlue;
+    }
+  }
+
+  String _parseErrorMessage(dynamic error, String operation) {
+    final errorStr = error.toString().toLowerCase();
+    final l10n = context.l10n;
+
+    if (errorStr.contains('socket') || errorStr.contains('network') || errorStr.contains('connection')) {
+      return l10n.noInternetConnection;
+    }
+
+    if (errorStr.contains('timeout')) {
+      return l10n.requestTimedOut;
+    }
+
+    if (errorStr.contains('500') || errorStr.contains('server error')) {
+      return l10n.serverError;
+    }
+
+    if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
+      return l10n.sessionExpired;
+    }
+
+    if (errorStr.contains('forbidden') || errorStr.contains('403')) {
+      return l10n.noPermissionToOperation(operation);
+    }
+
+    if (errorStr.contains('not found') || errorStr.contains('404')) {
+      return l10n.calendarNotFoundDeleted;
+    }
+
+    if (errorStr.contains('already subscribed')) {
+      return l10n.alreadySubscribed;
+    }
+
+    if (errorStr.contains('not subscribed')) {
+      return l10n.notSubscribed;
+    }
+
+    return l10n.failedToOperationCalendar(operation);
+  }
+
+  Future<bool?> _showConfirmDialog({required String title, required String message}) {
+    return showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(context.l10n.leave),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(context.l10n.cancel),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+
+    showCupertinoDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CupertinoAlertDialog(
+        title: Row(
+          children: [
+            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
+            const SizedBox(width: 8),
+            Text(context.l10n.error),
+          ],
+        ),
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    if (!mounted) return;
+
+    showCupertinoDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => CupertinoAlertDialog(
+        title: Row(
+          children: [
+            const Icon(CupertinoIcons.checkmark_circle, color: CupertinoColors.systemGreen, size: 20),
+            const SizedBox(width: 8),
+            Text(context.l10n.success),
+          ],
+        ),
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
+      ),
     );
   }
 }

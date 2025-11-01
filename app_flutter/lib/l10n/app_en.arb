@@ -2038,5 +2038,69 @@
   "noItemsAvailable": "No items available",
   "@noItemsAvailable": {
     "description": "Message when no items are available in a selector"
+  },
+  "searchByNameOrCode": "Search by name or #code",
+  "@searchByNameOrCode": {
+    "description": "Calendar search placeholder"
+  },
+  "enterCodePrecededByHash": "Enter the 8-character code preceded by #",
+  "@enterCodePrecededByHash": {
+    "description": "Help text for code search"
+  },
+  "noCalendarsSearchByCode": "You have no calendars. Search by #code to subscribe.",
+  "@noCalendarsSearchByCode": {
+    "description": "Message when no calendars exist"
+  },
+  "calendarNotFoundByHash": "No calendar found with that code",
+  "@calendarNotFoundByHash": {
+    "description": "Message when calendar not found by hash"
+  },
+  "subscribe": "Subscribe",
+  "@subscribe": {
+    "description": "Subscribe button"
+  },
+  "unsubscribe": "Unsubscribe",
+  "@unsubscribe": {
+    "description": "Unsubscribe button"
+  },
+  "leaveCalendar": "Leave calendar",
+  "@leaveCalendar": {
+    "description": "Action to leave a calendar"
+  },
+  "confirmLeaveCalendar": "Are you sure you want to leave this calendar?",
+  "@confirmLeaveCalendar": {
+    "description": "Confirmation to leave calendar"
+  },
+  "calendarLeft": "You have left the calendar",
+  "@calendarLeft": {
+    "description": "Confirmation message when leaving calendar"
+  },
+  "errorLeavingCalendar": "Error leaving calendar",
+  "@errorLeavingCalendar": {
+    "description": "Error when leaving calendar"
+  },
+  "privateCalendar": "Private calendar",
+  "@privateCalendar": {
+    "description": "Label for private calendar"
+  },
+  "publicCalendar": "Public calendar",
+  "@publicCalendar": {
+    "description": "Label for public calendar"
+  },
+  "owner": "Owner",
+  "@owner": {
+    "description": "Owner role"
+  },
+  "admin": "Admin",
+  "@admin": {
+    "description": "Admin role"
+  },
+  "member": "Member",
+  "@member": {
+    "description": "Member role"
+  },
+  "subscriber": "Subscriber",
+  "@subscriber": {
+    "description": "Subscriber role"
   }
 }

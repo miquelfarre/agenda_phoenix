@@ -458,6 +458,26 @@ class ApiClient implements IApiClient {
     await delete('/calendars/$calendarId');
   }
 
+  // Search public calendar by share_hash
+  Future<Map<String, dynamic>?> searchCalendarByHash(String shareHash) async {
+    final result = await get('/calendars/public', queryParams: {'search': shareHash});
+    if (result is List && result.isNotEmpty) {
+      return result.first as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  // Subscribe to a public calendar using share_hash
+  Future<Map<String, dynamic>> subscribeByShareHash(String shareHash) async {
+    final result = await post('/calendars/$shareHash/subscribe', body: {});
+    return result as Map<String, dynamic>;
+  }
+
+  // Unsubscribe from a public calendar using share_hash
+  Future<void> unsubscribeByShareHash(String shareHash) async {
+    await delete('/calendars/$shareHash/subscribe');
+  }
+
   @override
   Future<List<Map<String, dynamic>>> fetchAllCalendarMemberships({int? calendarId, int? userId, int? currentUserId}) async {
     final result = await get('/calendar_memberships', queryParams: {if (calendarId != null) 'calendar_id': calendarId, if (userId != null) 'user_id': userId});

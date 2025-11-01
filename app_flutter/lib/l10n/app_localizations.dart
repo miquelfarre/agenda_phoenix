@@ -935,10 +935,10 @@ abstract class AppLocalizations {
   /// **'new events'**
   String get newEvents;
 
-  /// No description provided for @subscriber.
+  /// Subscriber role
   ///
   /// In en, this message translates to:
-  /// **'subscriber'**
+  /// **'Subscriber'**
   String get subscriber;
 
   /// No description provided for @subscribers.
@@ -5327,10 +5327,10 @@ abstract class AppLocalizations {
   /// **'Failed to create calendar. Please try again.'**
   String get failedToCreateCalendar;
 
-  /// Label for public calendar toggle
+  /// Label for public calendar
   ///
   /// In en, this message translates to:
-  /// **'Public Calendar'**
+  /// **'Public calendar'**
   String get publicCalendar;
 
   /// Description for public calendar feature
@@ -5536,6 +5536,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No events in this series'**
   String get noEventsInSeries;
+
+  /// Generic title for forms
+  ///
+  /// In en, this message translates to:
+  /// **'Form'**
+  String get form;
+
+  /// Warning when user tries to leave with unsaved changes
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Are you sure you want to leave?'**
+  String get unsavedChangesWarning;
+
+  /// Text to select an item with dynamic label
+  ///
+  /// In en, this message translates to:
+  /// **'Select {label}'**
+  String selectLabel(String label);
+
+  /// Help text for organizing events with calendars
+  ///
+  /// In en, this message translates to:
+  /// **'Organize your events by creating calendars or subscribe to public ones'**
+  String get organizeEventsHint;
+
+  /// Message when there are no public calendars
+  ///
+  /// In en, this message translates to:
+  /// **'No public calendars available'**
+  String get noPublicCalendarsAvailable;
+
+  /// Suggestion to try a different search
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching for a different name or keyword'**
+  String get tryDifferentSearch;
+
+  /// Empty state message for public calendars
+  ///
+  /// In en, this message translates to:
+  /// **'Public calendars will appear here when available'**
+  String get publicCalendarsWillAppearHere;
+
+  /// Confirmation message when unsubscribing from a calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribed from {calendarName}'**
+  String unsubscribedFrom(String calendarName);
+
+  /// Confirmation message when subscribing to a calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed to {calendarName}'**
+  String subscribedTo(String calendarName);
+
+  /// Permission error message with dynamic operation
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to {operation} this calendar.'**
+  String noPermissionToOperation(String operation);
+
+  /// Message when a calendar is not found
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar not found. It may have been deleted.'**
+  String get calendarNotFoundDeleted;
+
+  /// Message when user is already subscribed
+  ///
+  /// In en, this message translates to:
+  /// **'You are already subscribed to this calendar.'**
+  String get alreadySubscribed;
+
+  /// Message when user is not subscribed
+  ///
+  /// In en, this message translates to:
+  /// **'You are not subscribed to this calendar.'**
+  String get notSubscribed;
+
+  /// Error message when operating on calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to {operation} calendar. Please try again.'**
+  String failedToOperationCalendar(String operation);
+
+  /// Text indicating failed invitations
+  ///
+  /// In en, this message translates to:
+  /// **'invitations failed'**
+  String get invitationsFailed;
+
+  /// Option to use a custom timezone
+  ///
+  /// In en, this message translates to:
+  /// **'Use custom timezone'**
+  String get useCustomTimezone;
+
+  /// Detailed error message when loading calendars
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading calendars: {error}'**
+  String errorLoadingCalendarsDetail(String error);
+
+  /// Error when event ID is missing
+  ///
+  /// In en, this message translates to:
+  /// **'Event ID is missing'**
+  String get eventIdMissing;
+
+  /// Error message for test authentication
+  ///
+  /// In en, this message translates to:
+  /// **'Test authentication failed: {error}'**
+  String testAuthFailed(String error);
+
+  /// Error message when leaving an event
+  ///
+  /// In en, this message translates to:
+  /// **'Error leaving event'**
+  String get errorLeavingEvent;
+
+  /// Loading message for event series
+  ///
+  /// In en, this message translates to:
+  /// **'Loading event series...'**
+  String get loadingEventSeries;
+
+  /// Error message when loading event series
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading event series'**
+  String get errorLoadingEventSeries;
+
+  /// Shows how many members have been invited out of total
+  ///
+  /// In en, this message translates to:
+  /// **'{partiallyInvitedCount}/{totalMembers} invited'**
+  String partiallyInvited(int partiallyInvitedCount, int totalMembers);
+
+  /// Message when no items are available in a selector
+  ///
+  /// In en, this message translates to:
+  /// **'No items available'**
+  String get noItemsAvailable;
+
+  /// Calendar search placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or #code'**
+  String get searchByNameOrCode;
+
+  /// Help text for code search
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 8-character code preceded by #'**
+  String get enterCodePrecededByHash;
+
+  /// Message when no calendars exist
+  ///
+  /// In en, this message translates to:
+  /// **'You have no calendars. Search by #code to subscribe.'**
+  String get noCalendarsSearchByCode;
+
+  /// Message when calendar not found by hash
+  ///
+  /// In en, this message translates to:
+  /// **'No calendar found with that code'**
+  String get calendarNotFoundByHash;
+
+  /// Subscribe button
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get subscribe;
+
+  /// Unsubscribe button
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe'**
+  String get unsubscribe;
+
+  /// Action to leave a calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Leave calendar'**
+  String get leaveCalendar;
+
+  /// Confirmation to leave calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave this calendar?'**
+  String get confirmLeaveCalendar;
+
+  /// Confirmation message when leaving calendar
+  ///
+  /// In en, this message translates to:
+  /// **'You have left the calendar'**
+  String get calendarLeft;
+
+  /// Error when leaving calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Error leaving calendar'**
+  String get errorLeavingCalendar;
+
+  /// Label for private calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Private calendar'**
+  String get privateCalendar;
+
+  /// Owner role
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get owner;
+
+  /// Admin role
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get admin;
+
+  /// Member role
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get member;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

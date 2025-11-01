@@ -8,7 +8,6 @@ import '../../screens/access_denied_screen.dart';
 import '../../screens/login/phone_login_screen.dart';
 import '../../screens/events_screen.dart';
 import '../../screens/subscriptions_screen.dart';
-import '../../screens/communities_screen.dart';
 import '../../screens/create_calendar_screen.dart';
 import '../../screens/edit_calendar_screen.dart';
 import '../../screens/calendars_screen.dart';
@@ -68,9 +67,9 @@ class AppRouter {
           GoRoute(path: '/subscriptions', name: 'subscriptions', builder: (context, state) => SubscriptionsScreen(), routes: []),
 
           GoRoute(
-            path: '/communities',
-            name: 'communities',
-            builder: (context, state) => const CommunitiesScreen(),
+            path: '/calendars',
+            name: 'calendars',
+            builder: (context, state) => const CalendarsScreen(),
             routes: [
               GoRoute(path: 'create', name: 'calendar-create', builder: (context, state) => const CreateCalendarScreen()),
 
@@ -100,8 +99,6 @@ class AppRouter {
               ),
             ],
           ),
-
-          GoRoute(path: '/calendars', name: 'calendars', builder: (context, state) => const CalendarsScreen()),
 
           GoRoute(path: '/birthdays', name: 'birthdays', builder: (context, state) => const BirthdaysScreen()),
         ],

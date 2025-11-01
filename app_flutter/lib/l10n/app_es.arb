@@ -1401,6 +1401,7 @@
   "noCurrentUserToUpdate": "No hay usuario actual para actualizar",
   "failedToUpdateProfile": "Error al actualizar perfil",
   "failedToUpdateFCMToken": "Error al actualizar token FCM",
+  "authUserHasNoPhoneNumber": "El usuario autenticado no tiene número de teléfono",
   "firebaseUserHasNoPhoneNumber": "El usuario de Firebase no tiene número de teléfono",
   
   "@_PUBLIC_USER_EVENTS_SCREEN": {
@@ -1788,6 +1789,70 @@
   "noItemsAvailable": "No hay elementos disponibles",
   "@noItemsAvailable": {
     "description": "Mensaje cuando no hay elementos disponibles en un selector"
+  },
+  "searchByNameOrCode": "Buscar por nombre o #código",
+  "@searchByNameOrCode": {
+    "description": "Placeholder del buscador de calendarios"
+  },
+  "enterCodePrecededByHash": "Introduce el código de 8 caracteres precedido de #",
+  "@enterCodePrecededByHash": {
+    "description": "Texto de ayuda para búsqueda por código"
+  },
+  "noCalendarsSearchByCode": "No tienes calendarios. Busca por #código para suscribirte.",
+  "@noCalendarsSearchByCode": {
+    "description": "Mensaje cuando no hay calendarios"
+  },
+  "calendarNotFoundByHash": "No se encontró ningún calendario con ese código",
+  "@calendarNotFoundByHash": {
+    "description": "Mensaje cuando no se encuentra calendario por hash"
+  },
+  "subscribe": "Suscribirse",
+  "@subscribe": {
+    "description": "Botón para suscribirse"
+  },
+  "unsubscribe": "Desuscribirse",
+  "@unsubscribe": {
+    "description": "Botón para desuscribirse"
+  },
+  "leaveCalendar": "Abandonar calendario",
+  "@leaveCalendar": {
+    "description": "Acción para abandonar un calendario"
+  },
+  "confirmLeaveCalendar": "¿Estás seguro de que quieres abandonar este calendario?",
+  "@confirmLeaveCalendar": {
+    "description": "Confirmación para abandonar calendario"
+  },
+  "calendarLeft": "Has abandonado el calendario",
+  "@calendarLeft": {
+    "description": "Mensaje de confirmación al abandonar calendario"
+  },
+  "errorLeavingCalendar": "Error al abandonar el calendario",
+  "@errorLeavingCalendar": {
+    "description": "Error al abandonar calendario"
+  },
+  "privateCalendar": "Calendario privado",
+  "@privateCalendar": {
+    "description": "Etiqueta para calendario privado"
+  },
+  "publicCalendar": "Calendario público",
+  "@publicCalendar": {
+    "description": "Etiqueta para calendario público"
+  },
+  "owner": "Propietario",
+  "@owner": {
+    "description": "Rol de propietario"
+  },
+  "admin": "Administrador",
+  "@admin": {
+    "description": "Rol de administrador"
+  },
+  "member": "Miembro",
+  "@member": {
+    "description": "Rol de miembro"
+  },
+  "subscriber": "Suscriptor",
+  "@subscriber": {
+    "description": "Rol de suscriptor"
   }
 }
 

@@ -157,6 +157,63 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
             CalendarMembership.calendar_id == calendar_id
         ).offset(skip).limit(limit).all()
 
+    def get_all_user_calendars(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[Calendar]:
+        """
+        Get all calendars accessible to a user:
+        - Owned calendars
+        - Calendars where user is a member (excluding calendars from public users)
+        - Public calendars user is subscribed to (excluding calendars from public users)
+
+        Args:
+            db: Database session
+            user_id: User ID
+            skip: Number of records to skip
+            limit: Maximum number of records
+
+        Returns:
+            List of calendars
+        """
+        from models import User, CalendarSubscription
+
+        # Build query with UNION for owned, membership, and subscription calendars
+        # 1. Owned calendars
+        owned_query = db.query(Calendar).filter(Calendar.owner_id == user_id)
+
+        # 2. Calendars where user is a member (excluding public user calendars)
+        membership_query = db.query(Calendar).join(
+            CalendarMembership, Calendar.id == CalendarMembership.calendar_id
+        ).join(
+            User, Calendar.owner_id == User.id
+        ).filter(
+            CalendarMembership.user_id == user_id,
+            CalendarMembership.status == "accepted",
+            User.is_public == False
+        )
+
+        # 3. Public calendars user is subscribed to (excluding public user calendars)
+        subscription_query = db.query(Calendar).join(
+            CalendarSubscription, Calendar.id == CalendarSubscription.calendar_id
+        ).join(
+            User, Calendar.owner_id == User.id
+        ).filter(
+            CalendarSubscription.user_id == user_id,
+            CalendarSubscription.status == "active",
+            User.is_public == False
+        )
+
+        # Combine with UNION to avoid duplicates
+        combined_query = owned_query.union(membership_query, subscription_query)
+
+        # Apply pagination
+        return combined_query.offset(skip).limit(limit).all()
+
 
 class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCreate, CalendarMembershipBase]):
     """CRUD operations for CalendarMembership model with specific methods"""
@@ -407,6 +464,8 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
         """
         Get list of calendar IDs for a user, filtered by status and roles.
 
+        Excludes calendars from public users (Tipo 3 - handled via user subscriptions).
+
         Args:
             db: Database session
             user_id: User ID
@@ -414,10 +473,17 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
             roles: Optional list of roles to filter by (['owner', 'admin'])
 
         Returns:
-            List of calendar IDs
+            List of calendar IDs (excluding calendars from public users)
         """
-        query = db.query(CalendarMembership.calendar_id).filter(
-            CalendarMembership.user_id == user_id
+        from models import User
+
+        query = db.query(CalendarMembership.calendar_id).join(
+            Calendar, CalendarMembership.calendar_id == Calendar.id
+        ).join(
+            User, Calendar.owner_id == User.id
+        ).filter(
+            CalendarMembership.user_id == user_id,
+            User.is_public == False  # Exclude calendars from public users
         )
 
         if status:

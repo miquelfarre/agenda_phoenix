@@ -4,6 +4,7 @@ CRUD operations for CalendarSubscription model
 
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_
 from crud.base import CRUDBase
 from models import CalendarSubscription, Calendar, Contact
 from schemas import CalendarSubscriptionBase, CalendarSubscriptionCreate
@@ -273,16 +274,25 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         """
         Get list of calendar IDs that a user is subscribed to.
 
+        Excludes calendars from public users (Tipo 3 - handled via user subscriptions).
+
         Args:
             db: Database session
             user_id: User ID
             status: Optional status filter ('active', 'paused'). Defaults to 'active'.
 
         Returns:
-            List of calendar IDs
+            List of calendar IDs (excluding calendars from public users)
         """
-        query = db.query(CalendarSubscription.calendar_id).filter(
-            CalendarSubscription.user_id == user_id
+        from models import User
+
+        query = db.query(CalendarSubscription.calendar_id).join(
+            Calendar, CalendarSubscription.calendar_id == Calendar.id
+        ).join(
+            User, Calendar.owner_id == User.id
+        ).filter(
+            CalendarSubscription.user_id == user_id,
+            User.is_public == False  # Exclude calendars from public users
         )
 
         if status:
@@ -306,27 +316,39 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         Args:
             db: Database session
             category: Optional category filter
-            search: Optional search term (matches name or description)
+            search: Optional search term (matches name, description, or exact share_hash)
             skip: Records to skip
             limit: Max records
 
         Returns:
             List of public calendars
         """
-        query = db.query(Calendar).filter(
-            Calendar.is_public == True,
-            Calendar.is_discoverable == True
-        )
+        # Start with base query for public calendars
+        query = db.query(Calendar).filter(Calendar.is_public == True)
+
+        # If searching by share_hash (exact match), skip is_discoverable filter
+        # Otherwise, only show discoverable calendars
+        if search:
+            search_pattern = f"%{search}%"
+            # Check if exact share_hash match OR discoverable calendars matching name/description
+            query = query.filter(
+                or_(
+                    Calendar.share_hash == search,  # Exact share_hash (no need for is_discoverable)
+                    and_(
+                        Calendar.is_discoverable == True,
+                        or_(
+                            Calendar.name.ilike(search_pattern),
+                            Calendar.description.ilike(search_pattern)
+                        )
+                    )
+                )
+            )
+        else:
+            # No search - only show discoverable calendars
+            query = query.filter(Calendar.is_discoverable == True)
 
         if category:
             query = query.filter(Calendar.category == category)
-
-        if search:
-            search_pattern = f"%{search}%"
-            query = query.filter(
-                (Calendar.name.ilike(search_pattern)) |
-                (Calendar.description.ilike(search_pattern))
-            )
 
         return query.offset(skip).limit(limit).all()
 

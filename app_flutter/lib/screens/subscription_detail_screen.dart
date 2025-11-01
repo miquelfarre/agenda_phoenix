@@ -111,9 +111,6 @@ class _SubscriptionDetailScreenState extends ConsumerState<SubscriptionDetailScr
       onEventTap: _openEventDetail,
       onDelete: (Event event, {bool shouldNavigate = false}) async {},
       navigateAfterDelete: false,
-      onRefresh: () async {
-        await _loadData();
-      },
     );
   }
 

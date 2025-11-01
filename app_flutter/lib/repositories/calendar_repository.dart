@@ -19,7 +19,8 @@ class CalendarRepository {
   Box<CalendarHive>? _box;
   final StreamController<List<Calendar>> _calendarsController = StreamController<List<Calendar>>.broadcast();
   List<Calendar> _cachedCalendars = [];
-  RealtimeChannel? _realtimeChannel;
+  RealtimeChannel? _membershipChannel;
+  RealtimeChannel? _calendarsChannel;
 
   final Completer<void> _initCompleter = Completer<void>();
   Future<void> get initialized => _initCompleter.future;
@@ -82,7 +83,15 @@ class CalendarRepository {
 
       await _updateLocalCache(_cachedCalendars);
 
-      _rt.setServerSyncTsFromResponse(rows: _cachedCalendars.map((c) => c.toJson()));
+      // Set sync timestamp from latest updated_at
+      if (_cachedCalendars.isNotEmpty) {
+        final updatedAtTimestamps = _cachedCalendars.map((c) => c.updatedAt).toList();
+        if (updatedAtTimestamps.isNotEmpty) {
+          final latestUpdate = updatedAtTimestamps.reduce((a, b) => a.isAfter(b) ? a : b);
+          _rt.setServerSyncTs(latestUpdate.toUtc());
+        }
+      }
+
       _emitCurrentCalendars();
       print('✅ [CalendarRepository] Fetched ${_cachedCalendars.length} calendars');
     } catch (e) {
@@ -212,11 +221,59 @@ class CalendarRepository {
     }
   }
 
+  Future<Calendar?> searchByShareHash(String shareHash) async {
+    try {
+      print('🔍 [CalendarRepository] Searching calendar by share_hash: $shareHash');
+      final result = await _apiClient.searchCalendarByHash(shareHash);
+
+      if (result != null) {
+        final calendar = Calendar.fromJson(result);
+        print('✅ [CalendarRepository] Found calendar: "${calendar.name}"');
+        return calendar;
+      }
+
+      print('⚠️ [CalendarRepository] No calendar found with hash: $shareHash');
+      return null;
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error searching calendar by hash: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> subscribeByShareHash(String shareHash) async {
+    try {
+      print('➕ [CalendarRepository] Subscribing to calendar with share_hash: $shareHash');
+      await _apiClient.subscribeByShareHash(shareHash);
+      await _fetchAndSync();
+      print('✅ [CalendarRepository] Subscribed to calendar with hash: $shareHash');
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error subscribing to calendar: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> unsubscribeByShareHash(String shareHash) async {
+    try {
+      print('🗑️ [CalendarRepository] Unsubscribing from calendar with share_hash: $shareHash');
+      await _apiClient.unsubscribeByShareHash(shareHash);
+      await _fetchAndSync();
+      print('✅ [CalendarRepository] Unsubscribed from calendar with hash: $shareHash');
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error unsubscribing from calendar: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
   // --- Realtime ---
 
   Future<void> _startRealtimeSubscription() async {
     final userId = ConfigService.instance.currentUserId;
-    _realtimeChannel = _supabaseService.client
+
+    // Listen to calendar_memberships changes (when user subscribes/unsubscribes)
+    _membershipChannel = _supabaseService.client
         .channel('calendar_memberships_realtime')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -224,13 +281,27 @@ class CalendarRepository {
           table: 'calendar_memberships',
           filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
           callback: (payload) {
-            print('🔄 [CalendarRepository] Realtime change detected, refreshing calendars');
+            print('🔄 [CalendarRepository] Calendar membership change detected, refreshing calendars');
             _fetchAndSync();
           },
         )
         .subscribe();
 
-    print('✅ [CalendarRepository] Realtime subscription started for calendar_memberships table');
+    // Listen to calendars table changes (when calendar properties change)
+    _calendarsChannel = _supabaseService.client
+        .channel('calendars_realtime')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'calendars',
+          callback: (payload) {
+            print('🔄 [CalendarRepository] Calendar data change detected, refreshing calendars');
+            _fetchAndSync();
+          },
+        )
+        .subscribe();
+
+    print('✅ [CalendarRepository] Realtime subscriptions started for calendar_memberships and calendars tables');
   }
 
   void _emitCurrentCalendars() {
@@ -245,7 +316,8 @@ class CalendarRepository {
 
   void dispose() {
     print('👋 [CalendarRepository] Disposing...');
-    _realtimeChannel?.unsubscribe();
+    _membershipChannel?.unsubscribe();
+    _calendarsChannel?.unsubscribe();
     _calendarsController.close();
     _box?.close();
   }

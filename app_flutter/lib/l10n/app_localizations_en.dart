@@ -433,7 +433,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newEvents => 'new events';
 
   @override
-  String get subscriber => 'subscriber';
+  String get subscriber => 'Subscriber';
 
   @override
   String get subscribers => 'subscribers';
@@ -2753,7 +2753,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToCreateCalendar => 'Failed to create calendar. Please try again.';
 
   @override
-  String get publicCalendar => 'Public Calendar';
+  String get publicCalendar => 'Public calendar';
 
   @override
   String get othersCanSearchAndSubscribe => 'Others can search and subscribe';
@@ -2862,4 +2862,134 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noEventsInSeries => 'No events in this series';
+
+  @override
+  String get form => 'Form';
+
+  @override
+  String get unsavedChangesWarning => 'You have unsaved changes. Are you sure you want to leave?';
+
+  @override
+  String selectLabel(String label) {
+    return 'Select $label';
+  }
+
+  @override
+  String get organizeEventsHint => 'Organize your events by creating calendars or subscribe to public ones';
+
+  @override
+  String get noPublicCalendarsAvailable => 'No public calendars available';
+
+  @override
+  String get tryDifferentSearch => 'Try searching for a different name or keyword';
+
+  @override
+  String get publicCalendarsWillAppearHere => 'Public calendars will appear here when available';
+
+  @override
+  String unsubscribedFrom(String calendarName) {
+    return 'Unsubscribed from $calendarName';
+  }
+
+  @override
+  String subscribedTo(String calendarName) {
+    return 'Subscribed to $calendarName';
+  }
+
+  @override
+  String noPermissionToOperation(String operation) {
+    return 'You don\'t have permission to $operation this calendar.';
+  }
+
+  @override
+  String get calendarNotFoundDeleted => 'Calendar not found. It may have been deleted.';
+
+  @override
+  String get alreadySubscribed => 'You are already subscribed to this calendar.';
+
+  @override
+  String get notSubscribed => 'You are not subscribed to this calendar.';
+
+  @override
+  String failedToOperationCalendar(String operation) {
+    return 'Failed to $operation calendar. Please try again.';
+  }
+
+  @override
+  String get invitationsFailed => 'invitations failed';
+
+  @override
+  String get useCustomTimezone => 'Use custom timezone';
+
+  @override
+  String errorLoadingCalendarsDetail(String error) {
+    return 'Error loading calendars: $error';
+  }
+
+  @override
+  String get eventIdMissing => 'Event ID is missing';
+
+  @override
+  String testAuthFailed(String error) {
+    return 'Test authentication failed: $error';
+  }
+
+  @override
+  String get errorLeavingEvent => 'Error leaving event';
+
+  @override
+  String get loadingEventSeries => 'Loading event series...';
+
+  @override
+  String get errorLoadingEventSeries => 'Error loading event series';
+
+  @override
+  String partiallyInvited(int partiallyInvitedCount, int totalMembers) {
+    return '$partiallyInvitedCount/$totalMembers invited';
+  }
+
+  @override
+  String get noItemsAvailable => 'No items available';
+
+  @override
+  String get searchByNameOrCode => 'Search by name or #code';
+
+  @override
+  String get enterCodePrecededByHash => 'Enter the 8-character code preceded by #';
+
+  @override
+  String get noCalendarsSearchByCode => 'You have no calendars. Search by #code to subscribe.';
+
+  @override
+  String get calendarNotFoundByHash => 'No calendar found with that code';
+
+  @override
+  String get subscribe => 'Subscribe';
+
+  @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
+  String get leaveCalendar => 'Leave calendar';
+
+  @override
+  String get confirmLeaveCalendar => 'Are you sure you want to leave this calendar?';
+
+  @override
+  String get calendarLeft => 'You have left the calendar';
+
+  @override
+  String get errorLeavingCalendar => 'Error leaving calendar';
+
+  @override
+  String get privateCalendar => 'Private calendar';
+
+  @override
+  String get owner => 'Owner';
+
+  @override
+  String get admin => 'Admin';
+
+  @override
+  String get member => 'Member';
 }

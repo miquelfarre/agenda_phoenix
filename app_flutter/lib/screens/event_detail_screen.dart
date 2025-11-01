@@ -507,6 +507,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
   }
 
   Widget _buildAttendeesSection() {
+    final l10n = context.l10n;
     final event = _detailedEvent ?? currentEvent;
 
     print('🔍 DEBUG ATTENDEES: event.attendees count = ${event.attendees.length}');
@@ -686,6 +687,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
   }
 
   Future<void> _leaveEvent(Event event, {bool shouldNavigate = false}) async {
+    final l10n = context.l10n;
     print('👋 [EventDetail] _leaveEvent START');
     print('👋 [EventDetail] Event ID: ${event.id}');
     print('👋 [EventDetail] Event Name: "${event.name}"');
@@ -1002,6 +1004,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
   }
 
   void _viewParentEventSeries() async {
+    final l10n = context.l10n;
     final event = _detailedEvent ?? currentEvent;
 
     if (event.parentRecurringEventId == null) {

@@ -28,25 +28,30 @@ router = APIRouter(prefix="/api/v1/calendars", tags=["calendars"])
 
 @router.get("", response_model=List[CalendarResponse])
 async def get_calendars(
-    user_id: Optional[int] = None,
+    current_user_id: int = Depends(get_current_user_id),
     limit: int = 50,
     offset: int = 0,
-    order_by: Optional[str] = "id",
-    order_dir: str = "asc",
     db: Session = Depends(get_db)
 ):
-    """Get all calendars, optionally filtered by owner user_id"""
+    """
+    Get all calendars accessible to the authenticated user.
+
+    Requires JWT authentication - provide token in Authorization header.
+
+    Returns:
+    - Calendars owned by the user
+    - Calendars where the user is a member (excluding calendars from public users)
+    - Public calendars the user is subscribed to (excluding calendars from public users)
+    """
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return calendar.get_multi_filtered(
+    return calendar.get_all_user_calendars(
         db,
-        owner_id=user_id,
+        user_id=current_user_id,
         skip=offset,
-        limit=limit,
-        order_by=order_by or "id",
-        order_dir=order_dir
+        limit=limit
     )
 
 

@@ -662,6 +662,8 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
   }
 
   Widget _buildCalendarWidget(AsyncValue<List<dynamic>> calendarsAsync) {
+    final l10n = context.l10n;
+
     if (calendarsAsync.isLoading) {
       return const CupertinoActivityIndicator();
     }
