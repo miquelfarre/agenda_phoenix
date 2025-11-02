@@ -163,7 +163,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
       final hasBirthdayCalendar = calendars.any((cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays');
 
       if (!hasBirthdayCalendar) {
-        await calendarRepository.createCalendar(name: 'Cumpleaños', description: 'Calendario para cumpleaños', color: '#FF5733');
+        await calendarRepository.createCalendar(name: 'Cumpleaños', description: 'Calendario para cumpleaños');
       }
     } catch (e) {
       // Ignore errors

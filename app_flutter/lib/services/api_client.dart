@@ -281,6 +281,11 @@ class ApiClient implements IApiClient {
     return result as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> unsubscribeFromUser(int userId, int targetUserId) async {
+    final result = await delete('/users/$targetUserId/subscribe');
+    return result as Map<String, dynamic>;
+  }
+
   @override
   Future<List<Map<String, dynamic>>> fetchContacts({required int currentUserId}) async {
     final result = await get('/contacts');
@@ -454,8 +459,8 @@ class ApiClient implements IApiClient {
   }
 
   @override
-  Future<void> deleteCalendar(int calendarId, {int? currentUserId}) async {
-    await delete('/calendars/$calendarId');
+  Future<void> deleteCalendar(int calendarId, {bool deleteEvents = false, int? currentUserId}) async {
+    await delete('/calendars/$calendarId?delete_events=$deleteEvents');
   }
 
   // Search public calendar by share_hash

@@ -63,31 +63,28 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
   }
 
   Widget _buildScrollableContent(List<User> users, bool isIOS, AppLocalizations l10n, WidgetRef ref) {
-    if (users.isEmpty) {
-      return CustomScrollView(
+    return SafeArea(
+      child: CustomScrollView(
         physics: const ClampingScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(child: _buildSearchField(isIOS)),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: EmptyState(message: l10n.noSubscriptions, icon: isIOS ? CupertinoIcons.person_2 : CupertinoIcons.person_2),
-          ),
+          if (users.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyState(message: l10n.noSubscriptions, icon: isIOS ? CupertinoIcons.person_2 : CupertinoIcons.person_2),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final user = users[index];
+                  return _buildUserItem(user, isIOS, l10n, ref);
+                },
+                childCount: users.length,
+              ),
+            ),
         ],
-      );
-    }
-
-    return ListView.builder(
-      physics: const ClampingScrollPhysics(),
-      itemCount: users.length + 1,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return _buildSearchField(isIOS);
-        }
-
-        final subIndex = index - 1;
-        final user = users[subIndex];
-        return _buildUserItem(user, isIOS, l10n, ref);
-      },
+      ),
     );
   }
 
@@ -115,11 +112,11 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
   }
 
   void _showSuccessMessage(String message) {
-    PlatformDialogHelpers.showSnackBar(message: message);
+    PlatformDialogHelpers.showSnackBar(context: context, message: message);
   }
 
   void _showErrorMessage(String message) {
-    PlatformDialogHelpers.showSnackBar(message: message, isError: true);
+    PlatformDialogHelpers.showSnackBar(context: context, message: message, isError: true);
   }
 
   @override

@@ -2102,5 +2102,29 @@
   "subscriber": "Subscriber",
   "@subscriber": {
     "description": "Subscriber role"
+  },
+  "calendarInformation": "Calendar Information",
+  "@calendarInformation": {
+    "description": "Header for calendar information section"
+  },
+  "visibility": "Visibility",
+  "@visibility": {
+    "description": "Header for visibility settings section"
+  },
+  "discoverableCalendar": "Discoverable Calendar",
+  "@discoverableCalendar": {
+    "description": "Label for discoverable calendar switch"
+  },
+  "appearsInSearch": "Appears in public search",
+  "@appearsInSearch": {
+    "description": "Subtitle when calendar is discoverable"
+  },
+  "onlyViaShareLink": "Only accessible via share link",
+  "@onlyViaShareLink": {
+    "description": "Subtitle when calendar is not discoverable"
+  },
+  "chooseWhatHappensToEvents": "Choose what happens to calendar events",
+  "@chooseWhatHappensToEvents": {
+    "description": "Description for delete calendar section"
   }
 }

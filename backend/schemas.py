@@ -273,8 +273,8 @@ class EventInteractionWithEventResponse(EventInteractionBase):
 
 class CalendarBase(BaseModel):
     name: str
-    start_date: Optional[datetime] = None  # Optional: for temporal calendars
-    end_date: Optional[datetime] = None  # Optional: for temporal calendars
+    description: Optional[str] = None
+    is_discoverable: Optional[bool] = None
 
 
 class CalendarCreate(CalendarBase):
@@ -285,8 +285,6 @@ class CalendarResponse(CalendarBase):
     id: int
     owner_id: int
     is_public: bool = False
-    is_discoverable: bool = True
-    description: Optional[str] = None
     category: Optional[str] = None
     share_hash: Optional[str] = None
     subscriber_count: int = 0

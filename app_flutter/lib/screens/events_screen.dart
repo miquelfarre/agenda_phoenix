@@ -167,49 +167,51 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       events = _applySearchFilter(events, _searchQuery);
     }
 
-    return CustomScrollView(
-      physics: const ClampingScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Consumer(
-              builder: (context, ref, _) {
-                final authAsync = ref.watch(currentUserStreamProvider);
-                final l10n = context.l10n;
-                String greeting = authAsync.maybeWhen(
-                  data: (user) {
-                    final name = user?.displayName.trim();
-                    return name != null && name.isNotEmpty ? l10n.helloWithName(name) : l10n.hello;
-                  },
-                  loading: () {
-                    return l10n.hello;
-                  },
-                  error: (err, stack) {
-                    return l10n.hello;
-                  },
-                  orElse: () => l10n.hello,
-                );
-                return Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    greeting,
-                    style: AppStyles.headlineSmall.copyWith(color: AppStyles.grey700, fontWeight: FontWeight.bold),
-                  ),
-                );
-              },
+    return SafeArea(
+      child: CustomScrollView(
+        physics: const ClampingScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final authAsync = ref.watch(currentUserStreamProvider);
+                  final l10n = context.l10n;
+                  String greeting = authAsync.maybeWhen(
+                    data: (user) {
+                      final name = user?.displayName.trim();
+                      return name != null && name.isNotEmpty ? l10n.helloWithName(name) : l10n.hello;
+                    },
+                    loading: () {
+                      return l10n.hello;
+                    },
+                    error: (err, stack) {
+                      return l10n.hello;
+                    },
+                    orElse: () => l10n.hello,
+                  );
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      greeting,
+                      style: AppStyles.headlineSmall.copyWith(color: AppStyles.grey700, fontWeight: FontWeight.bold),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
-        ),
 
-        SliverToBoxAdapter(
-          child: Padding(padding: const EdgeInsets.all(16.0), child: _buildSearchField(isIOS)),
-        ),
+          SliverToBoxAdapter(
+            child: Padding(padding: const EdgeInsets.all(16.0), child: _buildSearchField(isIOS)),
+          ),
 
-        SliverToBoxAdapter(child: _buildEventTypeFilters(context, eventsData, allEvents, isFiltered)),
+          SliverToBoxAdapter(child: _buildEventTypeFilters(context, eventsData, allEvents, isFiltered)),
 
-        _buildSliverContent(events, isFiltered, isIOS),
-      ],
+          _buildSliverContent(events, isFiltered, isIOS),
+        ],
+      ),
     );
   }
 

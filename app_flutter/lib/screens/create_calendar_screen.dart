@@ -16,12 +16,9 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  String _selectedColor = '#2196F3';
   bool _isPublic = false;
   bool _deleteAssociatedEvents = false;
   bool _isLoading = false;
-
-  final List<String> _colors = ['#2196F3', '#4CAF50', '#FF5722', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548'];
 
   @override
   void dispose() {
@@ -54,7 +51,7 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     });
 
     try {
-      await ref.read(calendarRepositoryProvider).createCalendar(name: name, description: description.isEmpty ? null : description, color: _selectedColor, isPublic: _isPublic);
+      await ref.read(calendarRepositoryProvider).createCalendar(name: name, description: description.isEmpty ? null : description, isPublic: _isPublic);
 
       // Realtime handles refresh automatically via CalendarRepository
 
@@ -141,35 +138,6 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
           CupertinoTextField(controller: _descriptionController, placeholder: l10n.calendarDescription, maxLines: 3, maxLength: 500, enabled: !_isLoading),
           const SizedBox(height: 24),
 
-          Text(l10n.calendarColor, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _colors.map((color) {
-              final isSelected = color == _selectedColor;
-              return GestureDetector(
-                onTap: _isLoading
-                    ? null
-                    : () {
-                        setState(() {
-                          _selectedColor = color;
-                        });
-                      },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: _parseColor(color),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: isSelected ? CupertinoColors.activeBlue : CupertinoColors.systemGrey, width: isSelected ? 3 : 1),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 24),
-
           CupertinoListTile(
             title: Text(l10n.publicCalendar),
             subtitle: Text(l10n.othersCanSearchAndSubscribe),
@@ -202,14 +170,5 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
         ],
       ),
     );
-  }
-
-  Color _parseColor(String colorString) {
-    try {
-      final hex = colorString.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return CupertinoColors.systemBlue;
-    }
   }
 }

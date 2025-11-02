@@ -114,11 +114,11 @@ class CalendarRepository {
 
   // --- Mutations ---
 
-  Future<Calendar> createCalendar({required String name, String? description, String color = '#2196F3', bool isPublic = false}) async {
+  Future<Calendar> createCalendar({required String name, String? description, bool isPublic = false}) async {
     try {
       print('➕ [CalendarRepository] Creating calendar: "$name"');
       final userId = ConfigService.instance.currentUserId;
-      final newCalendar = await _apiClient.createCalendar({'name': name, 'description': description, 'color': color, 'is_public': isPublic, 'owner_id': userId});
+      final newCalendar = await _apiClient.createCalendar({'name': name, 'description': description, 'is_public': isPublic, 'owner_id': userId});
       await _fetchAndSync();
       print('✅ [CalendarRepository] Calendar created: "${newCalendar['name']}"');
       return Calendar.fromJson(newCalendar);
@@ -143,20 +143,15 @@ class CalendarRepository {
     }
   }
 
-  Future<void> deleteCalendar(int calendarId) async {
+  Future<void> deleteCalendar(int calendarId, {bool deleteAssociatedEvents = false}) async {
     try {
-      print('🗑️ [CalendarRepository] deleteCalendar START - calendarId: $calendarId');
+      print('🗑️ [CalendarRepository] deleteCalendar START - calendarId: $calendarId, deleteEvents: $deleteAssociatedEvents');
       final calendar = _cachedCalendars.firstWhere((c) => c.id == calendarId.toString(), orElse: () => throw exceptions.NotFoundException(message: 'Calendar not found in cache'));
-
-      if (calendar.isDefault) {
-        print('❌ [CalendarRepository] Cannot delete default calendar');
-        throw exceptions.ValidationException(message: 'Cannot delete default calendar');
-      }
 
       print('🗑️ [CalendarRepository] Calendar in cache: "${calendar.name}"');
       print('🗑️ [CalendarRepository] Cache size before: ${_cachedCalendars.length}');
 
-      await _apiClient.deleteCalendar(calendarId);
+      await _apiClient.deleteCalendar(calendarId, deleteEvents: deleteAssociatedEvents);
       await _fetchAndSync();
 
       print('🗑️ [CalendarRepository] Cache size after: ${_cachedCalendars.length}');
@@ -267,7 +262,36 @@ class CalendarRepository {
     }
   }
 
+  Future<List<Map<String, dynamic>>> fetchCalendarMemberships(int calendarId) async {
+    try {
+      print('👥 [CalendarRepository] Fetching memberships for calendar: $calendarId');
+      final memberships = await _apiClient.fetchCalendarMemberships(calendarId);
+      print('✅ [CalendarRepository] Fetched ${memberships.length} memberships');
+      return memberships;
+    } catch (e, stackTrace) {
+      print('❌ [CalendarRepository] Error fetching calendar memberships: $e');
+      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
   // --- Realtime ---
+
+  bool _shouldProcessEvent(PostgresChangePayload payload, String eventType) {
+    print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
+
+    if (payload.eventType == PostgresChangeEvent.delete) {
+      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
+      return _rt.shouldProcessDelete();
+    }
+
+    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
+    final ok = _rt.shouldProcessInsertOrUpdate(ct);
+    if (!ok) {
+      print('🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate');
+    }
+    return ok;
+  }
 
   Future<void> _startRealtimeSubscription() async {
     final userId = ConfigService.instance.currentUserId;
@@ -281,6 +305,7 @@ class CalendarRepository {
           table: 'calendar_memberships',
           filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
           callback: (payload) {
+            if (!_shouldProcessEvent(payload, 'calendar_membership')) return;
             print('🔄 [CalendarRepository] Calendar membership change detected, refreshing calendars');
             _fetchAndSync();
           },
@@ -295,6 +320,7 @@ class CalendarRepository {
           schema: 'public',
           table: 'calendars',
           callback: (payload) {
+            if (!_shouldProcessEvent(payload, 'calendar')) return;
             print('🔄 [CalendarRepository] Calendar data change detected, refreshing calendars');
             _fetchAndSync();
           },

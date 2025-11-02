@@ -12,6 +12,7 @@ class SubscriptionRepository {
   static const String _boxName = 'subscriptions';
   final _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
+  final RealtimeSync _rt = RealtimeSync();
 
   Box<UserHive>? _box;
   final StreamController<List<models.User>> _subscriptionsController = StreamController<List<models.User>>.broadcast();
@@ -80,6 +81,10 @@ class SubscriptionRepository {
 
       await _updateLocalCache(_cachedUsers);
 
+      // Set sync timestamp to now (after successful fetch)
+      // This ensures we only process realtime events that occur AFTER this fetch
+      _rt.setServerSyncTs(DateTime.now().toUtc());
+
       _emitCurrentSubscriptions();
       print('✅ [SubscriptionRepository] Fetched ${_cachedUsers.length} subscriptions');
     } catch (e) {
@@ -128,11 +133,10 @@ class SubscriptionRepository {
     try {
       print('🗑️ [SubscriptionRepository] Deleting subscription to user $targetUserId');
       final currentUserId = ConfigService.instance.currentUserId;
-      final interactions = await _apiClient.fetchInteractions(userId: currentUserId, interactionType: 'subscribed');
 
-      final targetInteraction = interactions.firstWhere((interaction) => interaction['target_user_id'] == targetUserId, orElse: () => throw Exception('Subscription not found'));
+      // Usar el endpoint correcto que borra TODAS las suscripciones a eventos del usuario
+      await _apiClient.unsubscribeFromUser(currentUserId, targetUserId);
 
-      await _apiClient.deleteInteraction(targetInteraction['id']);
       await _fetchAndSync();
       print('✅ [SubscriptionRepository] Subscription deleted');
     } catch (e, stackTrace) {
@@ -156,6 +160,22 @@ class SubscriptionRepository {
     }
   }
 
+  bool _shouldProcessEvent(PostgresChangePayload payload, String eventType) {
+    print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
+
+    if (payload.eventType == PostgresChangeEvent.delete) {
+      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
+      return _rt.shouldProcessDelete();
+    }
+
+    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
+    final ok = _rt.shouldProcessInsertOrUpdate(ct);
+    if (!ok) {
+      print('🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate');
+    }
+    return ok;
+  }
+
   Future<void> _startRealtimeSubscription() async {
     // NOTE: We no longer subscribe to event_interactions here because EventRepository
     // now handles all interactions (including subscriptions). This avoids conflicts
@@ -168,6 +188,12 @@ class SubscriptionRepository {
 
   void _handleStatsChange(PostgresChangePayload payload) {
     if (payload.eventType == PostgresChangeEvent.delete) return;
+
+    // Filter out historical events from initial payload
+    if (!_shouldProcessEvent(payload, 'subscription_stats')) {
+      print('🚫 [SubscriptionRepository] Skipping historical stats change event');
+      return;
+    }
 
     final statsRecord = Map<String, dynamic>.from(payload.newRecord);
     final affectedUserId = statsRecord['user_id'] as int?;

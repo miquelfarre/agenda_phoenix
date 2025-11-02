@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from auth import get_current_user_id
-from crud import calendar, calendar_membership
+from crud import calendar, calendar_membership, event
 from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import check_calendar_permission, get_db
 from schemas import (
@@ -133,6 +133,7 @@ async def update_calendar(
 @router.delete("/{calendar_id}")
 async def delete_calendar(
     calendar_id: int,
+    delete_events: bool = False,
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ):
@@ -141,6 +142,10 @@ async def delete_calendar(
 
     Requires JWT authentication - provide token in Authorization header.
     Only the calendar owner or calendar admins can delete calendars.
+
+    Args:
+        delete_events: If True, delete all events in the calendar.
+                      If False, events remain but lose their calendar association.
     """
     # Check permissions (owner or admin)
     check_calendar_permission(calendar_id, current_user_id, db)
@@ -149,8 +154,23 @@ async def delete_calendar(
     if not db_calendar:
         raise HTTPException(status_code=404, detail="Calendar not found")
 
+    # Handle associated events based on delete_events parameter
+    calendar_events = event.get_by_calendar(db, calendar_id=calendar_id)
+
+    if delete_events:
+        # Delete all events in the calendar
+        for calendar_event in calendar_events:
+            event.delete(db, id=calendar_event.id)
+    else:
+        # Remove calendar association (set calendar_id to NULL)
+        for calendar_event in calendar_events:
+            event.update(db, db_obj=calendar_event, obj_in={"calendar_id": None})
+
+    # Delete the calendar
     calendar.delete(db, id=calendar_id)
-    return {"message": "Calendar deleted successfully", "id": calendar_id}
+
+    events_msg = f" and {len(calendar_events)} events" if delete_events else ""
+    return {"message": f"Calendar deleted successfully{events_msg}", "id": calendar_id}
 
 
 @router.get("/{calendar_id}/memberships", response_model=List[CalendarMembershipResponse])

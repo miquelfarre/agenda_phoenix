@@ -18,15 +18,6 @@ class CalendarHive extends HiveObject {
   @HiveField(3)
   String? description;
 
-  @HiveField(4)
-  String color;
-
-  @HiveField(5)
-  bool isDefault;
-
-  @HiveField(6)
-  bool isShared;
-
   @HiveField(7)
   DateTime createdAt;
 
@@ -48,20 +39,21 @@ class CalendarHive extends HiveObject {
   @HiveField(13)
   int subscriberCount;
 
-  CalendarHive({required this.id, required this.ownerId, required this.name, this.description, required this.color, this.isDefault = false, this.isShared = false, required this.createdAt, required this.updatedAt, this.deleteAssociatedEvents = false, this.isPublic = false, this.shareHash, this.category, this.subscriberCount = 0});
+  @HiveField(14)
+  bool isDiscoverable;
+
+  CalendarHive({required this.id, required this.ownerId, required this.name, this.description, required this.createdAt, required this.updatedAt, this.deleteAssociatedEvents = false, this.isPublic = false, this.isDiscoverable = true, this.shareHash, this.category, this.subscriberCount = 0});
 
   factory CalendarHive.fromJson(Map<String, dynamic> json) => CalendarHive(
     id: json['id'].toString(),
     ownerId: json['owner_id'].toString(),
     name: json['name'] ?? '',
     description: json['description'],
-    color: json['color'] ?? '#2196F3',
-    isDefault: json['is_default'] ?? false,
-    isShared: json['is_shared'] ?? false,
     createdAt: DateTimeUtils.parseAndNormalize(json['created_at']),
     updatedAt: DateTimeUtils.parseAndNormalize(json['updated_at']),
     deleteAssociatedEvents: json['delete_associated_events'] ?? false,
     isPublic: json['is_public'] ?? false,
+    isDiscoverable: json['is_discoverable'] ?? true,
     shareHash: json['share_hash'],
     category: json['category'],
     subscriberCount: json['subscriber_count'] ?? 0,
@@ -72,20 +64,18 @@ class CalendarHive extends HiveObject {
     'owner_id': ownerId,
     'name': name,
     'description': description,
-    'color': color,
-    'is_default': isDefault,
-    'is_shared': isShared,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
     'delete_associated_events': deleteAssociatedEvents,
     'is_public': isPublic,
+    'is_discoverable': isDiscoverable,
     'share_hash': shareHash,
     'category': category,
     'subscriber_count': subscriberCount,
   };
 
   Calendar toCalendar() {
-    return Calendar(id: id, ownerId: ownerId, name: name, description: description, color: color, isDefault: isDefault, isShared: isShared, deleteAssociatedEvents: deleteAssociatedEvents, isPublic: isPublic, shareHash: shareHash, category: category, subscriberCount: subscriberCount, createdAt: createdAt, updatedAt: updatedAt);
+    return Calendar(id: id, ownerId: ownerId, name: name, description: description, deleteAssociatedEvents: deleteAssociatedEvents, isPublic: isPublic, isDiscoverable: isDiscoverable, shareHash: shareHash, category: category, subscriberCount: subscriberCount, createdAt: createdAt, updatedAt: updatedAt);
   }
 
   static CalendarHive fromCalendar(Calendar calendar) {
@@ -94,11 +84,9 @@ class CalendarHive extends HiveObject {
       ownerId: calendar.ownerId,
       name: calendar.name,
       description: calendar.description,
-      color: calendar.color,
-      isDefault: calendar.isDefault,
-      isShared: calendar.isShared,
       deleteAssociatedEvents: calendar.deleteAssociatedEvents,
       isPublic: calendar.isPublic,
+      isDiscoverable: calendar.isDiscoverable,
       shareHash: calendar.shareHash,
       category: calendar.category,
       subscriberCount: calendar.subscriberCount,

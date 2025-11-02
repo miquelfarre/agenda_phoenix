@@ -2,9 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
+import '../ui/styles/app_styles.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../models/calendar.dart';
 import '../core/state/app_state.dart';
+import '../services/config_service.dart';
 
 class EditCalendarScreen extends ConsumerStatefulWidget {
   final String calendarId;
@@ -19,13 +21,10 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  String _selectedColor = '#2196F3';
-  bool _isPublic = false;
+  bool _isDiscoverable = true;
   bool _deleteAssociatedEvents = false;
   bool _isLoading = true;
   Calendar? _calendar;
-
-  final List<String> _colors = ['#2196F3', '#4CAF50', '#FF5722', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548'];
 
   @override
   void initState() {
@@ -42,8 +41,8 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
   Future<void> _loadCalendar() async {
     try {
-      final calendarService = ref.read(calendarRepositoryProvider);
-      final calendar = calendarService.getCalendarById(int.parse(widget.calendarId));
+      final calendarRepository = ref.read(calendarRepositoryProvider);
+      final calendar = calendarRepository.getCalendarById(int.parse(widget.calendarId));
 
       if (calendar == null) {
         if (!mounted) return;
@@ -52,12 +51,38 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         return;
       }
 
+      // Verify user is the owner OR admin
+      final userId = ConfigService.instance.currentUserId;
+      final isOwner = calendar.ownerId == userId.toString();
+
+      bool isAdmin = false;
+      if (!isOwner) {
+        // Check if user is admin of this calendar
+        try {
+          final memberships = await calendarRepository.fetchCalendarMemberships(int.parse(widget.calendarId));
+          final userMembership = memberships.firstWhere(
+            (m) => m['user_id'].toString() == userId.toString(),
+            orElse: () => <String, dynamic>{},
+          );
+          isAdmin = userMembership['role'] == 'admin' && userMembership['status'] == 'accepted';
+        } catch (e) {
+          isAdmin = false;
+        }
+      }
+
+      // If not owner AND not admin, deny access
+      if (!isOwner && !isAdmin) {
+        if (!mounted) return;
+        _showError(context.l10n.noPermission);
+        context.pop();
+        return;
+      }
+
       setState(() {
         _calendar = calendar;
         _nameController.text = calendar.name;
         _descriptionController.text = calendar.description ?? '';
-        _selectedColor = calendar.color;
-        _isPublic = calendar.isShared;
+        _isDiscoverable = calendar.isDiscoverable;
         _deleteAssociatedEvents = calendar.deleteAssociatedEvents;
         _isLoading = false;
       });
@@ -92,7 +117,11 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      final updateData = <String, dynamic>{'name': name, 'description': description.isEmpty ? null : description, 'color': _selectedColor};
+      final updateData = <String, dynamic>{
+        'name': name,
+        'description': description.isEmpty ? null : description,
+        'is_discoverable': _isDiscoverable,
+      };
       await ref.read(calendarRepositoryProvider).updateCalendar(int.parse(widget.calendarId), updateData);
 
       // Realtime handles refresh automatically via CalendarRepository
@@ -122,7 +151,10 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      await ref.read(calendarRepositoryProvider).deleteCalendar(int.parse(widget.calendarId));
+      await ref.read(calendarRepositoryProvider).deleteCalendar(
+        int.parse(widget.calendarId),
+        deleteAssociatedEvents: _deleteAssociatedEvents,
+      );
 
       // Realtime handles refresh automatically via CalendarRepository
 
@@ -143,14 +175,26 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
   }
 
   Future<bool> _showDeleteConfirmation() async {
+    final l10n = context.l10n;
     final result = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text(context.l10n.deleteCalendar),
-        content: Text(_deleteAssociatedEvents ? context.l10n.confirmDeleteCalendarWithEvents : context.l10n.confirmDeleteCalendarKeepEvents),
+        title: Text(l10n.deleteCalendar),
+        content: Text(
+          _deleteAssociatedEvents
+              ? l10n.confirmDeleteCalendarWithEvents
+              : l10n.confirmDeleteCalendarKeepEvents,
+        ),
         actions: [
-          CupertinoDialogAction(child: Text(context.l10n.cancel), onPressed: () => Navigator.of(context).pop(false)),
-          CupertinoDialogAction(isDestructiveAction: true, onPressed: () => Navigator.of(context).pop(true), child: Text(context.l10n.delete)),
+          CupertinoDialogAction(
+            child: Text(l10n.cancel),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.delete),
+          ),
         ],
       ),
     );
@@ -205,7 +249,13 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
           ],
         ),
         content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
-        actions: [CupertinoDialogAction(isDefaultAction: true, child: Text(context.l10n.ok), onPressed: () => Navigator.of(context).pop())],
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: Text(context.l10n.ok),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
       ),
     );
   }
@@ -223,72 +273,187 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
     return AdaptivePageScaffold(
       title: l10n.editCalendar,
-      leading: CupertinoButton(padding: EdgeInsets.zero, onPressed: () => context.pop(), child: Text(l10n.cancel)),
-      actions: [CupertinoButton(padding: EdgeInsets.zero, onPressed: _isLoading ? null : _updateCalendar, child: _isLoading ? const CupertinoActivityIndicator() : Text(l10n.save))],
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      leading: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () => context.pop(),
+        child: Text(l10n.cancel),
+      ),
+      actions: [
+        CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: _isLoading ? null : _updateCalendar,
+          child: _isLoading ? const CupertinoActivityIndicator() : Text(l10n.save),
+        )
+      ],
+      body: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildBasicInfoSection(),
+            const SizedBox(height: 16),
+            if (_calendar!.isPublic) ...[
+              _buildVisibilitySection(),
+              const SizedBox(height: 16),
+            ],
+            _buildDeleteSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBasicInfoSection() {
+    final l10n = context.l10n;
+
+    return Container(
+      margin: EdgeInsets.zero,
+      decoration: AppStyles.cardDecoration,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CupertinoTextField(controller: _nameController, placeholder: l10n.calendarName, maxLength: 100, enabled: !_isLoading),
-          const SizedBox(height: 16),
-
-          CupertinoTextField(controller: _descriptionController, placeholder: l10n.calendarDescription, maxLines: 3, maxLength: 500, enabled: !_isLoading),
-          const SizedBox(height: 24),
-
-          Text(l10n.calendarColor, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _colors.map((color) {
-              final isSelected = color == _selectedColor;
-              return GestureDetector(
-                onTap: _isLoading
-                    ? null
-                    : () {
-                        setState(() {
-                          _selectedColor = color;
-                        });
-                      },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: _parseColor(color),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: isSelected ? CupertinoColors.activeBlue : CupertinoColors.systemGrey, width: isSelected ? 3 : 1),
-                  ),
-                ),
-              );
-            }).toList(),
+          Text(
+            l10n.calendarInformation,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.grey700),
           ),
-          const SizedBox(height: 24),
-
+          const SizedBox(height: 16),
+          CupertinoTextField(
+            controller: _nameController,
+            placeholder: l10n.calendarName,
+            maxLength: 100,
+            enabled: !_isLoading,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppStyles.grey300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.all(12),
+          ),
+          const SizedBox(height: 12),
+          CupertinoTextField(
+            controller: _descriptionController,
+            placeholder: l10n.calendarDescription,
+            maxLines: 3,
+            maxLength: 500,
+            enabled: !_isLoading,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppStyles.grey300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.all(12),
+          ),
+          const SizedBox(height: 16),
           CupertinoListTile(
             title: Text(l10n.publicCalendar),
-            subtitle: Text(_isPublic ? l10n.visibleToOthers : l10n.private),
-            trailing: CupertinoSwitch(value: _isPublic, onChanged: null),
+            subtitle: Text(_calendar!.isPublic ? l10n.visibleToOthers : l10n.private),
+            trailing: CupertinoSwitch(value: _calendar!.isPublic, onChanged: null),
+            padding: EdgeInsets.zero,
           ),
-
-          CupertinoListTile(
-            title: Text(l10n.deleteAssociatedEvents),
-            subtitle: Text(_deleteAssociatedEvents ? l10n.eventsWillBeDeleted : l10n.eventsWillBeKept),
-            trailing: CupertinoSwitch(value: _deleteAssociatedEvents, onChanged: null),
-          ),
-
-          const SizedBox(height: 32),
-
-          CupertinoButton.filled(onPressed: _isLoading ? null : _deleteCalendar, child: Text(l10n.deleteCalendar)),
         ],
       ),
     );
   }
 
-  Color _parseColor(String colorString) {
-    try {
-      final hex = colorString.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return CupertinoColors.systemBlue;
-    }
+  Widget _buildVisibilitySection() {
+    final l10n = context.l10n;
+
+    return Container(
+      margin: EdgeInsets.zero,
+      decoration: AppStyles.cardDecoration,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.visibility,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.grey700),
+          ),
+          const SizedBox(height: 16),
+          CupertinoListTile(
+            title: Text(l10n.discoverableCalendar),
+            subtitle: Text(
+              _isDiscoverable ? l10n.appearsInSearch : l10n.onlyViaShareLink,
+            ),
+            trailing: CupertinoSwitch(
+              value: _isDiscoverable,
+              onChanged: _isLoading
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _isDiscoverable = value;
+                      });
+                    },
+            ),
+            padding: EdgeInsets.zero,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteSection() {
+    final l10n = context.l10n;
+
+    return Container(
+      margin: EdgeInsets.zero,
+      decoration: BoxDecoration(
+        color: AppStyles.colorWithOpacity(CupertinoColors.systemRed, 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppStyles.colorWithOpacity(CupertinoColors.systemRed, 0.2), width: 1),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(CupertinoIcons.delete, color: CupertinoColors.systemRed, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                l10n.deleteCalendar,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.black87),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.chooseWhatHappensToEvents,
+            style: TextStyle(fontSize: 14, color: AppStyles.grey600),
+          ),
+          const SizedBox(height: 16),
+          CupertinoListTile(
+            title: Text(l10n.deleteAssociatedEvents),
+            subtitle: Text(
+              _deleteAssociatedEvents ? l10n.eventsWillBeDeleted : l10n.eventsWillBeKept,
+            ),
+            trailing: CupertinoSwitch(
+              value: _deleteAssociatedEvents,
+              onChanged: _isLoading
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _deleteAssociatedEvents = value;
+                      });
+                    },
+            ),
+            padding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoButton.filled(
+              onPressed: _isLoading ? null : _deleteCalendar,
+              child: Text(l10n.deleteCalendar),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

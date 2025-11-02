@@ -2992,4 +2992,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get member => 'Miembro';
+
+  @override
+  String get calendarInformation => 'Información del calendario';
+
+  @override
+  String get visibility => 'Visibilidad';
+
+  @override
+  String get discoverableCalendar => 'Calendario descubrible';
+
+  @override
+  String get appearsInSearch => 'Aparece en búsquedas públicas';
+
+  @override
+  String get onlyViaShareLink => 'Solo accesible mediante enlace compartido';
+
+  @override
+  String get chooseWhatHappensToEvents => 'Elige qué sucede con los eventos del calendario';
 }

@@ -1853,6 +1853,30 @@
   "subscriber": "Suscriptor",
   "@subscriber": {
     "description": "Rol de suscriptor"
+  },
+  "calendarInformation": "Información del calendario",
+  "@calendarInformation": {
+    "description": "Encabezado para la sección de información del calendario"
+  },
+  "visibility": "Visibilidad",
+  "@visibility": {
+    "description": "Encabezado para la sección de configuración de visibilidad"
+  },
+  "discoverableCalendar": "Calendario descubrible",
+  "@discoverableCalendar": {
+    "description": "Etiqueta para el interruptor de calendario descubrible"
+  },
+  "appearsInSearch": "Aparece en búsquedas públicas",
+  "@appearsInSearch": {
+    "description": "Subtítulo cuando el calendario es descubrible"
+  },
+  "onlyViaShareLink": "Solo accesible mediante enlace compartido",
+  "@onlyViaShareLink": {
+    "description": "Subtítulo cuando el calendario no es descubrible"
+  },
+  "chooseWhatHappensToEvents": "Elige qué sucede con los eventos del calendario",
+  "@chooseWhatHappensToEvents": {
+    "description": "Descripción para la sección de eliminar calendario"
   }
 }
 

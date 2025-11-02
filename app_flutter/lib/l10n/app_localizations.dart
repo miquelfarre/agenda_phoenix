@@ -5764,6 +5764,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Member'**
   String get member;
+
+  /// Header for calendar information section
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Information'**
+  String get calendarInformation;
+
+  /// Header for visibility settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get visibility;
+
+  /// Label for discoverable calendar switch
+  ///
+  /// In en, this message translates to:
+  /// **'Discoverable Calendar'**
+  String get discoverableCalendar;
+
+  /// Subtitle when calendar is discoverable
+  ///
+  /// In en, this message translates to:
+  /// **'Appears in public search'**
+  String get appearsInSearch;
+
+  /// Subtitle when calendar is not discoverable
+  ///
+  /// In en, this message translates to:
+  /// **'Only accessible via share link'**
+  String get onlyViaShareLink;
+
+  /// Description for delete calendar section
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what happens to calendar events'**
+  String get chooseWhatHappensToEvents;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

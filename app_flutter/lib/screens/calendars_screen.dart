@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../ui/helpers/platform/platform_detection.dart';
+import '../ui/helpers/platform/dialog_helpers.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive/adaptive_button.dart';
@@ -90,7 +91,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       await repository.subscribeByShareHash(calendar.shareHash!);
 
       if (mounted) {
-        _showSuccess(context.l10n.subscribedTo(calendar.name));
+        PlatformDialogHelpers.showSnackBar(context: context, message: context.l10n.subscribedTo(calendar.name));
         _searchController.clear();
         setState(() {
           _searchingByHash = false;
@@ -101,7 +102,8 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showError(_parseErrorMessage(e, 'subscribe to'));
+        String cleanError = e.toString().replaceFirst('Exception: ', '');
+        PlatformDialogHelpers.showSnackBar(context: context, message: cleanError, isError: true);
       }
     }
   }
@@ -111,14 +113,6 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     final userId = ConfigService.instance.currentUserId;
     final isOwner = calendar.ownerId == userId.toString();
 
-    // Mostrar confirmación diferente según sea owner o no
-    final shouldDelete = await _showConfirmDialog(
-      title: isOwner ? l10n.deleteCalendar : l10n.leaveCalendar,
-      message: isOwner ? l10n.confirmDeleteCalendarWithEvents : l10n.confirmLeaveCalendar,
-    );
-
-    if (shouldDelete != true) return;
-
     try {
       final repository = ref.read(calendarRepositoryProvider);
 
@@ -126,7 +120,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
         // Owner: eliminar el calendario completo (esto eliminará todos los eventos del calendario)
         await repository.deleteCalendar(int.parse(calendar.id));
         if (mounted) {
-          _showSuccess(l10n.success);
+          PlatformDialogHelpers.showSnackBar(context: context, message: l10n.success);
         }
       } else {
         // No owner: dejar el calendario (unsubscribe/leave)
@@ -138,14 +132,14 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
           await repository.unsubscribeFromCalendar(int.parse(calendar.id));
         }
         if (mounted) {
-          _showSuccess(l10n.calendarLeft);
+          PlatformDialogHelpers.showSnackBar(context: context, message: l10n.calendarLeft);
         }
       }
-
       // Realtime will automatically update the calendars list
     } catch (e) {
       if (mounted) {
-        _showError(l10n.error);
+        String cleanError = e.toString().replaceFirst('Exception: ', '');
+        PlatformDialogHelpers.showSnackBar(context: context, message: cleanError, isError: true);
       }
     }
   }
@@ -186,13 +180,17 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   }
 
   Widget _buildCalendarsView() {
-    return Column(
-      children: [
-        _buildSearchBar(),
-        Expanded(
-          child: _searchingByHash ? _buildHashSearchResults() : _buildMyCalendarsList(),
-        ),
-      ],
+    return SafeArea(
+      child: CustomScrollView(
+        physics: const ClampingScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(child: _buildSearchBar()),
+          if (_searchingByHash)
+            ..._buildHashSearchResults()
+          else
+            ..._buildMyCalendarsList(),
+        ],
+      ),
     );
   }
 
@@ -221,33 +219,52 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     );
   }
 
-  Widget _buildHashSearchResults() {
+  List<Widget> _buildHashSearchResults() {
     final l10n = context.l10n;
 
     if (_loadingHashSearch) {
-      return const Center(child: CupertinoActivityIndicator());
+      return [
+        const SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CupertinoActivityIndicator()),
+        ),
+      ];
     }
 
     if (_hashSearchError != null) {
-      return EmptyState(
-        icon: CupertinoIcons.search,
-        message: _hashSearchError!,
-      );
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: EmptyState(
+            icon: CupertinoIcons.search,
+            message: _hashSearchError!,
+          ),
+        ),
+      ];
     }
 
     if (_hashSearchResult != null) {
-      return ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          _buildHashResultCard(_hashSearchResult!),
-        ],
-      );
+      return [
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _buildHashResultCard(_hashSearchResult!),
+            ]),
+          ),
+        ),
+      ];
     }
 
-    return EmptyState(
-      icon: CupertinoIcons.search,
-      message: l10n.enterCodePrecededByHash,
-    );
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: EmptyState(
+          icon: CupertinoIcons.search,
+          message: l10n.enterCodePrecededByHash,
+        ),
+      ),
+    ];
   }
 
   Widget _buildHashResultCard(Calendar calendar) {
@@ -269,8 +286,8 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
               Container(
                 width: 48,
                 height: 48,
-                decoration: BoxDecoration(
-                  color: _parseColor(calendar.color),
+                decoration: const BoxDecoration(
+                  color: CupertinoColors.systemBlue,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -328,7 +345,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     );
   }
 
-  Widget _buildMyCalendarsList() {
+  List<Widget> _buildMyCalendarsList() {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
     final searchQuery = _searchController.text.toLowerCase();
 
@@ -340,43 +357,67 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
             : calendars.where((cal) => cal.name.toLowerCase().contains(searchQuery)).toList();
 
         if (calendars.isEmpty) {
-          return EmptyState(
-            icon: CupertinoIcons.calendar,
-            message: context.l10n.noCalendarsYet,
-            subtitle: context.l10n.noCalendarsSearchByCode,
-            actionLabel: context.l10n.createCalendar,
-            onAction: () => context.push('/calendars/create'),
-          );
+          return [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyState(
+                icon: CupertinoIcons.calendar,
+                message: context.l10n.noCalendarsYet,
+                subtitle: context.l10n.noCalendarsSearchByCode,
+                actionLabel: context.l10n.createCalendar,
+                onAction: () => context.push('/calendars/create'),
+              ),
+            ),
+          ];
         }
 
         if (filteredCalendars.isEmpty && searchQuery.isNotEmpty) {
-          return EmptyState(
-            icon: CupertinoIcons.search,
-            message: context.l10n.noCalendarsFound,
-          );
+          return [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyState(
+                icon: CupertinoIcons.search,
+                message: context.l10n.noCalendarsFound,
+              ),
+            ),
+          ];
         }
 
-        return ListView.separated(
-          physics: const ClampingScrollPhysics(),
-          itemCount: filteredCalendars.length,
-          itemBuilder: (context, index) {
-            return _buildCalendarItem(filteredCalendars[index]);
-          },
-          separatorBuilder: (context, index) {
-            return Container(
-              height: 0.5,
-              margin: const EdgeInsets.only(left: 72),
-              color: CupertinoColors.separator,
-            );
-          },
-        );
+        return [
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final calendarIndex = index ~/ 2;
+                if (index.isOdd) {
+                  return Container(
+                    height: 0.5,
+                    margin: const EdgeInsets.only(left: 72),
+                    color: CupertinoColors.separator,
+                  );
+                }
+                return _buildCalendarItem(filteredCalendars[calendarIndex]);
+              },
+              childCount: filteredCalendars.length * 2 - 1,
+            ),
+          ),
+        ];
       },
-      loading: () => const Center(child: CupertinoActivityIndicator()),
+      loading: () => [
+        const SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CupertinoActivityIndicator()),
+        ),
+      ],
       error: (error, stack) {
-        return EmptyState(
-          icon: CupertinoIcons.exclamationmark_triangle,
-          message: error.toString(),
-        );
+        return [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: EmptyState(
+              icon: CupertinoIcons.exclamationmark_triangle,
+              message: error.toString(),
+            ),
+          ),
+        ];
       },
     );
   }
@@ -393,7 +434,6 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
             builder: (context) => CalendarEventsScreen(
               calendarId: int.parse(calendar.id),
               calendarName: calendar.name,
-              calendarColor: calendar.color,
             ),
           ),
         );
@@ -401,8 +441,8 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       leading: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
-          color: _parseColor(calendar.color),
+        decoration: const BoxDecoration(
+          color: CupertinoColors.systemBlue,
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -438,128 +478,6 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
           size: 20,
         ),
         onPressed: () => _deleteOrLeaveCalendar(calendar),
-      ),
-    );
-  }
-
-  Color _parseColor(String colorString) {
-    try {
-      final hex = colorString.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return CupertinoColors.systemBlue;
-    }
-  }
-
-  String _parseErrorMessage(dynamic error, String operation) {
-    final errorStr = error.toString().toLowerCase();
-    final l10n = context.l10n;
-
-    if (errorStr.contains('socket') || errorStr.contains('network') || errorStr.contains('connection')) {
-      return l10n.noInternetConnection;
-    }
-
-    if (errorStr.contains('timeout')) {
-      return l10n.requestTimedOut;
-    }
-
-    if (errorStr.contains('500') || errorStr.contains('server error')) {
-      return l10n.serverError;
-    }
-
-    if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
-      return l10n.sessionExpired;
-    }
-
-    if (errorStr.contains('forbidden') || errorStr.contains('403')) {
-      return l10n.noPermissionToOperation(operation);
-    }
-
-    if (errorStr.contains('not found') || errorStr.contains('404')) {
-      return l10n.calendarNotFoundDeleted;
-    }
-
-    if (errorStr.contains('already subscribed')) {
-      return l10n.alreadySubscribed;
-    }
-
-    if (errorStr.contains('not subscribed')) {
-      return l10n.notSubscribed;
-    }
-
-    return l10n.failedToOperationCalendar(operation);
-  }
-
-  Future<bool?> _showConfirmDialog({required String title, required String message}) {
-    return showCupertinoDialog<bool>(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(context.l10n.leave),
-          ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(context.l10n.cancel),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showError(String message) {
-    if (!mounted) return;
-
-    showCupertinoDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => CupertinoAlertDialog(
-        title: Row(
-          children: [
-            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
-            const SizedBox(width: 8),
-            Text(context.l10n.error),
-          ],
-        ),
-        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context).pop(),
-          )
-        ],
-      ),
-    );
-  }
-
-  void _showSuccess(String message) {
-    if (!mounted) return;
-
-    showCupertinoDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => CupertinoAlertDialog(
-        title: Row(
-          children: [
-            const Icon(CupertinoIcons.checkmark_circle, color: CupertinoColors.systemGreen, size: 20),
-            const SizedBox(width: 8),
-            Text(context.l10n.success),
-          ],
-        ),
-        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context).pop(),
-          )
-        ],
       ),
     );
   }
