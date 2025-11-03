@@ -9,6 +9,7 @@ import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
 import '../utils/app_exceptions.dart' as exceptions;
+import '../utils/realtime_filter.dart';
 
 class CalendarRepository {
   static const String _boxName = 'calendars';
@@ -277,22 +278,6 @@ class CalendarRepository {
 
   // --- Realtime ---
 
-  bool _shouldProcessEvent(PostgresChangePayload payload, String eventType) {
-    print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
-
-    if (payload.eventType == PostgresChangeEvent.delete) {
-      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
-      return _rt.shouldProcessDelete();
-    }
-
-    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
-    final ok = _rt.shouldProcessInsertOrUpdate(ct);
-    if (!ok) {
-      print('🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate');
-    }
-    return ok;
-  }
-
   Future<void> _startRealtimeSubscription() async {
     final userId = ConfigService.instance.currentUserId;
 
@@ -305,7 +290,7 @@ class CalendarRepository {
           table: 'calendar_memberships',
           filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
           callback: (payload) {
-            if (!_shouldProcessEvent(payload, 'calendar_membership')) return;
+            if (!RealtimeFilter.shouldProcessEvent(payload, 'calendar_membership', _rt)) return;
             print('🔄 [CalendarRepository] Calendar membership change detected, refreshing calendars');
             _fetchAndSync();
           },
@@ -320,7 +305,7 @@ class CalendarRepository {
           schema: 'public',
           table: 'calendars',
           callback: (payload) {
-            if (!_shouldProcessEvent(payload, 'calendar')) return;
+            if (!RealtimeFilter.shouldProcessEvent(payload, 'calendar', _rt)) return;
             print('🔄 [CalendarRepository] Calendar data change detected, refreshing calendars');
             _fetchAndSync();
           },

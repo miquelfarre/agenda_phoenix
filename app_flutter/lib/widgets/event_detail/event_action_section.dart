@@ -9,6 +9,7 @@ import '../../ui/helpers/platform/dialog_helpers.dart';
 import '../../ui/helpers/l10n/l10n_helpers.dart';
 import '../../ui/styles/app_styles.dart';
 import '../event_detail_actions.dart';
+import '../../utils/event_permissions.dart';
 
 class EventActionSection extends ConsumerStatefulWidget {
   final Event event;
@@ -26,7 +27,7 @@ class _EventActionSectionState extends ConsumerState<EventActionSection> {
   final TextEditingController _cancellationNotificationController = TextEditingController();
 
   int get currentUserId => ConfigService.instance.currentUserId;
-  bool get isEventOwner => widget.event.ownerId == currentUserId;
+  bool get isEventOwner => EventPermissions.isOwner(widget.event);
   bool get canInviteUsers => widget.event.canInviteUsers;
 
   @override

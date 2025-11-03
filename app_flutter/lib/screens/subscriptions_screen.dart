@@ -12,6 +12,7 @@ import '../widgets/adaptive_scaffold.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
 import 'public_user_events_screen.dart';
+import '../utils/error_message_parser.dart';
 
 class SubscriptionsScreen extends ConsumerStatefulWidget {
   const SubscriptionsScreen({super.key});
@@ -185,8 +186,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
       await ref.read(subscriptionRepositoryProvider).deleteSubscription(targetUserId: user.id);
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
     } catch (e) {
-      String cleanError = e.toString().replaceFirst('Exception: ', '');
-      _showErrorMessage(cleanError);
+      final errorMessage = ErrorMessageParser.parse(e, context);
+      _showErrorMessage(errorMessage);
     }
   }
 }

@@ -8,9 +8,10 @@ import '../core/state/app_state.dart';
 import '../widgets/event_list_item.dart';
 import 'event_detail_screen.dart';
 import '../ui/styles/app_styles.dart';
-import '../services/config_service.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
-import '../ui/helpers/platform/dialog_helpers.dart';
+import '../utils/calendar_permissions.dart';
+import '../utils/event_operations.dart';
+import '../utils/calendar_operations.dart';
 
 class CalendarEventsScreen extends ConsumerStatefulWidget {
   final int calendarId;
@@ -72,8 +73,7 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
   bool get _isOwner {
     final calendar = _calendar;
     if (calendar == null) return false;
-    final userId = ConfigService.instance.currentUserId;
-    return calendar.ownerId == userId.toString();
+    return CalendarPermissions.isOwner(calendar);
   }
 
   Color _parseCalendarColor() {
@@ -95,25 +95,12 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
     final calendar = _calendar;
     if (calendar == null) return;
 
-    // Verify permissions: owner OR admin
-    final userId = ConfigService.instance.currentUserId;
-    final isOwner = calendar.ownerId == userId.toString();
-
-    bool canEdit = isOwner;
-    if (!isOwner) {
-      // Check if user is admin of this calendar
-      try {
-        final calendarRepository = ref.read(calendarRepositoryProvider);
-        final memberships = await calendarRepository.fetchCalendarMemberships(widget.calendarId);
-        final userMembership = memberships.firstWhere(
-          (m) => m['user_id'].toString() == userId.toString(),
-          orElse: () => <String, dynamic>{},
-        );
-        canEdit = userMembership['role'] == 'admin' && userMembership['status'] == 'accepted';
-      } catch (e) {
-        canEdit = false;
-      }
-    }
+    // Check if user has edit permissions (owner OR admin)
+    final calendarRepository = ref.read(calendarRepositoryProvider);
+    final canEdit = await CalendarPermissions.canEdit(
+      calendar: calendar,
+      repository: calendarRepository,
+    );
 
     final actions = <CupertinoActionSheetAction>[
       // Show edit option if user is owner OR admin
@@ -149,39 +136,15 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
   }
 
   Future<void> _deleteOrLeaveCalendar(Calendar calendar) async {
-    final l10n = context.l10n;
-    final userId = ConfigService.instance.currentUserId;
-    final isOwner = calendar.ownerId == userId.toString();
-
-    try {
-      final repository = ref.read(calendarRepositoryProvider);
-
-      if (isOwner) {
-        // Owner: eliminar el calendario completo
-        await repository.deleteCalendar(int.parse(calendar.id));
-        if (mounted) {
-          PlatformDialogHelpers.showSnackBar(context: context, message: l10n.success);
-          context.pop(); // Volver a la lista de calendarios
-        }
-      } else {
-        // No owner: dejar el calendario
-        if (calendar.shareHash != null) {
-          await repository.unsubscribeByShareHash(calendar.shareHash!);
-        } else {
-          await repository.unsubscribeFromCalendar(int.parse(calendar.id));
-        }
-        if (mounted) {
-          PlatformDialogHelpers.showSnackBar(context: context, message: l10n.calendarLeft);
-          context.pop(); // Volver a la lista de calendarios
-        }
-      }
-      // Realtime will automatically update the calendars list
-    } catch (e) {
-      if (mounted) {
-        String cleanError = e.toString().replaceFirst('Exception: ', '');
-        PlatformDialogHelpers.showSnackBar(context: context, message: cleanError, isError: true);
-      }
-    }
+    print('🗑️ [CalendarEventsScreen._deleteOrLeaveCalendar] Delegating to CalendarOperations');
+    await CalendarOperations.deleteOrLeaveCalendar(
+      calendar: calendar,
+      repository: ref.read(calendarRepositoryProvider),
+      context: context,
+      shouldNavigate: true, // Navigate back to calendars list
+      showSuccessMessage: true,
+    );
+    // Realtime will automatically update the calendars list
   }
 
   @override
@@ -287,44 +250,14 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-    final l10n = context.l10n;
-    print('🗑️ [CalendarEventsScreen._deleteEvent] Initiating delete for event: "${event.name}" (ID: ${event.id})');
-    try {
-      if (event.id == null) {
-        print('❌ [CalendarEventsScreen._deleteEvent] Error: Event ID is null.');
-        throw Exception('Event ID is null');
-      }
-
-      final currentUserId = ConfigService.instance.currentUserId;
-      final isOwner = event.ownerId == currentUserId;
-      final isAdmin = event.interactionType == 'joined' && event.interactionRole == 'admin';
-      print('👤 [CalendarEventsScreen._deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner, Is Admin: $isAdmin');
-
-      if (isOwner || isAdmin) {
-        print('🗑️ [CalendarEventsScreen._deleteEvent] User has permission. DELETING event via eventRepositoryProvider.');
-        await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
-        print('✅ [CalendarEventsScreen._deleteEvent] Event DELETED successfully');
-        if (mounted) {
-          PlatformDialogHelpers.showSnackBar(context: context, message: l10n.success);
-        }
-      } else {
-        print('👋 [CalendarEventsScreen._deleteEvent] User is not owner/admin. LEAVING event via eventRepositoryProvider.');
-        await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
-        print('✅ [CalendarEventsScreen._deleteEvent] Event LEFT successfully');
-        if (mounted) {
-          PlatformDialogHelpers.showSnackBar(context: context, message: l10n.success);
-        }
-      }
-
-      print('✅ [CalendarEventsScreen._deleteEvent] Operation completed for event ID: ${event.id}');
-      // EventRepository handles updates via Realtime
-    } catch (e, s) {
-      print('❌ [CalendarEventsScreen._deleteEvent] Error: $e');
-      print('STACK TRACE: $s');
-      if (mounted) {
-        String cleanError = e.toString().replaceFirst('Exception: ', '');
-        PlatformDialogHelpers.showSnackBar(context: context, message: cleanError, isError: true);
-      }
-    }
+    print('🗑️ [CalendarEventsScreen._deleteEvent] Delegating to EventOperations');
+    await EventOperations.deleteOrLeaveEvent(
+      event: event,
+      repository: ref.read(eventRepositoryProvider),
+      context: context,
+      shouldNavigate: shouldNavigate,
+      showSuccessMessage: true,
+    );
+    // EventRepository handles updates via Realtime
   }
 }

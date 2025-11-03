@@ -9,8 +9,10 @@ import '../widgets/empty_state.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import '../core/state/app_state.dart';
 import '../models/calendar.dart';
-import '../services/config_service.dart';
 import 'calendar_events_screen.dart';
+import '../utils/error_message_parser.dart';
+import '../utils/calendar_operations.dart';
+import '../utils/calendar_permissions.dart';
 
 class CalendarsScreen extends ConsumerStatefulWidget {
   const CalendarsScreen({super.key});
@@ -102,46 +104,22 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        String cleanError = e.toString().replaceFirst('Exception: ', '');
-        PlatformDialogHelpers.showSnackBar(context: context, message: cleanError, isError: true);
+        final errorMessage = ErrorMessageParser.parse(e, context);
+        PlatformDialogHelpers.showSnackBar(context: context, message: errorMessage, isError: true);
       }
     }
   }
 
   Future<void> _deleteOrLeaveCalendar(Calendar calendar) async {
-    final l10n = context.l10n;
-    final userId = ConfigService.instance.currentUserId;
-    final isOwner = calendar.ownerId == userId.toString();
-
-    try {
-      final repository = ref.read(calendarRepositoryProvider);
-
-      if (isOwner) {
-        // Owner: eliminar el calendario completo (esto eliminará todos los eventos del calendario)
-        await repository.deleteCalendar(int.parse(calendar.id));
-        if (mounted) {
-          PlatformDialogHelpers.showSnackBar(context: context, message: l10n.success);
-        }
-      } else {
-        // No owner: dejar el calendario (unsubscribe/leave)
-        if (calendar.shareHash != null) {
-          // Tipo 2: Calendario público - desuscribirse por share_hash
-          await repository.unsubscribeByShareHash(calendar.shareHash!);
-        } else {
-          // Tipo 1: Calendario privado - eliminar membresía
-          await repository.unsubscribeFromCalendar(int.parse(calendar.id));
-        }
-        if (mounted) {
-          PlatformDialogHelpers.showSnackBar(context: context, message: l10n.calendarLeft);
-        }
-      }
-      // Realtime will automatically update the calendars list
-    } catch (e) {
-      if (mounted) {
-        String cleanError = e.toString().replaceFirst('Exception: ', '');
-        PlatformDialogHelpers.showSnackBar(context: context, message: cleanError, isError: true);
-      }
-    }
+    print('🗑️ [CalendarsScreen._deleteOrLeaveCalendar] Delegating to CalendarOperations');
+    await CalendarOperations.deleteOrLeaveCalendar(
+      calendar: calendar,
+      repository: ref.read(calendarRepositoryProvider),
+      context: context,
+      shouldNavigate: false,
+      showSuccessMessage: true,
+    );
+    // Realtime will automatically update the calendars list
   }
 
   @override
@@ -424,8 +402,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
 
   Widget _buildCalendarItem(Calendar calendar) {
     final l10n = context.l10n;
-    final userId = ConfigService.instance.currentUserId;
-    final isOwner = calendar.ownerId == userId.toString();
+    final isOwner = CalendarPermissions.isOwner(calendar);
 
     return CupertinoListTile(
       onTap: () {

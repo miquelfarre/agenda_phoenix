@@ -7,6 +7,7 @@ import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
+import '../utils/realtime_filter.dart';
 
 class SubscriptionRepository {
   static const String _boxName = 'subscriptions';
@@ -160,22 +161,6 @@ class SubscriptionRepository {
     }
   }
 
-  bool _shouldProcessEvent(PostgresChangePayload payload, String eventType) {
-    print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
-
-    if (payload.eventType == PostgresChangeEvent.delete) {
-      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
-      return _rt.shouldProcessDelete();
-    }
-
-    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
-    final ok = _rt.shouldProcessInsertOrUpdate(ct);
-    if (!ok) {
-      print('🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate');
-    }
-    return ok;
-  }
-
   Future<void> _startRealtimeSubscription() async {
     // NOTE: We no longer subscribe to event_interactions here because EventRepository
     // now handles all interactions (including subscriptions). This avoids conflicts
@@ -190,7 +175,7 @@ class SubscriptionRepository {
     if (payload.eventType == PostgresChangeEvent.delete) return;
 
     // Filter out historical events from initial payload
-    if (!_shouldProcessEvent(payload, 'subscription_stats')) {
+    if (!RealtimeFilter.shouldProcessEvent(payload, 'subscription_stats', _rt)) {
       print('🚫 [SubscriptionRepository] Skipping historical stats change event');
       return;
     }

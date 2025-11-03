@@ -9,6 +9,7 @@ import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../services/api_client.dart';
 import '../utils/app_exceptions.dart' as exceptions;
+import '../utils/realtime_filter.dart';
 
 class EventRepository {
   static const String _boxName = 'events';
@@ -290,19 +291,7 @@ class EventRepository {
   }
 
   bool _shouldProcessEvent(PostgresChangePayload payload, String eventType) {
-    print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
-
-    if (payload.eventType == PostgresChangeEvent.delete) {
-      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
-      return _rt.shouldProcessDelete();
-    }
-
-    final ct = DateTime.tryParse(payload.commitTimestamp.toString());
-    final ok = _rt.shouldProcessInsertOrUpdate(ct);
-    if (!ok) {
-      print('🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate');
-    }
-    return ok;
+    return RealtimeFilter.shouldProcessEvent(payload, eventType, _rt);
   }
 
   void _handleInteractionChange(PostgresChangePayload payload) {

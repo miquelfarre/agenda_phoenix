@@ -9,7 +9,7 @@ import '../widgets/adaptive_scaffold.dart';
 import 'event_detail_screen.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../core/state/app_state.dart';
-import '../services/config_service.dart';
+import '../utils/event_operations.dart';
 
 class EventSeriesScreen extends ConsumerStatefulWidget {
   final List<Event> events;
@@ -89,40 +89,22 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-    print('🗑️ [EventSeriesScreen._deleteEvent] Initiating delete for event: "${event.name}" (ID: ${event.id})');
-    try {
-      if (event.id == null) {
-        print('❌ [EventSeriesScreen._deleteEvent] Error: Event ID is null.');
-        throw Exception('Event ID is null');
-      }
+    print('🗑️ [EventSeriesScreen._deleteEvent] Delegating to EventOperations');
 
-      final currentUserId = ConfigService.instance.currentUserId;
-      final isOwner = event.ownerId == currentUserId;
-      final isAdmin = event.interactionType == 'joined' && event.interactionRole == 'admin';
-      print('👤 [EventSeriesScreen._deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner, Is Admin: $isAdmin');
+    final success = await EventOperations.deleteOrLeaveEvent(
+      event: event,
+      repository: ref.read(eventRepositoryProvider),
+      context: context,
+      shouldNavigate: shouldNavigate,
+      showSuccessMessage: false,
+    );
 
-      if (isOwner || isAdmin) {
-        print('🗑️ [EventSeriesScreen._deleteEvent] User has permission. DELETING event via eventRepositoryProvider.');
-        await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
-        print('✅ [EventSeriesScreen._deleteEvent] Event DELETED successfully');
-      } else {
-        print('👋 [EventSeriesScreen._deleteEvent] User is not owner/admin. LEAVING event via eventRepositoryProvider.');
-        await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
-        print('✅ [EventSeriesScreen._deleteEvent] Event LEFT successfully');
-      }
-
-      // Update local list
-      if (mounted) {
-        setState(() {
-          _events.removeWhere((e) => e.id == event.id);
-        });
-      }
-
+    // Update local list if operation was successful
+    if (success && mounted) {
+      setState(() {
+        _events.removeWhere((e) => e.id == event.id);
+      });
       print('✅ [EventSeriesScreen._deleteEvent] Event removed from series list. Remaining: ${_events.length}');
-    } catch (e, s) {
-      print('❌ [EventSeriesScreen._deleteEvent] Error: $e');
-      print('STACK TRACE: $s');
-      rethrow;
     }
   }
 }

@@ -18,6 +18,7 @@ import '../widgets/event_card/event_card_config.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/event_detail_actions.dart';
+import '../utils/event_permissions.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import '../widgets/adaptive/configs/button_config.dart';
 import '../widgets/personal_note_widget.dart';
@@ -659,13 +660,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
     }
 
     try {
-      final currentUserId = ConfigService.instance.currentUserId;
-      final isOwner = event.ownerId == currentUserId;
-      final isAdmin = event.interactionType == 'joined' && event.interactionRole == 'admin';
+      final canEdit = EventPermissions.canEdit(event: event);
 
-      print('👤 [EventDetail] Is Owner: $isOwner, Is Admin: $isAdmin');
+      print('👤 [EventDetail] Can Edit: $canEdit');
 
-      if (isOwner || isAdmin) {
+      if (canEdit) {
         print('🗑️ [EventDetail] User has permission. DELETING event via EventService...');
         await ref.read(eventServiceProvider).deleteEvent(event.id!);
         print('✅ [EventDetail] Event DELETED successfully');

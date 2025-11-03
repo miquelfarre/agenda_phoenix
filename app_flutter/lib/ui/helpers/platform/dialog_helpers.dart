@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'platform_detection.dart';
 import '../../styles/app_styles.dart';
 import '../l10n/l10n_helpers.dart';
+import '../../../utils/error_message_parser.dart';
 
 class PlatformAction<T> {
   final String? text;
@@ -121,33 +122,11 @@ class PlatformDialogHelpers {
       _showOverlayNotification(context, message, isError: isError, duration: duration);
       return;
     }
-
-    final idMatch = RegExp(r'\(ID:\s*(\d+)\)').firstMatch(message);
-    idMatch != null ? ' [ID:${idMatch.group(1)}]' : '';
+    // No context available - message cannot be shown
   }
 
   static void showSnackBar({BuildContext? context, required String message, bool isError = false, Duration duration = const Duration(seconds: 3), String? actionLabel, VoidCallback? onAction}) {
     showGlobalPlatformMessage(context: context, message: message, isError: isError, duration: duration);
-  }
-
-  static String cleanApiError(String error, BuildContext context) {
-    if (error.contains('Exception:')) {
-      error = error.replaceAll('Exception:', '').trim();
-    }
-    if (error.contains('Error:')) {
-      error = error.replaceAll('Error:', '').trim();
-    }
-    if (error.contains('SocketException:')) {
-      return context.l10n.connectionErrorCheckInternet;
-    }
-    if (error.contains('TimeoutException')) {
-      return context.l10n.operationTookTooLong;
-    }
-    if (error.contains('FormatException')) {
-      return context.l10n.dataFormatError;
-    }
-
-    return error;
   }
 
   static void showError(BuildContext context, String message) {
@@ -162,8 +141,9 @@ class PlatformDialogHelpers {
     showGlobalPlatformMessage(context: context, message: message, isError: false);
   }
 
-  static void showCleanError(BuildContext context, String error) {
-    showError(context, cleanApiError(error, context));
+  static void showCleanError(BuildContext context, dynamic error) {
+    final cleanedError = ErrorMessageParser.parse(error, context);
+    showError(context, cleanedError);
   }
 
   static void showNetworkError(BuildContext context, {required VoidCallback onRetry, String? message}) {
@@ -293,5 +273,36 @@ class DialogHelpers {
 
   static Future<void> showErrorDialog(BuildContext context, {required String title, required String content, String? buttonText}) {
     return showInfoDialog(context, title: title, content: content, buttonText: buttonText);
+  }
+
+  /// Show error dialog with error icon (red triangle)
+  ///
+  /// This creates a CupertinoAlertDialog with:
+  /// - Red triangle icon next to title
+  /// - Error message
+  /// - OK button
+  static Future<void> showErrorDialogWithIcon(BuildContext context, String message) {
+    final l10n = context.l10n;
+    return showCupertinoDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CupertinoAlertDialog(
+        title: Row(
+          children: [
+            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
+            const SizedBox(width: 8),
+            Text(l10n.error),
+          ],
+        ),
+        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: Text(l10n.ok),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
+      ),
+    );
   }
 }

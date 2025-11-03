@@ -6,8 +6,8 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../../core/state/app_state.dart';
-import '../../services/config_service.dart';
 import 'event_card_config.dart';
+import '../../utils/event_permissions.dart';
 
 /// Widget for building trailing action buttons (accept/reject invitations, delete, chevron)
 class EventCardActions extends ConsumerWidget {
@@ -20,8 +20,7 @@ class EventCardActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUserId = ConfigService.instance.currentUserId;
-    final isOwner = event.ownerId == currentUserId;
+    final isOwner = EventPermissions.isOwner(event);
 
     // If there's an invitation, show accept/reject buttons
     if (interaction != null && interaction!.inviterId != null) {

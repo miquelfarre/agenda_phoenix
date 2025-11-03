@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../core/state/app_state.dart';
+import '../utils/error_message_parser.dart';
+import '../ui/helpers/platform/dialog_helpers.dart';
 
 class CreateCalendarScreen extends ConsumerStatefulWidget {
   const CreateCalendarScreen({super.key});
@@ -31,18 +33,18 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      _showError(context.l10n.calendarNameRequired);
+      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNameRequired);
       return;
     }
 
     if (name.length > 100) {
-      _showError(context.l10n.calendarNameTooLong);
+      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNameTooLong);
       return;
     }
 
     final description = _descriptionController.text.trim();
     if (description.length > 500) {
-      _showError(context.l10n.calendarDescriptionTooLong);
+      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarDescriptionTooLong);
       return;
     }
 
@@ -61,8 +63,8 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      final errorMessage = _parseErrorMessage(e);
-      _showError(errorMessage);
+      final errorMessage = ErrorMessageParser.parse(e, context);
+      DialogHelpers.showErrorDialogWithIcon(context, errorMessage);
     } finally {
       if (mounted) {
         setState(() {
@@ -70,55 +72,6 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
         });
       }
     }
-  }
-
-  String _parseErrorMessage(dynamic error) {
-    final errorStr = error.toString().toLowerCase();
-    final l10n = context.l10n;
-
-    if (errorStr.contains('socket') || errorStr.contains('network') || errorStr.contains('connection')) {
-      return l10n.noInternetCheckNetwork;
-    }
-
-    if (errorStr.contains('timeout')) {
-      return l10n.requestTimedOut;
-    }
-
-    if (errorStr.contains('500') || errorStr.contains('server error')) {
-      return l10n.serverError;
-    }
-
-    if (errorStr.contains('duplicate') || errorStr.contains('already exists')) {
-      return l10n.calendarNameExists;
-    }
-
-    if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
-      return l10n.sessionExpired;
-    }
-
-    if (errorStr.contains('forbidden') || errorStr.contains('403')) {
-      return l10n.noPermission;
-    }
-
-    return l10n.failedToCreateCalendar;
-  }
-
-  void _showError(String message) {
-    showCupertinoDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => CupertinoAlertDialog(
-        title: Row(
-          children: [
-            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
-            const SizedBox(width: 8),
-            Text(context.l10n.error),
-          ],
-        ),
-        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
-        actions: [CupertinoDialogAction(isDefaultAction: true, child: Text(context.l10n.ok), onPressed: () => Navigator.of(context).pop())],
-      ),
-    );
   }
 
   @override

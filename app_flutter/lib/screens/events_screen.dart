@@ -17,6 +17,8 @@ import '../services/config_service.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
+import '../utils/event_permissions.dart';
+import '../utils/event_operations.dart';
 
 // Helper class to store event with interaction type
 class EventWithInteraction {
@@ -84,7 +86,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       eventItems.add(EventWithInteraction(event, interactionType, invitationStatus, isAttending: isAttending));
     }
 
-    final myEvents = eventItems.where((e) => e.event.ownerId == userId || (e.event.ownerId != userId && e.interactionType == 'joined' && e.event.interactionRole == 'admin') || (e.invitationStatus == 'rejected' && e.isAttending)).length;
+    final myEvents = eventItems.where((e) => EventPermissions.canEdit(event: e.event) || (e.invitationStatus == 'rejected' && e.isAttending)).length;
     final invitations = eventItems.where((e) => e.event.ownerId != userId && e.interactionType == 'invited' && !(e.invitationStatus == 'rejected' && e.isAttending)).length;
     final subscribed = eventItems.where((e) => e.event.ownerId != userId && e.interactionType == 'subscribed').length;
 
@@ -357,7 +359,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     switch (filter) {
       case 'my':
         // My Events: events I own + events where I'm admin + events with rejected invitation but attending
-        return items.where((item) => item.event.ownerId == userId || (item.event.ownerId != userId && item.interactionType == 'joined' && item.event.interactionRole == 'admin') || (item.invitationStatus == 'rejected' && item.isAttending)).toList();
+        return items.where((item) => EventPermissions.canEdit(event: item.event) || (item.invitationStatus == 'rejected' && item.isAttending)).toList();
       case 'subscribed':
         return items.where((item) => item.event.ownerId != userId && item.interactionType == 'subscribed').toList();
       case 'invitations':
@@ -452,41 +454,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-    print('🗑️ [_deleteEvent] Initiating delete for event: "${event.name}" (ID: ${event.id})');
-    try {
-      if (event.id == null) {
-        print('❌ [_deleteEvent] Error: Event ID is null.');
-        throw Exception('Event ID is null');
-      }
-
-      final currentUserId = ConfigService.instance.currentUserId;
-      final isOwner = event.ownerId == currentUserId;
-      final isAdmin = event.interactionType == 'joined' && event.interactionRole == 'admin';
-      print('👤 [_deleteEvent] User ID: $currentUserId, Owner ID: ${event.ownerId}, Is Owner: $isOwner, Is Admin: $isAdmin');
-
-      if (isOwner || isAdmin) {
-        print('🗑️ [_deleteEvent] User has permission. DELETING event via eventRepositoryProvider.');
-        await ref.read(eventRepositoryProvider).deleteEvent(event.id!);
-        print('✅ [_deleteEvent] Event DELETED successfully');
-      } else {
-        print('👋 [_deleteEvent] User is not owner/admin. LEAVING event via eventRepositoryProvider.');
-        await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
-        print('✅ [_deleteEvent] Event LEFT successfully');
-      }
-
-      if (shouldNavigate && mounted) {
-        print('➡️ [_deleteEvent] Navigating back.');
-        Navigator.of(context).pop();
-      }
-
-      print('✅ [_deleteEvent] Operation completed for event ID: ${event.id}');
-      // EventRepository handles updates via Realtime, but we manually remove
-      // for non-owners as RLS policies can prevent the DELETE event from broadcasting.
-    } catch (e, s) {
-      print('❌ [_deleteEvent] Error: $e');
-      print('STACK TRACE: $s');
-      rethrow;
-    }
+    await EventOperations.deleteOrLeaveEvent(
+      event: event,
+      repository: ref.read(eventRepositoryProvider),
+      context: context,
+      shouldNavigate: shouldNavigate,
+      showSuccessMessage: false, // Already handled by EventListItem
+    );
+    // EventRepository handles updates via Realtime, but we manually remove
+    // for non-owners as RLS policies can prevent the DELETE event from broadcasting.
   }
 
   void _navigateToCreateEvent() async {

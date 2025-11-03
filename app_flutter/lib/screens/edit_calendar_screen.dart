@@ -6,7 +6,9 @@ import '../ui/styles/app_styles.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../models/calendar.dart';
 import '../core/state/app_state.dart';
-import '../services/config_service.dart';
+import '../utils/calendar_permissions.dart';
+import '../utils/error_message_parser.dart';
+import '../ui/helpers/platform/dialog_helpers.dart';
 
 class EditCalendarScreen extends ConsumerStatefulWidget {
   final String calendarId;
@@ -46,34 +48,20 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
       if (calendar == null) {
         if (!mounted) return;
-        _showError(context.l10n.calendarNotFound);
+        DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNotFound);
         context.pop();
         return;
       }
 
-      // Verify user is the owner OR admin
-      final userId = ConfigService.instance.currentUserId;
-      final isOwner = calendar.ownerId == userId.toString();
+      // Verify user has permission to edit (owner OR admin)
+      final canEdit = await CalendarPermissions.canEdit(
+        calendar: calendar,
+        repository: calendarRepository,
+      );
 
-      bool isAdmin = false;
-      if (!isOwner) {
-        // Check if user is admin of this calendar
-        try {
-          final memberships = await calendarRepository.fetchCalendarMemberships(int.parse(widget.calendarId));
-          final userMembership = memberships.firstWhere(
-            (m) => m['user_id'].toString() == userId.toString(),
-            orElse: () => <String, dynamic>{},
-          );
-          isAdmin = userMembership['role'] == 'admin' && userMembership['status'] == 'accepted';
-        } catch (e) {
-          isAdmin = false;
-        }
-      }
-
-      // If not owner AND not admin, deny access
-      if (!isOwner && !isAdmin) {
+      if (!canEdit) {
         if (!mounted) return;
-        _showError(context.l10n.noPermission);
+        DialogHelpers.showErrorDialogWithIcon(context, context.l10n.noPermission);
         context.pop();
         return;
       }
@@ -88,7 +76,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      _showError(context.l10n.failedToLoadCalendar);
+      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.failedToLoadCalendar);
       context.pop();
     }
   }
@@ -97,18 +85,18 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      _showError(context.l10n.calendarNameRequired);
+      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNameRequired);
       return;
     }
 
     if (name.length > 100) {
-      _showError(context.l10n.calendarNameTooLong);
+      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNameTooLong);
       return;
     }
 
     final description = _descriptionController.text.trim();
     if (description.length > 500) {
-      _showError(context.l10n.calendarDescriptionTooLong);
+      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarDescriptionTooLong);
       return;
     }
 
@@ -131,8 +119,8 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      final errorMessage = _parseErrorMessage(e, 'update');
-      _showError(errorMessage);
+      final errorMessage = ErrorMessageParser.parse(e, context);
+      DialogHelpers.showErrorDialogWithIcon(context, errorMessage);
     } finally {
       if (mounted) {
         setState(() {
@@ -163,8 +151,8 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      final errorMessage = _parseErrorMessage(e, 'delete');
-      _showError(errorMessage);
+      final errorMessage = ErrorMessageParser.parse(e, context);
+      DialogHelpers.showErrorDialogWithIcon(context, errorMessage);
 
       if (mounted) {
         setState(() {
@@ -199,65 +187,6 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       ),
     );
     return result ?? false;
-  }
-
-  String _parseErrorMessage(dynamic error, String operation) {
-    final errorStr = error.toString().toLowerCase();
-    final l10n = context.l10n;
-
-    if (errorStr.contains('socket') || errorStr.contains('network') || errorStr.contains('connection')) {
-      return l10n.noInternetCheckNetwork;
-    }
-
-    if (errorStr.contains('timeout')) {
-      return l10n.requestTimedOut;
-    }
-
-    if (errorStr.contains('500') || errorStr.contains('server error')) {
-      return l10n.serverError;
-    }
-
-    if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
-      return l10n.sessionExpired;
-    }
-
-    if (errorStr.contains('forbidden') || errorStr.contains('403')) {
-      return l10n.noPermission;
-    }
-
-    if (errorStr.contains('not found') || errorStr.contains('404')) {
-      return l10n.calendarNotFound;
-    }
-
-    if (errorStr.contains('conflict') || errorStr.contains('409')) {
-      return l10n.failedToCreateCalendar;
-    }
-
-    return l10n.failedToLoadCalendar;
-  }
-
-  void _showError(String message) {
-    showCupertinoDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => CupertinoAlertDialog(
-        title: Row(
-          children: [
-            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
-            const SizedBox(width: 8),
-            Text(context.l10n.error),
-          ],
-        ),
-        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: Text(context.l10n.ok),
-            onPressed: () => Navigator.of(context).pop(),
-          )
-        ],
-      ),
-    );
   }
 
   @override
