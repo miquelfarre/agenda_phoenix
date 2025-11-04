@@ -111,7 +111,6 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   }
 
   Future<void> _deleteOrLeaveCalendar(Calendar calendar) async {
-    print('🗑️ [CalendarsScreen._deleteOrLeaveCalendar] Delegating to CalendarOperations');
     await CalendarOperations.deleteOrLeaveCalendar(
       calendar: calendar,
       repository: ref.read(calendarRepositoryProvider),

@@ -102,6 +102,8 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
       repository: calendarRepository,
     );
 
+    if (!mounted) return;
+
     final actions = <CupertinoActionSheetAction>[
       // Show edit option if user is owner OR admin
       if (canEdit)
@@ -136,7 +138,6 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
   }
 
   Future<void> _deleteOrLeaveCalendar(Calendar calendar) async {
-    print('🗑️ [CalendarEventsScreen._deleteOrLeaveCalendar] Delegating to CalendarOperations');
     await CalendarOperations.deleteOrLeaveCalendar(
       calendar: calendar,
       repository: ref.read(calendarRepositoryProvider),
@@ -250,7 +251,6 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-    print('🗑️ [CalendarEventsScreen._deleteEvent] Delegating to EventOperations');
     await EventOperations.deleteOrLeaveEvent(
       event: event,
       repository: ref.read(eventRepositoryProvider),

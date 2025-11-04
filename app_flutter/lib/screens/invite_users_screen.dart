@@ -60,7 +60,6 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
   }
 
   Future<void> _loadData() async {
-    print('🔵 [InviteUsersScreen] _loadData START');
     setState(() {
       _isLoading = true;
       _error = null;
@@ -86,9 +85,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
         return;
       }
 
-      print('🔵 [InviteUsersScreen] Calling fetchAvailableInvitees...');
       final users = await ApiClient().fetchAvailableInvitees(eventId);
-      print('🔵 [InviteUsersScreen] fetchAvailableInvitees completed, available users: ${users.length}');
 
       if (mounted) {
         setState(() {
@@ -96,10 +93,8 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
           _groups = [];
           _isLoading = false;
         });
-        print('🔵 [InviteUsersScreen] setState completed, _isLoading=false');
       }
     } catch (e) {
-      print('🔴 [InviteUsersScreen] ERROR: $e');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -280,7 +275,6 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
           _recentlyInvitedUserIds.add(userId);
         } catch (e) {
           errorCount++;
-          print('Failed to invite user $userId: $e');
         }
       }
 

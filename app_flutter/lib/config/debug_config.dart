@@ -69,7 +69,6 @@ class DebugConfig {
     if (!DebugConfig.enabled) return;
     final formattedMessage = _formatMessage(message, tag ?? 'INFO');
 
-    print(formattedMessage);
     developer.log(formattedMessage, name: _appName, level: 800, error: error, stackTrace: stackTrace);
   }
 
@@ -84,7 +83,6 @@ class DebugConfig {
     if (!DebugConfig.enabled) return;
     final formattedMessage = _formatMessage(message, tag ?? 'ERROR');
 
-    print(formattedMessage);
     developer.log(formattedMessage, name: _appName, level: 1000, error: error, stackTrace: stackTrace);
   }
 

@@ -25,7 +25,6 @@ class EventDetailActions extends StatelessWidget {
               text: l10n.inviteUsers,
               icon: CupertinoIcons.person_add,
               onPressed: () {
-                print('🟢 [EventDetailActions] Invite button pressed');
                 onInvite?.call();
               },
             ),

@@ -182,11 +182,13 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
 
   Future<void> _removeUser(User user, WidgetRef ref) async {
     final l10n = context.l10n;
+    final currentContext = context;
     try {
       await ref.read(subscriptionRepositoryProvider).deleteSubscription(targetUserId: user.id);
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
     } catch (e) {
-      final errorMessage = ErrorMessageParser.parse(e, context);
+      // ignore: use_build_context_synchronously
+      final errorMessage = ErrorMessageParser.parse(e, currentContext);
       _showErrorMessage(errorMessage);
     }
   }

@@ -34,7 +34,6 @@ class GroupRepository {
     if (_initCompleter.isCompleted) return;
 
     try {
-      print('🚀 [GroupRepository] Initializing...');
       _box = await Hive.openBox<GroupHive>(_boxName);
 
       // Load groups from Hive cache first (if any)
@@ -47,7 +46,6 @@ class GroupRepository {
       await _startRealtimeSubscription();
 
       _emitCurrentGroups();
-      print('✅ [GroupRepository] Initialization complete');
 
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
@@ -66,16 +64,13 @@ class GroupRepository {
     try {
       _cachedGroups = _box!.values.map((groupHive) => groupHive.toGroup()).toList();
 
-      print('✅ [GroupRepository] Loaded ${_cachedGroups.length} groups from Hive cache');
     } catch (e) {
-      print('❌ [GroupRepository] Error loading from Hive: $e');
       _cachedGroups = [];
     }
   }
 
   Future<void> _fetchAndSync() async {
     try {
-      print('📡 [GroupRepository] Fetching groups from API...');
       final userId = ConfigService.instance.currentUserId;
       final response = await _apiClient.fetchGroups(currentUserId: userId);
       _cachedGroups = response.map((data) => Group.fromJson(data)).toList();
@@ -84,45 +79,38 @@ class GroupRepository {
 
       _rt.setServerSyncTsFromResponse(rows: _cachedGroups.map((g) => g.toJson()));
       _emitCurrentGroups();
-      print('✅ [GroupRepository] Fetched ${_cachedGroups.length} groups');
+      // ignore: empty_catches
     } catch (e) {
-      print('❌ [GroupRepository] Error fetching groups: $e');
+      // Intentionally ignore realtime errors
     }
   }
 
   Future<void> _updateLocalCache(List<Group> groups) async {
     if (_box == null) return;
 
-    print('💾 [GroupRepository] Updating Hive cache with ${groups.length} groups...');
     await _box!.clear();
 
     for (final group in groups) {
       final groupHive = GroupHive.fromGroup(group);
       await _box!.put(group.id, groupHive);
     }
-    print('✅ [GroupRepository] Hive cache updated');
   }
 
   // --- Mutations ---
 
   Future<Group> createGroup({required String name, String? description}) async {
     try {
-      print('➕ [GroupRepository] Creating group: "$name"');
       final creatorId = ConfigService.instance.currentUserId;
       final newGroup = await _apiClient.createGroup({'name': name, 'description': description, 'creator_id': creatorId});
       await _fetchAndSync();
-      print('✅ [GroupRepository] Group created: "${newGroup['name']}"');
       return Group.fromJson(newGroup);
-    } catch (e, stackTrace) {
-      print('❌ [GroupRepository] Error creating group: $e');
-      print('📍 [GroupRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<Group> updateGroup({required int groupId, String? name, String? description}) async {
     try {
-      print('🔄 [GroupRepository] Updating group ID $groupId');
       final userId = ConfigService.instance.currentUserId;
       _validateAdminPermissions(groupId, userId);
 
@@ -132,138 +120,102 @@ class GroupRepository {
 
       final updatedGroup = await _apiClient.updateGroup(groupId, updateData);
       await _fetchAndSync();
-      print('✅ [GroupRepository] Group updated: ID $groupId');
       return Group.fromJson(updatedGroup);
-    } catch (e, stackTrace) {
-      print('❌ [GroupRepository] Error updating group: $e');
-      print('📍 [GroupRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> deleteGroup({required int groupId}) async {
     try {
-      print('🗑️ [GroupRepository] deleteGroup START - groupId: $groupId');
       final userId = ConfigService.instance.currentUserId;
       final group = _getGroupFromCache(groupId);
 
-      print('🗑️ [GroupRepository] Group in cache: "${group.name}"');
-      print('🗑️ [GroupRepository] Cache size before: ${_cachedGroups.length}');
 
       if (!group.isCreator(userId)) {
-        print('❌ [GroupRepository] Permission denied: Only creator can delete');
         throw const exceptions.PermissionDeniedException(message: 'Only group creator can delete the group');
       }
 
       await _apiClient.deleteGroup(groupId);
       await _fetchAndSync();
 
-      print('🗑️ [GroupRepository] Cache size after: ${_cachedGroups.length}');
-      print('✅ [GroupRepository] Group deleted: ID $groupId');
-    } catch (e, stackTrace) {
-      print('❌ [GroupRepository] Error deleting group: $e');
-      print('📍 [GroupRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> addMemberToGroup({required int groupId, required int memberUserId}) async {
     try {
-      print('👥 [GroupRepository] Adding user $memberUserId to group $groupId');
       final adminUserId = ConfigService.instance.currentUserId;
       _validateMemberOperationPermissions(groupId, memberUserId, adminUserId, 'add');
       await _apiClient.createGroupMembership({'group_id': groupId, 'user_id': memberUserId});
       await _fetchAndSync();
-      print('✅ [GroupRepository] Member $memberUserId added to group $groupId');
-    } catch (e, stackTrace) {
-      print('❌ [GroupRepository] Error adding member to group: $e');
-      print('📍 [GroupRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> removeMemberFromGroup({required int groupId, required int memberUserId}) async {
     try {
-      print('👥 [GroupRepository] Removing user $memberUserId from group $groupId');
       final adminUserId = ConfigService.instance.currentUserId;
       _validateMemberOperationPermissions(groupId, memberUserId, adminUserId, 'remove');
       final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: memberUserId);
       if (memberships.isEmpty) {
-        print('❌ [GroupRepository] Membership not found');
         throw exceptions.NotFoundException(message: 'Membership not found for user $memberUserId in group $groupId');
       }
       final membershipId = memberships[0]['id'];
       await _apiClient.deleteGroupMembership(membershipId);
       await _fetchAndSync();
-      print('✅ [GroupRepository] Member $memberUserId removed from group $groupId');
-    } catch (e, stackTrace) {
-      print('❌ [GroupRepository] Error removing member from group: $e');
-      print('📍 [GroupRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> leaveGroup(int groupId) async {
     try {
-      print('🚪 [GroupRepository] User leaving group $groupId');
       final userId = ConfigService.instance.currentUserId;
       final group = _getGroupFromCache(groupId);
 
       if (group.isCreator(userId)) {
-        print('❌ [GroupRepository] Creator cannot leave group');
         throw const exceptions.ConflictException(message: 'Group creator cannot leave. Delete the group instead.');
       }
 
       final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
       if (memberships.isEmpty) {
-        print('❌ [GroupRepository] Membership not found');
         throw exceptions.NotFoundException(message: 'Membership not found for user $userId in group $groupId');
       }
       final membershipId = memberships[0]['id'];
       await _apiClient.deleteGroupMembership(membershipId);
       await _fetchAndSync();
-      print('✅ [GroupRepository] User left group $groupId');
-    } catch (e, stackTrace) {
-      print('❌ [GroupRepository] Error leaving group: $e');
-      print('📍 [GroupRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> grantAdminPermission({required int groupId, required int userId}) async {
     try {
-      print('👑 [GroupRepository] Granting admin permission to user $userId in group $groupId');
       final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
       if (memberships.isEmpty) {
-        print('❌ [GroupRepository] Membership not found');
         throw exceptions.NotFoundException(message: 'Membership not found for user $userId in group $groupId');
       }
       final membershipId = memberships[0]['id'];
       await _apiClient.updateGroupMembership(membershipId, {'role': 'admin'});
       await _fetchAndSync();
-      print('✅ [GroupRepository] Admin permission granted to user $userId');
-    } catch (e, stackTrace) {
-      print('❌ [GroupRepository] Error granting admin permission: $e');
-      print('📍 [GroupRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> removeAdminPermission({required int groupId, required int userId}) async {
     try {
-      print('👑 [GroupRepository] Removing admin permission from user $userId in group $groupId');
       final memberships = await _apiClient.fetchGroupMemberships(groupId: groupId, userId: userId);
       if (memberships.isEmpty) {
-        print('❌ [GroupRepository] Membership not found');
         throw exceptions.NotFoundException(message: 'Membership not found for user $userId in group $groupId');
       }
       final membershipId = memberships[0]['id'];
       await _apiClient.updateGroupMembership(membershipId, {'role': 'member'});
       await _fetchAndSync();
-      print('✅ [GroupRepository] Admin permission removed from user $userId');
-    } catch (e, stackTrace) {
-      print('❌ [GroupRepository] Error removing admin permission: $e');
-      print('📍 [GroupRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
@@ -273,7 +225,6 @@ class GroupRepository {
   Future<void> _startRealtimeSubscription() async {
     _realtimeChannel = _supabaseService.client.channel('groups_realtime').onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'groups', callback: _handleGroupChange).subscribe();
 
-    print('✅ [GroupRepository] Realtime subscription started for groups table');
   }
 
   void _handleGroupChange(PostgresChangePayload payload) {
@@ -282,10 +233,8 @@ class GroupRepository {
 
     if (payload.eventType == PostgresChangeEvent.insert || payload.eventType == PostgresChangeEvent.update) {
       if (!_rt.shouldProcessInsertOrUpdate(ct)) {
-        print('⏸️ [GroupRepository] Event skipped by time gate');
         return;
       }
-      print('🔄 [GroupRepository] ${payload.eventType == PostgresChangeEvent.insert ? 'INSERT' : 'UPDATE'} detected');
 
       final groupData = payload.newRecord;
       final group = Group.fromJson(groupData);
@@ -304,26 +253,22 @@ class GroupRepository {
         _box?.put(group.id, groupHive);
 
         _emitCurrentGroups();
-        print('✅ [GroupRepository] Cache updated for group ${group.id}');
       } else {
         final groupId = groupData['id'] as int?;
         if (groupId != null) {
           _cachedGroups.removeWhere((g) => g.id == groupId);
           _box?.delete(groupId);
           _emitCurrentGroups();
-          print('✅ [GroupRepository] Group $groupId removed (user no longer member)');
         }
       }
     } else if (payload.eventType == PostgresChangeEvent.delete) {
       if (!_rt.shouldProcessDelete()) return;
-      print('🔄 [GroupRepository] DELETE detected');
 
       final groupId = payload.oldRecord['id'] as int?;
       if (groupId != null) {
         _cachedGroups.removeWhere((g) => g.id == groupId);
         _box?.delete(groupId);
         _emitCurrentGroups();
-        print('✅ [GroupRepository] Group $groupId deleted');
       }
     }
   }
@@ -335,7 +280,6 @@ class GroupRepository {
   }
 
   void dispose() {
-    print('👋 [GroupRepository] Disposing...');
     _realtimeChannel?.unsubscribe();
     _groupsController.close();
     _box?.close();

@@ -18,10 +18,8 @@ class RealtimeFilter {
     String eventType,
     RealtimeSync realtimeSync,
   ) {
-    print('🔍 [FILTER] Checking $eventType event (type=${payload.eventType})');
 
     if (payload.eventType == PostgresChangeEvent.delete) {
-      print('✅ [FILTER] DELETE event - processing immediately (skip timestamp check)');
       return realtimeSync.shouldProcessDelete();
     }
 
@@ -29,7 +27,6 @@ class RealtimeFilter {
     final shouldProcess = realtimeSync.shouldProcessInsertOrUpdate(commitTimestamp);
 
     if (!shouldProcess) {
-      print('🚫 [FILTER] Ignoring historical $eventType by commit_timestamp gate');
     }
 
     return shouldProcess;

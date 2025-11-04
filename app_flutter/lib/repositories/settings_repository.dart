@@ -15,8 +15,6 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
   String get serviceName => 'SettingsRepository';
 
   Future<void> initialize() async {
-    print('🚀 [SettingsRepository] Initializing...');
-    print('✅ [SettingsRepository] Initialization complete');
   }
 
   static const String _defaultCountryCodeKey = 'default_country_code';
@@ -142,6 +140,5 @@ class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
   }
 
   void dispose() {
-    print('👋 [SettingsRepository] Disposing...');
   }
 }

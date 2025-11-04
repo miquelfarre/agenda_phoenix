@@ -25,22 +25,17 @@ class EventOperations {
     bool shouldNavigate = false,
     bool showSuccessMessage = true,
   }) async {
-    print('🗑️ [EventOperations] Initiating delete/leave for event: "${event.name}" (ID: ${event.id})');
 
     try {
       if (event.id == null) {
-        print('❌ [EventOperations] Error: Event ID is null.');
         throw Exception('Event ID is null');
       }
 
       final canEdit = EventPermissions.canEdit(event: event);
-      print('👤 [EventOperations] Can Edit: $canEdit');
 
       if (canEdit) {
         // User has permission - DELETE event
-        print('🗑️ [EventOperations] User has permission. DELETING event.');
         await repository.deleteEvent(event.id!);
-        print('✅ [EventOperations] Event DELETED successfully');
 
         if (showSuccessMessage && context.mounted) {
           final l10n = context.l10n;
@@ -51,9 +46,7 @@ class EventOperations {
         }
       } else {
         // User is participant - LEAVE event
-        print('👋 [EventOperations] User is not owner/admin. LEAVING event.');
         await repository.leaveEvent(event.id!);
-        print('✅ [EventOperations] Event LEFT successfully');
 
         if (showSuccessMessage && context.mounted) {
           final l10n = context.l10n;
@@ -66,15 +59,11 @@ class EventOperations {
 
       // Navigate back if requested
       if (shouldNavigate && context.mounted) {
-        print('➡️ [EventOperations] Navigating back.');
         Navigator.of(context).pop();
       }
 
-      print('✅ [EventOperations] Operation completed for event ID: ${event.id}');
       return true;
-    } catch (e, stackTrace) {
-      print('❌ [EventOperations] Error: $e');
-      print('📍 [EventOperations] Stack trace: $stackTrace');
+    } catch (e, _) {
 
       if (context.mounted) {
         final errorMessage = ErrorMessageParser.parse(e, context);
@@ -101,10 +90,11 @@ class EventOperations {
   }) async {
     final l10n = context.l10n;
     final canEdit = EventPermissions.canEdit(event: event);
+    final currentContext = context;
 
     // Show confirmation dialog
     final confirmed = await showCupertinoDialog<bool>(
-      context: context,
+      context: currentContext,
       builder: (context) => CupertinoAlertDialog(
         title: Text(canEdit ? l10n.deleteEvent : l10n.leaveEvent),
         content: Text(
@@ -130,7 +120,8 @@ class EventOperations {
       return await deleteOrLeaveEvent(
         event: event,
         repository: repository,
-        context: context,
+        // ignore: use_build_context_synchronously
+        context: currentContext,
         shouldNavigate: shouldNavigate,
       );
     }

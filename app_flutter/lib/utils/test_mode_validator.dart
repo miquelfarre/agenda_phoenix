@@ -51,8 +51,6 @@ class TestModeValidator {
 
     final token = jwt.sign(SecretKey(_jwtSecret));
     if (kDebugMode) {
-      print('🔐 [TestMode] Generated JWT token for user $userId');
-      print('🔐 [TestMode] Token (first 50 chars): ${token.substring(0, 50)}...');
     }
     return token;
   }

@@ -89,7 +89,6 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-    print('🗑️ [EventSeriesScreen._deleteEvent] Delegating to EventOperations');
 
     final success = await EventOperations.deleteOrLeaveEvent(
       event: event,
@@ -104,7 +103,6 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
       setState(() {
         _events.removeWhere((e) => e.id == event.id);
       });
-      print('✅ [EventSeriesScreen._deleteEvent] Event removed from series list. Remaining: ${_events.length}');
     }
   }
 }

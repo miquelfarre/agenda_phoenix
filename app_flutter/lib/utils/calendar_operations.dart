@@ -25,17 +25,13 @@ class CalendarOperations {
     bool shouldNavigate = false,
     bool showSuccessMessage = true,
   }) async {
-    print('🗑️ [CalendarOperations] Initiating delete/leave for calendar: "${calendar.name}" (ID: ${calendar.id})');
 
     try {
       final isOwner = CalendarPermissions.isOwner(calendar);
-      print('👤 [CalendarOperations] Is Owner: $isOwner');
 
       if (isOwner) {
         // User is owner - DELETE calendar
-        print('🗑️ [CalendarOperations] User is owner. DELETING calendar.');
         await repository.deleteCalendar(int.parse(calendar.id));
-        print('✅ [CalendarOperations] Calendar DELETED successfully');
 
         if (showSuccessMessage && context.mounted) {
           final l10n = context.l10n;
@@ -46,18 +42,14 @@ class CalendarOperations {
         }
       } else {
         // User is not owner - LEAVE calendar
-        print('👋 [CalendarOperations] User is not owner. LEAVING calendar.');
 
         if (calendar.shareHash != null) {
           // Public calendar - unsubscribe by share_hash
-          print('📤 [CalendarOperations] Public calendar - unsubscribing by share_hash');
           await repository.unsubscribeByShareHash(calendar.shareHash!);
         } else {
           // Private calendar - remove membership
-          print('📤 [CalendarOperations] Private calendar - removing membership');
           await repository.unsubscribeFromCalendar(int.parse(calendar.id));
         }
-        print('✅ [CalendarOperations] Calendar LEFT successfully');
 
         if (showSuccessMessage && context.mounted) {
           final l10n = context.l10n;
@@ -70,15 +62,11 @@ class CalendarOperations {
 
       // Navigate back if requested
       if (shouldNavigate && context.mounted) {
-        print('➡️ [CalendarOperations] Navigating back.');
         Navigator.of(context).pop();
       }
 
-      print('✅ [CalendarOperations] Operation completed for calendar ID: ${calendar.id}');
       return true;
-    } catch (e, stackTrace) {
-      print('❌ [CalendarOperations] Error: $e');
-      print('📍 [CalendarOperations] Stack trace: $stackTrace');
+    } catch (e, _) {
 
       if (context.mounted) {
         final errorMessage = ErrorMessageParser.parse(e, context);
@@ -105,10 +93,11 @@ class CalendarOperations {
   }) async {
     final l10n = context.l10n;
     final isOwner = CalendarPermissions.isOwner(calendar);
+    final currentContext = context;
 
     // Show confirmation dialog
     final confirmed = await showCupertinoDialog<bool>(
-      context: context,
+      context: currentContext,
       builder: (context) => CupertinoAlertDialog(
         title: Text(isOwner ? l10n.deleteCalendar : l10n.leaveCalendar),
         content: Text(
@@ -134,7 +123,8 @@ class CalendarOperations {
       return await deleteOrLeaveCalendar(
         calendar: calendar,
         repository: repository,
-        context: context,
+        // ignore: use_build_context_synchronously
+        context: currentContext,
         shouldNavigate: shouldNavigate,
       );
     }

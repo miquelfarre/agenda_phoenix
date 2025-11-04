@@ -37,7 +37,6 @@ class CalendarRepository {
     if (_initCompleter.isCompleted) return;
 
     try {
-      print('🚀 [CalendarRepository] Initializing...');
       _box = await Hive.openBox<CalendarHive>(_boxName);
 
       // Load calendars from Hive cache first (if any)
@@ -50,7 +49,6 @@ class CalendarRepository {
       await _startRealtimeSubscription();
 
       _emitCurrentCalendars();
-      print('✅ [CalendarRepository] Initialization complete');
 
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
@@ -69,16 +67,13 @@ class CalendarRepository {
     try {
       _cachedCalendars = _box!.values.map((calendarHive) => calendarHive.toCalendar()).toList();
 
-      print('✅ [CalendarRepository] Loaded ${_cachedCalendars.length} calendars from Hive cache');
     } catch (e) {
-      print('❌ [CalendarRepository] Error loading from Hive: $e');
       _cachedCalendars = [];
     }
   }
 
   Future<void> _fetchAndSync() async {
     try {
-      print('📡 [CalendarRepository] Fetching calendars from API...');
       final response = await _apiClient.fetchCalendars();
       _cachedCalendars = response.map((data) => Calendar.fromJson(data)).toList();
 
@@ -94,111 +89,84 @@ class CalendarRepository {
       }
 
       _emitCurrentCalendars();
-      print('✅ [CalendarRepository] Fetched ${_cachedCalendars.length} calendars');
+      // ignore: empty_catches
     } catch (e) {
-      print('❌ [CalendarRepository] Error fetching calendars: $e');
+      // Intentionally ignore realtime errors
     }
   }
 
   Future<void> _updateLocalCache(List<Calendar> calendars) async {
     if (_box == null) return;
 
-    print('💾 [CalendarRepository] Updating Hive cache with ${calendars.length} calendars...');
     await _box!.clear();
 
     for (final calendar in calendars) {
       final calendarHive = CalendarHive.fromCalendar(calendar);
       await _box!.put(calendar.id, calendarHive);
     }
-    print('✅ [CalendarRepository] Hive cache updated');
   }
 
   // --- Mutations ---
 
   Future<Calendar> createCalendar({required String name, String? description, bool isPublic = false}) async {
     try {
-      print('➕ [CalendarRepository] Creating calendar: "$name"');
       final userId = ConfigService.instance.currentUserId;
       final newCalendar = await _apiClient.createCalendar({'name': name, 'description': description, 'is_public': isPublic, 'owner_id': userId});
       await _fetchAndSync();
-      print('✅ [CalendarRepository] Calendar created: "${newCalendar['name']}"');
       return Calendar.fromJson(newCalendar);
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error creating calendar: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<Calendar> updateCalendar(int calendarId, Map<String, dynamic> data) async {
     try {
-      print('🔄 [CalendarRepository] Updating calendar ID $calendarId');
       final updatedCalendar = await _apiClient.updateCalendar(calendarId, data);
       await _fetchAndSync();
-      print('✅ [CalendarRepository] Calendar updated: ID $calendarId');
       return Calendar.fromJson(updatedCalendar);
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error updating calendar: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> deleteCalendar(int calendarId, {bool deleteAssociatedEvents = false}) async {
     try {
-      print('🗑️ [CalendarRepository] deleteCalendar START - calendarId: $calendarId, deleteEvents: $deleteAssociatedEvents');
-      final calendar = _cachedCalendars.firstWhere((c) => c.id == calendarId.toString(), orElse: () => throw exceptions.NotFoundException(message: 'Calendar not found in cache'));
+      _cachedCalendars.firstWhere((c) => c.id == calendarId.toString(), orElse: () => throw exceptions.NotFoundException(message: 'Calendar not found in cache'));
 
-      print('🗑️ [CalendarRepository] Calendar in cache: "${calendar.name}"');
-      print('🗑️ [CalendarRepository] Cache size before: ${_cachedCalendars.length}');
 
       await _apiClient.deleteCalendar(calendarId, deleteEvents: deleteAssociatedEvents);
       await _fetchAndSync();
 
-      print('🗑️ [CalendarRepository] Cache size after: ${_cachedCalendars.length}');
-      print('✅ [CalendarRepository] Calendar deleted: ID $calendarId');
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error deleting calendar: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> subscribeToCalendar(int calendarId) async {
     try {
-      print('➕ [CalendarRepository] Subscribing to calendar ID $calendarId');
       await _apiClient.addCalendarMembership(calendarId, {}); // Body might need user id, check API
       await _fetchAndSync();
-      print('✅ [CalendarRepository] Subscribed to calendar ID $calendarId');
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error subscribing to calendar: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> unsubscribeFromCalendar(int calendarId) async {
     try {
-      print('🗑️ [CalendarRepository] Unsubscribing from calendar ID $calendarId');
       final memberships = await _apiClient.fetchCalendarMemberships(calendarId);
       if (memberships.isEmpty) {
-        print('⚠️ [CalendarRepository] No membership found, already unsubscribed');
         return;
       }
       final membershipId = memberships[0]['id'];
       await _apiClient.deleteCalendarMembership(membershipId);
       await _fetchAndSync();
-      print('✅ [CalendarRepository] Unsubscribed from calendar ID $calendarId');
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error unsubscribing from calendar: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<List<Calendar>> fetchPublicCalendars({String? search}) async {
     try {
-      print('🔍 [CalendarRepository] Searching public calendars${search != null ? ': "$search"' : ''}');
       final queryParams = <String, String>{'is_public': 'true'};
       if (search != null) queryParams['search'] = search;
 
@@ -208,70 +176,50 @@ class CalendarRepository {
       for (final item in response as List) {
         calendars.add(Calendar.fromJson(item));
       }
-      print('✅ [CalendarRepository] Found ${calendars.length} public calendars');
       return calendars;
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error fetching public calendars: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<Calendar?> searchByShareHash(String shareHash) async {
     try {
-      print('🔍 [CalendarRepository] Searching calendar by share_hash: $shareHash');
       final result = await _apiClient.searchCalendarByHash(shareHash);
 
       if (result != null) {
         final calendar = Calendar.fromJson(result);
-        print('✅ [CalendarRepository] Found calendar: "${calendar.name}"');
         return calendar;
       }
 
-      print('⚠️ [CalendarRepository] No calendar found with hash: $shareHash');
       return null;
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error searching calendar by hash: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> subscribeByShareHash(String shareHash) async {
     try {
-      print('➕ [CalendarRepository] Subscribing to calendar with share_hash: $shareHash');
       await _apiClient.subscribeByShareHash(shareHash);
       await _fetchAndSync();
-      print('✅ [CalendarRepository] Subscribed to calendar with hash: $shareHash');
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error subscribing to calendar: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<void> unsubscribeByShareHash(String shareHash) async {
     try {
-      print('🗑️ [CalendarRepository] Unsubscribing from calendar with share_hash: $shareHash');
       await _apiClient.unsubscribeByShareHash(shareHash);
       await _fetchAndSync();
-      print('✅ [CalendarRepository] Unsubscribed from calendar with hash: $shareHash');
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error unsubscribing from calendar: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
   Future<List<Map<String, dynamic>>> fetchCalendarMemberships(int calendarId) async {
     try {
-      print('👥 [CalendarRepository] Fetching memberships for calendar: $calendarId');
       final memberships = await _apiClient.fetchCalendarMemberships(calendarId);
-      print('✅ [CalendarRepository] Fetched ${memberships.length} memberships');
       return memberships;
-    } catch (e, stackTrace) {
-      print('❌ [CalendarRepository] Error fetching calendar memberships: $e');
-      print('📍 [CalendarRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
@@ -291,7 +239,6 @@ class CalendarRepository {
           filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
           callback: (payload) {
             if (!RealtimeFilter.shouldProcessEvent(payload, 'calendar_membership', _rt)) return;
-            print('🔄 [CalendarRepository] Calendar membership change detected, refreshing calendars');
             _fetchAndSync();
           },
         )
@@ -306,13 +253,11 @@ class CalendarRepository {
           table: 'calendars',
           callback: (payload) {
             if (!RealtimeFilter.shouldProcessEvent(payload, 'calendar', _rt)) return;
-            print('🔄 [CalendarRepository] Calendar data change detected, refreshing calendars');
             _fetchAndSync();
           },
         )
         .subscribe();
 
-    print('✅ [CalendarRepository] Realtime subscriptions started for calendar_memberships and calendars tables');
   }
 
   void _emitCurrentCalendars() {
@@ -326,7 +271,6 @@ class CalendarRepository {
   }
 
   void dispose() {
-    print('👋 [CalendarRepository] Disposing...');
     _membershipChannel?.unsubscribe();
     _calendarsChannel?.unsubscribe();
     _calendarsController.close();

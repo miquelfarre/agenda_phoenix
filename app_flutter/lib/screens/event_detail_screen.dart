@@ -77,20 +77,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
 
       EventInteraction? interaction;
       if (!isEventOwner && data['interactions'] != null) {
-        print('🔍 DEBUG: data[interactions] = ${data['interactions']}');
         final interactions = (data['interactions'] as List).map((i) => EventInteraction.fromJson(i)).where((i) => i.userId == currentUserId).toList();
-        print('🔍 DEBUG: Found ${interactions.length} interactions for current user');
         if (interactions.isNotEmpty) {
           interaction = interactions.first;
-          print('🔍 DEBUG: interaction.id = ${interaction.id}');
-          print('🔍 DEBUG: interaction.inviterId = ${interaction.inviterId}');
-          print('🔍 DEBUG: interaction.wasInvited = ${interaction.wasInvited}');
-          print('🔍 DEBUG: interaction.participationStatus = ${interaction.participationStatus}');
         } else {
-          print('🔍 DEBUG: No interactions found for current user');
         }
       } else {
-        print('🔍 DEBUG: isEventOwner=$isEventOwner, interactions null=${data['interactions'] == null}');
       }
 
       // Get other invitations if available (owner, admin, or accepted participant can see them)
@@ -108,9 +100,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
           currentEvent = detailedEvent;
           _isLoadingComposite = false;
         });
-        print('🔍 DEBUG: _interaction assigned = $_interaction');
-        print('🔍 DEBUG: _interaction?.wasInvited = ${_interaction?.wasInvited}');
-        print('🔍 DEBUG: _interaction?.inviterId = ${_interaction?.inviterId}');
 
         // Mark interaction as read if it exists and hasn't been read yet
         if (interaction != null && !interaction.viewed) {
@@ -131,9 +120,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
 
     try {
       await ref.read(eventRepositoryProvider).markAsViewed(currentEvent.id!);
-      print('✅ [EventDetail] Interaction marked as read');
     } catch (e) {
-      print('⚠️ [EventDetail] Error marking interaction as read: $e');
       // Don't show error to user - this is a background operation
     }
   }
@@ -164,7 +151,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
         final updatedEvent = events.where((e) => e.id == currentEvent.id).firstOrNull;
 
         if (updatedEvent != null && mounted) {
-          print('🔔 [EventDetail] Event ${updatedEvent.name} updated via realtime');
           setState(() {
             currentEvent = updatedEvent;
             // Don't replace _detailedEvent - reload from API to preserve full details
@@ -173,8 +159,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
           _loadDetailData();
         }
       });
+      // ignore: empty_catches
     } catch (e) {
-      print('🔴 [EventDetail] Error initializing realtime: $e');
+      // Intentionally ignore realtime subscription errors
     }
   }
 
@@ -232,18 +219,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
 
             Builder(
               builder: (context) {
-                print('🔍 DEBUG BUILD: isEventOwner = $isEventOwner');
-                print('🔍 DEBUG BUILD: _interaction = $_interaction');
-                print('🔍 DEBUG BUILD: _interaction?.wasInvited = ${_interaction?.wasInvited}');
-                print('🔍 DEBUG BUILD: Will show buttons = ${!isEventOwner && _interaction != null && _interaction!.wasInvited}');
 
                 if (!isEventOwner && _interaction != null && _interaction!.wasInvited) {
                   return _buildParticipationStatusButtons();
                 } else {
-                  print('🔍 DEBUG BUILD: Buttons NOT shown because:');
-                  if (isEventOwner) print('  - You are the owner');
-                  if (_interaction == null) print('  - _interaction is null');
-                  if (_interaction != null && !_interaction!.wasInvited) print('  - wasInvited is false (inviterId = ${_interaction!.inviterId})');
                   return const SizedBox.shrink();
                 }
               },
@@ -511,34 +490,24 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
     final l10n = context.l10n;
     final event = _detailedEvent ?? currentEvent;
 
-    print('🔍 DEBUG ATTENDEES: event.attendees count = ${event.attendees.length}');
-    print('🔍 DEBUG ATTENDEES: event.attendees = ${event.attendees}');
 
     final List<User> attendeeUsers = [];
     for (final a in event.attendees) {
       if (a is User) {
-        print('🔍 DEBUG ATTENDEES: Found User object - id=${a.id}, fullName=${a.fullName}');
         attendeeUsers.add(a);
       } else if (a is Map<String, dynamic>) {
-        print('🔍 DEBUG ATTENDEES: Found Map - data=$a');
         try {
           final user = User.fromJson(a);
-          print('🔍 DEBUG ATTENDEES: Parsed User - id=${user.id}, fullName=${user.fullName}');
           attendeeUsers.add(user);
+          // ignore: empty_catches
         } catch (e) {
-          print('🔍 DEBUG ATTENDEES: Failed to parse user - error=$e');
+          // Intentionally ignore malformed user data
         }
       }
     }
 
-    print('🔍 DEBUG ATTENDEES: Total attendeeUsers = ${attendeeUsers.length}');
-    for (final u in attendeeUsers) {
-      print('🔍 DEBUG ATTENDEES: User ${u.id}: fullName="${u.fullName}", profilePicture="${u.profilePicture}"');
-    }
-
     final otherAttendees = attendeeUsers.where((u) => u.id != currentUserId).toList();
 
-    print('🔍 DEBUG ATTENDEES: otherAttendees after filter = ${otherAttendees.length}');
 
     if (otherAttendees.isEmpty) return const SizedBox.shrink();
 
@@ -618,21 +587,15 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
   void _navigateToInviteScreen() {
     final event = _detailedEvent ?? currentEvent;
 
-    print('🔵 [EventDetailScreen] _navigateToInviteScreen called');
-    print('🔵 [EventDetailScreen] event.id: ${event.id}');
-    print('🔵 [EventDetailScreen] event.title: ${event.title}');
-    print('🔵 [EventDetailScreen] event.canInviteUsers: ${event.canInviteUsers}');
 
     Navigator.of(context).push(
       CupertinoPageRoute(
         builder: (context) {
-          print('🔵 [EventDetailScreen] Building InviteUsersScreen');
           return InviteUsersScreen(event: event);
         },
       ),
     );
 
-    print('🔵 [EventDetailScreen] Navigation push completed');
   }
 
   Future<void> _editEvent(BuildContext context) async {
@@ -647,70 +610,43 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-    print('🗑️ [EventDetail] _deleteEvent START');
-    print('🗑️ [EventDetail] Event ID: ${event.id}');
-    print('🗑️ [EventDetail] Event Name: "${event.name}"');
-    print('🗑️ [EventDetail] Event Owner ID: ${event.ownerId}');
-    print('🗑️ [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}');
-    print('🗑️ [EventDetail] Should Navigate: $shouldNavigate');
 
     if (event.id == null) {
-      print('❌ [EventDetail] Event ID is null, aborting');
       throw Exception('Event ID is null');
     }
 
     try {
       final canEdit = EventPermissions.canEdit(event: event);
 
-      print('👤 [EventDetail] Can Edit: $canEdit');
 
       if (canEdit) {
-        print('🗑️ [EventDetail] User has permission. DELETING event via EventService...');
         await ref.read(eventServiceProvider).deleteEvent(event.id!);
-        print('✅ [EventDetail] Event DELETED successfully');
       } else {
-        print('👋 [EventDetail] User is not owner/admin. LEAVING event via EventRepository...');
         await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
-        print('✅ [EventDetail] Event LEFT successfully');
       }
     } catch (e) {
-      print('❌ [EventDetail] Error in _deleteEvent: $e');
       rethrow;
     }
 
     if (shouldNavigate && mounted) {
-      print('🗑️ [EventDetail] Navigating back...');
       Navigator.of(context).pop();
     }
-    print('✅ [EventDetail] _deleteEvent COMPLETED');
   }
 
   Future<void> _leaveEvent(Event event, {bool shouldNavigate = false}) async {
     final l10n = context.l10n;
-    print('👋 [EventDetail] _leaveEvent START');
-    print('👋 [EventDetail] Event ID: ${event.id}');
-    print('👋 [EventDetail] Event Name: "${event.name}"');
-    print('👋 [EventDetail] Event Owner ID: ${event.ownerId}');
-    print('👋 [EventDetail] Current User ID: ${ConfigService.instance.currentUserId}');
-    print('👋 [EventDetail] Should Navigate: $shouldNavigate');
 
     if (event.id == null) {
-      print('❌ [EventDetail] Event ID is null, aborting _leaveEvent');
       return;
     }
 
     try {
-      print('👋 [EventDetail] Leaving event via EventRepository...');
       await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
-      print('✅ [EventDetail] Left event successfully');
 
       if (shouldNavigate && mounted) {
-        print('👋 [EventDetail] Navigating back...');
         Navigator.of(context).pop();
       }
-      print('✅ [EventDetail] _leaveEvent COMPLETED');
     } catch (e) {
-      print('❌ [EventDetail] Error leaving event: $e');
       if (mounted) {
         _showEphemeralMessage(l10n.errorLeavingEvent, color: AppStyles.errorColor);
       }
@@ -1007,7 +943,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
     final event = _detailedEvent ?? currentEvent;
 
     if (event.parentRecurringEventId == null) {
-      print('⚠️ [EventDetail] Event has no parent recurring event');
       return;
     }
 
@@ -1039,7 +974,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> with Widg
         );
       }
     } catch (e) {
-      print('🔴 [EventDetail] Error loading event series: $e');
       if (mounted) {
         _showEphemeralMessage(l10n.errorLoadingEventSeries, color: AppStyles.errorColor);
       }

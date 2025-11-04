@@ -27,9 +27,7 @@ class UserRepository {
     if (_initCompleter.isCompleted) return;
 
     try {
-      print('🚀 [UserRepository] Initializing...');
       await _loadCurrentUser();
-      print('✅ [UserRepository] Initialization complete');
 
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
@@ -71,7 +69,6 @@ class UserRepository {
       // If API call fails, try to return cached user
       return _cachedCurrentUser;
     } catch (e) {
-      print('Error loading current user: $e');
       _cachedCurrentUser = null;
       _emitCurrentUser();
       return null;
@@ -85,7 +82,6 @@ class UserRepository {
       final response = await _apiClient.fetchUser(userId);
       return User.fromJson(response);
     } catch (e) {
-      print('Error fetching user by ID: $e');
       return null;
     }
   }
@@ -128,7 +124,6 @@ class UserRepository {
   }
 
   void dispose() {
-    print('👋 [UserRepository] Disposing...');
     _currentUserController.close();
   }
 }

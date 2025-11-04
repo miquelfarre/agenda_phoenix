@@ -15,17 +15,12 @@ class NavigationService with SingletonMixin {
   BuildContext? get context => navigatorKey.currentContext;
 
   Future<T?> push<T extends Object?>(Route<T> route) async {
-    print('🔵 [NavigationService] push called');
-    print('🔵 [NavigationService] navigator: $navigator');
-    print('🔵 [NavigationService] context: $context');
 
     if (navigator == null) {
-      print('🔴 [NavigationService] ERROR: navigator is null!');
       return null;
     }
 
     final result = await navigator?.push(route);
-    print('🔵 [NavigationService] push completed');
     return result;
   }
 

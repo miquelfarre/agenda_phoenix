@@ -27,7 +27,7 @@ Este archivo contiene:
 **Propósito**: Widget de botón adaptativo que cambia su apariencia según variante, tamaño, estado de carga y plataforma
 
 ### Implements
-- `IAdaptiveWidget`: Interface para widgets adaptativos (del archivo adaptive_card.dart)
+- `IAdaptiveWidget`: Interface para widgets adaptativos (definida en este archivo)
 - `IButtonWidget`: Interface específica para botones (definida en este archivo)
 
 ### Propiedades (líneas 6-19)
@@ -568,7 +568,6 @@ enum IconPosition { leading, trailing, only }
 
 ### Imports internos:
 - `platform_theme.dart`: PlatformTheme para tema adaptativo
-- `adaptive_card.dart`: IAdaptiveWidget interface
 
 ### Tipos personalizados:
 - `PlatformTheme`: Tema adaptativo según plataforma

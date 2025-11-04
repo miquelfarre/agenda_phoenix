@@ -1,21 +1,13 @@
 import 'package:flutter/material.dart';
 import 'platform_theme.dart';
-import 'adaptive_card.dart';
 
-class AdaptiveButton extends StatelessWidget implements IAdaptiveWidget, IButtonWidget {
-  @override
+class AdaptiveButton extends StatelessWidget {
   final AdaptiveButtonConfig config;
-  @override
   final VoidCallback? onPressed;
-  @override
   final String? text;
-  @override
   final IconData? icon;
-  @override
   final bool isLoading;
-  @override
   final void Function(bool loading)? onLoadingChanged;
-  @override
   final bool enabled;
 
   const AdaptiveButton({super.key, required this.config, this.onPressed, this.text, this.icon, this.isLoading = false, this.onLoadingChanged, this.enabled = true});
@@ -159,28 +151,6 @@ class AdaptiveButton extends StatelessWidget implements IAdaptiveWidget, IButton
         return 24;
     }
   }
-
-  @override
-  PlatformTheme get theme => PlatformTheme.adaptive(null);
-
-  @override
-  ValidationResult validate() {
-    final issues = <ValidationIssue>[];
-
-    if (config.variant == ButtonVariant.icon && icon == null) {
-      issues.add(const ValidationIssue(message: 'Icon buttons must have an icon', severity: ValidationSeverity.error, suggestion: 'Provide an icon property'));
-    }
-
-    if (config.variant != ButtonVariant.icon && text == null && icon == null) {
-      issues.add(const ValidationIssue(message: 'Buttons should have either text or icon content', severity: ValidationSeverity.warning, suggestion: 'Provide text or icon property'));
-    }
-
-    if (config.fullWidth && config.variant == ButtonVariant.fab) {
-      issues.add(const ValidationIssue(message: 'FAB buttons should not be full width', severity: ValidationSeverity.warning));
-    }
-
-    return ValidationResult(isValid: issues.where((i) => i.severity == ValidationSeverity.error).isEmpty, issues: issues, severity: issues.isEmpty ? ValidationSeverity.none : issues.map((i) => i.severity).reduce((a, b) => a.index > b.index ? a : b));
-  }
 }
 
 class AdaptiveButtonConfig {
@@ -210,12 +180,3 @@ enum ButtonVariant { primary, secondary, text, icon, fab }
 enum ButtonSize { small, medium, large }
 
 enum IconPosition { leading, trailing, only }
-
-abstract class IButtonWidget extends IAdaptiveWidget {
-  AdaptiveButtonConfig get config;
-  VoidCallback? get onPressed;
-  String? get text;
-  IconData? get icon;
-  bool get isLoading;
-  void Function(bool loading)? get onLoadingChanged;
-}

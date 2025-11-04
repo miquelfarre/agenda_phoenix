@@ -33,28 +33,23 @@ class _SubscriptionDetailScreenState extends ConsumerState<SubscriptionDetailScr
   }
 
   Future<void> _loadData() async {
-    print('🔵 [SubscriptionDetailScreen] _loadData START');
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      print('🔵 [SubscriptionDetailScreen] Calling Backend API for user events...');
       final publicUserId = widget.subscription.subscribedToId;
       final eventsData = await ApiClient().fetchUserEvents(publicUserId);
       final events = eventsData.map((e) => Event.fromJson(e)).toList();
-      print('🔵 [SubscriptionDetailScreen] Backend API completed, events count: ${events.length}');
 
       if (mounted) {
         setState(() {
           _events = events;
           _isLoading = false;
         });
-        print('🔵 [SubscriptionDetailScreen] setState completed, _isLoading=false');
       }
     } catch (e) {
-      print('🔴 [SubscriptionDetailScreen] ERROR: $e');
       if (mounted) {
         setState(() {
           _error = e.toString();

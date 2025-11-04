@@ -13,8 +13,6 @@ class SupabaseService {
   }
 
   static Future<void> initialize({required String supabaseUrl, required String supabaseAnonKey}) async {
-    print('🔵 [SupabaseService] Initializing Supabase client...');
-    print('🔵 [SupabaseService] URL: $supabaseUrl');
 
     await Supabase.initialize(
       url: supabaseUrl,
@@ -25,13 +23,10 @@ class SupabaseService {
 
     // Listen to auth state changes to debug token issues
     _client!.auth.onAuthStateChange.listen((data) {
-      print('🔵 [SupabaseService] Auth state changed: ${data.event}');
       if (data.session != null) {
-        print('🔵 [SupabaseService] Session active, token (first 50): ${data.session!.accessToken.substring(0, 50)}...');
       }
     });
 
-    print('✅ [SupabaseService] Supabase client initialized');
   }
 
   SupabaseClient get client {
@@ -57,9 +52,9 @@ class SupabaseService {
       // Also update the token for HTTP requests
       client.auth.headers['Authorization'] = 'Bearer $token';
 
-      print('🔐 [SupabaseService] Applied test auth token to Realtime and HTTP clients');
+      // ignore: empty_catches
     } catch (e) {
-      print('❌ [SupabaseService] Failed to apply auth tokens: $e');
+      // Intentionally ignore errors when applying test auth
     }
   }
 
@@ -120,7 +115,6 @@ class SupabaseService {
 
       return allEvents;
     } catch (e) {
-      print('Error fetching events: $e');
       rethrow;
     }
   }
@@ -142,7 +136,6 @@ class SupabaseService {
           .single();
       return events;
     } catch (e) {
-      print('Error fetching event detail: $e');
       rethrow;
     }
   }
@@ -175,7 +168,6 @@ class SupabaseService {
       }
       return ownerMap.values.toList();
     } catch (e) {
-      print('Error fetching subscriptions: $e');
       rethrow;
     }
   }
@@ -196,7 +188,6 @@ class SupabaseService {
           .order('start_date', ascending: true);
       return List<Map<String, dynamic>>.from(events as List);
     } catch (e) {
-      print('Error fetching public user events: $e');
       rethrow;
     }
   }
@@ -217,7 +208,6 @@ class SupabaseService {
       final users = await client.from('users').select('*').neq('id', userId);
       return {'contacts': users as List, 'groups': []};
     } catch (e) {
-      print('Error fetching people and groups: $e');
       rethrow;
     }
   }
@@ -229,7 +219,6 @@ class SupabaseService {
       final availableUsers = (allUsers as List).where((userData) => !invitedUserIds.contains(userData['id'])).toList();
       return availableUsers.cast<Map<String, dynamic>>();
     } catch (e) {
-      print('Error fetching available invitees: $e');
       rethrow;
     }
   }
@@ -239,7 +228,6 @@ class SupabaseService {
       final user = await client.from('users').select('*').eq('id', contactId).single();
       return user;
     } catch (e) {
-      print('Error fetching contact detail: $e');
       rethrow;
     }
   }

@@ -151,7 +151,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
       // Ensure birthday calendar exists (calendar repo is guaranteed to be ready)
       await _ensureBirthdayCalendar();
     } catch (e) {
-      print('Error initializing repositories: $e');
       // Continue anyway, repositories may still be partially functional
     }
   }
