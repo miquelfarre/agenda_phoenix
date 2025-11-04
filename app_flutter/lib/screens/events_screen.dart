@@ -19,6 +19,7 @@ import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:flutter/material.dart';
 import '../utils/event_permissions.dart';
 import '../utils/event_operations.dart';
+import '../widgets/voice_command_button.dart';
 
 // Helper class to store event with interaction type
 class EventWithInteraction {
@@ -117,6 +118,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       body = Stack(
         children: [
           body,
+          // Botón de crear evento
           Positioned(
             bottom: 100,
             right: 20,
@@ -129,6 +131,17 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
               ),
             ),
           ),
+          // Botón de comandos de voz
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: VoiceCommandFab(
+              onCommandExecuted: (result) {
+                // Refrescar lista de eventos
+                ref.invalidate(eventsStreamProvider);
+              },
+            ),
+          ),
         ],
       );
     }
@@ -138,13 +151,28 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       title: isIOS ? null : l10n.events,
       body: body,
       floatingActionButton: !isIOS
-          ? Tooltip(
-              message: l10n.createEvent,
-              child: AdaptiveButton(
-                config: const AdaptiveButtonConfig(variant: ButtonVariant.fab, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
-                icon: CupertinoIcons.add,
-                onPressed: _showCreateEventOptions,
-              ),
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Botón de comandos de voz
+                VoiceCommandFab(
+                  onCommandExecuted: (result) {
+                    // Refrescar lista de eventos
+                    ref.invalidate(eventsStreamProvider);
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Botón de crear evento
+                Tooltip(
+                  message: l10n.createEvent,
+                  child: AdaptiveButton(
+                    config: const AdaptiveButtonConfig(variant: ButtonVariant.fab, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+                    icon: CupertinoIcons.add,
+                    onPressed: _showCreateEventOptions,
+                  ),
+                ),
+              ],
             )
           : null,
     );

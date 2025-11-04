@@ -1,0 +1,534 @@
+# EventyPop Operations Schema
+# Define todas las operaciones disponibles para comandos de voz
+
+operations:
+  # ==================== CALENDARIOS ====================
+  CREATE_CALENDAR:
+    description: Crear un nuevo calendario
+    endpoint:
+      method: POST
+      path: /api/v1/calendars
+    fields:
+      name:
+        type: string
+        required: true
+        max_length: 255
+        validation:
+          not_empty: true
+        questions:
+          es: "¿Qué nombre quieres para el calendario?"
+          en: "What name do you want for the calendar?"
+          ca: "Quin nom vols per al calendari?"
+
+      description:
+        type: string
+        required: false
+        max_length: 500
+        questions:
+          es: "¿Quieres añadir una descripción al calendario?"
+          en: "Do you want to add a description to the calendar?"
+          ca: "Vols afegir una descripció al calendari?"
+
+      is_public:
+        type: boolean
+        required: false
+        default: false
+        questions:
+          es: "¿Quieres que el calendario sea público o privado?"
+          en: "Do you want the calendar to be public or private?"
+          ca: "Vols que el calendari sigui públic o privat?"
+        value_mapping:
+          es:
+            público: true
+            privado: false
+            sí: true
+            no: false
+          en:
+            public: true
+            private: false
+            yes: true
+            no: false
+
+      is_discoverable:
+        type: boolean
+        required: false
+        default: true
+        depends_on:
+          field: is_public
+          value: true
+        questions:
+          es: "¿Quieres que otros usuarios puedan encontrarlo en búsquedas?"
+          en: "Do you want other users to be able to find it in searches?"
+
+      category:
+        type: string
+        required: false
+        options:
+          - holidays
+          - sports
+          - cultural
+          - work
+          - personal
+          - academic
+        depends_on:
+          field: is_public
+          value: true
+        questions:
+          es: "¿De qué tipo es el calendario? (festivos, deportes, cultural, trabajo, personal, académico)"
+          en: "What type of calendar is it? (holidays, sports, cultural, work, personal, academic)"
+
+      start_date:
+        type: datetime
+        required: false
+        questions:
+          es: "¿Cuándo empieza este calendario? (para calendarios temporales)"
+          en: "When does this calendar start? (for temporary calendars)"
+
+      end_date:
+        type: datetime
+        required: false
+        depends_on:
+          field: start_date
+          exists: true
+        questions:
+          es: "¿Cuándo termina este calendario?"
+          en: "When does this calendar end?"
+
+  UPDATE_CALENDAR:
+    description: Actualizar un calendario existente
+    endpoint:
+      method: PUT
+      path: /api/v1/calendars/{calendar_id}
+    fields:
+      calendar_id:
+        type: integer
+        required: true
+        auto_from_context: true  # Se puede obtener del contexto previo
+        questions:
+          es: "¿Qué calendario quieres actualizar?"
+          en: "Which calendar do you want to update?"
+
+      name:
+        type: string
+        required: false
+        max_length: 255
+
+      description:
+        type: string
+        required: false
+        max_length: 500
+
+      is_public:
+        type: boolean
+        required: false
+
+      is_discoverable:
+        type: boolean
+        required: false
+
+      category:
+        type: string
+        required: false
+
+  DELETE_CALENDAR:
+    description: Eliminar un calendario
+    endpoint:
+      method: DELETE
+      path: /api/v1/calendars/{calendar_id}
+    confirmation_required: true
+    fields:
+      calendar_id:
+        type: integer
+        required: true
+        auto_from_context: true
+
+      delete_events:
+        type: boolean
+        required: false
+        default: false
+        questions:
+          es: "¿Quieres eliminar también todos los eventos del calendario?"
+          en: "Do you also want to delete all events from the calendar?"
+
+  LIST_CALENDARS:
+    description: Listar calendarios del usuario
+    endpoint:
+      method: GET
+      path: /api/v1/calendars
+    fields: {}
+
+  SEARCH_PUBLIC_CALENDARS:
+    description: Buscar calendarios públicos
+    endpoint:
+      method: GET
+      path: /api/v1/calendars/public
+    fields:
+      search:
+        type: string
+        required: false
+        questions:
+          es: "¿Qué calendario estás buscando?"
+          en: "What calendar are you looking for?"
+
+      category:
+        type: string
+        required: false
+        options:
+          - holidays
+          - sports
+          - cultural
+          - work
+          - academic
+
+  # ==================== MEMBRESÍAS (COMPARTIR PRIVADO) ====================
+  INVITE_TO_CALENDAR:
+    description: Invitar usuario a calendario privado
+    endpoint:
+      method: POST
+      path: /api/v1/calendars/{calendar_id}/memberships
+    fields:
+      calendar_id:
+        type: integer
+        required: true
+        auto_from_context: true
+
+      user_email:
+        type: string
+        required: true
+        format: email
+        questions:
+          es: "¿Con quién quieres compartir el calendario? (email)"
+          en: "Who do you want to share the calendar with? (email)"
+
+      role:
+        type: string
+        required: false
+        default: member
+        options:
+          - owner
+          - admin
+          - member
+        questions:
+          es: "¿Quieres que sea miembro o administrador?"
+          en: "Do you want them to be a member or administrator?"
+        value_mapping:
+          es:
+            miembro: member
+            administrador: admin
+            admin: admin
+          en:
+            member: member
+            administrator: admin
+            admin: admin
+
+  UPDATE_MEMBERSHIP:
+    description: Actualizar rol de miembro
+    endpoint:
+      method: PUT
+      path: /api/v1/calendar_memberships/{membership_id}
+    fields:
+      membership_id:
+        type: integer
+        required: true
+
+      role:
+        type: string
+        required: true
+        options:
+          - admin
+          - member
+
+  # ==================== SUSCRIPCIONES (CALENDARIOS PÚBLICOS) ====================
+  SUBSCRIBE_TO_CALENDAR:
+    description: Suscribirse a calendario público
+    endpoint:
+      method: POST
+      path: /api/v1/calendar_subscriptions
+    fields:
+      calendar_id:
+        type: integer
+        required: true
+        questions:
+          es: "¿A qué calendario quieres suscribirte?"
+          en: "Which calendar do you want to subscribe to?"
+
+      status:
+        type: string
+        required: false
+        default: active
+        options:
+          - active
+          - paused
+
+  UNSUBSCRIBE_FROM_CALENDAR:
+    description: Desuscribirse de calendario público
+    endpoint:
+      method: DELETE
+      path: /api/v1/calendar_subscriptions/{subscription_id}
+    confirmation_required: true
+    fields:
+      subscription_id:
+        type: integer
+        required: true
+
+  PAUSE_SUBSCRIPTION:
+    description: Pausar notificaciones de suscripción
+    endpoint:
+      method: PUT
+      path: /api/v1/calendar_subscriptions/{subscription_id}
+    fields:
+      subscription_id:
+        type: integer
+        required: true
+
+      status:
+        type: string
+        required: true
+        fixed_value: paused
+
+  # ==================== EVENTOS ====================
+  CREATE_EVENT:
+    description: Crear un nuevo evento
+    endpoint:
+      method: POST
+      path: /api/v1/events
+    fields:
+      name:
+        type: string
+        required: true
+        max_length: 255
+        questions:
+          es: "¿Cuál es el nombre del evento?"
+          en: "What is the name of the event?"
+
+      start_date:
+        type: datetime
+        required: true
+        questions:
+          es: "¿Cuándo empieza el evento? (fecha y hora)"
+          en: "When does the event start? (date and time)"
+
+      calendar_id:
+        type: integer
+        required: false
+        auto_from_context: true
+        questions:
+          es: "¿En qué calendario quieres crear el evento?"
+          en: "In which calendar do you want to create the event?"
+
+      description:
+        type: string
+        required: false
+        questions:
+          es: "¿Quieres añadir una descripción?"
+          en: "Do you want to add a description?"
+
+      location:
+        type: string
+        required: false
+        questions:
+          es: "¿Dónde será el evento?"
+          en: "Where will the event be?"
+
+      event_type:
+        type: string
+        required: false
+        default: regular
+        options:
+          - regular
+          - recurring
+        questions:
+          es: "¿Es un evento único o recurrente?"
+          en: "Is it a one-time or recurring event?"
+        value_mapping:
+          es:
+            único: regular
+            recurrente: recurring
+            repetir: recurring
+          en:
+            single: regular
+            recurring: recurring
+            repeating: recurring
+
+  CREATE_RECURRING_EVENT:
+    description: Crear evento recurrente
+    endpoint:
+      method: POST
+      path: /api/v1/events
+    fields:
+      name:
+        type: string
+        required: true
+        max_length: 255
+
+      start_date:
+        type: datetime
+        required: true
+
+      event_type:
+        type: string
+        required: true
+        fixed_value: recurring
+
+      recurrence_type:
+        type: string
+        required: true
+        options:
+          - daily
+          - weekly
+          - monthly
+          - yearly
+        questions:
+          es: "¿Con qué frecuencia se repite? (diario, semanal, mensual, anual)"
+          en: "How often does it repeat? (daily, weekly, monthly, yearly)"
+        value_mapping:
+          es:
+            diario: daily
+            cada día: daily
+            semanal: weekly
+            cada semana: weekly
+            mensual: monthly
+            cada mes: monthly
+            anual: yearly
+            cada año: yearly
+
+      recurrence_schedule:
+        type: json
+        required: true
+        depends_on:
+          field: recurrence_type
+        dynamic_questions:
+          weekly:
+            es: "¿Qué días de la semana? (ejemplo: lunes, miércoles, viernes)"
+            en: "Which days of the week? (example: monday, wednesday, friday)"
+          monthly:
+            es: "¿Qué día del mes? (ejemplo: día 15, último día)"
+            en: "Which day of the month? (example: 15th, last day)"
+          yearly:
+            es: "¿Qué fecha? (ejemplo: 25 de diciembre)"
+            en: "What date? (example: December 25th)"
+
+      recurrence_end_date:
+        type: datetime
+        required: false
+        questions:
+          es: "¿Hasta cuándo se repite? (deja vacío para siempre)"
+          en: "Until when does it repeat? (leave empty for forever)"
+
+  UPDATE_EVENT:
+    description: Actualizar un evento
+    endpoint:
+      method: PUT
+      path: /api/v1/events/{event_id}
+    fields:
+      event_id:
+        type: integer
+        required: true
+        auto_from_context: true
+
+      name:
+        type: string
+        required: false
+
+      start_date:
+        type: datetime
+        required: false
+
+      description:
+        type: string
+        required: false
+
+      location:
+        type: string
+        required: false
+
+  DELETE_EVENT:
+    description: Eliminar un evento
+    endpoint:
+      method: DELETE
+      path: /api/v1/events/{event_id}
+    confirmation_required: true
+    fields:
+      event_id:
+        type: integer
+        required: true
+        auto_from_context: true
+
+  LIST_EVENTS:
+    description: Listar eventos
+    endpoint:
+      method: GET
+      path: /api/v1/events
+    fields:
+      calendar_id:
+        type: integer
+        required: false
+
+      start_date:
+        type: datetime
+        required: false
+
+      end_date:
+        type: datetime
+        required: false
+
+  # ==================== INVITACIONES A EVENTOS ====================
+  INVITE_USER_TO_EVENT:
+    description: Invitar usuario a evento
+    endpoint:
+      method: POST
+      path: /api/v1/event_interactions
+    fields:
+      event_id:
+        type: integer
+        required: true
+        auto_from_context: true
+
+      user_email:
+        type: string
+        required: true
+        format: email
+        questions:
+          es: "¿A quién quieres invitar al evento? (email)"
+          en: "Who do you want to invite to the event? (email)"
+
+      role:
+        type: string
+        required: false
+        options:
+          - admin
+        questions:
+          es: "¿Quieres que sea organizador del evento?"
+          en: "Do you want them to be an organizer of the event?"
+        value_mapping:
+          es:
+            sí: admin
+            organizador: admin
+          en:
+            yes: admin
+            organizer: admin
+
+      note:
+        type: string
+        required: false
+        questions:
+          es: "¿Quieres incluir un mensaje personal?"
+          en: "Do you want to include a personal message?"
+
+  INVITE_GROUP_TO_EVENT:
+    description: Invitar grupo completo a evento
+    endpoint:
+      method: POST
+      path: /api/v1/events/{event_id}/invite_group
+    fields:
+      event_id:
+        type: integer
+        required: true
+        auto_from_context: true
+
+      group_id:
+        type: integer
+        required: true
+        questions:
+          es: "¿Qué grupo quieres invitar?"
+          en: "Which group do you want to invite?"

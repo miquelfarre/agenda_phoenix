@@ -55,6 +55,10 @@ dependencies:
   uuid: ^4.5.1
   connectivity_plus: ^7.0.0
 
+  # Voice commands
+  record: ^6.1.2
+  speech_to_text: ^7.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

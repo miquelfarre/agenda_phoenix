@@ -1,6 +1,7 @@
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
+import 'package:eventypop/ui/helpers/platform/platform_navigation.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers/settings_provider.dart';
@@ -15,6 +16,7 @@ import 'package:eventypop/ui/styles/app_styles.dart';
 import '../services/permission_service.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../widgets/adaptive/adaptive_button.dart';
+import 'ai_settings_screen.dart';
 
 import 'package:permission_handler/permission_handler.dart' show openAppSettings;
 
@@ -60,6 +62,10 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             _buildPermissionsSection(context, l10n),
+
+            const SizedBox(height: 24),
+
+            _buildAISettingsSection(context, l10n),
 
             const SizedBox(height: 24),
 
@@ -116,6 +122,41 @@ class SettingsScreen extends ConsumerWidget {
                 },
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAISettingsSection(BuildContext context, dynamic l10n) {
+    return ConfigurableStyledContainer.card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              PlatformWidgets.platformIcon(CupertinoIcons.sparkles, color: AppStyles.primary600),
+              const SizedBox(width: 8),
+              const Text('Comandos de Voz IA', style: AppStyles.cardTitle),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Configura Google Gemini para usar comandos de voz y crear eventos hablando',
+            style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.grey700),
+          ),
+          const SizedBox(height: 12),
+          AdaptiveButton(
+            config: AdaptiveButtonConfig.secondary(),
+            text: 'Configurar IA',
+            icon: CupertinoIcons.settings,
+            onPressed: () {
+              Navigator.of(context).push(
+                PlatformNavigation.platformPageRoute(
+                  builder: (context) => const AISettingsScreen(),
+                ),
+              );
+            },
           ),
         ],
       ),

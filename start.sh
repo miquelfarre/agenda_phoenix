@@ -100,13 +100,14 @@ start_backend() {
         exit 1
     fi
 
-    # Build backend image if needed
-    info "Building backend Docker image..."
-    docker compose build backend
+    # Build backend and MCP images if needed
+    info "Building Docker images (backend + MCP)..."
+    docker compose build backend mcp
 
-    # Start all Supabase services in detached mode
-    info "Starting all Supabase services in Docker (detached mode)..."
+    # Start all services in detached mode
+    info "Starting all services in Docker (detached mode)..."
     success "⚙️  FastAPI Backend on port 8001"
+    success "⚙️  EventyPop MCP Server on port 8002"
     success "⚙️  Supabase Studio on port 3000"
     success "⚙️  Kong API Gateway on port 8000"
     INIT_SCRIPT="$DB_SCRIPT" docker compose up -d
@@ -138,12 +139,29 @@ start_backend() {
     done
 
     success "Backend ready at http://localhost:8001"
+
+    # Wait for MCP server to be ready
+    info "Waiting for MCP server to be ready..."
+    timeout=30
+    start=$(date +%s)
+
+    while ! docker exec agenda_phoenix_mcp python -c "import sys; sys.exit(0)" 2>/dev/null; do
+        sleep 1
+        if (( $(date +%s) - start > timeout )); then
+            warn "MCP server took longer than expected, but continuing..."
+            break
+        fi
+    done
+
+    success "MCP Server ready (schemas in eventypop_mcp/schemas/)"
     info "All services running in Docker containers:"
     info "  - Backend API: http://localhost:8001"
     info "  - API Docs: http://localhost:8001/docs"
+    info "  - MCP Server: port 8002 (stdio mode for Flutter)"
     info "  - Supabase Studio: http://localhost:3000"
     info "  - Kong Gateway: http://localhost:8000"
     info ""
+    info "💡 MCP schemas are hot-reloadable (edit eventypop_mcp/schemas/*.yaml)"
     info "Use './start.sh stop' to stop all containers"
 }
 
@@ -254,7 +272,7 @@ check_and_generate_hive() {
     fi
 }
 
-# Check if .env file exists
+# Check if .env file exists and load it
 check_env_file() {
     if [[ ! -f "$ROOT_DIR/.env" ]]; then
         warn "⚠️  .env file not found in agenda_phoenix/"
@@ -262,6 +280,10 @@ check_env_file() {
         info "Example: SUPABASE_URL=http://localhost:8000"
     else
         info "✓ .env file found"
+        # Load environment variables from .env
+        set -a
+        source "$ROOT_DIR/.env"
+        set +a
     fi
 }
 
@@ -327,6 +349,10 @@ start_flutter() {
     if [[ -n "${SUPABASE_URL:-}" ]]; then
         info "Using custom SUPABASE_URL: $SUPABASE_URL"
         DART_DEFINES+=("--dart-define=SUPABASE_URL=$SUPABASE_URL")
+    fi
+    if [[ -n "${GEMINI_API_KEY:-}" ]]; then
+        info "Using GEMINI_API_KEY from environment"
+        DART_DEFINES+=("--dart-define=GEMINI_API_KEY=$GEMINI_API_KEY")
     fi
 
     if [[ -n "$flutter_device_id" ]]; then

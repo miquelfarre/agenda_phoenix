@@ -22,7 +22,12 @@ class MyApp extends StatelessWidget {
           return AdaptiveApp.router(
             appKey: ValueKey(locale.toString()),
             title: 'EventyPop',
-            localizationsDelegates: const [AppLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             supportedLocales: AppLocalizations.supportedLocales,
             locale: locale,
             routerConfig: AppRouter.router,

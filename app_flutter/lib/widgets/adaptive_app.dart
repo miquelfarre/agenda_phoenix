@@ -21,7 +21,8 @@ class AdaptiveApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final delegates = <LocalizationsDelegate<dynamic>>[AppLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate];
+    // Usar los delegates que se pasan como parámetro en lugar de hardcodearlos
+    final delegates = localizationsDelegates;
 
     if (routerConfig != null) {
       if (PlatformDetection.isIOS) {

@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Permisos para comandos de voz -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Esta app necesita acceso al micrófono para permitirte crear eventos usando comandos de voz</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Esta app necesita acceso al reconocimiento de voz para interpretar tus comandos</string>
 </dict>
 </plist>
