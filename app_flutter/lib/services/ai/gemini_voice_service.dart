@@ -7,10 +7,11 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../config/debug_config.dart';
 import '../api_client.dart';
 import '../config_service.dart';
+import 'base_voice_service.dart';
 
 /// Servicio que procesa comandos de voz usando Google Gemini para interpretar la intención
 /// y ejecutar las acciones correspondientes en la API.
-class GeminiVoiceService {
+class GeminiVoiceService implements BaseVoiceService {
   final AudioRecorder _recorder = AudioRecorder();
   final SpeechToText _speechToText = SpeechToText();
   final String _geminiApiKey;
@@ -31,23 +32,19 @@ ACCIONES DISPONIBLES EN LA API:
 
 1. CREATE_EVENT - Crear un evento nuevo
    Parámetros requeridos:
-   - title: string (máx 100 chars)
-   - start_datetime: ISO 8601 (ej: "2024-03-15T14:30:00")
+   - name: string (nombre del evento)
+   - start_date: ISO 8601 (ej: "2024-03-15T14:30:00")
    Parámetros opcionales:
-   - end_datetime: ISO 8601
-   - description: string (máx 500 chars)
-   - location: string
-   - calendar_id: integer (default: calendario principal del usuario)
-   - all_day: boolean
+   - description: string
+   - calendar_id: integer (si no se especifica, se crea en el calendario principal)
+   - event_type: string ("regular" o "recurring", default: "regular")
 
 2. UPDATE_EVENT - Modificar un evento existente
    Parámetros:
    - event_id: integer (requerido)
-   - title: string (opcional)
-   - start_datetime: ISO 8601 (opcional)
-   - end_datetime: ISO 8601 (opcional)
+   - name: string (opcional)
+   - start_date: ISO 8601 (opcional)
    - description: string (opcional)
-   - location: string (opcional)
 
 3. DELETE_EVENT - Eliminar un evento
    Parámetros:
@@ -63,13 +60,13 @@ ACCIONES DISPONIBLES EN LA API:
 5. CREATE_CALENDAR - Crear un calendario nuevo
    Parámetros:
    - name: string (requerido)
-   - description: string (opcional)
-   - color: string hex (opcional, ej: "#FF5733")
+   - description: string (opcional) - Descripción detallada del calendario
+   - is_discoverable: boolean (opcional) - Si es público, ¿puede aparecer en búsquedas?
 
 6. INVITE_TO_CALENDAR - Suscribir usuarios a un calendario (verán TODOS los eventos del calendario)
    Parámetros:
    - calendar_id: integer (requerido)
-   - user_emails: array de strings (emails de los usuarios) o user_id: integer
+   - contact_names: array de strings (nombres de contactos, ej: ["Miquel", "Ada", "Sara"])
    - role: string (opcional: "owner", "editor", "member", default: "member")
    - message: string (opcional)
 
@@ -99,7 +96,11 @@ Estructura del JSON para UNA acción:
   },
   "confidence": 0.0-1.0,
   "user_confirmation_needed": boolean,
-  "clarification_message": "mensaje opcional si necesitas más info del usuario"
+  "clarification_message": "mensaje opcional si necesitas más info del usuario",
+  "suggestions": [
+    "¿Quieres añadir una descripción al evento?",
+    "¿Prefieres que el calendario sea público?"
+  ]
 }
 
 Estructura del JSON para MÚLTIPLES acciones:
@@ -121,7 +122,11 @@ Estructura del JSON para MÚLTIPLES acciones:
   ],
   "confidence": 0.0-1.0,
   "user_confirmation_needed": boolean,
-  "clarification_message": "mensaje opcional"
+  "suggestions": [
+    "¿Quieres añadir una descripción a alguno de los eventos?",
+    "¿El calendario debe ser público o privado?",
+    "¿Quieres configurar recordatorios para estos eventos?"
+  ]
 }
 
 REGLAS:
@@ -132,6 +137,8 @@ REGLAS:
 - La fecha de hoy es: ${DateTime.now().toIso8601String().split('T')[0]}
 - Si no entiendes el comando, usa action: "UNKNOWN"
 - Mantén confidence alto (>0.8) solo si estás seguro
+- IMPORTANTE: Si hay múltiples contactos para invitar (ej: "Miquel, Ada y Sara"), crea UNA ACCIÓN POR CADA CONTACTO con contact_names: ["nombre"]
+- IMPORTANTE: Incluye un campo "suggestions" con preguntas útiles para que el usuario mejore/ajuste las acciones antes de ejecutarlas
 
 IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
 - "Invita a X al calendario" / "Suscribe a X al calendario" / "Comparte el calendario con X" → INVITE_TO_CALENDAR
@@ -339,6 +346,7 @@ Respuesta:
 
   /// Transcribe audio a texto usando speech_to_text (on-device)
   /// Por defecto usa control manual con límite de 30 segundos
+  @override
   Future<String> transcribeAudioOnDevice({
     Function(int secondsElapsed)? onProgress,
     Future<void> Function()? waitForStopSignal,
@@ -433,7 +441,8 @@ Respuesta:
 
   /// Envía el texto a Gemini para que lo interprete
   /// Si [customPrompt] se proporciona, se usa en lugar del system prompt por defecto
-  Future<Map<String, dynamic>> interpretWithGemini(String transcribedText, {String? customPrompt}) async {
+  @override
+  Future<Map<String, dynamic>> interpretWithAI(String transcribedText, {String? customPrompt}) async {
     print('🤖 ===== LLAMANDO A GEMINI API =====');
     try {
       print('🤖 Texto a interpretar: "$transcribedText"');
@@ -548,6 +557,7 @@ Respuesta:
   }
 
   /// Ejecuta la acción interpretada por Gemini usando ApiClient
+  @override
   Future<dynamic> executeAction(Map<String, dynamic> interpretation) async {
     print('🔧 ===== EJECUTANDO ACCIÓN EN API =====');
     try {
@@ -604,10 +614,10 @@ Respuesta:
           final interactionData = {
             'event_id': eventId,
             'user_id': userId,
-            'interaction_type': 'invitation',
+            'interaction_type': 'invited',
             'status': 'pending',
           };
-          // Añadir nota si existe
+          // Añadir nota/mensaje si existe
           if (message != null && message.isNotEmpty) {
             interactionData['note'] = message;
           }
@@ -677,6 +687,7 @@ Respuesta:
   }
 
   /// Método principal que orquesta todo el flujo
+  @override
   Future<VoiceCommandResult> processVoiceCommand() async {
     DebugConfig.info('🚀 ===== INICIANDO processVoiceCommand() =====', tag: 'VoiceService');
     try {
@@ -695,7 +706,7 @@ Respuesta:
 
       // 2. Interpretar con Gemini
       DebugConfig.info('🤖 PASO 2: Enviando a Gemini para interpretación...', tag: 'VoiceService');
-      final interpretation = await interpretWithGemini(transcribedText);
+      final interpretation = await interpretWithAI(transcribedText);
       DebugConfig.info('✅ Interpretación recibida: ${interpretation['action']}', tag: 'VoiceService');
       DebugConfig.info('📊 Confidence: ${interpretation['confidence']}', tag: 'VoiceService');
       DebugConfig.info('📋 Parameters: ${interpretation['parameters']}', tag: 'VoiceService');
@@ -729,26 +740,4 @@ Respuesta:
 }
 
 /// Resultado del procesamiento del comando de voz
-class VoiceCommandResult {
-  final bool success;
-  final String? message;
-  final dynamic data;
-  final Map<String, dynamic>? interpretation;
-  final String? transcribedText;
-  final bool needsConfirmation;
-
-  VoiceCommandResult({
-    required this.success,
-    this.message,
-    this.data,
-    this.interpretation,
-    this.transcribedText,
-    this.needsConfirmation = false,
-  });
-
-  @override
-  String toString() {
-    return 'VoiceCommandResult(success: $success, message: $message, '
-           'transcribed: $transcribedText, interpretation: $interpretation)';
-  }
-}
+// VoiceCommandResult ahora está definido en base_voice_service.dart

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../services/ai/gemini_voice_service.dart';
+import '../services/ai/base_voice_service.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import '../widgets/voice_recording_dialog.dart';
@@ -11,7 +11,7 @@ import '../config/app_constants.dart';
 class VoiceCommandConfirmationScreen extends StatefulWidget {
   final String transcribedText;
   final Map<String, dynamic> interpretation;
-  final GeminiVoiceService voiceService;
+  final BaseVoiceService voiceService;
 
   const VoiceCommandConfirmationScreen({
     super.key,
@@ -245,6 +245,12 @@ class _VoiceCommandConfirmationScreenState
               );
             }),
 
+            // Sugerencias de la IA
+            if (_getSuggestions().isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _buildSuggestionsSection(),
+            ],
+
             if (_errorMessage != null) ...[
               const SizedBox(height: 16),
               _buildErrorMessage(),
@@ -296,7 +302,7 @@ class _VoiceCommandConfirmationScreenState
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         side: BorderSide(
-          color: _getActionColor(actionType).withOpacity(0.3),
+          color: _getActionColor(actionType).withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -466,13 +472,17 @@ class _VoiceCommandConfirmationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (params['user_id'] != null)
-          _buildDetailRow(Icons.person, 'Usuario ID', _formatPlaceholder(params['user_id'].toString(), 'El usuario recién añadido')),
+        if (params['user_name'] != null)
+          _buildDetailRow(Icons.person, 'Usuario', params['user_name']),
         if (params['email'] != null)
           _buildDetailRow(Icons.email, 'Email', params['email']),
+        if (params['contact_names'] != null)
+          _buildDetailRow(Icons.group, 'Contactos', (params['contact_names'] as List).join(', ')),
         if (params['user_emails'] != null)
           _buildDetailRow(Icons.group, 'Usuarios', (params['user_emails'] as List).join(', ')),
-        if (params['calendar_id'] != null)
+        if (params['calendar_id'] != null && params['calendar_name'] != null)
+          _buildDetailRow(Icons.calendar_month, 'Al calendario', params['calendar_name']),
+        if (params['calendar_id'] != null && params['calendar_name'] == null)
           _buildDetailRow(
             Icons.calendar_month,
             'Al calendario',
@@ -494,8 +504,6 @@ class _VoiceCommandConfirmationScreenState
               'event',
             ),
           ),
-        if (params['role'] != null)
-          _buildDetailRow(Icons.badge, 'Rol', params['role']),
         if (params['message'] != null && params['message'].toString().isNotEmpty)
           _buildDetailRow(Icons.note, 'Nota personal', params['message']),
       ],
@@ -506,25 +514,8 @@ class _VoiceCommandConfirmationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (params['event_id'] != null)
-          _buildDetailRow(
-            Icons.event,
-            'Para el evento',
-            _formatPlaceholderWithContext(
-              params['event_id'].toString(),
-              'El evento recién creado',
-              actionNumber,
-              'event',
-            ),
-          ),
         if (params['note'] != null)
-          _buildDetailRow(Icons.sticky_note_2, 'Mi nota', params['note']),
-        // Indicador de que se creará o actualizará
-        _buildDetailRow(
-          Icons.info_outline,
-          'Información',
-          'Si ya tienes una nota en este evento, se reemplazará con esta nueva',
-        ),
+          _buildDetailRow(Icons.sticky_note_2, 'Nota', params['note']),
       ],
     );
   }
@@ -533,7 +524,6 @@ class _VoiceCommandConfirmationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDetailRow(Icons.edit, 'Actualizando calendario', 'ID: ${params['calendar_id']}'),
         if (params['name'] != null)
           _buildDetailRow(Icons.label, 'Nuevo nombre', params['name']),
         if (params['description'] != null)
@@ -552,7 +542,6 @@ class _VoiceCommandConfirmationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDetailRow(Icons.edit, 'Actualizando evento', 'ID: ${params['event_id']}'),
         if (params['title'] != null)
           _buildDetailRow(Icons.title, 'Nuevo título', params['title']),
         if (params['start_datetime'] != null)
@@ -572,10 +561,10 @@ class _VoiceCommandConfirmationScreenState
           'Atención',
           'Esta acción no se puede deshacer',
         ),
-        if (params['event_id'] != null)
-          _buildDetailRow(Icons.event, 'Evento a eliminar', 'ID: ${params['event_id']}'),
-        if (params['calendar_id'] != null)
-          _buildDetailRow(Icons.calendar_month, 'Calendario a eliminar', 'ID: ${params['calendar_id']}'),
+        if (params['event_name'] != null)
+          _buildDetailRow(Icons.event, 'Evento', params['event_name']),
+        if (params['calendar_name'] != null)
+          _buildDetailRow(Icons.calendar_month, 'Calendario', params['calendar_name']),
       ],
     );
   }
@@ -585,9 +574,22 @@ class _VoiceCommandConfirmationScreenState
       return const Text('Sin parámetros adicionales');
     }
 
+    // Filtrar parámetros que contienen placeholders o son IDs técnicos
+    final visibleParams = params.entries.where((entry) {
+      final value = entry.value?.toString() ?? '';
+      // Ocultar placeholders y campos con _id
+      return !value.contains('{{') &&
+             !value.contains('}}') &&
+             !entry.key.endsWith('_id');
+    }).toList();
+
+    if (visibleParams.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: params.entries.map((entry) {
+      children: visibleParams.map((entry) {
         return _buildDetailRow(
           Icons.info,
           entry.key,
@@ -649,9 +651,9 @@ class _VoiceCommandConfirmationScreenState
     if (value.contains('{{') && value.contains('}}')) {
       return friendlyText;
     }
-    // Si es un ID numérico, mostrarlo con formato
+    // Si es un ID numérico, mostrar texto amigable en lugar del ID
     if (int.tryParse(value) != null) {
-      return 'ID: $value';
+      return friendlyText;
     }
     return value;
   }
@@ -666,7 +668,7 @@ class _VoiceCommandConfirmationScreenState
     // Si no es un placeholder, devolver el valor tal cual
     if (!value.contains('{{') || !value.contains('}}')) {
       if (int.tryParse(value) != null) {
-        return 'ID: $value';
+        return fallbackText;
       }
       return value;
     }
@@ -788,7 +790,7 @@ class _VoiceCommandConfirmationScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         border: Border.all(color: color, width: 2),
       ),
@@ -810,7 +812,7 @@ class _VoiceCommandConfirmationScreenState
                 const SizedBox(height: 4),
                 LinearProgressIndicator(
                   value: confidence,
-                  backgroundColor: color.withOpacity(0.2),
+                  backgroundColor: color.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(color),
                 ),
               ],
@@ -872,7 +874,7 @@ class _VoiceCommandConfirmationScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
+        color: Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         border: Border.all(color: Colors.red, width: 2),
       ),
@@ -1011,7 +1013,7 @@ IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo forma
       print('🤖 Enviando corrección a Gemini...');
 
       // Interpretar la corrección
-      final updatedInterpretation = await widget.voiceService.interpretWithGemini(
+      final updatedInterpretation = await widget.voiceService.interpretWithAI(
         correctionText,
         customPrompt: correctionPrompt,
       );
@@ -1064,6 +1066,67 @@ IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo forma
         content: Text(message),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  List<String> _getSuggestions() {
+    final suggestions = widget.interpretation['suggestions'];
+    if (suggestions != null && suggestions is List) {
+      return suggestions.cast<String>();
+    }
+    return [];
+  }
+
+  Widget _buildSuggestionsSection() {
+    final suggestions = _getSuggestions();
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.purple[50],
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        border: Border.all(color: Colors.purple[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.lightbulb_outline, color: Colors.purple[700], size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Sugerencias',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple[700],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...suggestions.map((suggestion) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.circle, size: 6, color: Colors.purple[400]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        suggestion,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.purple[900],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+        ],
       ),
     );
   }

@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/ai/gemini_voice_service.dart';
+import '../services/ai/base_voice_service.dart';
 import '../services/ai/voice_workflow_context.dart';
-import '../services/ai/voice_conversation_context.dart';
-import '../config/debug_config.dart';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 
 /// Pantalla de flujo de trabajo inteligente por voz
 /// Permite completar múltiples acciones relacionadas en secuencia
 class VoiceWorkflowScreen extends ConsumerStatefulWidget {
   final VoiceWorkflowContext workflowContext;
-  final GeminiVoiceService voiceService;
+  final BaseVoiceService voiceService;
 
   const VoiceWorkflowScreen({
     super.key,
@@ -136,7 +134,7 @@ IMPORTANTE: Devuelve SOLO el JSON del campo "$nextField", sin texto adicional.
 ''';
 
     try {
-      final newParams = await widget.voiceService.interpretWithGemini(
+      final newParams = await widget.voiceService.interpretWithAI(
         userResponse,
         customPrompt: contextualPrompt,
       );
@@ -207,7 +205,7 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
 ''';
 
     try {
-      final interpretation = await widget.voiceService.interpretWithGemini(
+      final interpretation = await widget.voiceService.interpretWithAI(
         userResponse,
         customPrompt: prompt,
       );
@@ -409,7 +407,7 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
                       color: _isListening ? Colors.red : Colors.blue,
                       boxShadow: [
                         BoxShadow(
-                          color: (_isListening ? Colors.red : Colors.blue).withOpacity(0.3),
+                          color: (_isListening ? Colors.red : Colors.blue).withValues(alpha: 0.3),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),

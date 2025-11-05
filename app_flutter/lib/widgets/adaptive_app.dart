@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
-import '../l10n/app_localizations.dart';
 
 class AdaptiveApp extends StatelessWidget {
   final Key? appKey;

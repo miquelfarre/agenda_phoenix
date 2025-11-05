@@ -1,10 +1,17 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/debug_config.dart';
 
-/// Servicio para gestionar la configuración de AI APIs (Gemini, Claude, etc.)
+/// Provider de AI disponibles
+enum AIProvider {
+  gemini,
+  ollama,
+}
+
+/// Servicio para gestionar la configuración de AI APIs (Gemini, Ollama, etc.)
 class AIConfigService {
   static const String _geminiApiKeyKey = 'gemini_api_key';
   static const String _voiceCommandsEnabledKey = 'voice_commands_enabled';
+  static const String _aiProviderKey = 'ai_provider';
 
   static AIConfigService? _instance;
   late SharedPreferences _prefs;
@@ -118,5 +125,60 @@ class AIConfigService {
     return trimmed.isNotEmpty &&
            trimmed.length >= 30 &&
            RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(trimmed);
+  }
+
+  /// Obtener el provider de AI configurado
+  /// Prioridad: 1) SharedPreferences (configurado por usuario)
+  ///            2) dart-defines (configurado en start.sh para desarrollo)
+  ///            3) Default: gemini
+  AIProvider get aiProvider {
+    // Primero verificar si el usuario configuró uno manualmente
+    final userProvider = _prefs.getString(_aiProviderKey);
+    if (userProvider != null && userProvider.isNotEmpty) {
+      if (userProvider.toLowerCase() == 'ollama') {
+        DebugConfig.info('🔧 AI Provider desde SharedPreferences: Ollama', tag: 'AIConfig');
+        return AIProvider.ollama;
+      } else if (userProvider.toLowerCase() == 'gemini') {
+        DebugConfig.info('🔧 AI Provider desde SharedPreferences: Gemini', tag: 'AIConfig');
+        return AIProvider.gemini;
+      }
+    }
+
+    // Fallback: usar el del entorno si está disponible
+    const envProvider = String.fromEnvironment('AI_PROVIDER', defaultValue: 'gemini');
+    if (envProvider.toLowerCase() == 'ollama') {
+      DebugConfig.info('🔧 AI Provider desde .env: Ollama', tag: 'AIConfig');
+      return AIProvider.ollama;
+    }
+
+    // Default: Gemini
+    DebugConfig.info('🔧 AI Provider: Gemini (default)', tag: 'AIConfig');
+    return AIProvider.gemini;
+  }
+
+  /// Cambiar el provider de AI
+  Future<bool> setAIProvider(AIProvider provider) async {
+    try {
+      final providerName = provider == AIProvider.ollama ? 'ollama' : 'gemini';
+      final success = await _prefs.setString(_aiProviderKey, providerName);
+      if (success) {
+        DebugConfig.info('AI provider cambiado a: $providerName', tag: 'AIConfig');
+      }
+      return success;
+    } catch (e) {
+      DebugConfig.error('Error al cambiar AI provider: $e', tag: 'AIConfig');
+      return false;
+    }
+  }
+
+  /// Obtener configuración de Ollama desde .env
+  String get ollamaBaseUrl {
+    const url = String.fromEnvironment('OLLAMA_BASE_URL', defaultValue: 'http://localhost:11434');
+    return url;
+  }
+
+  String get ollamaModel {
+    const model = String.fromEnvironment('OLLAMA_MODEL', defaultValue: 'gpt-oss');
+    return model;
   }
 }

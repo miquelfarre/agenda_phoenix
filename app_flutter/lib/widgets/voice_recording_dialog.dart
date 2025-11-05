@@ -58,7 +58,7 @@ class _VoiceRecordingDialogState extends State<VoiceRecordingDialog>
                       color: Colors.red,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.red.withOpacity(0.4),
+                          color: Colors.red.withValues(alpha: 0.4),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),

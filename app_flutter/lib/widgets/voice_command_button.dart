@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/ai/gemini_voice_service.dart';
+import '../services/ai/ollama_voice_service.dart';
+import '../services/ai/base_voice_service.dart';
 import '../services/ai/ai_config_service.dart';
 import '../services/ai/voice_conversation_context.dart';
 import '../screens/voice_command_confirmation_screen.dart';
@@ -8,8 +10,8 @@ import '../screens/voice_conversation_screen.dart';
 import '../config/debug_config.dart';
 import 'voice_recording_dialog.dart';
 
-/// Provider para el servicio de voz de Gemini
-final geminiVoiceServiceProvider = FutureProvider<GeminiVoiceService?>((ref) async {
+/// Provider para el servicio de voz (Gemini u Ollama según configuración)
+final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
   print('🔄 ===== INICIALIZANDO PROVIDER DE VOZ =====');
   DebugConfig.info('🔄 ===== INICIALIZANDO PROVIDER DE VOZ =====', tag: 'VoiceButton');
   try {
@@ -17,26 +19,44 @@ final geminiVoiceServiceProvider = FutureProvider<GeminiVoiceService?>((ref) asy
     DebugConfig.info('📋 Obteniendo AIConfigService...', tag: 'VoiceButton');
     final config = await AIConfigService.getInstance();
 
-    print('🔍 Verificando API key y configuración...');
-    print('   - hasApiKey: ${config.hasApiKey}');
+    print('🔍 Verificando configuración...');
+    print('   - AI Provider: ${config.aiProvider}');
     print('   - voiceCommandsEnabled: ${config.voiceCommandsEnabled}');
-    DebugConfig.info('🔍 Verificando API key y configuración...', tag: 'VoiceButton');
-    DebugConfig.info('   - hasApiKey: ${config.hasApiKey}', tag: 'VoiceButton');
+    DebugConfig.info('🔍 Verificando configuración...', tag: 'VoiceButton');
+    DebugConfig.info('   - AI Provider: ${config.aiProvider}', tag: 'VoiceButton');
     DebugConfig.info('   - voiceCommandsEnabled: ${config.voiceCommandsEnabled}', tag: 'VoiceButton');
 
-    if (!config.hasApiKey || !config.voiceCommandsEnabled) {
-      print('⚠️ Gemini API no configurada o deshabilitada');
-      DebugConfig.info('⚠️ Gemini API no configurada o deshabilitada', tag: 'VoiceButton');
+    if (!config.voiceCommandsEnabled) {
+      print('⚠️ Comandos de voz deshabilitados');
+      DebugConfig.info('⚠️ Comandos de voz deshabilitados', tag: 'VoiceButton');
       return null;
     }
 
-    final apiKey = config.geminiApiKey!;
-    print('✅ API key disponible (${apiKey.length} chars), creando GeminiVoiceService...');
-    DebugConfig.info('✅ API key disponible, creando GeminiVoiceService...', tag: 'VoiceButton');
-    return GeminiVoiceService(geminiApiKey: apiKey);
+    // Crear el servicio según el provider configurado
+    if (config.aiProvider == AIProvider.ollama) {
+      print('✅ Usando Ollama (${config.ollamaModel}) en ${config.ollamaBaseUrl}');
+      DebugConfig.info('✅ Usando Ollama (${config.ollamaModel})', tag: 'VoiceButton');
+
+      return OllamaVoiceService(
+        ollamaBaseUrl: config.ollamaBaseUrl,
+        ollamaModel: config.ollamaModel,
+      );
+    } else {
+      // Gemini
+      if (!config.hasApiKey) {
+        print('⚠️ Gemini API no configurada');
+        DebugConfig.info('⚠️ Gemini API no configurada', tag: 'VoiceButton');
+        return null;
+      }
+
+      final apiKey = config.geminiApiKey!;
+      print('✅ Usando Gemini con API key (${apiKey.length} chars)');
+      DebugConfig.info('✅ Usando Gemini', tag: 'VoiceButton');
+      return GeminiVoiceService(geminiApiKey: apiKey);
+    }
   } catch (e) {
-    print('❌ Error al inicializar GeminiVoiceService: $e');
-    DebugConfig.error('❌ Error al inicializar GeminiVoiceService: $e', tag: 'VoiceButton');
+    print('❌ Error al inicializar servicio de voz: $e');
+    DebugConfig.error('❌ Error al inicializar servicio de voz: $e', tag: 'VoiceButton');
     return null;
   }
 });
@@ -98,7 +118,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
       );
     }
 
-    final voiceServiceAsync = ref.read(geminiVoiceServiceProvider);
+    final voiceServiceAsync = ref.read(voiceServiceProvider);
 
     final voiceService = voiceServiceAsync.when(
       data: (service) {
@@ -121,7 +141,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
     if (voiceService == null) {
       print('❌ Servicio de voz es NULL');
       DebugConfig.error('❌ Servicio de voz no disponible', tag: 'VoiceButton');
-      _showError('Gemini API key no configurada. '
+      _showError('Servicio de IA no configurado. '
                 'Ve a Configuración para añadir tu API key.');
       return;
     }
@@ -217,7 +237,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
 
   /// Inicia la pantalla conversacional para recolectar datos faltantes
   Future<void> _startConversationalDialog(
-    GeminiVoiceService voiceService,
+    BaseVoiceService voiceService,
     String originalCommand,
     String action,
     Map<String, dynamic> collectedParameters,
@@ -277,7 +297,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
   }
 
   Future<void> _showConfirmationScreen(
-    GeminiVoiceService voiceService,
+    BaseVoiceService voiceService,
     String transcribedText,
     Map<String, dynamic> interpretation,
   ) async {
@@ -323,12 +343,12 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
 
   @override
   Widget build(BuildContext context) {
-    final voiceServiceAsync = ref.watch(geminiVoiceServiceProvider);
+    final voiceServiceAsync = ref.watch(voiceServiceProvider);
 
     final isDisabled = voiceServiceAsync.when(
       data: (service) => service == null,
       loading: () => true,
-      error: (_, __) => true,
+      error: (error, stackTrace) => true,
     );
 
     return FloatingActionButton.extended(
@@ -428,16 +448,16 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
   Future<void> _handleVoiceCommand() async {
     print('🎤 ===== VoiceCommandFab PRESIONADO ===== ${DateTime.now()}');
 
-    final voiceServiceAsync = ref.read(geminiVoiceServiceProvider);
+    final voiceServiceAsync = ref.read(voiceServiceProvider);
 
     final voiceService = voiceServiceAsync.when(
       data: (service) => service,
       loading: () => null,
-      error: (_, __) => null,
+      error: (error, stackTrace) => null,
     );
 
     if (voiceService == null) {
-      _showError('Gemini API key no configurada. Ve a Configuración → Configurar IA para añadir tu API key.');
+      _showError('Servicio de IA no configurado. Ve a Configuración → Configurar IA.');
       return;
     }
 
@@ -493,8 +513,8 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
         return;
       }
 
-      // Interpretar con Gemini
-      final interpretation = await voiceService.interpretWithGemini(transcribedText);
+      // Interpretar con IA (Gemini u Ollama)
+      final interpretation = await voiceService.interpretWithAI(transcribedText);
 
       // Crear result object
       final result = VoiceCommandResult(
@@ -534,6 +554,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
         // Ir directamente a confirmación (no hay campos faltantes en workflows complejos)
         print('✅ FAB - Mostrando confirmación de múltiples acciones');
 
+        if (!mounted) return;
         final executionResult = await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => VoiceCommandConfirmationScreen(
@@ -572,6 +593,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
           // Todos los campos completos → Ir a confirmación final
           print('✅ FAB - Todos los campos completos, mostrando confirmación final');
 
+          if (!mounted) return;
           final executionResult = await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => VoiceCommandConfirmationScreen(
@@ -597,7 +619,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
 
   /// Inicia la pantalla conversacional para recolectar datos faltantes
   Future<void> _startConversationalScreen(
-    GeminiVoiceService voiceService,
+    BaseVoiceService voiceService,
     String originalCommand,
     String action,
     Map<String, dynamic> collectedParameters,
@@ -676,12 +698,12 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
 
   @override
   Widget build(BuildContext context) {
-    final voiceServiceAsync = ref.watch(geminiVoiceServiceProvider);
+    final voiceServiceAsync = ref.watch(voiceServiceProvider);
 
     final isDisabled = voiceServiceAsync.when(
       data: (service) => service == null,
       loading: () => true,
-      error: (_, __) => true,
+      error: (error, stackTrace) => true,
     );
 
     return FloatingActionButton(

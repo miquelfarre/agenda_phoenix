@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import '../../config/debug_config.dart';
 
 /// Cliente MCP para comunicarse con el servidor eventypop_mcp

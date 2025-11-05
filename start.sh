@@ -354,6 +354,18 @@ start_flutter() {
         info "Using GEMINI_API_KEY from environment"
         DART_DEFINES+=("--dart-define=GEMINI_API_KEY=$GEMINI_API_KEY")
     fi
+    if [[ -n "${AI_PROVIDER:-}" ]]; then
+        info "Using AI_PROVIDER: $AI_PROVIDER"
+        DART_DEFINES+=("--dart-define=AI_PROVIDER=$AI_PROVIDER")
+    fi
+    if [[ -n "${OLLAMA_BASE_URL:-}" ]]; then
+        info "Using OLLAMA_BASE_URL: $OLLAMA_BASE_URL"
+        DART_DEFINES+=("--dart-define=OLLAMA_BASE_URL=$OLLAMA_BASE_URL")
+    fi
+    if [[ -n "${OLLAMA_MODEL:-}" ]]; then
+        info "Using OLLAMA_MODEL: $OLLAMA_MODEL"
+        DART_DEFINES+=("--dart-define=OLLAMA_MODEL=$OLLAMA_MODEL")
+    fi
 
     if [[ -n "$flutter_device_id" ]]; then
         info "Running Flutter on device: $flutter_device_id"
