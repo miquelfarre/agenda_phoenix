@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from auth import get_current_user_id
 from crud import group_membership
 from dependencies import check_user_not_public, get_db
-from models import Group
+from models import Group, GroupMembership
 from schemas import GroupMembershipCreate, GroupMembershipResponse, GroupMembershipUpdate
 
 router = APIRouter(prefix="/api/v1/group_memberships", tags=["group_memberships"])
@@ -83,7 +83,7 @@ async def update_group_membership(
     Update a group membership (currently only role can be updated).
 
     Requires JWT authentication - provide token in Authorization header.
-    Only the group creator can update memberships.
+    Only the group creator or admins can update memberships.
 
     Valid roles: 'admin', 'member'
     """
@@ -91,16 +91,26 @@ async def update_group_membership(
     if not db_membership:
         raise HTTPException(status_code=404, detail="Group membership not found")
 
-    # Get group to check creator
+    # Get group to check creator/admin
     group = db.query(Group).filter(Group.id == db_membership.group_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
-    # Only group creator can update memberships
-    if group.created_by != current_user_id:
+    # Check if user is creator
+    is_creator = group.created_by == current_user_id
+
+    # Check if user is admin
+    is_admin = db.query(GroupMembership).filter(
+        GroupMembership.group_id == db_membership.group_id,
+        GroupMembership.user_id == current_user_id,
+        GroupMembership.role == "admin"
+    ).first() is not None
+
+    # Only group creator or admins can update memberships
+    if not (is_creator or is_admin):
         raise HTTPException(
             status_code=403,
-            detail="Only the group creator can update memberships"
+            detail="Only the group creator or admins can update memberships"
         )
 
     # Validate role if provided
@@ -124,7 +134,7 @@ async def delete_group_membership(
     Remove a user from a group.
 
     Requires JWT authentication - provide token in Authorization header.
-    Either the group creator OR the user themselves can delete the membership.
+    Either the group creator, admins, OR the user themselves can delete the membership.
     """
     db_membership = group_membership.get(db, id=membership_id)
     if not db_membership:
@@ -135,14 +145,23 @@ async def delete_group_membership(
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
-    # Check if user is group creator OR the member themselves
+    # Check if user is group creator
     is_creator = group.created_by == current_user_id
+
+    # Check if user is admin
+    is_admin = db.query(GroupMembership).filter(
+        GroupMembership.group_id == db_membership.group_id,
+        GroupMembership.user_id == current_user_id,
+        GroupMembership.role == "admin"
+    ).first() is not None
+
+    # Check if user is the member themselves
     is_self = db_membership.user_id == current_user_id
 
-    if not (is_creator or is_self):
+    if not (is_creator or is_admin or is_self):
         raise HTTPException(
             status_code=403,
-            detail="You don't have permission to delete this membership. Only the group creator or the member themselves can do this."
+            detail="You don't have permission to delete this membership. Only the group creator, admins, or the member themselves can do this."
         )
 
     group_membership.delete(db, id=membership_id)

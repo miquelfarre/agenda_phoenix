@@ -148,7 +148,9 @@ def check_calendar_permission(calendar_id: int, current_user_id: int, db: Sessio
 def check_group_permission(group_id: int, current_user_id: int, db: Session) -> None:
     """
     Validates that current user has permission to modify/delete a group.
-    Only the group creator can modify/delete groups.
+    User must be either:
+    - Group creator, OR
+    - Group admin (GroupMembership with role='admin')
 
     Args:
         group_id: The ID of the group
@@ -168,10 +170,20 @@ def check_group_permission(group_id: int, current_user_id: int, db: Session) -> 
     if group.created_by == current_user_id:
         return  # Creator has permission
 
+    # Check if user is admin of this group
+    membership = db.query(GroupMembership).filter(
+        GroupMembership.group_id == group_id,
+        GroupMembership.user_id == current_user_id,
+        GroupMembership.role == "admin"
+    ).first()
+
+    if membership:
+        return  # Admin has permission
+
     # No permission
     raise HTTPException(
         status_code=403,
-        detail="You don't have permission to modify this group. Only the group creator can perform this action."
+        detail="You don't have permission to modify this group. Only the group creator or admins can perform this action."
     )
 
 
@@ -235,6 +247,37 @@ def is_calendar_owner_or_admin(calendar_id: int, user_id: int, db: Session) -> b
         CalendarMembership.user_id == user_id,
         CalendarMembership.role == "admin",
         CalendarMembership.status == "accepted"
+    ).first()
+
+    return membership is not None
+
+
+def is_group_creator_or_admin(group_id: int, user_id: int, db: Session) -> bool:
+    """
+    Check if user is creator or admin of a group (without raising exception).
+
+    Args:
+        group_id: The ID of the group
+        user_id: The ID of the user
+        db: Database session
+
+    Returns:
+        True if user is creator or admin, False otherwise
+    """
+    # Get group
+    group = db.query(Group).filter(Group.id == group_id).first()
+    if not group:
+        return False
+
+    # Check if user is creator
+    if group.created_by == user_id:
+        return True
+
+    # Check if user is admin
+    membership = db.query(GroupMembership).filter(
+        GroupMembership.group_id == group_id,
+        GroupMembership.user_id == user_id,
+        GroupMembership.role == "admin"
     ).first()
 
     return membership is not None

@@ -157,7 +157,7 @@ def setup_test_data(db, setup_config: Dict):
     # Crear memberships de grupo
     if "group_memberships" in setup_config:
         for membership_config in setup_config["group_memberships"]:
-            membership = GroupMembership(id=membership_config.get("id"), group_id=membership_config["group_id"], user_id=membership_config["user_id"])
+            membership = GroupMembership(id=membership_config.get("id"), group_id=membership_config["group_id"], user_id=membership_config["user_id"], role=membership_config.get("role"))
             db.add(membership)
             db.flush()
 
