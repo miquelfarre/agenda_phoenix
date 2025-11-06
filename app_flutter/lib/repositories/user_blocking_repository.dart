@@ -1,24 +1,71 @@
 import 'dart:async';
+import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import '../core/realtime_sync.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
+import '../utils/realtime_filter.dart';
 
 class UserBlockingRepository {
+  static const String _boxName = 'blocked_users';
+  final SupabaseService _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
-  final _supabaseService = SupabaseService.instance;
+  final RealtimeSync _rt = RealtimeSync();
 
+  Box<List<int>>? _box;
   final StreamController<List<User>> _blockedUsersController = StreamController<List<User>>.broadcast();
   List<User> _cachedBlockedUsers = [];
   RealtimeChannel? _realtimeChannel;
 
-  Stream<List<User>> get blockedUsersStream => _blockedUsersController.stream;
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initialized => _initCompleter.future;
+
+  Stream<List<User>> get blockedUsersStream async* {
+    if (_cachedBlockedUsers.isNotEmpty) {
+      yield List.from(_cachedBlockedUsers);
+    }
+    yield* _blockedUsersController.stream;
+  }
 
   Future<void> initialize() async {
-    await _fetchAndSync();
-    await _startRealtimeSubscription();
-    _emitBlockedUsers();
+    if (_initCompleter.isCompleted) return;
+
+    try {
+      _box = await Hive.openBox<List<int>>(_boxName);
+
+      // Load blocked user IDs from Hive cache first
+      _loadBlockedUsersFromHive();
+
+      // Fetch and sync from API
+      await _fetchAndSync();
+
+      // Subscribe to Realtime updates
+      await _startRealtimeSubscription();
+
+      _emitBlockedUsers();
+
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
+    } catch (e) {
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.completeError(e);
+      }
+      rethrow;
+    }
+  }
+
+  void _loadBlockedUsersFromHive() {
+    if (_box == null) return;
+
+    try {
+      final blockedUserIds = _box!.get('blocked_user_ids', defaultValue: <int>[]) ?? <int>[];
+      _cachedBlockedUsers = blockedUserIds.map((id) => User(id: id, isPublic: false, fullName: 'Blocked User $id')).toList();
+    } catch (e) {
+      _cachedBlockedUsers = [];
+    }
   }
 
   Future<void> _fetchAndSync() async {
@@ -27,10 +74,29 @@ class UserBlockingRepository {
       final blocks = await _apiClient.fetchUserBlocks(blockerUserId: currentUserId);
 
       _cachedBlockedUsers = blocks.map((block) => User(id: block['blocked_user_id'] as int, isPublic: false, fullName: 'Blocked User ${block['blocked_user_id']}')).toList();
+
+      // Update Hive cache with blocked user IDs
+      await _updateLocalCache();
+
+      // Set sync timestamp
+      _rt.setServerSyncTs(DateTime.now().toUtc());
+
       _emitBlockedUsers();
       // ignore: empty_catches
     } catch (e) {
       // Intentionally ignore fetch errors
+    }
+  }
+
+  Future<void> _updateLocalCache() async {
+    if (_box == null) return;
+
+    try {
+      final blockedUserIds = _cachedBlockedUsers.map((user) => user.id).toList();
+      await _box!.put('blocked_user_ids', blockedUserIds);
+      // ignore: empty_catches
+    } catch (e) {
+      // Intentionally ignore cache update errors
     }
   }
 
@@ -72,12 +138,18 @@ class UserBlockingRepository {
           schema: 'public',
           table: 'user_blocks',
           filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'blocker_user_id', value: userId.toString()),
-          callback: (payload) {
-            // A block changed, refetch all blocked users
-            _fetchAndSync();
-          },
+          callback: _handleBlockChange,
         )
         .subscribe();
+  }
+
+  void _handleBlockChange(PostgresChangePayload payload) {
+    if (!RealtimeFilter.shouldProcessEvent(payload, 'user_block', _rt)) {
+      return;
+    }
+
+    // A block changed, refetch all blocked users
+    _fetchAndSync();
   }
 
   void _emitBlockedUsers() {
@@ -89,5 +161,6 @@ class UserBlockingRepository {
   void dispose() {
     _realtimeChannel?.unsubscribe();
     _blockedUsersController.close();
+    _box?.close();
   }
 }

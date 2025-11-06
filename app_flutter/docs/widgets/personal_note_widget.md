@@ -14,7 +14,8 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../models/event.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../services/api_client.dart';
+import '../core/state/app_state.dart';
+import '../repositories/event_repository.dart';
 import '../utils/app_exceptions.dart';
 import 'adaptive/adaptive_button.dart';
 import 'adaptive/configs/button_config.dart';
@@ -22,13 +23,20 @@ import 'adaptive/configs/button_config.dart';
 
 **Key Dependencies:**
 - `flutter_riverpod`: Provides ConsumerStatefulWidget and ref for state management
-- `api_client.dart`: `ApiClientFactory.instance` for PATCH requests to save/delete notes
+- `event_repository.dart`: EventRepository via provider for all note operations (follows repository pattern)
+- `app_state.dart`: Access to `eventRepositoryProvider` through Riverpod
 - `event.dart`: Event model with personalNote property and copyWith method
 - `app_exceptions.dart`: `ApiException` for handling API errors with status codes
 - `adaptive_button.dart`: Platform-adaptive buttons for all actions
 - `platform_widgets.dart`: Platform detection, icons, dialogs, and messages
 - `l10n_helpers.dart`: Localization for labels, hints, and messages
 - `app_styles.dart`: Colors and decoration for container styling
+
+**⚠️ ARCHITECTURE NOTE:**
+This widget now follows the **Repository Pattern**: `Widget → Provider → Repository → API`
+- ✅ Uses `ref.read(eventRepositoryProvider)` for all operations
+- ✅ Realtime synchronization handled automatically by EventRepository
+- ❌ NO direct `ApiClient` usage
 
 ## Class Declaration
 
@@ -374,18 +382,17 @@ if (note.trim().isEmpty) {
 - **No API Call:** Empty notes aren't saved, just cancel editing
 - **Return Early:** Skips rest of method, goes to finally block
 
-**Lines 78-79:** API request
+**Lines 78-80:** Repository request
 ```dart
-await ApiClientFactory.instance.patch(
-  '/api/v1/events/${_event.id}/interaction',
-  body: {'note': note}
-);
+final eventRepo = ref.read(eventRepositoryProvider);
+await eventRepo.updatePersonalNote(_event.id!, note);
 ```
-- **Method:** PATCH (update existing resource)
-- **Endpoint:** `/api/v1/events/{eventId}/interaction`
-- **Body:** JSON with 'note' field
-- **Await:** Blocks until API responds or throws
+- **Pattern:** Repository pattern via Riverpod provider
+- **Repository Method:** `updatePersonalNote(eventId, note)`
+- **Internally:** Calls ApiClient PATCH to `/api/v1/events/{eventId}/interaction`
+- **Await:** Blocks until repository operation completes
 - **Can Throw:** Network errors, API errors, timeouts
+- **Side Effects:** Updates local Hive cache and emits to EventRepository stream
 
 **Lines 80-93:** Success handling
 ```dart
@@ -565,16 +572,17 @@ _preventOverwrite = true;
   - Prevents didUpdateWidget from resetting state during delete
   - Critical for race condition prevention with realtime updates
 
-**Lines 112-114:** API request
+**Lines 115-116:** Repository request
 ```dart
-await ApiClientFactory.instance.patch(
-  '/api/v1/events/${_event.id}/interaction',
-  body: {'note': null}
-);
+final eventRepo = ref.read(eventRepositoryProvider);
+await eventRepo.updatePersonalNote(_event.id!, null);
 ```
-- **Same Endpoint:** Uses interaction endpoint with null note
+- **Pattern:** Repository pattern via Riverpod provider
+- **Repository Method:** `updatePersonalNote(eventId, null)`
+- **Internally:** Calls ApiClient PATCH with `{'note': null}` to delete
 - **Pattern:** Null value deletes the note (rather than DELETE verb)
 - **Rationale:** Interaction endpoint handles multiple fields, PATCH with null is idiomatic
+- **Side Effects:** Updates local Hive cache and emits to EventRepository stream
 
 **Lines 116-130:** Success path
 ```dart
@@ -1181,11 +1189,17 @@ AdaptiveButton(
 - **Try-Catch-Finally:** Proper exception handling with cleanup
 - **Race Condition Prevention:** _preventOverwrite flag with delayed reset
 
-### API Integration
-- **Endpoint:** `/api/v1/events/{id}/interaction`
-- **Method:** PATCH (update)
-- **Save:** `{'note': 'text'}`
-- **Delete:** `{'note': null}`
+### Repository Integration
+- **Provider:** `eventRepositoryProvider` via Riverpod
+- **Methods:**
+  - Save: `updatePersonalNote(eventId, note)`
+  - Delete: `updatePersonalNote(eventId, null)`
+- **Internally:** Repository calls ApiClient PATCH to `/api/v1/events/{id}/interaction`
+- **Benefits:**
+  - Automatic Hive cache updates
+  - Realtime synchronization with other clients
+  - Consistent error handling
+  - Stream emissions for reactive UI
 - **Error Handling:** ApiException for typed errors, generic catch for others
 - **Idempotent Delete:** 404 treated as success
 

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/event.dart';
 import '../models/user.dart';
-import '../services/api_client.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 import '../widgets/event_list_item.dart';
 import 'event_detail_screen.dart';
@@ -58,20 +57,17 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
     });
 
     try {
-      final eventsData = await ApiClient().fetchUserEvents(widget.publicUser.id);
-      final events = eventsData.map((e) => Event.fromJson(e)).toList();
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      final events = await subscriptionRepo.fetchUserEvents(widget.publicUser.id);
 
-      // Check if user is subscribed by looking at interactions in events
-      bool isSubscribed = false;
-      for (final eventData in eventsData) {
-        if (eventData['interaction'] != null) {
-          final interaction = eventData['interaction'] as Map<String, dynamic>;
-          if (interaction['interaction_type'] == 'subscribed') {
-            isSubscribed = true;
-            break;
-          }
-        }
-      }
+      // Check if user is subscribed by looking at the subscriptions stream
+      final subscriptionsAsync = ref.read(subscriptionsStreamProvider);
+      final subscriptions = subscriptionsAsync.when(
+        data: (subs) => subs,
+        loading: () => <User>[],
+        error: (error, stack) => <User>[],
+      );
+      final isSubscribed = subscriptions.any((sub) => sub.id == widget.publicUser.id);
 
       if (mounted) {
         setState(() {
@@ -103,8 +99,8 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
     setState(() => _isProcessingSubscription = true);
 
     try {
-      // Use new bulk subscribe endpoint
-      await ApiClient().post('/users/${widget.publicUser.id}/subscribe');
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      await subscriptionRepo.subscribeToUser(widget.publicUser.id);
 
       if (mounted) {
         PlatformDialogHelpers.showSnackBar(context: context, message: AppLocalizations.of(context)!.subscribedSuccessfully);
@@ -130,8 +126,8 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
     setState(() => _isProcessingSubscription = true);
 
     try {
-      // Use new bulk unsubscribe endpoint
-      await ApiClient().delete('/users/${widget.publicUser.id}/subscribe');
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      await subscriptionRepo.unsubscribeFromUser(widget.publicUser.id);
 
       if (mounted) {
         PlatformDialogHelpers.showSnackBar(context: context, message: AppLocalizations.of(context)!.unsubscribedSuccessfully);

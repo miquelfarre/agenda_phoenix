@@ -1307,17 +1307,95 @@ abstract class AppLocalizations {
   /// **'Group Name'**
   String get groupName;
 
+  /// No description provided for @groupNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter group name'**
+  String get groupNamePlaceholder;
+
   /// No description provided for @groupDescription.
   ///
   /// In en, this message translates to:
   /// **'Group Description'**
   String get groupDescription;
 
+  /// No description provided for @groupDescriptionPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter group description (optional)'**
+  String get groupDescriptionPlaceholder;
+
+  /// No description provided for @deleteGroupConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this group? This action cannot be undone.'**
+  String get deleteGroupConfirmation;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
   /// No description provided for @inviteToGroup.
   ///
   /// In en, this message translates to:
   /// **'Invite to Group'**
   String get inviteToGroup;
+
+  /// No description provided for @addMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Members'**
+  String get addMembers;
+
+  /// No description provided for @manageMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Members'**
+  String get manageMembers;
+
+  /// No description provided for @searchContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search contacts...'**
+  String get searchContacts;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @clearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearSelection;
+
+  /// No description provided for @membersAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} member(s) added'**
+  String membersAdded(int count);
+
+  /// No description provided for @addSelectedMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {count} Member(s)'**
+  String addSelectedMembers(int count);
+
+  /// No description provided for @noContactsToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts available to add'**
+  String get noContactsToAdd;
+
+  /// No description provided for @noContactsFoundWithSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts match your search'**
+  String get noContactsFoundWithSearch;
 
   /// No description provided for @groupCreated.
   ///
@@ -1438,6 +1516,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave Group'**
   String get leaveGroup;
+
+  /// No description provided for @confirmLeaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave {groupName}?'**
+  String confirmLeaveGroup(String groupName);
+
+  /// No description provided for @leftGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You left {groupName}'**
+  String leftGroup(String groupName);
+
+  /// No description provided for @groupNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Group not found'**
+  String get groupNotFound;
+
+  /// No description provided for @noMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'No members in this group'**
+  String get noMembers;
+
+  /// No description provided for @creator.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator'**
+  String get creator;
 
   /// No description provided for @groupInvitations.
   ///
@@ -2944,12 +3052,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add details about your event...'**
   String get addEventDetailsHint;
-
-  /// No description provided for @addMembers.
-  ///
-  /// In en, this message translates to:
-  /// **'Add Members'**
-  String get addMembers;
 
   /// No description provided for @searchFriends.
   ///

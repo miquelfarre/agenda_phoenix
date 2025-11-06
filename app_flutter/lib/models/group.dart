@@ -7,22 +7,22 @@ class Group {
   final int id;
   final String name;
   final String description;
-  final int creatorId;
-  final User? creator;
+  final int ownerId;
+  final User? owner;
   final List<User> members;
   final List<User> admins;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
-  const Group({required this.id, required this.name, required this.description, required this.creatorId, this.creator, this.members = const [], this.admins = const [], required this.createdAt, this.updatedAt});
+  const Group({required this.id, required this.name, required this.description, required this.ownerId, this.owner, this.members = const [], this.admins = const [], required this.createdAt, this.updatedAt});
 
   factory Group.fromJson(Map<String, dynamic> json) {
     return Group(
       id: json['id'],
       name: json['name'],
       description: json['description'] ?? '',
-      creatorId: json['creator_id'],
-      creator: json['creator'] != null ? User.fromJson(json['creator']) : null,
+      ownerId: json['owner_id'],
+      owner: json['owner'] != null ? User.fromJson(json['owner']) : null,
       members: json['members'] != null ? (json['members'] as List).map((m) => User.fromJson(m)).toList() : [],
       admins: json['admins'] != null ? (json['admins'] as List).map((a) => User.fromJson(a)).toList() : [],
       createdAt: DateTimeUtils.parseAndNormalize(json['created_at']),
@@ -35,8 +35,8 @@ class Group {
       'id': id,
       'name': name,
       'description': description,
-      'creator_id': creatorId,
-      'creator': creator?.toJson(),
+      'owner_id': ownerId,
+      'owner': owner?.toJson(),
       'members': members.map((m) => m.toJson()).toList(),
       'admins': admins.map((a) => a.toJson()).toList(),
       'created_at': createdAt.toIso8601String(),
@@ -45,7 +45,7 @@ class Group {
   }
 
   bool isAdmin(int userId) {
-    return creatorId == userId || admins.any((admin) => admin.id == userId);
+    return ownerId == userId || admins.any((admin) => admin.id == userId);
   }
 
   bool isMember(int userId) {
@@ -56,13 +56,18 @@ class Group {
     return isAdmin(userId);
   }
 
+  bool isOwner(int userId) {
+    return ownerId == userId;
+  }
+
+  // Deprecated: Use isOwner instead
   bool isCreator(int userId) {
-    return creatorId == userId;
+    return isOwner(userId);
   }
 
   int get totalMemberCount {
     final uniqueIds = <int>{};
-    uniqueIds.add(creatorId);
+    uniqueIds.add(ownerId);
     uniqueIds.addAll(admins.map((a) => a.id));
     uniqueIds.addAll(members.map((m) => m.id));
     return uniqueIds.length;
@@ -73,13 +78,13 @@ class Group {
     return count == 1 ? '1 miembro' : '$count miembros';
   }
 
-  Group copyWith({int? id, String? name, String? description, int? creatorId, User? creator, List<User>? members, List<User>? admins, DateTime? createdAt, DateTime? updatedAt}) {
+  Group copyWith({int? id, String? name, String? description, int? ownerId, User? owner, List<User>? members, List<User>? admins, DateTime? createdAt, DateTime? updatedAt}) {
     return Group(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      creatorId: creatorId ?? this.creatorId,
-      creator: creator ?? this.creator,
+      ownerId: ownerId ?? this.ownerId,
+      owner: owner ?? this.owner,
       members: members ?? this.members,
       admins: admins ?? this.admins,
       createdAt: createdAt ?? this.createdAt,
@@ -98,7 +103,7 @@ class Group {
 
   @override
   String toString() {
-    return 'Group(id: $id, name: $name, memberCount: $totalMemberCount)';
+    return 'Group(id: $id, name: $name, ownerId: $ownerId, memberCount: $totalMemberCount)';
   }
 }
 

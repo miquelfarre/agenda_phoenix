@@ -879,6 +879,34 @@
   "groupInvitations": "Invitaciones de Grupos",
   "groupMembers": "Miembros del Grupo",
   "groupName": "Nombre del Grupo",
+  "groupNamePlaceholder": "Ingresa el nombre del grupo",
+  "groupDescriptionPlaceholder": "Ingresa la descripción del grupo (opcional)",
+  "deleteGroupConfirmation": "¿Estás seguro de que quieres eliminar este grupo? Esta acción no se puede deshacer.",
+  "saveChanges": "Guardar Cambios",
+  "addMembers": "Añadir Miembros",
+  "manageMembers": "Administrar Miembros",
+  "searchContacts": "Buscar contactos...",
+  "selectedCount": "{count} seleccionado(s)",
+  "@selectedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clearSelection": "Limpiar",
+  "membersAdded": "{count} miembro(s) añadido(s)",
+  "@membersAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "addSelectedMembers": "Añadir {count} Miembro(s)",
+  "@addSelectedMembers": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noContactsToAdd": "No hay contactos disponibles para añadir",
+  "noContactsFoundWithSearch": "No se encontraron contactos con tu búsqueda",
   "groupUpdated": "Grupo actualizado exitosamente",
   "groupsWillAppearHere": "Tus grupos aparecerán aquí.",
   "hourLabel": "Hora",
@@ -943,6 +971,24 @@
   "july": "Julio",
   "june": "Junio",
   "leaveGroup": "Salir del Grupo",
+  "confirmLeaveGroup": "¿Estás seguro de que quieres salir de {groupName}?",
+  "@confirmLeaveGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "leftGroup": "Saliste de {groupName}",
+  "@leftGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "groupNotFound": "Grupo no encontrado",
+  "noMembers": "No hay miembros en este grupo",
+  "creator": "Creador",
+  "remove": "Eliminar",
+  "confirm": "Confirmar",
+  "leave": "Salir",
   "loginWithPhone": "Iniciar sesión con teléfono",
   "makeAdmin": "Hacer Administrador",
   "march": "Marzo",

@@ -3,8 +3,8 @@ import '../utils/datetime_utils.dart';
 
 @immutable
 class Calendar {
-  final String id;
-  final String ownerId;
+  final int id;
+  final int ownerId;
   final String name;
   final String? description;
   final bool deleteAssociatedEvents;
@@ -20,8 +20,8 @@ class Calendar {
 
   factory Calendar.fromJson(Map<String, dynamic> json) {
     return Calendar(
-      id: json['id'].toString(),
-      ownerId: json['owner_id'].toString(),
+      id: json['id'] as int,
+      ownerId: json['owner_id'] as int,
       name: json['name'] ?? '',
       description: json['description'],
       deleteAssociatedEvents: json['delete_associated_events'] ?? false,
@@ -52,7 +52,7 @@ class Calendar {
     };
   }
 
-  Calendar copyWith({String? id, String? ownerId, String? name, String? description, bool? deleteAssociatedEvents, bool? isPublic, bool? isDiscoverable, String? shareHash, String? category, int? subscriberCount, DateTime? createdAt, DateTime? updatedAt}) {
+  Calendar copyWith({int? id, int? ownerId, String? name, String? description, bool? deleteAssociatedEvents, bool? isPublic, bool? isDiscoverable, String? shareHash, String? category, int? subscriberCount, DateTime? createdAt, DateTime? updatedAt}) {
     return Calendar(
       id: id ?? this.id,
       ownerId: ownerId ?? this.ownerId,
@@ -85,5 +85,5 @@ class Calendar {
 
   bool get isValidName => name.trim().isNotEmpty && name.length <= 100;
 
-  bool isOwnedBy(String userId) => ownerId == userId;
+  bool isOwnedBy(int userId) => ownerId == userId;
 }

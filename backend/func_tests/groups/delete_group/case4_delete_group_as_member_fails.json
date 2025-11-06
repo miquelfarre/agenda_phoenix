@@ -18,7 +18,7 @@
         "id": 1,
         "name": "Team A",
         "description": "Should not be deleted",
-        "created_by": 1
+        "owner_id": 1
       }
     ],
     "group_memberships": [

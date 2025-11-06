@@ -54,7 +54,7 @@ class User(Base):
     auth_id = Column(String(255), nullable=False, unique=True, index=True)  # Phone number or Instagram user ID
     is_public = Column(Boolean, nullable=False, default=False, index=True)  # True for instagram users, False for phone users
     is_admin = Column(Boolean, nullable=False, default=False, index=True)  # True for super admins
-    profile_picture_url = Column(String(500), nullable=True)
+    profile_picture = Column(String(500), nullable=True)
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -64,7 +64,7 @@ class User(Base):
     owned_contacts = relationship("Contact", foreign_keys="Contact.owner_id", back_populates="owner", cascade="all, delete-orphan")
     calendars = relationship("Calendar", back_populates="user", cascade="all, delete-orphan")
     calendar_memberships = relationship("CalendarMembership", foreign_keys="CalendarMembership.user_id", back_populates="user", cascade="all, delete-orphan")
-    created_groups = relationship("Group", back_populates="creator", cascade="all, delete-orphan")
+    owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
     group_memberships = relationship("GroupMembership", back_populates="user", cascade="all, delete-orphan")
     events = relationship("Event", foreign_keys="Event.owner_id", back_populates="owner", cascade="all, delete-orphan")
     interactions = relationship("EventInteraction", foreign_keys="EventInteraction.user_id", back_populates="user", cascade="all, delete-orphan")
@@ -84,7 +84,7 @@ class User(Base):
             "auth_id": self.auth_id,
             "is_public": self.is_public,
             "is_admin": self.is_admin,
-            "profile_picture_url": self.profile_picture_url,
+            "profile_picture": self.profile_picture,
             "last_login": self.last_login.isoformat() if self.last_login else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
@@ -246,23 +246,23 @@ class Group(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
-    creator = relationship("User", back_populates="created_groups")
+    owner = relationship("User", back_populates="owned_groups")
     memberships = relationship("GroupMembership", back_populates="group", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Group(id={self.id}, name='{self.name}', created_by={self.created_by})>"
+        return f"<Group(id={self.id}, name='{self.name}', owner_id={self.owner_id})>"
 
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "created_by": self.created_by,
+            "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

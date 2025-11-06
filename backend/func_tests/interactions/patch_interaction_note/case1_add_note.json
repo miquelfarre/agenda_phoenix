@@ -52,7 +52,7 @@
       "invited_by_user_id": null,
       "invited_via_group_id": null,
       "read_at": null,
-      "is_new": true,
+      "is_new": false,
       "created_at": "{{TIMESTAMP}}",
       "updated_at": "{{TIMESTAMP}}"
     }

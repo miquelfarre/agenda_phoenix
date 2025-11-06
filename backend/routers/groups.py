@@ -12,33 +12,69 @@ from sqlalchemy.orm import Session
 from auth import get_current_user_id
 from crud import group
 from dependencies import check_group_permission, get_db
+from models import Group
 from schemas import GroupBase, GroupCreate, GroupResponse
 
 router = APIRouter(prefix="/api/v1/groups", tags=["groups"])
 
 
+def _enrich_group_with_members(db: Session, db_group: Group) -> GroupResponse:
+    """Enrich a group with owner, members, and admins"""
+    from crud.crud_group_membership import group_membership
+
+    # Get all memberships
+    memberships = group_membership.get_by_group(db, group_id=db_group.id)
+
+    # Separate members and admins
+    members_list = []
+    admins_list = []
+
+    for membership in memberships:
+        if membership.user:
+            if membership.role == "admin":
+                admins_list.append(membership.user)
+            else:
+                members_list.append(membership.user)
+
+    # Create response with all data
+    return GroupResponse(
+        id=db_group.id,
+        name=db_group.name,
+        description=db_group.description,
+        owner_id=db_group.owner_id,
+        owner=db_group.owner,
+        members=members_list,
+        admins=admins_list,
+        created_at=db_group.created_at,
+        updated_at=db_group.updated_at
+    )
+
+
 @router.get("", response_model=List[GroupResponse])
 async def get_groups(
-    created_by: Optional[int] = None,
+    owner_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
     order_by: str = "id",
     order_dir: str = "asc",
     db: Session = Depends(get_db)
 ):
-    """Get all groups, optionally filtered by creator, with pagination and ordering"""
+    """Get all groups, optionally filtered by owner, with pagination and ordering"""
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return group.get_multi_filtered(
+    groups = group.get_multi_filtered(
         db,
-        created_by=created_by,
+        owner_id=owner_id,
         skip=offset,
         limit=limit,
         order_by=order_by,
         order_dir=order_dir
     )
+
+    # Enrich each group with members and admins
+    return [_enrich_group_with_members(db, g) for g in groups]
 
 
 @router.get("/{group_id}", response_model=GroupResponse)
@@ -47,7 +83,7 @@ async def get_group(group_id: int, db: Session = Depends(get_db)):
     db_group = group.get(db, id=group_id)
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
-    return db_group
+    return _enrich_group_with_members(db, db_group)
 
 
 @router.post("", response_model=GroupResponse, status_code=201)
@@ -59,7 +95,7 @@ async def create_group(group_data: GroupCreate, db: Session = Depends(get_db)):
     if error:
         raise HTTPException(status_code=404, detail=error)
 
-    return db_group
+    return _enrich_group_with_members(db, db_group)
 
 
 @router.put("/{group_id}", response_model=GroupResponse)
@@ -83,7 +119,7 @@ async def update_group(
         raise HTTPException(status_code=404, detail="Group not found")
 
     updated_group = group.update(db, db_obj=db_group, obj_in=group_data)
-    return updated_group
+    return _enrich_group_with_members(db, updated_group)
 
 
 @router.delete("/{group_id}")

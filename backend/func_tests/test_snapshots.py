@@ -54,7 +54,7 @@ def setup_test_data(db, setup_config: Dict):
                 auth_id=contact.phone,
                 is_public=is_public,
                 is_admin=user_config.get("is_admin", False),
-                profile_picture_url=user_config.get("profile_picture_url")
+                profile_picture=user_config.get("profile_picture")
             )
             db.add(user)
             db.flush()
@@ -77,7 +77,7 @@ def setup_test_data(db, setup_config: Dict):
     # Crear grupos
     if "groups" in setup_config:
         for group_config in setup_config["groups"]:
-            group = Group(id=group_config.get("id"), name=group_config["name"], description=group_config.get("description"), created_by=group_config["created_by"])
+            group = Group(id=group_config.get("id"), name=group_config["name"], description=group_config.get("description"), owner_id=group_config["owner_id"])
             db.add(group)
             db.flush()
             created_objects[f"group_{group.id}"] = group

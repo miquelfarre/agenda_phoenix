@@ -4,7 +4,7 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../models/event.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../services/api_client.dart';
+import '../core/state/app_state.dart';
 import '../utils/app_exceptions.dart';
 import 'adaptive/adaptive_button.dart';
 import 'adaptive/configs/button_config.dart';
@@ -75,7 +75,8 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
         return;
       }
 
-      await ApiClientFactory.instance.patch('/api/v1/events/${_event.id}/interaction', body: {'note': note});
+      final eventRepo = ref.read(eventRepositoryProvider);
+      await eventRepo.updatePersonalNote(_event.id!, note);
 
       if (mounted) {
         setState(() {
@@ -110,7 +111,8 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
     _preventOverwrite = true;
 
     try {
-      await ApiClientFactory.instance.patch('/api/v1/events/${_event.id}/interaction', body: {'note': null});
+      final eventRepo = ref.read(eventRepositoryProvider);
+      await eventRepo.updatePersonalNote(_event.id!, null);
 
       // Realtime handles refresh automatically via EventRepository
 
@@ -221,7 +223,7 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
-          child: AdaptiveButton(config: AdaptiveButtonConfigExtended.submit(), text: l10n.addPersonalNote, icon: CupertinoIcons.add, onPressed: () => setState(() => _isEditing = true)),
+          child: AdaptiveButton(config: AdaptiveButtonConfig.primary(), text: l10n.addPersonalNote, icon: CupertinoIcons.add, onPressed: () => setState(() => _isEditing = true)),
         ),
       ],
     );
@@ -292,7 +294,7 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
             children: [
               Expanded(
                 child: AdaptiveButton(
-                  config: AdaptiveButtonConfigExtended.cancel(),
+                  config: AdaptiveButtonConfig.secondary(),
                   text: l10n.cancel,
                   onPressed: () {
                     setState(() {
@@ -305,7 +307,7 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
               const SizedBox(width: 12),
               Expanded(
                 child: AdaptiveButton(
-                  config: AdaptiveButtonConfigExtended.submit(),
+                  config: AdaptiveButtonConfig.primary(),
                   text: l10n.save,
                   onPressed: () async {
                     final note = _controller.text.trim();

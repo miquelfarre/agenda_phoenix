@@ -619,10 +619,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupName => 'Group Name';
 
   @override
+  String get groupNamePlaceholder => 'Enter group name';
+
+  @override
   String get groupDescription => 'Group Description';
 
   @override
+  String get groupDescriptionPlaceholder => 'Enter group description (optional)';
+
+  @override
+  String get deleteGroupConfirmation => 'Are you sure you want to delete this group? This action cannot be undone.';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
   String get inviteToGroup => 'Invite to Group';
+
+  @override
+  String get addMembers => 'Add Members';
+
+  @override
+  String get manageMembers => 'Manage Members';
+
+  @override
+  String get searchContacts => 'Search contacts...';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get clearSelection => 'Clear';
+
+  @override
+  String membersAdded(int count) {
+    return '$count member(s) added';
+  }
+
+  @override
+  String addSelectedMembers(int count) {
+    return 'Add $count Member(s)';
+  }
+
+  @override
+  String get noContactsToAdd => 'No contacts available to add';
+
+  @override
+  String get noContactsFoundWithSearch => 'No contacts match your search';
 
   @override
   String get groupCreated => 'Group created successfully';
@@ -695,6 +740,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaveGroup => 'Leave Group';
+
+  @override
+  String confirmLeaveGroup(String groupName) {
+    return 'Are you sure you want to leave $groupName?';
+  }
+
+  @override
+  String leftGroup(String groupName) {
+    return 'You left $groupName';
+  }
+
+  @override
+  String get groupNotFound => 'Group not found';
+
+  @override
+  String get noMembers => 'No members in this group';
+
+  @override
+  String get creator => 'Creator';
 
   @override
   String get groupInvitations => 'Group Invitations';
@@ -1500,9 +1564,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addEventDetailsHint => 'Add details about your event...';
-
-  @override
-  String get addMembers => 'Add Members';
 
   @override
   String get searchFriends => 'Search Friends';

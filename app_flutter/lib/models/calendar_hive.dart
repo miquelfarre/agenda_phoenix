@@ -7,10 +7,10 @@ part 'calendar_hive.g.dart';
 @HiveType(typeId: 30)
 class CalendarHive extends HiveObject {
   @HiveField(0)
-  String id;
+  int id;
 
   @HiveField(1)
-  String ownerId;
+  int ownerId;
 
   @HiveField(2)
   String name;
@@ -45,8 +45,8 @@ class CalendarHive extends HiveObject {
   CalendarHive({required this.id, required this.ownerId, required this.name, this.description, required this.createdAt, required this.updatedAt, this.deleteAssociatedEvents = false, this.isPublic = false, this.isDiscoverable = true, this.shareHash, this.category, this.subscriberCount = 0});
 
   factory CalendarHive.fromJson(Map<String, dynamic> json) => CalendarHive(
-    id: json['id'].toString(),
-    ownerId: json['owner_id'].toString(),
+    id: json['id'] as int,
+    ownerId: json['owner_id'] as int,
     name: json['name'] ?? '',
     description: json['description'],
     createdAt: DateTimeUtils.parseAndNormalize(json['created_at']),

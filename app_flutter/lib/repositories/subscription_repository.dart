@@ -3,6 +3,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user.dart' as models;
 import '../models/user_hive.dart';
+import '../models/event.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
@@ -177,6 +178,26 @@ class SubscriptionRepository {
     if (!_subscriptionsController.isClosed) {
       _subscriptionsController.add(List.from(_cachedUsers));
     }
+  }
+
+  /// Fetch events from a specific user
+  Future<List<Event>> fetchUserEvents(int userId) async {
+    final eventsData = await _apiClient.fetchUserEvents(userId);
+    return eventsData.map((data) => Event.fromJson(data)).toList();
+  }
+
+  /// Subscribe to a user
+  Future<void> subscribeToUser(int userId) async {
+    await _apiClient.post('/users/$userId/subscribe');
+    // Refresh subscriptions after subscribing
+    await _fetchAndSync();
+  }
+
+  /// Unsubscribe from a user
+  Future<void> unsubscribeFromUser(int userId) async {
+    await _apiClient.delete('/users/$userId/subscribe');
+    // Refresh subscriptions after unsubscribing
+    await _fetchAndSync();
   }
 
   void dispose() {

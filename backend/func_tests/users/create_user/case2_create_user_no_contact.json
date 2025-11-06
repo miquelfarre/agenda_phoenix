@@ -11,7 +11,7 @@
       "username": "instagram_user",
       "auth_provider": "instagram",
       "auth_id": "ig_12345678",
-      "profile_picture_url": "https://example.com/profile.jpg"
+      "profile_picture": "https://example.com/profile.jpg"
     }
   },
   "expected_response": {
@@ -25,7 +25,7 @@
       "auth_id": "{{ID}}",
       "is_public": false,
       "is_admin": false,
-      "profile_picture_url": "https://example.com/profile.jpg",
+      "profile_picture": "https://example.com/profile.jpg",
       "id": "{{ID}}",
       "contact_id": null,
       "last_login": null,

@@ -7,7 +7,7 @@
     "body": {
       "name": "Invalid Team",
       "description": "Team with invalid creator",
-      "created_by": 999
+      "owner_id": 999
     }
   },
   "expected": {
@@ -16,7 +16,7 @@
       "Creator user not found"
     ],
     "body": {
-      "detail": "Creator user not found"
+      "detail": "Owner user not found"
     }
   }
 }

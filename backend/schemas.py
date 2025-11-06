@@ -43,7 +43,7 @@ class UserBase(BaseModel):
     auth_id: str
     is_public: bool = False
     is_admin: bool = False
-    profile_picture_url: Optional[str] = None
+    profile_picture: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -71,6 +71,8 @@ class UserEnrichedResponse(UserBase):
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserSubscriptionResponse(UserBase):
@@ -396,12 +398,15 @@ class GroupBase(BaseModel):
 
 
 class GroupCreate(GroupBase):
-    created_by: int
+    owner_id: int
 
 
 class GroupResponse(GroupBase):
     id: int
-    created_by: int
+    owner_id: int
+    owner: Optional["UserResponse"] = None
+    members: List["UserResponse"] = []
+    admins: List["UserResponse"] = []
     created_at: datetime
     updated_at: datetime
 

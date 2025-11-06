@@ -64,7 +64,7 @@
           "inviter": null
         }
       ],
-      "owner_name": null,
+      "owner_name": "Alice (Owner)",
       "owner_profile_picture": null,
       "is_owner_public": false,
       "can_subscribe_to_owner": null,

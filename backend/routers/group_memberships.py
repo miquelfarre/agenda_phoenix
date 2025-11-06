@@ -96,8 +96,8 @@ async def update_group_membership(
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
-    # Check if user is creator
-    is_creator = group.created_by == current_user_id
+    # Check if user is owner
+    is_creator = group.owner_id == current_user_id
 
     # Check if user is admin
     is_admin = db.query(GroupMembership).filter(
@@ -145,8 +145,8 @@ async def delete_group_membership(
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
-    # Check if user is group creator
-    is_creator = group.created_by == current_user_id
+    # Check if user is group owner
+    is_creator = group.owner_id == current_user_id
 
     # Check if user is admin
     is_admin = db.query(GroupMembership).filter(

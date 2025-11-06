@@ -288,13 +288,16 @@ class ApiClient implements IApiClient {
 
   @override
   Future<List<Map<String, dynamic>>> fetchContacts({required int currentUserId}) async {
-    final result = await get('/contacts');
+    // Contacts are private users (is_public=false) who have logged into the app
+    // NOT the contacts table, which contains phone contacts
+    final result = await get('/users?public=false&enriched=true');
     return List<Map<String, dynamic>>.from(result);
   }
 
   @override
   Future<Map<String, dynamic>> fetchContact(int contactId, {required int currentUserId}) async {
-    final result = await get('/contacts/$contactId');
+    // Fetch a specific private user (contact)
+    final result = await get('/users/$contactId?enriched=true');
     return result as Map<String, dynamic>;
   }
 
@@ -511,8 +514,8 @@ class ApiClient implements IApiClient {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchGroups({int? createdBy, int? currentUserId}) async {
-    final result = await get('/groups', queryParams: {if (createdBy != null) 'created_by': createdBy});
+  Future<List<Map<String, dynamic>>> fetchGroups({int? ownerId, int? currentUserId}) async {
+    final result = await get('/groups', queryParams: {if (ownerId != null) 'owner_id': ownerId});
     return List<Map<String, dynamic>>.from(result);
   }
 

@@ -444,7 +444,11 @@ Column con:
 ### Services:
 - `ConfigService.instance.currentUserId`: ID del usuario actual
 - `ConfigService.instance.hasUser`: Si hay usuario logueado
-- `ApiClient().fetchContact()`: Carga detalles del contacto
+
+### Repositories:
+- `UserRepository.fetchContact()`: Carga detalles del contacto (a través del provider)
+
+**Arquitectura**: Screen → Provider → Repository → ApiClient
 
 ### Widgets externos:
 - `CustomScrollView`: Vista scrollable

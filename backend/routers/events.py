@@ -115,7 +115,7 @@ async def get_event(
         "created_at": db_event.created_at,
         "updated_at": db_event.updated_at,
         "owner_name": owner_name,
-        "owner_profile_picture": owner.profile_picture_url,
+        "owner_profile_picture": owner.profile_picture,
         "is_owner_public": owner.is_public,
     }
 
@@ -242,7 +242,7 @@ async def get_event(
                         "full_name": user_name,
                         "username": interaction_user.username,
                         "phone_number": user_phone,
-                        "profile_picture": interaction_user.profile_picture_url,
+                        "profile_picture": interaction_user.profile_picture,
                     },
                     "inviter": {
                         "id": inviter.id,
@@ -338,12 +338,12 @@ async def get_event(
                         print(f"🔍 DEBUG BACKEND: contact.name={user_contact.name}")
                     user_name = user_contact.name if user_contact else user_name
 
-                print(f"🔍 DEBUG BACKEND: Final user_name={user_name}, profile_picture={user_obj.profile_picture_url}")
+                print(f"🔍 DEBUG BACKEND: Final user_name={user_name}, profile_picture={user_obj.profile_picture}")
                 attendees.append({
                     "id": user_obj.id,
                     "full_name": user_name,
                     "username": user_obj.username,
-                    "profile_picture": user_obj.profile_picture_url,
+                    "profile_picture": user_obj.profile_picture,
                 })
 
         response_data["attendees"] = attendees

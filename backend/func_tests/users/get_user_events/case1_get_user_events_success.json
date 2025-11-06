@@ -92,6 +92,7 @@
           "role": null,
           "invited_by_user_id": null,
           "note": null,
+          "is_attending": false,
           "read_at": null,
           "is_new": true
         },
@@ -108,7 +109,8 @@
         "attendees": [
           {
             "id": "{{ID}}",
-            "name": "Sonia",
+            "full_name": "Sonia",
+            "username": null,
             "profile_picture": null
           }
         ],

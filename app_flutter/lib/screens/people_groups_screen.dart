@@ -13,8 +13,6 @@ import '../widgets/adaptive_scaffold.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/widgets/adaptive/adaptive_button.dart';
-import 'package:eventypop/widgets/adaptive/configs/button_config.dart';
-import '../services/api_client.dart';
 import '../core/state/app_state.dart';
 
 class PeopleGroupsScreen extends ConsumerStatefulWidget {
@@ -73,12 +71,17 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
     });
 
     try {
-      // Fetch contacts from backend API (not migrated to Realtime)
-      final contactsData = await ApiClient().fetchContacts(currentUserId: userId);
+      final userRepo = ref.read(userRepositoryProvider);
+      final contacts = await userRepo.fetchContacts(userId);
+
+      print('📥 [PeopleGroupsScreen] Loaded ${contacts.length} private users (contacts) from API');
+      for (var contact in contacts) {
+        print('📥   - Contact: displayName="${contact.displayName}", fullName="${contact.fullName}", instagramName="${contact.instagramName}" (ID: ${contact.id}, is_public: ${contact.isPublic})');
+      }
 
       if (mounted) {
         setState(() {
-          _contacts = contactsData.map((c) => User.fromJson(c)).toList();
+          _contacts = contacts;
           _isLoadingContacts = false;
         });
       }
@@ -93,18 +96,12 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
   }
 
   Future<void> _navigateToCreateGroup() async {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text(AppLocalizations.of(context)?.createGroup ?? 'Create Group'),
-        content: Text(AppLocalizations.of(context)?.seriesEditNotAvailable ?? 'This feature will be available soon'),
-        actions: [CupertinoDialogAction(child: Text(AppLocalizations.of(context)?.ok ?? 'OK'), onPressed: () => Navigator.of(context).pop())],
-      ),
-    );
+    await context.push('/people/groups/create');
   }
 
   Widget _buildContactsTab() {
     final l10n = context.l10n;
+    print('🔵 [PeopleGroupsScreen] Building CONTACTS tab - contacts count: ${_contacts.length}');
 
     if (_isLoadingContacts) {
       return const Center(child: CupertinoActivityIndicator());
@@ -137,7 +134,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
           if (isPermissionError) ...[
             AdaptiveButton(
               key: const Key('people_groups_grant_permission_button'),
-              config: AdaptiveButtonConfigExtended.submit(),
+              config: AdaptiveButtonConfig.primary(),
               text: l10n.allowAccess,
               icon: CupertinoIcons.person_2,
               onPressed: () async {
@@ -225,6 +222,13 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
         }
 
         final contactIndex = index - 1;
+
+        // Safety check to prevent RangeError
+        if (contactIndex >= filteredContacts.length) {
+          print('⚠️ [PeopleGroupsScreen] Index out of range: $contactIndex >= ${filteredContacts.length}');
+          return const SizedBox.shrink();
+        }
+
         final contact = filteredContacts[contactIndex];
         return ContactCard(
           contact: contact,
@@ -239,12 +243,24 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
   Widget _buildGroupsTab() {
     final l10n = context.l10n;
     final groupsAsync = ref.watch(groupsStreamProvider);
+    print('🟣 [PeopleGroupsScreen] Building GROUPS tab - async state: ${groupsAsync.runtimeType}');
 
     return groupsAsync.when(
       data: (groups) {
-        final userGroups = groups.where((group) => group.members.any((member) => member.id == userId)).toList();
+        print('🟣 [PeopleGroupsScreen] GROUPS data received - total groups: ${groups.length}');
+        final userGroups = groups.where((group) =>
+          group.ownerId == userId ||
+          group.members.any((member) => member.id == userId) ||
+          group.admins.any((admin) => admin.id == userId)
+        ).toList();
+        print('🟣 [PeopleGroupsScreen] Filtered user groups: ${userGroups.length}');
+
+        for (var group in userGroups) {
+          print('🟣   - Group: ${group.name} (ID: ${group.id})');
+        }
 
         if (userGroups.isEmpty) {
+          print('🟣 [PeopleGroupsScreen] No groups found - showing empty state');
           return EmptyState(message: l10n.noGroupsMessage, icon: CupertinoIcons.group);
         }
 
@@ -254,30 +270,38 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
           itemCount: userGroups.length,
           itemBuilder: (context, index) {
             final group = userGroups[index];
+            print('🟣 [PeopleGroupsScreen] Building group card at index $index: ${group.name}');
             return _buildGroupCard(group, l10n);
           },
         );
       },
-      loading: () => const Center(child: CupertinoActivityIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${l10n.error}: $error'),
-            const SizedBox(height: 16),
-            CupertinoButton(
-              onPressed: () {
-                ref.invalidate(groupsStreamProvider);
-              },
-              child: Text(l10n.retry),
-            ),
-          ],
-        ),
-      ),
+      loading: () {
+        print('🟣 [PeopleGroupsScreen] GROUPS in loading state');
+        return const Center(child: CupertinoActivityIndicator());
+      },
+      error: (error, stack) {
+        print('🔴 [PeopleGroupsScreen] GROUPS error: $error');
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${l10n.error}: $error'),
+              const SizedBox(height: 16),
+              CupertinoButton(
+                onPressed: () {
+                  ref.invalidate(groupsStreamProvider);
+                },
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildGroupCard(Group group, AppLocalizations l10n) {
+    print('👥 [GroupCard] Building card for group: ${group.name} (ID: ${group.id})');
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Container(
@@ -293,14 +317,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
           subtitle: Text(l10n.membersLabel(group.members.length), style: AppStyles.bodyText.copyWith(color: AppStyles.grey600)),
           trailing: PlatformWidgets.platformIcon(CupertinoIcons.chevron_right, color: AppStyles.grey400),
           onTap: () {
-            showCupertinoDialog(
-              context: context,
-              builder: (context) => CupertinoAlertDialog(
-                title: Text(context.l10n.groupDetails),
-                content: Text(AppLocalizations.of(context)?.seriesEditNotAvailable ?? 'This feature will be available soon'),
-                actions: [CupertinoDialogAction(child: Text(AppLocalizations.of(context)?.ok ?? 'OK'), onPressed: () => Navigator.of(context).pop())],
-              ),
-            );
+            context.push('/people/groups/${group.id}', extra: group);
           },
         ),
       ),
@@ -311,19 +328,16 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isIOS = PlatformWidgets.isIOS;
+    print('🔷 [PeopleGroupsScreen] Building widget - current tab index: $_tabIndex');
 
     return AdaptivePageScaffold(
       key: const Key('people_groups_screen_scaffold'),
       title: l10n.peopleAndGroups,
-      floatingActionButton: _tabIndex == 1
-          ? CupertinoButton.filled(
-              key: const Key('people_groups_create_group_fab'),
-              onPressed: _navigateToCreateGroup,
-              child: Icon(CupertinoIcons.plus, color: AppStyles.white),
-            )
-          : null,
-      body: Column(
-        children: [
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
           Container(
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: isIOS ? CupertinoColors.systemGroupedBackground.resolveFrom(context) : AppStyles.grey100, borderRadius: BorderRadius.circular(12)),
@@ -376,14 +390,39 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
             child: PageView(
               controller: _pageController,
               onPageChanged: (index) {
+                print('📄 [PeopleGroupsScreen] PageView changed to page: $index');
                 setState(() {
                   _tabIndex = index;
                 });
               },
-              children: [_buildContactsTab(), _buildGroupsTab()],
+              children: [
+                Builder(builder: (context) {
+                  print('📄 [PeopleGroupsScreen] Building PageView child 0 (CONTACTS)');
+                  return _buildContactsTab();
+                }),
+                Builder(builder: (context) {
+                  print('📄 [PeopleGroupsScreen] Building PageView child 1 (GROUPS)');
+                  return _buildGroupsTab();
+                }),
+              ],
             ),
           ),
         ],
+      ),
+      // FAB positioned over the content
+      if (_tabIndex == 1)
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: CupertinoButton.filled(
+            key: const Key('people_groups_create_group_fab'),
+            onPressed: _navigateToCreateGroup,
+            padding: const EdgeInsets.all(16),
+            child: Icon(CupertinoIcons.plus, color: AppStyles.white, size: 28),
+          ),
+        ),
+      ],
+        ),
       ),
     );
   }

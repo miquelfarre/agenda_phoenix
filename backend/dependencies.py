@@ -166,9 +166,9 @@ def check_group_permission(group_id: int, current_user_id: int, db: Session) -> 
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
-    # Check if user is creator
-    if group.created_by == current_user_id:
-        return  # Creator has permission
+    # Check if user is owner
+    if group.owner_id == current_user_id:
+        return  # Owner has permission
 
     # Check if user is admin of this group
     membership = db.query(GroupMembership).filter(
@@ -269,8 +269,8 @@ def is_group_creator_or_admin(group_id: int, user_id: int, db: Session) -> bool:
     if not group:
         return False
 
-    # Check if user is creator
-    if group.created_by == user_id:
+    # Check if user is owner
+    if group.owner_id == user_id:
         return True
 
     # Check if user is admin

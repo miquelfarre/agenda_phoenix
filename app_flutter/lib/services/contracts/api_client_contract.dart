@@ -91,7 +91,7 @@ abstract class IApiClient {
 
   Future<void> deleteCalendarMembership(int membershipId, {int? currentUserId});
 
-  Future<List<Map<String, dynamic>>> fetchGroups({int? createdBy, int? currentUserId});
+  Future<List<Map<String, dynamic>>> fetchGroups({int? ownerId, int? currentUserId});
 
   Future<Map<String, dynamic>> fetchGroup(int groupId, {int? currentUserId});
 

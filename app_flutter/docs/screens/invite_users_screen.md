@@ -121,7 +121,7 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
        - Retorna
    - **Fetch usuarios** (líneas 89-92):
      - Imprime log "Calling fetchAvailableInvitees..."
-     - Llama a `ApiClient().fetchAvailableInvitees(eventId)`
+     - Llama a `ref.read(userRepositoryProvider).fetchAvailableInvitees(eventId)`
      - Imprime cantidad de usuarios disponibles
    - **Actualizar estado** (líneas 93-100):
      - Si está montado:
@@ -372,9 +372,13 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
 ### Providers utilizados:
 - `eventInteractionRepositoryProvider`: Repositorio de interacciones de eventos (read)
 
+### Repositories:
+- `UserRepository.fetchAvailableInvitees()`: Carga usuarios disponibles para invitar (a través del provider)
+
 ### Services:
-- `ApiClient().fetchAvailableInvitees()`: Carga usuarios disponibles para invitar
 - `ConfigService.instance.hasUser`: Si hay usuario logueado
+
+**Arquitectura**: Screen → Provider → Repository → ApiClient
 
 ### Widgets externos:
 - `CupertinoSearchTextField`: Campo de búsqueda de iOS

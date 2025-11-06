@@ -17,12 +17,12 @@
       {
         "id": 1,
         "name": "Team A",
-        "created_by": 1
+        "owner_id": 1
       },
       {
         "id": 2,
         "name": "Team B",
-        "created_by": 1
+        "owner_id": 1
       }
     ],
     "group_memberships": [

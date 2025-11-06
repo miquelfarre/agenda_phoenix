@@ -382,8 +382,36 @@
   "editGroup": "Edit Group",
   "deleteGroup": "Delete Group",
   "groupName": "Group Name",
+  "groupNamePlaceholder": "Enter group name",
   "groupDescription": "Group Description",
+  "groupDescriptionPlaceholder": "Enter group description (optional)",
+  "deleteGroupConfirmation": "Are you sure you want to delete this group? This action cannot be undone.",
+  "saveChanges": "Save Changes",
   "inviteToGroup": "Invite to Group",
+  "addMembers": "Add Members",
+  "manageMembers": "Manage Members",
+  "searchContacts": "Search contacts...",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clearSelection": "Clear",
+  "membersAdded": "{count} member(s) added",
+  "@membersAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "addSelectedMembers": "Add {count} Member(s)",
+  "@addSelectedMembers": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noContactsToAdd": "No contacts available to add",
+  "noContactsFoundWithSearch": "No contacts match your search",
   "groupCreated": "Group created successfully",
   "groupUpdated": "Group updated successfully",
   "groupDeleted": "Group deleted successfully",
@@ -434,6 +462,24 @@
   },
   "joinGroup": "Join Group",
   "leaveGroup": "Leave Group",
+  "confirmLeaveGroup": "Are you sure you want to leave {groupName}?",
+  "@confirmLeaveGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "leftGroup": "You left {groupName}",
+  "@leftGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "groupNotFound": "Group not found",
+  "noMembers": "No members in this group",
+  "creator": "Creator",
+  "remove": "Remove",
+  "confirm": "Confirm",
+  "leave": "Leave",
   "groupInvitations": "Group Invitations",
   
   "@_USERS": {

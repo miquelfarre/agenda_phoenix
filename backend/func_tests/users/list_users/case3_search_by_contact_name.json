@@ -25,14 +25,17 @@
     "status_code": 200,
     "body": [
       {
+        "id": "{{ID}}",
         "username": "test_user",
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
         "is_public": false,
         "is_admin": false,
-        "profile_picture_url": null,
-        "id": "{{ID}}",
+        "profile_picture": null,
         "contact_id": "{{ID}}",
+        "contact_name": "Test User",
+        "contact_phone": "+1234567891",
+        "display_name": "test_user (Test User)",
         "last_login": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"

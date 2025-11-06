@@ -396,7 +396,8 @@ def insert_sample_data():
 
     db = SessionLocal()
     try:
-        now = datetime.now()
+        # Use December 15, 2025 as reference date for sample data
+        now = datetime(2025, 12, 15, 12, 0, 0)
 
         # Date references - all events will be in the future starting from tomorrow
         tomorrow = now + timedelta(days=1)
@@ -473,7 +474,7 @@ def insert_sample_data():
             auth_provider="instagram",
             auth_id="ig_fcbarcelona",
             is_public=True,
-            profile_picture_url="https://example.com/fcb-logo.png",
+            profile_picture="https://example.com/fcb-logo.png",
             last_login=now,
         )
 
@@ -500,7 +501,7 @@ def insert_sample_data():
             auth_id="ig_fitzone",
             is_public=True,
             contact_id=contact_gym.id,
-            profile_picture_url="https://example.com/gym-logo.png",
+            profile_picture="https://example.com/gym-logo.png",
             last_login=now,
         )
         restaurant_sabor = User(
@@ -509,7 +510,7 @@ def insert_sample_data():
             auth_id="ig_restaurant",
             is_public=True,
             contact_id=contact_restaurant.id,
-            profile_picture_url="https://example.com/restaurant-logo.png",
+            profile_picture="https://example.com/restaurant-logo.png",
             last_login=now,
         )
         cultural_llotja = User(
@@ -518,7 +519,7 @@ def insert_sample_data():
             auth_id="ig_cultural",
             is_public=True,
             contact_id=contact_cultural.id,
-            profile_picture_url="https://example.com/cultural-logo.png",
+            profile_picture="https://example.com/cultural-logo.png",
             last_login=now,
         )
 
@@ -2022,7 +2023,7 @@ def create_database_views():
                     u.auth_id,
                     u.is_public,
                     u.is_admin,
-                    u.profile_picture_url AS profile_picture,
+                    u.profile_picture AS profile_picture,
                     u.last_login AS last_seen,
                     u.created_at,
                     u.updated_at,

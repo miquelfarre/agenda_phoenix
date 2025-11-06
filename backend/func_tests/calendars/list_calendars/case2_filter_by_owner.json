@@ -44,19 +44,27 @@
     "body": [
       {
         "name": "Calendario Personal Laura",
-        "start_date": null,
-        "end_date": null,
+        "description": null,
+        "is_discoverable": true,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
+        "is_public": false,
+        "category": null,
+        "share_hash": null,
+        "subscriber_count": 0,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"
       },
       {
         "name": "Calendario Deportes",
-        "start_date": null,
-        "end_date": null,
+        "description": null,
+        "is_discoverable": true,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
+        "is_public": false,
+        "category": null,
+        "share_hash": null,
+        "subscriber_count": 0,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"
       }

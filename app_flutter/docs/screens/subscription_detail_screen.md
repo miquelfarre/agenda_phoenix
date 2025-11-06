@@ -158,8 +158,8 @@ Estado del widget que extiende `ConsumerState<SubscriptionDetailScreen>`
    - **Obtiene ID del usuario suscrito** (línea 44):
      - `publicUserId = widget.subscription.subscribedToId`
 
-   - **Llama al API** (línea 45):
-     - Llama a `ApiClient().fetchUserEvents(publicUserId)`
+   - **Llama al Repository** (línea 45):
+     - Llama a `ref.read(subscriptionRepositoryProvider).fetchUserEvents(publicUserId)`
      - Obtiene datos raw del backend
 
    - **Convierte datos a objetos Event** (línea 46):
@@ -314,9 +314,13 @@ Estado del widget que extiende `ConsumerState<SubscriptionDetailScreen>`
 - `../models/subscription.dart`: Modelo `Subscription` con información del usuario suscrito
 - `../models/event.dart`: Modelo `Event`
 
+### Imports internos - Repositories:
+- Usa `SubscriptionRepository.fetchUserEvents(publicUserId)` a través del provider
+
 ### Imports internos - Services:
-- `../services/api_client.dart`: Cliente API para llamadas al backend
-  - Usa: `ApiClient().fetchUserEvents(publicUserId)`
+- `../core/state/app_state.dart`: Acceso a providers de Riverpod
+
+**Arquitectura**: Screen → Provider → Repository → ApiClient
 
 ### Imports internos - Widgets:
 - `../widgets/adaptive_scaffold.dart`: `AdaptivePageScaffold` para scaffold adaptativo

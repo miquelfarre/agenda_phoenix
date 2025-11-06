@@ -15,6 +15,7 @@ class ContactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIOS = PlatformDetection.isIOS;
+    print('👤 [ContactCard] Building card for: ${contact.displayName} (ID: ${contact.id})');
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: isIOS ? 16.0 : 8.0, vertical: 4.0),

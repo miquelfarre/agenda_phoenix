@@ -6,7 +6,7 @@ import 'package:eventypop/ui/helpers/platform/platform_navigation.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../models/subscription.dart';
 import '../models/event.dart';
-import '../services/api_client.dart';
+import '../core/state/app_state.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/events_list.dart';
@@ -40,8 +40,8 @@ class _SubscriptionDetailScreenState extends ConsumerState<SubscriptionDetailScr
 
     try {
       final publicUserId = widget.subscription.subscribedToId;
-      final eventsData = await ApiClient().fetchUserEvents(publicUserId);
-      final events = eventsData.map((e) => Event.fromJson(e)).toList();
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      final events = await subscriptionRepo.fetchUserEvents(publicUserId);
 
       if (mounted) {
         setState(() {

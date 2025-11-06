@@ -13,7 +13,7 @@
         "id": 1,
         "name": "Team A",
         "description": "First team",
-        "created_by": 1
+        "owner_id": 1
       }
     ]
   },

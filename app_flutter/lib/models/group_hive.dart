@@ -17,7 +17,7 @@ class GroupHive extends HiveObject {
   final String? description;
 
   @HiveField(3)
-  final int creatorId;
+  final int ownerId;
 
   @HiveField(4)
   final DateTime createdAt;
@@ -55,7 +55,7 @@ class GroupHive extends HiveObject {
     required this.id,
     required this.name,
     this.description,
-    required this.creatorId,
+    required this.ownerId,
     required this.createdAt,
     this.memberIds = const [],
     this.memberNames = const [],
@@ -75,7 +75,7 @@ class GroupHive extends HiveObject {
       members.add({'id': memberIds[i], 'instagram_name': i < memberNames.length ? memberNames[i] : null, 'full_name': i < memberFullNames.length ? memberFullNames[i] : null, 'is_public': i < memberIsPublic.length ? memberIsPublic[i] : false});
     }
 
-    return {'id': id, 'name': name, 'description': description, 'creator_id': creatorId, 'created_at': createdAt.toIso8601String(), 'members': members};
+    return {'id': id, 'name': name, 'description': description, 'owner_id': ownerId, 'created_at': createdAt.toIso8601String(), 'members': members};
   }
 
   static GroupHive fromGroup(Group group) {
@@ -86,7 +86,7 @@ class GroupHive extends HiveObject {
 
     final adminIds = group.admins.map((admin) => admin.id).toList();
 
-    return GroupHive(id: group.id, name: group.name, description: group.description, creatorId: group.creatorId, createdAt: DateTime.now(), memberIds: memberIds, memberNames: memberNames.cast<String?>(), memberFullNames: memberFullNames, memberIsPublic: memberIsPublic, adminIds: adminIds);
+    return GroupHive(id: group.id, name: group.name, description: group.description, ownerId: group.ownerId, createdAt: DateTime.now(), memberIds: memberIds, memberNames: memberNames.cast<String?>(), memberFullNames: memberFullNames, memberIsPublic: memberIsPublic, adminIds: adminIds);
   }
 
   static GroupHive fromJson(Map<String, dynamic> json) {
@@ -110,7 +110,7 @@ class GroupHive extends HiveObject {
       id: json['id'] as int,
       name: json['name'] as String,
       description: json['description'] as String?,
-      creatorId: json['creator_id'] as int? ?? 0,
+      ownerId: json['owner_id'] as int? ?? 0,
       createdAt: json['created_at'] != null ? (json['created_at'] is String ? DateTimeUtils.parseAndNormalize(json['created_at'] as String) : json['created_at']) : DateTime.now(),
       memberIds: memberIds,
       memberNames: memberNames,
@@ -126,12 +126,15 @@ class GroupHive extends HiveObject {
   bool get requiresSync => needsSync == true || hasPendingOperations;
 
   bool isAdmin(int userId) {
-    if (creatorId == userId) return true;
+    if (ownerId == userId) return true;
 
     return adminIds?.contains(userId) == true;
   }
 
-  bool isCreator(int userId) => creatorId == userId;
+  bool isOwner(int userId) => ownerId == userId;
+
+  // Deprecated: Use isOwner instead
+  bool isCreator(int userId) => isOwner(userId);
 
   GroupHive addAdminToCache(int userId) {
     final newAdminIds = List<int>.from(adminIds ?? []);
@@ -143,7 +146,7 @@ class GroupHive extends HiveObject {
       id: id,
       name: name,
       description: description,
-      creatorId: creatorId,
+      ownerId: ownerId,
       createdAt: createdAt,
       memberIds: memberIds,
       memberNames: memberNames,
@@ -165,7 +168,7 @@ class GroupHive extends HiveObject {
       id: id,
       name: name,
       description: description,
-      creatorId: creatorId,
+      ownerId: ownerId,
       createdAt: createdAt,
       memberIds: memberIds,
       memberNames: memberNames,
@@ -189,7 +192,7 @@ class GroupHive extends HiveObject {
       id: id,
       name: name,
       description: description,
-      creatorId: creatorId,
+      ownerId: ownerId,
       createdAt: createdAt,
       memberIds: memberIds,
       memberNames: memberNames,
@@ -228,6 +231,6 @@ class GroupHive extends HiveObject {
       }
     }
 
-    return Group(id: id, name: name, description: description ?? '', creatorId: creatorId, createdAt: createdAt, members: members, admins: admins);
+    return Group(id: id, name: name, description: description ?? '', ownerId: ownerId, createdAt: createdAt, members: members, admins: admins);
   }
 }

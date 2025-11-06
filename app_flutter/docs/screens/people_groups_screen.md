@@ -218,7 +218,7 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
    - `_isLoadingContacts = true`
    - `_contactsError = null`
 3. En try-catch:
-   - Llama a `ApiClient().fetchContacts(currentUserId: userId)`
+   - Llama a `ref.read(userRepositoryProvider).fetchContacts(userId)`
    - Incluye comentario: "not migrated to Realtime"
    - Si está montado:
      - Parsea datos a lista de User con `map((c) => User.fromJson(c))`
@@ -228,18 +228,23 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
      - Guarda error en `_contactsError`
      - `_isLoadingContacts = false`
 
-## 5. MÉTODO DE NAVEGACIÓN
+## 5. MÉTODOS DE NAVEGACIÓN
 
-### _navigateToCreateGroup() (líneas 95-104)
+### _navigateToCreateGroup() (líneas 95-97)
 **Tipo de retorno**: `Future<void>`
 
-**Propósito**: Muestra diálogo indicando que la creación de grupos no está disponible
+**Propósito**: Navegar a la pantalla de creación de grupos
 
 **Lógica**:
-- Muestra `CupertinoAlertDialog` con:
-  - Título: "Crear grupo"
-  - Contenido: "Esta funcionalidad estará disponible pronto"
-  - Botón "OK" que cierra el diálogo
+```dart
+Future<void> _navigateToCreateGroup() async {
+  await context.push('/people/groups/create');
+}
+```
+
+**Ruta**: `/people/groups/create` → `CreateEditGroupScreen` (modo crear)
+
+**Actualización**: Cuando se crea un grupo, `groupsStreamProvider` se actualiza automáticamente vía Realtime
 
 ## 6. TAB DE CONTACTOS
 
@@ -336,7 +341,7 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
      - Espaciador de 16px
      - Botón "Reintentar" que invalida `groupsStreamProvider`
 
-### _buildGroupCard(Group group, AppLocalizations l10n) (líneas 280-308)
+### _buildGroupCard(Group group, AppLocalizations l10n) (líneas 280-290)
 **Tipo de retorno**: `Widget`
 
 **Parámetros**:
@@ -352,10 +357,18 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
   - **title**: Nombre del grupo
   - **subtitle**: "{cantidad} miembros"
   - **trailing**: Icono chevron_right gris
-  - **onTap**: Muestra diálogo con:
-    - Título: "Detalles del grupo"
-    - Contenido: "Esta funcionalidad estará disponible pronto"
-    - Botón "OK"
+  - **onTap**: Navega a `/people/groups/{groupId}` con GoRouter, pasando el grupo como extra
+
+**Lógica de navegación**:
+```dart
+onTap: () {
+  context.push('/people/groups/${group.id}', extra: group);
+}
+```
+
+**Ruta**: `/people/groups/:groupId` → `GroupDetailScreen`
+
+**Actualización**: Cuando se modifican miembros o propiedades del grupo, `groupsStreamProvider` se actualiza automáticamente vía Realtime
 
 ## 8. MÉTODO BUILD PRINCIPAL
 
@@ -396,9 +409,16 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
 ### Providers utilizados:
 - `groupsStreamProvider`: Stream de grupos (observado con watch, invalidado)
 
+### Repositories:
+- `UserRepository.fetchContacts()`: Carga contactos desde API (no migrado a Realtime aún)
+- `GroupRepository`: A través de groupsStreamProvider (con Realtime)
+
 ### Services:
-- `ApiClient().fetchContacts()`: Carga contactos desde API (no Realtime)
 - `ConfigService.instance.currentUserId`: ID del usuario actual
+
+**Arquitectura**:
+- Contactos: Screen → Repository → ApiClient (sin Realtime)
+- Grupos: Screen → Provider → Repository → ApiClient (con Realtime)
 
 ### Permissions:
 - `Permission.contacts`: Permiso de acceso a contactos del dispositivo
@@ -482,6 +502,21 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
 2. Navega a `/people/contacts/{contactId}` con GoRouter
 3. Pasa objeto `contact` como extra
 
+### Navegación a crear grupo:
+1. Usuario presiona FAB en tab de grupos
+2. `_navigateToCreateGroup()` se ejecuta
+3. Navega a `/people/groups/create` con GoRouter
+4. Abre `CreateEditGroupScreen` en modo creación
+5. Al crear grupo, Realtime actualiza `groupsStreamProvider` automáticamente
+
+### Navegación a detalle de grupo:
+1. Usuario tap en tarjeta de grupo (`_buildGroupCard()`)
+2. Navega a `/people/groups/{groupId}` con GoRouter
+3. Pasa objeto `group` como extra
+4. Abre `GroupDetailScreen`
+5. Desde allí puede editar, agregar/quitar miembros, gestionar admins, etc.
+6. Cualquier cambio se refleja automáticamente vía Realtime
+
 ## 11. CARACTERÍSTICAS DE LA PANTALLA
 
 ### Funcionalidades principales:
@@ -493,12 +528,14 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
 3. **Lista de grupos**:
    - Stream en tiempo real de Supabase
    - Filtrados por membresía del usuario
-   - Navegación a detalle (pendiente de implementar)
+   - Navegación a `GroupDetailScreen` para ver y gestionar grupo
 4. **Gestión de permisos**:
    - Verifica permiso de contactos
    - Solicita permiso si no se tiene
    - Abre ajustes si se niega
-5. **FAB para crear grupo** (solo en tab de grupos)
+5. **FAB para crear grupo** (solo en tab de grupos):
+   - Navega a `CreateEditGroupScreen` en modo creación
+   - Permite crear nuevos grupos con nombre y descripción
 6. **Estados vacíos** apropiados para cada caso
 7. **Recarga automática** al volver a la app
 
@@ -523,10 +560,6 @@ Estado del widget que gestiona la lógica de la pantalla. Implementa `WidgetsBin
 **Selector de tabs**:
 - Tab activa (fondo azul, texto blanco)
 - Tab inactiva (fondo transparente, texto gris)
-
-### Funcionalidades pendientes:
-- **Crear grupo**: Muestra diálogo "pronto disponible"
-- **Ver detalles de grupo**: Muestra diálogo "pronto disponible"
 
 ## 12. ESTRUCTURA DEL CÓDIGO
 

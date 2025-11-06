@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/config_service.dart';
-import '../../services/api_client.dart';
 import '../../services/country_service.dart';
 import '../../models/country.dart';
 import '../../core/state/app_state.dart';
@@ -275,7 +274,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
 
       // Update user online status
       try {
-        await ApiClientFactory.instance.put('/api/v1/users/${user.id}', body: {'is_online': true, 'last_seen': DateTime.now().toIso8601String()});
+        final userRepo = ref.read(userRepositoryProvider);
+        await userRepo.updateOnlineStatus(userId: user.id, isOnline: true, lastSeen: DateTime.now());
       } catch (e) {
         // Ignore error
       }

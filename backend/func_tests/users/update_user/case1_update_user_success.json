@@ -32,7 +32,7 @@
       "auth_id": "{{ID}}",
       "is_public": false,
       "is_admin": false,
-      "profile_picture_url": null,
+      "profile_picture": null,
       "id": "{{ID}}",
       "contact_id": "{{ID}}",
       "last_login": null,

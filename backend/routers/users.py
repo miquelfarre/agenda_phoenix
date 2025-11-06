@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
-@router.get("", response_model=List[Union[UserResponse, UserEnrichedResponse]])
+@router.get("")
 async def get_users(public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all users, optionally filtered by public status, with optional search by username/contact name, optionally enriched with contact info"""
-    return user.get_multi_with_optional_enrichment(
+    result = user.get_multi_with_optional_enrichment(
         db,
         public=public,
         enriched=enriched,
@@ -38,6 +38,9 @@ async def get_users(public: Optional[bool] = None, enriched: bool = False, searc
         order_by=order_by or "id",
         order_dir=order_dir
     )
+    # When enriched=True, result is list of dicts; when False, result is list of User ORM objects
+    # Return as-is and let FastAPI serialize appropriately
+    return result
 
 
 @router.get("/me", response_model=Union[UserResponse, UserEnrichedResponse])
@@ -76,7 +79,9 @@ async def get_current_user(
             username=db_user.username,
             auth_provider=db_user.auth_provider,
             auth_id=db_user.auth_id,
-            profile_picture_url=db_user.profile_picture_url,
+            is_public=db_user.is_public,
+            is_admin=db_user.is_admin,
+            profile_picture=db_user.profile_picture,
             contact_id=db_user.contact_id,
             contact_name=db_contact.name if db_contact else None,
             contact_phone=db_contact.phone if db_contact else None,
@@ -119,7 +124,9 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
             username=db_user.username,
             auth_provider=db_user.auth_provider,
             auth_id=db_user.auth_id,
-            profile_picture_url=db_user.profile_picture_url,
+            is_public=db_user.is_public,
+            is_admin=db_user.is_admin,
+            profile_picture=db_user.profile_picture,
             contact_id=db_user.contact_id,
             contact_name=db_contact.name if db_contact else None,
             contact_phone=db_contact.phone if db_contact else None,
@@ -394,7 +401,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
             owner_info[user_obj.id] = {
                 "name": owner_name,
                 "is_public": user_obj.is_public,
-                "profile_picture": user_obj.profile_picture_url
+                "profile_picture": user_obj.profile_picture
             }
 
     # Fetch calendar info (name, color) - assuming calendars table has these fields
@@ -443,7 +450,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
                 "id": user_obj.id,
                 "full_name": contact_obj.name if contact_obj else None,
                 "username": user_obj.username,
-                "profile_picture": user_obj.profile_picture_url
+                "profile_picture": user_obj.profile_picture
             })
 
     # ============================================================
@@ -808,7 +815,7 @@ async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
             auth_id=public_user.auth_id,
             is_public=public_user.is_public,
             is_admin=public_user.is_admin,
-            profile_picture_url=public_user.profile_picture_url,
+            profile_picture=public_user.profile_picture,
             last_login=public_user.last_login,
             created_at=public_user.created_at,
             updated_at=public_user.updated_at,

@@ -411,6 +411,26 @@ class EventRepository {
     _emitInteractions();
   }
 
+  /// Fetch detailed event information by ID
+  Future<Event> fetchEventDetails(int eventId) async {
+    final data = await _apiClient.fetchEvent(eventId);
+    return Event.fromJson(data);
+  }
+
+  /// Fetch events for a specific user (used for event series / user's events list)
+  Future<List<Event>> fetchUserEvents(int userId) async {
+    final response = await _apiClient.get('/users/$userId/events');
+    final List<dynamic> eventsData = response['data'] ?? response;
+    return eventsData.map((data) => Event.fromJson(data)).toList();
+  }
+
+  /// Update personal note for an event
+  Future<void> updatePersonalNote(int eventId, String? note) async {
+    await _apiClient.patch('/api/v1/events/$eventId/interaction', body: {'note': note});
+    // After updating, refresh the local cache
+    await _fetchAndSync();
+  }
+
   void dispose() {
     _realtimeChannel?.unsubscribe();
     _interactionsChannel?.unsubscribe();

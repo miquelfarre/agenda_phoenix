@@ -6,6 +6,7 @@ import '../../widgets/adaptive_scaffold.dart';
 import '../../screens/events_screen.dart';
 import '../../screens/subscriptions_screen.dart';
 import '../../screens/calendars_screen.dart';
+import '../../screens/people_groups_screen.dart';
 import '../../widgets/adaptive/adaptive_button.dart';
 import '../../ui/helpers/platform/dialog_helpers.dart';
 
@@ -32,6 +33,7 @@ class _NavigationShellState extends State<NavigationShell> {
       AdaptiveNavigationItem(icon: CupertinoIcons.calendar, label: l10n.events, screen: const EventsScreen()),
       AdaptiveNavigationItem(icon: CupertinoIcons.square_stack, label: l10n.subscriptions, screen: SubscriptionsScreen()),
       AdaptiveNavigationItem(icon: CupertinoIcons.rectangle_stack_person_crop, label: l10n.calendars, screen: const CalendarsScreen()),
+      AdaptiveNavigationItem(icon: CupertinoIcons.person_2_fill, label: l10n.peopleAndGroups, screen: const PeopleGroupsScreen()),
     ];
 
     _updateSelectedIndex();
@@ -46,6 +48,8 @@ class _NavigationShellState extends State<NavigationShell> {
       _selectedIndex = 1;
     } else if (location.startsWith('/calendars')) {
       _selectedIndex = 2;
+    } else if (location.startsWith('/people')) {
+      _selectedIndex = 3;
     }
   }
 
@@ -65,6 +69,9 @@ class _NavigationShellState extends State<NavigationShell> {
         break;
       case 2:
         context.go('/calendars');
+        break;
+      case 3:
+        context.go('/people');
         break;
     }
   }

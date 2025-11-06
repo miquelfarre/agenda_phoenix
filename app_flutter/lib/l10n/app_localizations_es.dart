@@ -107,7 +107,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get add => 'Añadir';
 
   @override
-  String get remove => 'Quitar';
+  String get remove => 'Eliminar';
 
   @override
   String get close => 'Cerrar';
@@ -619,10 +619,55 @@ class AppLocalizationsEs extends AppLocalizations {
   String get groupName => 'Nombre del Grupo';
 
   @override
+  String get groupNamePlaceholder => 'Ingresa el nombre del grupo';
+
+  @override
   String get groupDescription => 'Descripción del Grupo';
 
   @override
+  String get groupDescriptionPlaceholder => 'Ingresa la descripción del grupo (opcional)';
+
+  @override
+  String get deleteGroupConfirmation => '¿Estás seguro de que quieres eliminar este grupo? Esta acción no se puede deshacer.';
+
+  @override
+  String get saveChanges => 'Guardar Cambios';
+
+  @override
   String get inviteToGroup => 'Invitar al Grupo';
+
+  @override
+  String get addMembers => 'Añadir Miembros';
+
+  @override
+  String get manageMembers => 'Administrar Miembros';
+
+  @override
+  String get searchContacts => 'Buscar contactos...';
+
+  @override
+  String selectedCount(int count) {
+    return '$count seleccionado(s)';
+  }
+
+  @override
+  String get clearSelection => 'Limpiar';
+
+  @override
+  String membersAdded(int count) {
+    return '$count miembro(s) añadido(s)';
+  }
+
+  @override
+  String addSelectedMembers(int count) {
+    return 'Añadir $count Miembro(s)';
+  }
+
+  @override
+  String get noContactsToAdd => 'No hay contactos disponibles para añadir';
+
+  @override
+  String get noContactsFoundWithSearch => 'No se encontraron contactos con tu búsqueda';
 
   @override
   String get groupCreated => 'Grupo creado exitosamente';
@@ -695,6 +740,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get leaveGroup => 'Salir del Grupo';
+
+  @override
+  String confirmLeaveGroup(String groupName) {
+    return '¿Estás seguro de que quieres salir de $groupName?';
+  }
+
+  @override
+  String leftGroup(String groupName) {
+    return 'Saliste de $groupName';
+  }
+
+  @override
+  String get groupNotFound => 'Grupo no encontrado';
+
+  @override
+  String get noMembers => 'No hay miembros en este grupo';
+
+  @override
+  String get creator => 'Creador';
 
   @override
   String get groupInvitations => 'Invitaciones de Grupos';
@@ -1500,9 +1564,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get addEventDetailsHint => 'Añade detalles sobre tu evento...';
-
-  @override
-  String get addMembers => 'Añadir Miembros';
 
   @override
   String get searchFriends => 'Buscar Amigos';

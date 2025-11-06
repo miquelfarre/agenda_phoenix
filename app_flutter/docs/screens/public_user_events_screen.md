@@ -154,7 +154,7 @@ Estado del widget que gestiona la lógica de la pantalla
 4. **En bloque try-catch**:
    - **Fetch eventos** (líneas 65-68):
      - Imprime log con userId
-     - Llama a `ApiClient().fetchUserEvents(userId)`
+     - Llama a `ref.read(subscriptionRepositoryProvider).fetchUserEvents(userId)`
      - Parsea eventos con `Event.fromJson()`
      - Imprime cantidad de eventos obtenidos
    - **Determinar suscripción** (líneas 71-84):
@@ -352,11 +352,16 @@ Estado del widget que gestiona la lógica de la pantalla
 
 ### Providers utilizados:
 - `eventRepositoryProvider`: Repositorio de eventos (read)
+- `subscriptionRepositoryProvider`: Repositorio de suscripciones (read)
+
+### Repositories:
+- `SubscriptionRepository.fetchUserEvents()`: Carga eventos de usuario (a través del provider)
+- `EventRepository.leaveEvent()`: Permite abandonar eventos
 
 ### Services:
-- `ApiClient().fetchUserEvents()`: Carga eventos de usuario
-- `ApiClient().post()`: Suscribe a usuario
-- `ApiClient().delete()`: Desuscribe de usuario
+- Suscripciones manejadas directamente por ApiClient (POST/DELETE a `/users/{userId}/subscribe`)
+
+**Arquitectura**: Screen → Provider → Repository → ApiClient
 
 ### Widgets externos:
 - `CupertinoPageScaffold`: Scaffold de iOS

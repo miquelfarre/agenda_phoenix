@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
 import '../models/user.dart';
 import '../models/group.dart';
-import '../services/api_client.dart';
 import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
@@ -85,11 +84,12 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
         return;
       }
 
-      final users = await ApiClient().fetchAvailableInvitees(eventId);
+      final userRepo = ref.read(userRepositoryProvider);
+      final users = await userRepo.fetchAvailableInvitees(eventId);
 
       if (mounted) {
         setState(() {
-          _availableUsers = users.map((u) => User.fromJson(u)).toList();
+          _availableUsers = users;
           _groups = [];
           _isLoading = false;
         });

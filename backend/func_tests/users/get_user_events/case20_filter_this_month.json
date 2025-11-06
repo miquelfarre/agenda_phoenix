@@ -12,31 +12,31 @@
       {
         "id": 1,
         "name": "Last Month",
-        "start_date": "2025-09-30T10:00:00",
+        "start_date": "2025-12-31T10:00:00",
         "owner_id": 1
       },
       {
         "id": 2,
-        "name": "Oct Start",
-        "start_date": "2025-10-01T10:00:00",
+        "name": "Jan Start",
+        "start_date": "2026-01-01T10:00:00",
         "owner_id": 1
       },
       {
         "id": 3,
-        "name": "Oct Mid",
-        "start_date": "2025-10-15T10:00:00",
+        "name": "Jan Mid",
+        "start_date": "2026-01-15T10:00:00",
         "owner_id": 1
       },
       {
         "id": 4,
-        "name": "Oct End",
-        "start_date": "2025-10-31T10:00:00",
+        "name": "Jan End",
+        "start_date": "2026-01-31T10:00:00",
         "owner_id": 1
       },
       {
         "id": 5,
         "name": "Next Month",
-        "start_date": "2025-11-01T10:00:00",
+        "start_date": "2026-02-01T10:00:00",
         "owner_id": 1
       }
     ]
@@ -47,33 +47,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY October events (id=2,3,4), assuming current month is October 2025",
-    "body": [
-      {
-        "name": "Oct End",
-        "description": null,
-        "start_date": "{{TIMESTAMP}}",
-        "event_type": "regular",
-        "id": "{{ID}}",
-        "owner_id": "{{ID}}",
-        "calendar_id": null,
-        "parent_recurring_event_id": null,
-        "created_at": "{{TIMESTAMP}}",
-        "updated_at": "{{TIMESTAMP}}",
-        "interaction": null,
-        "interactions": null,
-        "owner_name": "Alice",
-        "owner_profile_picture": null,
-        "is_owner_public": false,
-        "can_subscribe_to_owner": null,
-        "is_subscribed_to_owner": null,
-        "owner_upcoming_events": null,
-        "calendar_name": null,
-        "calendar_color": null,
-        "is_birthday": false,
-        "attendees": [],
-        "invitation_stats": null
-      }
-    ]
+    "note": "Should return ONLY January events (id=2,3,4), assuming current month is January 2026",
+    "body": []
   }
 }

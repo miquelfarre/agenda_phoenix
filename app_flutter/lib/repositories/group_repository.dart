@@ -24,9 +24,23 @@ class GroupRepository {
   Future<void> get initialized => _initCompleter.future;
 
   Stream<List<Group>> get groupsStream async* {
+    // Wait for initialization to complete
+    try {
+      await initialized;
+    } catch (e) {
+      // If initialization failed, still emit empty list to avoid infinite loading
+      print('🔴 [GroupRepository] Initialization failed: $e');
+    }
+
+    // Emit cached groups immediately
     if (_cachedGroups.isNotEmpty) {
       yield List.from(_cachedGroups);
+    } else {
+      // Emit empty list to avoid infinite loading state
+      yield [];
     }
+
+    // Then emit future updates
     yield* _groupsController.stream;
   }
 
@@ -79,9 +93,11 @@ class GroupRepository {
 
       _rt.setServerSyncTsFromResponse(rows: _cachedGroups.map((g) => g.toJson()));
       _emitCurrentGroups();
-      // ignore: empty_catches
     } catch (e) {
-      // Intentionally ignore realtime errors
+      // Emit current cached groups even on error (offline support)
+      _emitCurrentGroups();
+      // Log error but don't throw to allow app to continue with cached data
+      print('🔴 [GroupRepository] Error fetching groups: $e');
     }
   }
 
@@ -100,8 +116,8 @@ class GroupRepository {
 
   Future<Group> createGroup({required String name, String? description}) async {
     try {
-      final creatorId = ConfigService.instance.currentUserId;
-      final newGroup = await _apiClient.createGroup({'name': name, 'description': description, 'creator_id': creatorId});
+      final ownerId = ConfigService.instance.currentUserId;
+      final newGroup = await _apiClient.createGroup({'name': name, 'description': description, 'owner_id': ownerId});
       await _fetchAndSync();
       return Group.fromJson(newGroup);
     } catch (e, _) {
@@ -311,8 +327,8 @@ class GroupRepository {
       if (!group.isAdmin(adminUserId) && adminUserId != memberUserId) {
         throw const exceptions.PermissionDeniedException(message: 'No permission to remove member from group');
       }
-      if (memberUserId == group.creatorId) {
-        throw const exceptions.ConflictException(message: 'Cannot remove group creator');
+      if (memberUserId == group.ownerId) {
+        throw const exceptions.ConflictException(message: 'Cannot remove group owner');
       }
       if (!group.members.any((m) => m.id == memberUserId)) {
         throw const exceptions.NotFoundException(message: 'User is not a member of this group');

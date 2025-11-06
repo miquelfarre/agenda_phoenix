@@ -18,13 +18,13 @@
         "id": 1,
         "name": "Team A",
         "description": "First team",
-        "created_by": 1
+        "owner_id": 1
       },
       {
         "id": 2,
         "name": "Team B",
         "description": "Second team",
-        "created_by": 2
+        "owner_id": 2
       }
     ]
   },
@@ -43,7 +43,22 @@
         "name": "Team A",
         "description": "First team",
         "id": "{{ID}}",
-        "created_by": 1,
+        "owner_id": "{{ID}}",
+        "owner": {
+          "username": null,
+          "auth_provider": "phone",
+          "auth_id": "{{ID}}",
+          "is_public": false,
+          "is_admin": false,
+          "profile_picture": null,
+          "id": "{{ID}}",
+          "contact_id": "{{ID}}",
+          "last_login": null,
+          "created_at": "{{TIMESTAMP}}",
+          "updated_at": "{{TIMESTAMP}}"
+        },
+        "members": [],
+        "admins": [],
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"
       },
@@ -51,7 +66,22 @@
         "name": "Team B",
         "description": "Second team",
         "id": "{{ID}}",
-        "created_by": 2,
+        "owner_id": "{{ID}}",
+        "owner": {
+          "username": null,
+          "auth_provider": "phone",
+          "auth_id": "{{ID}}",
+          "is_public": false,
+          "is_admin": false,
+          "profile_picture": null,
+          "id": "{{ID}}",
+          "contact_id": "{{ID}}",
+          "last_login": null,
+          "created_at": "{{TIMESTAMP}}",
+          "updated_at": "{{TIMESTAMP}}"
+        },
+        "members": [],
+        "admins": [],
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"
       }

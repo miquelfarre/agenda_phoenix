@@ -88,6 +88,7 @@
           "role": null,
           "invited_by_user_id": "{{ID}}",
           "note": null,
+          "is_attending": false,
           "read_at": null,
           "is_new": true
         },

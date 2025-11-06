@@ -8,7 +8,6 @@ import '../models/user.dart';
 import '../models/event.dart';
 import '../core/state/app_state.dart';
 import '../services/config_service.dart';
-import '../services/api_client.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/event_card.dart';
@@ -74,7 +73,8 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> with 
 
     try {
       final currentUserId = ConfigService.instance.currentUserId;
-      await ApiClient().fetchContact(widget.contact.id, currentUserId: currentUserId);
+      final userRepo = ref.read(userRepositoryProvider);
+      await userRepo.fetchContact(widget.contact.id, currentUserId: currentUserId);
 
       if (mounted) {
         setState(() {
@@ -258,7 +258,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> with 
                           return Container(
                             margin: const EdgeInsets.all(16),
                             width: double.infinity,
-                            child: AdaptiveButton(config: AdaptiveButtonConfigExtended.destructive(), text: l10n.blockUser, enabled: !_blockingUser, onPressed: _showBlockConfirmation),
+                            child: AdaptiveButton(config: AdaptiveButtonConfigExtended.destructive(), text: l10n.blockUser, onPressed: _blockingUser ? null : _showBlockConfirmation),
                           );
                         }
 

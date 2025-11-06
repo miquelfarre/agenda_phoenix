@@ -15,9 +15,16 @@ import '../../screens/birthdays_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../../screens/create_edit_event_screen.dart';
 import '../../screens/event_detail_screen.dart';
+import '../../screens/people_groups_screen.dart';
+import '../../screens/group_detail_screen.dart';
+import '../../screens/create_edit_group_screen.dart';
+import '../../screens/add_group_members_screen.dart';
+import '../../screens/contact_detail_screen.dart';
 import '../../services/supabase_auth_service.dart';
 import '../navigation/navigation_shell.dart';
 import '../../models/event.dart';
+import '../../models/group.dart';
+import '../../models/user.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -83,6 +90,72 @@ class AppRouter {
                   }
                   return EditCalendarScreen(calendarId: calendarId);
                 },
+              ),
+            ],
+          ),
+
+          GoRoute(
+            path: '/people',
+            name: 'people',
+            builder: (context, state) => const PeopleGroupsScreen(),
+            routes: [
+              GoRoute(
+                path: 'contacts/:contactId',
+                name: 'contact-detail',
+                builder: (context, state) {
+                  final contactId = int.tryParse(state.pathParameters['contactId'] ?? '');
+                  if (contactId == null) {
+                    return _buildErrorPage(context, state, message: 'Invalid contact ID');
+                  }
+
+                  final contact = state.extra as User?;
+                  if (contact == null) {
+                    return _buildErrorPage(context, state, message: 'Contact data required');
+                  }
+                  return ContactDetailScreen(contact: contact);
+                },
+              ),
+              GoRoute(
+                path: 'groups/create',
+                name: 'group-create',
+                builder: (context, state) => const CreateEditGroupScreen(),
+              ),
+              GoRoute(
+                path: 'groups/:groupId',
+                name: 'group-detail',
+                builder: (context, state) {
+                  final groupId = int.tryParse(state.pathParameters['groupId'] ?? '');
+                  if (groupId == null) {
+                    return _buildErrorPage(context, state, message: 'Invalid group ID');
+                  }
+
+                  final group = state.extra as Group?;
+                  return GroupDetailScreen(groupId: groupId, initialGroup: group);
+                },
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    name: 'group-edit',
+                    builder: (context, state) {
+                      final group = state.extra as Group?;
+                      if (group == null) {
+                        return _buildErrorPage(context, state, message: 'Group data required');
+                      }
+                      return CreateEditGroupScreen(group: group);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'add-members',
+                    name: 'group-add-members',
+                    builder: (context, state) {
+                      final group = state.extra as Group?;
+                      if (group == null) {
+                        return _buildErrorPage(context, state, message: 'Group data required');
+                      }
+                      return AddGroupMembersScreen(group: group);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
