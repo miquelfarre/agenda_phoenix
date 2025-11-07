@@ -56,11 +56,11 @@ class _CalendarEventsScreenState extends ConsumerState<CalendarEventsScreen> {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
     return calendarsAsync.maybeWhen(
       data: (calendars) => calendars.firstWhere(
-        (cal) => cal.id == widget.calendarId.toString(),
+        (cal) => cal.id == widget.calendarId,
         orElse: () => Calendar(
-          id: widget.calendarId.toString(),
+          id: widget.calendarId,
           name: widget.calendarName,
-          ownerId: '',
+          ownerId: 0,
           isPublic: false,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),

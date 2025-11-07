@@ -7,9 +7,9 @@ import 'horizontal_selector_widget.dart';
 class CalendarHorizontalSelector extends StatelessWidget {
   final List<Calendar> calendars;
 
-  final String? selectedCalendarId;
+  final int? selectedCalendarId;
 
-  final Function(String calendarId) onSelected;
+  final Function(int calendarId) onSelected;
 
   final bool isDisabled;
 

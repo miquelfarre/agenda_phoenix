@@ -54,12 +54,8 @@ class _VoiceCommandConfirmationScreenState
     });
 
     try {
-      print('\n🚀 ===== EJECUTANDO COMANDO DE VOZ =====');
-      print('📝 Texto transcrito: "${widget.transcribedText}"');
-      print('🎯 Confianza: ${(widget.interpretation['confidence'] as double? ?? 0.0) * 100}%');
 
       final actions = _getActions();
-      print('\n📊 Total de acciones a ejecutar: ${actions.length}');
 
       for (int i = 0; i < actions.length; i++) {
         final action = actions[i];
@@ -67,43 +63,29 @@ class _VoiceCommandConfirmationScreenState
         final parameters = action['parameters'] as Map<String, dynamic>;
         final dependsOnPrevious = action['depends_on_previous'] as bool? ?? false;
 
-        print('\n┌─────────────────────────────────────────────────');
-        print('│ ACCIÓN ${i + 1}/${actions.length}: $actionType');
-        print('├─────────────────────────────────────────────────');
 
         if (dependsOnPrevious) {
-          print('│ 🔗 Depende de la acción anterior');
         }
 
         // Mostrar endpoint REST
-        final restInfo = _getRestEndpointInfo(actionType, parameters);
-        print('│ 🌐 REST API:');
-        print('│    Método: ${restInfo['method']}');
-        print('│    URL: ${restInfo['url']}');
-        print('│    Body:');
+        _getRestEndpointInfo(actionType, parameters);
 
         // Mostrar el body JSON formateado
         final bodyJson = const JsonEncoder.withIndent('│       ').convert(parameters);
-        print('│    {');
         for (final line in bodyJson.split('\n').skip(1)) {
           if (line.trim() == '}') {
-            print('│    }');
           } else {
-            print('│  $line');
           }
         }
 
-        print('└─────────────────────────────────────────────────');
       }
 
-      print('\n⏳ Iniciando ejecución...\n');
 
       // Ejecutar la acción
       final result = await widget.voiceService.executeAction(widget.interpretation);
 
       if (!mounted) return;
 
-      print('\n✅ ===== COMANDO EJECUTADO EXITOSAMENTE =====\n');
 
       // Mostrar resultado y volver
       ScaffoldMessenger.of(context).showSnackBar(
@@ -116,10 +98,7 @@ class _VoiceCommandConfirmationScreenState
 
       Navigator.of(context).pop(result);
 
-    } catch (e, stackTrace) {
-      print('\n❌ ===== ERROR AL EJECUTAR COMANDO =====');
-      print('Error: $e');
-      print('Stack trace: $stackTrace\n');
+    } catch (e, _) {
 
       setState(() {
         _errorMessage = e.toString();
@@ -646,18 +625,6 @@ class _VoiceCommandConfirmationScreenState
     }
   }
 
-  String _formatPlaceholder(String value, String friendlyText) {
-    // Detectar si el valor contiene un placeholder como {{previous_result.id}}
-    if (value.contains('{{') && value.contains('}}')) {
-      return friendlyText;
-    }
-    // Si es un ID numérico, mostrar texto amigable en lugar del ID
-    if (int.tryParse(value) != null) {
-      return friendlyText;
-    }
-    return value;
-  }
-
   /// Versión mejorada que busca el nombre real del objeto en acciones anteriores
   String _formatPlaceholderWithContext(
     String value,
@@ -940,7 +907,6 @@ class _VoiceCommandConfirmationScreenState
   }
 
   Future<void> _correctWithVoice() async {
-    print('\n🎤 ===== USUARIO QUIERE CORREGIR CON VOZ =====');
 
     // Mostrar diálogo de grabación
     final recordingSecondsNotifier = ValueNotifier<int>(0);
@@ -989,7 +955,6 @@ class _VoiceCommandConfirmationScreenState
         return;
       }
 
-      print('📝 Corrección transcrita: "$correctionText"');
 
       // Crear un prompt especial para que Gemini interprete la corrección
       final correctionPrompt = '''
@@ -1010,7 +975,6 @@ Si el usuario quiere eliminar una acción, no la incluyas en la respuesta.
 IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo formato JSON que antes.
 ''';
 
-      print('🤖 Enviando corrección a Gemini...');
 
       // Interpretar la corrección
       final updatedInterpretation = await widget.voiceService.interpretWithAI(
@@ -1018,8 +982,6 @@ IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo forma
         customPrompt: correctionPrompt,
       );
 
-      print('✅ Nueva interpretación recibida');
-      print('📊 Interpretación actualizada: ${const JsonEncoder.withIndent('  ').convert(updatedInterpretation)}');
 
       // Cerrar esta pantalla y volver al FAB con la nueva interpretación
       // El FAB volverá a abrir la pantalla de confirmación con los datos actualizados
@@ -1044,9 +1006,7 @@ IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo forma
         }
       }
 
-    } catch (e, stackTrace) {
-      print('❌ Error al corregir con voz: $e');
-      print('Stack trace: $stackTrace');
+    } catch (e, _) {
 
       recordingSecondsNotifier.dispose();
 

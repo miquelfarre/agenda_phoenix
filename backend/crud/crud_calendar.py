@@ -112,6 +112,7 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
     ) -> tuple[Optional[Calendar], Optional[str]]:
         """
         Create calendar with validation.
+        Automatically creates a calendar_membership for the owner as admin.
 
         Returns:
             (Calendar, None) if successful
@@ -126,6 +127,15 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
 
         # Create calendar
         db_calendar = self.create(db, obj_in=obj_in)
+
+        # Automatically create calendar_membership for the owner as admin
+        membership_data = CalendarMembershipCreate(
+            calendar_id=db_calendar.id,
+            user_id=obj_in.owner_id,
+            role="admin"
+        )
+        calendar_membership.create(db, obj_in=membership_data)
+
         return db_calendar, None
 
     def get_members(

@@ -12,29 +12,22 @@ import 'voice_recording_dialog.dart';
 
 /// Provider para el servicio de voz (Gemini u Ollama según configuración)
 final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
-  print('🔄 ===== INICIALIZANDO PROVIDER DE VOZ =====');
   DebugConfig.info('🔄 ===== INICIALIZANDO PROVIDER DE VOZ =====', tag: 'VoiceButton');
   try {
-    print('📋 Obteniendo AIConfigService...');
     DebugConfig.info('📋 Obteniendo AIConfigService...', tag: 'VoiceButton');
     final config = await AIConfigService.getInstance();
 
-    print('🔍 Verificando configuración...');
-    print('   - AI Provider: ${config.aiProvider}');
-    print('   - voiceCommandsEnabled: ${config.voiceCommandsEnabled}');
     DebugConfig.info('🔍 Verificando configuración...', tag: 'VoiceButton');
     DebugConfig.info('   - AI Provider: ${config.aiProvider}', tag: 'VoiceButton');
     DebugConfig.info('   - voiceCommandsEnabled: ${config.voiceCommandsEnabled}', tag: 'VoiceButton');
 
     if (!config.voiceCommandsEnabled) {
-      print('⚠️ Comandos de voz deshabilitados');
       DebugConfig.info('⚠️ Comandos de voz deshabilitados', tag: 'VoiceButton');
       return null;
     }
 
     // Crear el servicio según el provider configurado
     if (config.aiProvider == AIProvider.ollama) {
-      print('✅ Usando Ollama (${config.ollamaModel}) en ${config.ollamaBaseUrl}');
       DebugConfig.info('✅ Usando Ollama (${config.ollamaModel})', tag: 'VoiceButton');
 
       return OllamaVoiceService(
@@ -44,18 +37,15 @@ final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
     } else {
       // Gemini
       if (!config.hasApiKey) {
-        print('⚠️ Gemini API no configurada');
         DebugConfig.info('⚠️ Gemini API no configurada', tag: 'VoiceButton');
         return null;
       }
 
       final apiKey = config.geminiApiKey!;
-      print('✅ Usando Gemini con API key (${apiKey.length} chars)');
       DebugConfig.info('✅ Usando Gemini', tag: 'VoiceButton');
       return GeminiVoiceService(geminiApiKey: apiKey);
     }
   } catch (e) {
-    print('❌ Error al inicializar servicio de voz: $e');
     DebugConfig.error('❌ Error al inicializar servicio de voz: $e', tag: 'VoiceButton');
     return null;
   }
@@ -105,7 +95,6 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
   }
 
   Future<void> _handleVoiceCommand() async {
-    print('🎤 ===== BOTÓN DE VOZ PRESIONADO ===== ${DateTime.now()}');
     DebugConfig.info('🎤 ===== BOTÓN DE VOZ PRESIONADO =====', tag: 'VoiceButton');
 
     // Mostrar un diálogo visual para confirmar que el botón funciona
@@ -122,24 +111,20 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
 
     final voiceService = voiceServiceAsync.when(
       data: (service) {
-        print('✅ Servicio de voz disponible: ${service != null}');
         DebugConfig.info('✅ Servicio de voz disponible', tag: 'VoiceButton');
         return service;
       },
       loading: () {
-        print('⏳ Servicio de voz cargando...');
         DebugConfig.info('⏳ Servicio de voz cargando...', tag: 'VoiceButton');
         return null;
       },
       error: (error, stack) {
-        print('❌ Error en servicio de voz: $error');
         DebugConfig.error('❌ Error en servicio de voz: $error', tag: 'VoiceButton');
         return null;
       },
     );
 
     if (voiceService == null) {
-      print('❌ Servicio de voz es NULL');
       DebugConfig.error('❌ Servicio de voz no disponible', tag: 'VoiceButton');
       _showError('Servicio de IA no configurado. '
                 'Ve a Configuración para añadir tu API key.');
@@ -147,15 +132,12 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
     }
 
     try {
-      print('🔴 Iniciando grabación...');
       DebugConfig.info('🔴 Iniciando grabación...', tag: 'VoiceButton');
       setState(() => _isRecording = true);
 
       // 1. Grabar audio y transcribir
-      print('🎙️ Llamando a processVoiceCommand()...');
       DebugConfig.info('🎙️ Llamando a processVoiceCommand()...', tag: 'VoiceButton');
       final result = await voiceService.processVoiceCommand();
-      print('📥 Resultado recibido!');
 
       DebugConfig.info('📥 Resultado recibido: success=${result.success}, needsConfirmation=${result.needsConfirmation}', tag: 'VoiceButton');
       DebugConfig.info('📝 Texto transcrito: "${result.transcribedText}"', tag: 'VoiceButton');
@@ -163,46 +145,31 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
       setState(() => _isRecording = false);
 
       if (!result.success) {
-        print('❌ result.success = false');
         DebugConfig.info('⚠️ Comando no exitoso', tag: 'VoiceButton');
         DebugConfig.error('❌ Error: ${result.message}', tag: 'VoiceButton');
         _showError(result.message ?? 'Error al procesar comando');
         return;
       }
 
-      print('✅ result.success = true, continuando...');
-      print('🔍 DEBUG: result.interpretation = ${result.interpretation}');
-      print('🔍 DEBUG: result.transcribedText = ${result.transcribedText}');
 
       // 2. Verificar si tenemos interpretación
       if (result.interpretation == null) {
-        print('❌ result.interpretation es NULL');
         DebugConfig.info('⚠️ No hay interpretación para mostrar', tag: 'VoiceButton');
         _showError('No se pudo interpretar el comando');
         return;
       }
 
-      print('✅ Tenemos interpretación, extrayendo datos...');
 
       // 3. Verificar si faltan campos obligatorios
       final action = result.interpretation!['action'] as String;
-      print('🔍 DEBUG: action extraída = $action');
 
       final parameters = result.interpretation!['parameters'] as Map<String, dynamic>;
-      print('🔍 DEBUG: parameters extraídos = $parameters');
-      print('🔍 DEBUG: parameters.isEmpty = ${parameters.isEmpty}');
 
       final missingFields = RequiredFields.findMissing(action, parameters);
 
-      print('📊 Acción: $action');
-      print('📊 Parámetros actuales: $parameters');
-      print('📊 Campos faltantes: $missingFields');
-      print('📊 missingFields.isNotEmpty: ${missingFields.isNotEmpty}');
-      print('📊 missingFields.length: ${missingFields.length}');
 
       if (missingFields.isNotEmpty) {
         // Faltan campos obligatorios → Iniciar diálogo conversacional
-        print('🗣️ Faltan campos obligatorios, iniciando diálogo conversacional...');
         DebugConfig.info('🗣️ Iniciando diálogo conversacional para recolectar: $missingFields', tag: 'VoiceButton');
 
         await _startConversationalDialog(
@@ -214,7 +181,6 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         );
       } else {
         // Todos los campos están completos → Ir a confirmación final
-        print('✅ Todos los campos completos, mostrando confirmación final');
         DebugConfig.info('✅ Mostrando pantalla de confirmación', tag: 'VoiceButton');
 
         await _showConfirmationScreen(
@@ -245,11 +211,6 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
   ) async {
     if (!mounted) return;
 
-    print('🗣️ Iniciando diálogo conversacional');
-    print('   - Comando original: "$originalCommand"');
-    print('   - Acción: $action');
-    print('   - Parámetros ya recolectados: $collectedParameters');
-    print('   - Campos faltantes: $missingFields');
 
     // Crear contexto inicial
     var conversationContext = VoiceConversationContext(
@@ -275,8 +236,6 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
 
     // Si el usuario completó el diálogo, mostrar confirmación final
     if (completedContext != null && mounted) {
-      print('✅ Diálogo conversacional completado');
-      print('   - Parámetros finales: ${completedContext.collectedParameters}');
 
       // Crear interpretación completa para la pantalla de confirmación
       final finalInterpretation = {
@@ -292,7 +251,6 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         finalInterpretation,
       );
     } else {
-      print('⚠️ Diálogo conversacional cancelado por el usuario');
     }
   }
 
@@ -446,7 +404,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
   }
 
   Future<void> _handleVoiceCommand() async {
-    print('🎤 ===== VoiceCommandFab PRESIONADO ===== ${DateTime.now()}');
 
     final voiceServiceAsync = ref.read(voiceServiceProvider);
 
@@ -535,24 +492,19 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
         return;
       }
 
-      print('✅ Tenemos interpretación en FAB, extrayendo datos...');
 
       // Verificar si hay múltiples acciones o una sola
       final hasMultipleActions = result.interpretation!.containsKey('actions');
 
       if (hasMultipleActions) {
         // Múltiples acciones - ir directamente a confirmación
-        print('📊 FAB - Múltiples acciones detectadas');
         final actions = result.interpretation!['actions'] as List<dynamic>;
-        print('📊 FAB - Total de acciones: ${actions.length}');
 
         for (int i = 0; i < actions.length; i++) {
-          final action = actions[i] as Map<String, dynamic>;
-          print('   ${i + 1}. ${action['action']} - Params: ${action['parameters']}');
+          actions[i] as Map<String, dynamic>;
         }
 
         // Ir directamente a confirmación (no hay campos faltantes en workflows complejos)
-        print('✅ FAB - Mostrando confirmación de múltiples acciones');
 
         if (!mounted) return;
         final executionResult = await Navigator.of(context).push(
@@ -574,13 +526,9 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
         final parameters = result.interpretation!['parameters'] as Map<String, dynamic>;
         final missingFields = RequiredFields.findMissing(action, parameters);
 
-        print('📊 FAB - Acción: $action');
-        print('📊 FAB - Parámetros actuales: $parameters');
-        print('📊 FAB - Campos faltantes: $missingFields');
 
         if (missingFields.isNotEmpty) {
           // Faltan campos obligatorios → Iniciar pantalla conversacional
-          print('🗣️ FAB - Faltan campos, iniciando pantalla conversacional...');
 
           await _startConversationalScreen(
             voiceService,
@@ -591,7 +539,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
           );
         } else {
           // Todos los campos completos → Ir a confirmación final
-          print('✅ FAB - Todos los campos completos, mostrando confirmación final');
 
           if (!mounted) return;
           final executionResult = await Navigator.of(context).push(
@@ -611,7 +558,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       }
 
     } catch (e) {
-      print('❌ FAB - Error: $e');
       setState(() => _isRecording = false);
       _showError(e.toString());
     }
@@ -627,11 +573,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
   ) async {
     if (!mounted) return;
 
-    print('🗣️ FAB - Iniciando pantalla conversacional');
-    print('   - Comando original: "$originalCommand"');
-    print('   - Acción: $action');
-    print('   - Parámetros ya recolectados: $collectedParameters');
-    print('   - Campos faltantes: $missingFields');
 
     // Crear contexto inicial
     var conversationContext = VoiceConversationContext(
@@ -657,8 +598,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
 
     // Si el usuario completó la conversación, mostrar confirmación final
     if (completedContext != null && mounted) {
-      print('✅ FAB - Conversación completada');
-      print('   - Parámetros finales: ${completedContext.collectedParameters}');
 
       // Crear interpretación completa para la pantalla de confirmación
       final finalInterpretation = {
@@ -682,7 +621,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
         widget.onCommandExecuted!(executionResult);
       }
     } else {
-      print('⚠️ FAB - Conversación cancelada por el usuario');
     }
   }
 

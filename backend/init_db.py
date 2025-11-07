@@ -185,18 +185,26 @@ def create_subscription_stats_triggers():
                 EXECUTE FUNCTION update_stats_on_event_delete();
             """))
 
-            # TRIGGER 3: Update subscriber count on subscription
+            # TRIGGER 3: Update subscriber count on subscription (count DISTINCT users)
             conn.execute(text("""
                 CREATE OR REPLACE FUNCTION update_stats_on_subscription()
                 RETURNS TRIGGER AS $$
                 DECLARE
                     event_owner_id INTEGER;
+                    distinct_subscriber_count INTEGER;
                 BEGIN
                     SELECT owner_id INTO event_owner_id
                     FROM events
                     WHERE id = NEW.event_id;
 
                     IF event_owner_id IS NOT NULL AND NEW.interaction_type = 'subscribed' THEN
+                        -- Count distinct users who have subscribed to ANY event by this owner
+                        SELECT COUNT(DISTINCT ei.user_id) INTO distinct_subscriber_count
+                        FROM event_interactions ei
+                        JOIN events e ON ei.event_id = e.id
+                        WHERE e.owner_id = event_owner_id
+                        AND ei.interaction_type = 'subscribed';
+
                         INSERT INTO user_subscription_stats (
                             user_id,
                             total_events_count,
@@ -204,9 +212,9 @@ def create_subscription_stats_triggers():
                             subscribers_count,
                             updated_at
                         )
-                        VALUES (event_owner_id, 0, 0, 1, NOW())
+                        VALUES (event_owner_id, 0, 0, distinct_subscriber_count, NOW())
                         ON CONFLICT (user_id) DO UPDATE SET
-                            subscribers_count = user_subscription_stats.subscribers_count + 1,
+                            subscribers_count = distinct_subscriber_count,
                             updated_at = NOW();
                     END IF;
 
@@ -221,20 +229,29 @@ def create_subscription_stats_triggers():
                 EXECUTE FUNCTION update_stats_on_subscription();
             """))
 
-            # TRIGGER 4: Update subscriber count on unsubscription
+            # TRIGGER 4: Update subscriber count on unsubscription (count DISTINCT users)
             conn.execute(text("""
                 CREATE OR REPLACE FUNCTION update_stats_on_unsubscription()
                 RETURNS TRIGGER AS $$
                 DECLARE
                     event_owner_id INTEGER;
+                    distinct_subscriber_count INTEGER;
                 BEGIN
                     SELECT owner_id INTO event_owner_id
                     FROM events
                     WHERE id = OLD.event_id;
 
                     IF event_owner_id IS NOT NULL AND OLD.interaction_type = 'subscribed' THEN
+                        -- Count distinct users who have subscribed to ANY event by this owner
+                        -- (after the DELETE has been applied)
+                        SELECT COUNT(DISTINCT ei.user_id) INTO distinct_subscriber_count
+                        FROM event_interactions ei
+                        JOIN events e ON ei.event_id = e.id
+                        WHERE e.owner_id = event_owner_id
+                        AND ei.interaction_type = 'subscribed';
+
                         UPDATE user_subscription_stats
-                        SET subscribers_count = GREATEST(0, subscribers_count - 1),
+                        SET subscribers_count = distinct_subscriber_count,
                             updated_at = NOW()
                         WHERE user_id = event_owner_id;
                     END IF;
@@ -2095,7 +2112,9 @@ def setup_realtime():
                 'users',
                 'calendars',
                 'calendar_memberships',
+                'calendar_subscriptions',
                 'groups',
+                'group_memberships',
                 'contacts',
                 'event_bans',
                 'user_blocks',

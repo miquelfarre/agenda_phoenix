@@ -131,7 +131,7 @@ class CalendarRepository {
 
   Future<void> deleteCalendar(int calendarId, {bool deleteAssociatedEvents = false}) async {
     try {
-      _cachedCalendars.firstWhere((c) => c.id == calendarId.toString(), orElse: () => throw exceptions.NotFoundException(message: 'Calendar not found in cache'));
+      _cachedCalendars.firstWhere((c) => c.id == calendarId, orElse: () => throw exceptions.NotFoundException(message: 'Calendar not found in cache'));
 
 
       await _apiClient.deleteCalendar(calendarId, deleteEvents: deleteAssociatedEvents);
@@ -267,7 +267,7 @@ class CalendarRepository {
   }
 
   Calendar? getCalendarById(int calendarId) {
-    return _cachedCalendars.firstWhereOrNull((c) => c.id == calendarId.toString());
+    return _cachedCalendars.firstWhereOrNull((c) => c.id == calendarId);
   }
 
   void dispose() {

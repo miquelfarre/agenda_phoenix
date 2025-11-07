@@ -1448,8 +1448,7 @@
   "failedToUpdateProfile": "Error al actualizar perfil",
   "failedToUpdateFCMToken": "Error al actualizar token FCM",
   "authUserHasNoPhoneNumber": "El usuario autenticado no tiene número de teléfono",
-  "firebaseUserHasNoPhoneNumber": "El usuario de Firebase no tiene número de teléfono",
-  
+
   "@_PUBLIC_USER_EVENTS_SCREEN": {
     "description": "Texto específico para la pantalla de eventos de usuario público"
   },

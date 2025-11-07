@@ -211,7 +211,7 @@ class AppRouter {
     return null;
   }
 
-  static bool _checkAuthentication(bool isTestMode, bool isFirebaseAuthenticated) {
+  static bool _checkAuthentication(bool isTestMode, bool isAuthenticated) {
     if (isTestMode) {
       final configService = ConfigService.instance;
       final hasTestCredentials = configService.testUserInfo != null;
@@ -219,7 +219,7 @@ class AppRouter {
       return hasTestCredentials;
     }
 
-    return isFirebaseAuthenticated;
+    return isAuthenticated;
   }
 
   static Widget _buildErrorPage(BuildContext context, GoRouterState state, {String? message}) {

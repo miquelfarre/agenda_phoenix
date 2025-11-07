@@ -24,8 +24,6 @@ class UserHive extends HiveObject {
   DateTime? lastSeen;
   @HiveField(8)
   bool isOnline;
-  @HiveField(9)
-  String? firebaseUid;
   @HiveField(10)
   DateTime? registeredAt;
   @HiveField(11)
@@ -47,7 +45,6 @@ class UserHive extends HiveObject {
     this.isBanned = false,
     this.lastSeen,
     this.isOnline = false,
-    this.firebaseUid,
     this.registeredAt,
     DateTime? updatedAt,
     this.newEventsCount,
@@ -65,7 +62,6 @@ class UserHive extends HiveObject {
     isBanned: json['is_banned'] ?? false,
     lastSeen: json['last_seen'] != null ? (json['last_seen'] is String ? DateTimeUtils.parseAndNormalize(json['last_seen']) : json['last_seen']) : null,
     isOnline: json['is_online'] ?? false,
-    firebaseUid: json['firebase_uid'],
     registeredAt: json['registered_at'] != null ? (json['registered_at'] is String ? DateTimeUtils.parseAndNormalize(json['registered_at']) : json['registered_at']) : null,
     newEventsCount: json['new_events_count'],
     totalEventsCount: json['total_events_count'],
@@ -82,7 +78,6 @@ class UserHive extends HiveObject {
     isBanned: user.isBanned,
     lastSeen: user.lastSeen,
     isOnline: user.isOnline,
-    firebaseUid: user.firebaseUid,
     registeredAt: user.createdAt,
     newEventsCount: user.newEventsCount,
     totalEventsCount: user.totalEventsCount,
@@ -99,17 +94,14 @@ class UserHive extends HiveObject {
     'is_banned': isBanned,
     'last_seen': lastSeen?.toIso8601String(),
     'is_online': isOnline,
-    'firebase_uid': firebaseUid,
     'registered_at': registeredAt?.toIso8601String(),
   };
 
   User toUser() {
     return User(
       id: id,
-      firebaseUid: firebaseUid,
       phoneNumber: phoneNumber,
       instagramName: instagramName,
-      email: null,
       fullName: fullName,
       isPublic: isPublic,
       isActive: true,

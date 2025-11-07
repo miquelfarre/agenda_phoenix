@@ -408,7 +408,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
         Navigator.of(context).push(
           CupertinoPageRoute(
             builder: (context) => CalendarEventsScreen(
-              calendarId: int.parse(calendar.id),
+              calendarId: calendar.id,
               calendarName: calendar.name,
             ),
           ),

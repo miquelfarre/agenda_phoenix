@@ -95,10 +95,20 @@ async def get_calendar(calendar_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=CalendarResponse, status_code=201)
-async def create_calendar(calendar_data: CalendarCreate, db: Session = Depends(get_db)):
+async def create_calendar(
+    calendar_data: CalendarBase,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """Create a new calendar"""
+    # Create CalendarCreate with owner_id from authenticated user
+    # Use model_dump to get all fields and add owner_id
+    data_dict = calendar_data.model_dump()
+    data_dict['owner_id'] = current_user_id
+    create_data = CalendarCreate(**data_dict)
+
     # Create with validation (checks owner exists)
-    db_calendar, error = calendar.create_with_validation(db, obj_in=calendar_data)
+    db_calendar, error = calendar.create_with_validation(db, obj_in=create_data)
 
     if error:
         raise HTTPException(status_code=404, detail=error)

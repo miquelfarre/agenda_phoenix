@@ -350,8 +350,7 @@ def test_search_calendar_by_share_hash():
 def test_get_user_calendars_requires_auth():
     """Test that GET /calendars requires authentication"""
     response = api_request("GET", "/calendars")
-    assert response.status_code == 401, "GET /calendars without auth should return 401"
-    print(f"✅ GET /calendars correctly requires authentication")
+    assert response.status_code in [401, 403], "GET /calendars without auth should return 401 or 403"
 
 
 def test_get_user_calendars_own_calendars():
@@ -367,15 +366,13 @@ def test_get_user_calendars_own_calendars():
     user = api_request("POST", "/users", json=user_data).json()
     user_id = user["id"]
 
-    # Create a calendar for this user
+    # Create a calendar for this user (owner_id comes from JWT, not body)
     calendar_data = {
         "name": f"My Calendar {int(datetime.now().timestamp())}",
         "description": "Test calendar",
-        "owner_id": user_id,
-        "color": "#FF5733",
         "is_public": False,
     }
-    created_calendar = api_request("POST", "/calendars", json=calendar_data).json()
+    created_calendar = api_request("POST", "/calendars", json=calendar_data, user_id=user_id).json()
 
     # Get user's calendars
     response = api_request("GET", "/calendars", user_id=user_id)
@@ -482,15 +479,13 @@ def test_get_user_calendars_includes_memberships():
     user2 = api_request("POST", "/users", json=user2_data).json()
     user2_id = user2["id"]
 
-    # User1 creates a calendar
+    # User1 creates a calendar (owner_id comes from JWT, not body)
     calendar_data = {
         "name": f"Shared Calendar {int(datetime.now().timestamp())}",
         "description": "Shared with user2",
-        "owner_id": user1_id,
-        "color": "#00FF00",
         "is_public": False,
     }
-    calendar = api_request("POST", "/calendars", json=calendar_data).json()
+    calendar = api_request("POST", "/calendars", json=calendar_data, user_id=user1_id).json()
     calendar_id = calendar["id"]
 
     # Get user2's calendars before membership

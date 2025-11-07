@@ -17,13 +17,13 @@ class CalendarPermissions {
     required CalendarRepository repository,
   }) async {
     final userId = ConfigService.instance.currentUserId;
-    final isOwner = calendar.ownerId == userId.toString();
+    final isOwner = calendar.ownerId == userId;
 
     if (isOwner) return true;
 
     // Check if user is admin of this calendar
     try {
-      final memberships = await repository.fetchCalendarMemberships(int.parse(calendar.id));
+      final memberships = await repository.fetchCalendarMemberships(calendar.id);
       final userMembership = memberships.firstWhere(
         (m) => m['user_id'].toString() == userId.toString(),
         orElse: () => <String, dynamic>{},
@@ -37,7 +37,7 @@ class CalendarPermissions {
   /// Check if the current user is the owner of the calendar
   static bool isOwner(Calendar calendar) {
     final userId = ConfigService.instance.currentUserId;
-    return calendar.ownerId == userId.toString();
+    return calendar.ownerId == userId;
   }
 
   /// Check if user can delete the calendar

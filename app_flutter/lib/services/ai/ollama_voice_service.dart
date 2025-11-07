@@ -144,15 +144,11 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
 
   @override
   Future<Map<String, dynamic>> interpretWithAI(String transcribedText, {String? customPrompt}) async {
-    print('🤖 ===== LLAMANDO A OLLAMA API =====');
     try {
       DebugConfig.info('Enviando a Ollama: $transcribedText', tag: 'VoiceService');
 
       final fullPrompt = customPrompt ?? '$_systemPrompt\n\nComando del usuario: "$transcribedText"';
 
-      print('🤖 URL: $_ollamaBaseUrl/api/generate');
-      print('🤖 Model: $_ollamaModel');
-      print('🤖 Enviando request a Ollama...');
 
       final response = await http.post(
         Uri.parse('$_ollamaBaseUrl/api/generate'),
@@ -171,11 +167,8 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         },
       );
 
-      print('🤖 Respuesta recibida de Ollama. Status: ${response.statusCode}');
 
       if (response.statusCode != 200) {
-        print('❌ Error Ollama API: ${response.statusCode}');
-        print(response.body);
         DebugConfig.error('Error Ollama API: ${response.statusCode} - ${response.body}',
             tag: 'VoiceService');
         throw Exception('Error al llamar a Ollama API: ${response.statusCode}');
@@ -189,8 +182,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         throw Exception('No se recibió respuesta de Ollama');
       }
 
-      print('🤖 Respuesta de Ollama (raw):');
-      print(textResponse);
 
       DebugConfig.info('Respuesta de Ollama: $textResponse', tag: 'VoiceService');
 
@@ -210,12 +201,9 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       // Parsear la respuesta JSON del LLM
       final interpretation = jsonDecode(cleanedResponse) as Map<String, dynamic>;
 
-      print('✅ Interpretación exitosa: ${interpretation['action']}');
       return interpretation;
 
-    } catch (e, stackTrace) {
-      print('❌ Error al interpretar con Ollama: $e');
-      print(stackTrace);
+    } catch (e, _) {
       DebugConfig.error('Error al interpretar con Ollama: $e', tag: 'VoiceService');
       rethrow;
     }
@@ -223,47 +211,35 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
 
   @override
   Future<dynamic> executeAction(Map<String, dynamic> interpretation) async {
-    print('🔧 ===== EJECUTANDO ACCIÓN EN API =====');
     try {
       final action = interpretation['action'] as String;
       final parameters = interpretation['parameters'] as Map<String, dynamic>;
       final apiClient = ApiClient();
 
-      print('🔧 Acción: $action');
-      print('🔧 Parámetros: $parameters');
       DebugConfig.info('Ejecutando acción: $action con parámetros: $parameters',
                       tag: 'VoiceService');
 
       switch (action) {
         case 'CREATE_EVENT':
-          print('📝 Llamando a apiClient.createEvent()...');
           final result = await apiClient.createEvent(parameters);
-          print('✅ Evento creado: $result');
           return result;
 
         case 'UPDATE_EVENT':
-          print('✏️ Llamando a apiClient.updateEvent()...');
           final eventId = parameters['event_id'] as int;
           parameters.remove('event_id');
           final result = await apiClient.updateEvent(eventId, parameters);
-          print('✅ Evento actualizado: $result');
           return result;
 
         case 'DELETE_EVENT':
-          print('🗑️ Llamando a apiClient.deleteEvent()...');
           final eventId = parameters['event_id'] as int;
           await apiClient.deleteEvent(eventId);
-          print('✅ Evento eliminado');
           return {'success': true, 'message': 'Evento eliminado'};
 
         case 'CREATE_CALENDAR':
-          print('📅 Llamando a apiClient.createCalendar()...');
           final result = await apiClient.createCalendar(parameters);
-          print('✅ Calendario creado: $result');
           return result;
 
         case 'INVITE_USER':
-          print('✉️ Llamando a apiClient.createInteraction()...');
           final eventId = parameters['event_id'] as int;
           final userId = parameters['user_id'] as int?;
           final message = parameters['message'] as String?;
@@ -278,11 +254,9 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
             interactionData['note'] = message;
           }
           final result = await apiClient.createInteraction(interactionData);
-          print('✅ Usuario invitado: $result');
           return result;
 
         case 'ADD_EVENT_NOTE':
-          print('📝 Añadiendo nota personal al evento...');
           final eventId = parameters['event_id'] as int;
           final note = parameters['note'] as String;
 
@@ -290,7 +264,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
           final currentUserId = ConfigService.instance.currentUserId;
 
           // Verificar si ya existe una interacción del owner para este evento
-          print('🔍 Verificando si ya existe interacción del owner...');
           final existingInteractions = await apiClient.fetchInteractions(
             eventId: eventId,
             userId: currentUserId,
@@ -298,18 +271,15 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
 
           if (existingInteractions.isNotEmpty) {
             // Ya existe una interacción - actualizar la nota
-            print('♻️ Interacción existente encontrada, actualizando nota...');
             final existingInteraction = existingInteractions.first;
             final interactionId = existingInteraction['id'] as int;
             final result = await apiClient.patchInteraction(
               interactionId,
               {'note': note},
             );
-            print('✅ Nota personal actualizada: $result');
             return result;
           } else {
             // No existe - crear nueva interacción tipo 'joined' para el owner con la nota
-            print('➕ No existe interacción, creando nueva...');
             final interactionData = {
               'event_id': eventId,
               'user_id': currentUserId,
@@ -319,12 +289,10 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
               'invited_by_user_id': currentUserId, // El owner se añade a sí mismo
             };
             final result = await apiClient.createInteraction(interactionData);
-            print('✅ Nota personal añadida: $result');
             return result;
           }
 
         case 'UNKNOWN':
-          print('❓ Comando UNKNOWN');
           return {
             'success': false,
             'message': interpretation['clarification_message'] ??
@@ -336,7 +304,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       }
 
     } catch (e) {
-      print('❌ ERROR al ejecutar acción: $e');
       DebugConfig.error('Error al ejecutar acción: $e', tag: 'VoiceService');
       rethrow;
     }
@@ -347,7 +314,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
     Function(int secondsElapsed)? onProgress,
     Future<void> Function()? waitForStopSignal,
   }) async {
-    print('🎤 INICIO transcribeAudioOnDevice()');
     DebugConfig.info('🎤 Inicializando speech-to-text...', tag: 'VoiceService');
 
     try {
@@ -355,11 +321,9 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       if (!_speechToText.isAvailable) {
         final available = await _speechToText.initialize(
           onError: (error) {
-            print('❌ Error en speech-to-text: ${error.errorMsg}');
             DebugConfig.error('Error en speech-to-text: ${error.errorMsg}', tag: 'VoiceService');
           },
           onStatus: (status) {
-            print('📊 Estado speech-to-text: $status');
           },
         );
 
@@ -368,7 +332,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         }
       }
 
-      print('✅ Speech-to-text inicializado correctamente');
       DebugConfig.info('Speech-to-text inicializado', tag: 'VoiceService');
 
       String transcribedText = '';
@@ -380,7 +343,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       await _speechToText.listen(
         onResult: (result) {
           transcribedText = result.recognizedWords;
-          print('🎤 Transcripción en progreso: "$transcribedText"');
         },
         localeId: 'es_ES',
         listenFor: const Duration(seconds: 30), // Máximo 30 segundos
@@ -411,7 +373,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       // Detener la escucha
       await _speechToText.stop();
 
-      print('✅ Transcripción completada: "$transcribedText"');
       DebugConfig.info('Texto transcrito: $transcribedText', tag: 'VoiceService');
 
       if (transcribedText.isEmpty) {
@@ -421,7 +382,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       return transcribedText;
 
     } catch (e) {
-      print('❌ Error en transcripción: $e');
       DebugConfig.error('Error en transcripción: $e', tag: 'VoiceService');
       rethrow;
     }
@@ -432,11 +392,9 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
     DebugConfig.info('🚀 ===== INICIANDO processVoiceCommand() =====', tag: 'VoiceService');
     try {
       // 1. Transcribir audio (on-device)
-      print('🎤 PASO 1/2: Transcribiendo audio...');
       final transcribedText = await transcribeAudioOnDevice();
 
       // 2. Interpretar con Ollama
-      print('🤖 PASO 2/2: Interpretando con Ollama...');
       final interpretation = await interpretWithAI(transcribedText);
 
       // Retornar resultado
@@ -448,7 +406,6 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       );
 
     } catch (e) {
-      print('❌ ERROR en processVoiceCommand: $e');
       DebugConfig.error('Error al procesar comando de voz: $e', tag: 'VoiceService');
       return VoiceCommandResult(
         success: false,

@@ -128,6 +128,15 @@ class EventCreate(EventBase):
     parent_recurring_event_id: Optional[int] = None
 
 
+class EventUpdate(BaseModel):
+    """Schema for updating events - all fields are optional"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    start_date: Optional[datetime] = None
+    event_type: Optional[str] = None
+    calendar_id: Optional[int] = None
+
+
 class UpcomingEventSummary(BaseModel):
     """Simplified event schema for upcoming events list"""
 

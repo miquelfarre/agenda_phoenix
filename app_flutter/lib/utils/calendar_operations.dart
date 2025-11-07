@@ -31,7 +31,7 @@ class CalendarOperations {
 
       if (isOwner) {
         // User is owner - DELETE calendar
-        await repository.deleteCalendar(int.parse(calendar.id));
+        await repository.deleteCalendar(calendar.id);
 
         if (showSuccessMessage && context.mounted) {
           final l10n = context.l10n;
@@ -48,7 +48,7 @@ class CalendarOperations {
           await repository.unsubscribeByShareHash(calendar.shareHash!);
         } else {
           // Private calendar - remove membership
-          await repository.unsubscribeFromCalendar(int.parse(calendar.id));
+          await repository.unsubscribeFromCalendar(calendar.id);
         }
 
         if (showSuccessMessage && context.mounted) {

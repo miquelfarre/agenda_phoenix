@@ -72,20 +72,35 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
             order_by: Column name to order by
             order_dir: Order direction (asc/desc)
         """
+        from sqlalchemy.orm import noload
+
         filters = {}
         if owner_id is not None:
             filters["owner_id"] = owner_id
         if calendar_id is not None:
             filters["calendar_id"] = calendar_id
 
-        return self.get_multi(
-            db,
-            skip=skip,
-            limit=limit,
-            order_by=order_by,
-            order_dir=order_dir,
-            filters=filters
-        )
+        # Use noload for interactions relationship - list endpoint doesn't need them
+        query = db.query(self.model).options(noload(self.model.interactions))
+
+        # Apply filters
+        for key, value in filters.items():
+            if hasattr(self.model, key):
+                query = query.filter(getattr(self.model, key) == value)
+
+        # Apply ordering
+        if order_by and hasattr(self.model, order_by):
+            order_col = getattr(self.model, order_by)
+        else:
+            order_col = self.model.id
+
+        if order_dir.lower() == "desc":
+            query = query.order_by(order_col.desc())
+        else:
+            query = query.order_by(order_col.asc())
+
+        # Apply pagination
+        return query.offset(skip).limit(limit).all()
 
     def check_user_access(self, db: Session, *, event_id: int, user_id: int) -> bool:
         """
@@ -204,10 +219,13 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         db: Session,
         *,
         event_id: int,
-        obj_in: EventCreate
+        obj_in
     ) -> Tuple[Optional[Event], Optional[str]]:
         """
         Update an event with validation
+
+        Args:
+            obj_in: EventCreate or EventUpdate schema
 
         Returns:
             (Event, None) if successful
@@ -218,18 +236,19 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         if not db_event:
             return None, "Event not found"
 
+        # Prepare event data - exclude unset fields for partial updates
+        event_data = obj_in.model_dump(exclude_unset=True)
+
         # If owner changed, validate new owner exists
-        if obj_in.owner_id != db_event.owner_id:
-            owner_exists = db.query(User.id).filter(User.id == obj_in.owner_id).first() is not None
+        if "owner_id" in event_data and event_data["owner_id"] != db_event.owner_id:
+            owner_exists = db.query(User.id).filter(User.id == event_data["owner_id"]).first() is not None
             if not owner_exists:
                 return None, "Owner user not found"
 
-        # Prepare event data
-        event_data = obj_in.model_dump()
-
         # Ensure dates are timezone-aware
-        if event_data["start_date"].tzinfo is None:
-            event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
+        if "start_date" in event_data and event_data["start_date"] is not None:
+            if event_data["start_date"].tzinfo is None:
+                event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
 
         # Update event
         for key, value in event_data.items():

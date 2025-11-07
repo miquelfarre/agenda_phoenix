@@ -74,9 +74,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
       final userRepo = ref.read(userRepositoryProvider);
       final contacts = await userRepo.fetchContacts(userId);
 
-      print('📥 [PeopleGroupsScreen] Loaded ${contacts.length} private users (contacts) from API');
-      for (var contact in contacts) {
-        print('📥   - Contact: displayName="${contact.displayName}", fullName="${contact.fullName}", instagramName="${contact.instagramName}" (ID: ${contact.id}, is_public: ${contact.isPublic})');
+      for (var _ in contacts) {
       }
 
       if (mounted) {
@@ -101,7 +99,6 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
 
   Widget _buildContactsTab() {
     final l10n = context.l10n;
-    print('🔵 [PeopleGroupsScreen] Building CONTACTS tab - contacts count: ${_contacts.length}');
 
     if (_isLoadingContacts) {
       return const Center(child: CupertinoActivityIndicator());
@@ -225,7 +222,6 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
 
         // Safety check to prevent RangeError
         if (contactIndex >= filteredContacts.length) {
-          print('⚠️ [PeopleGroupsScreen] Index out of range: $contactIndex >= ${filteredContacts.length}');
           return const SizedBox.shrink();
         }
 
@@ -243,24 +239,19 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
   Widget _buildGroupsTab() {
     final l10n = context.l10n;
     final groupsAsync = ref.watch(groupsStreamProvider);
-    print('🟣 [PeopleGroupsScreen] Building GROUPS tab - async state: ${groupsAsync.runtimeType}');
 
     return groupsAsync.when(
       data: (groups) {
-        print('🟣 [PeopleGroupsScreen] GROUPS data received - total groups: ${groups.length}');
         final userGroups = groups.where((group) =>
           group.ownerId == userId ||
           group.members.any((member) => member.id == userId) ||
           group.admins.any((admin) => admin.id == userId)
         ).toList();
-        print('🟣 [PeopleGroupsScreen] Filtered user groups: ${userGroups.length}');
 
-        for (var group in userGroups) {
-          print('🟣   - Group: ${group.name} (ID: ${group.id})');
+        for (var _ in userGroups) {
         }
 
         if (userGroups.isEmpty) {
-          print('🟣 [PeopleGroupsScreen] No groups found - showing empty state');
           return EmptyState(message: l10n.noGroupsMessage, icon: CupertinoIcons.group);
         }
 
@@ -270,17 +261,14 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
           itemCount: userGroups.length,
           itemBuilder: (context, index) {
             final group = userGroups[index];
-            print('🟣 [PeopleGroupsScreen] Building group card at index $index: ${group.name}');
             return _buildGroupCard(group, l10n);
           },
         );
       },
       loading: () {
-        print('🟣 [PeopleGroupsScreen] GROUPS in loading state');
         return const Center(child: CupertinoActivityIndicator());
       },
       error: (error, stack) {
-        print('🔴 [PeopleGroupsScreen] GROUPS error: $error');
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -301,7 +289,6 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
   }
 
   Widget _buildGroupCard(Group group, AppLocalizations l10n) {
-    print('👥 [GroupCard] Building card for group: ${group.name} (ID: ${group.id})');
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Container(
@@ -328,7 +315,6 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isIOS = PlatformWidgets.isIOS;
-    print('🔷 [PeopleGroupsScreen] Building widget - current tab index: $_tabIndex');
 
     return AdaptivePageScaffold(
       key: const Key('people_groups_screen_scaffold'),
@@ -390,18 +376,15 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
             child: PageView(
               controller: _pageController,
               onPageChanged: (index) {
-                print('📄 [PeopleGroupsScreen] PageView changed to page: $index');
                 setState(() {
                   _tabIndex = index;
                 });
               },
               children: [
                 Builder(builder: (context) {
-                  print('📄 [PeopleGroupsScreen] Building PageView child 0 (CONTACTS)');
                   return _buildContactsTab();
                 }),
                 Builder(builder: (context) {
-                  print('📄 [PeopleGroupsScreen] Building PageView child 1 (GROUPS)');
                   return _buildGroupsTab();
                 }),
               ],

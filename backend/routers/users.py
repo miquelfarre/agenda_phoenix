@@ -314,13 +314,13 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         if event_id not in event_sources:
             event_sources[event_id] = "subscribed"
 
-    # Invited events (exclude rejected_invitation_accepted_event - those are handled by other sources)
+    # Invited events (exclude rejected statuses - those should not be visible)
     invited_interactions = event_interaction.get_by_user(
         db, user_id=user_id, interaction_type="invited"
     )
     invited_event_ids = [
         i.event_id for i in invited_interactions
-        if i.status != "rejected_invitation_accepted_event"
+        if i.status not in ["rejected", "rejected_invitation_accepted_event"]
     ]
     for event_id in invited_event_ids:
         if event_id not in event_sources:
@@ -633,7 +633,7 @@ async def get_accessible_calendar_ids(
     return sorted(all_calendar_ids)
 
 
-@router.post("/{target_user_id}/subscribe")
+@router.post("/{target_user_id}/subscribe", status_code=201)
 async def subscribe_to_user(
     target_user_id: int,
     current_user_id: int = Depends(get_current_user_id),
@@ -656,6 +656,10 @@ async def subscribe_to_user(
     if not db_target_user:
         raise HTTPException(status_code=404, detail="Target user not found")
 
+    # Verify target user is public (only public users can be subscribed to)
+    if not db_target_user.is_public:
+        raise HTTPException(status_code=400, detail="Cannot subscribe to private users. Only public users can be subscribed to.")
+
     # Get all events owned by target user
     events = event.get_by_owner(db, owner_id=target_user_id)
 
@@ -667,15 +671,21 @@ async def subscribe_to_user(
     error_count = 0
 
     for db_event in events:
-        # Check if subscription already exists
+        # Check if ANY interaction already exists (unique constraint on event_id, user_id)
         existing = event_interaction.get_interaction(db, event_id=db_event.id, user_id=current_user_id)
 
-        if existing and existing.interaction_type == "subscribed":
-            already_subscribed_count += 1
+        if existing:
+            # If already subscribed, count it
+            if existing.interaction_type == "subscribed":
+                already_subscribed_count += 1
+            # If another type exists (invited, joined, etc), update to subscribed
+            else:
+                existing.interaction_type = "subscribed"
+                subscribed_count += 1
             continue
 
         try:
-            # Create subscription
+            # Create new subscription
             interaction = EventInteraction(event_id=db_event.id, user_id=current_user_id, interaction_type="subscribed")
             db.add(interaction)
             subscribed_count += 1
@@ -683,7 +693,12 @@ async def subscribe_to_user(
             logger.error(f"Error subscribing to event {db_event.id}: {e}")
             error_count += 1
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        logger.error(f"Error committing subscriptions: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating subscriptions: {str(e)}")
 
     return {"message": f"Subscribed to {subscribed_count} events", "subscribed_count": subscribed_count, "already_subscribed_count": already_subscribed_count, "error_count": error_count, "total_events": len(events)}
 

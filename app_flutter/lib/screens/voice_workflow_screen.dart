@@ -70,15 +70,12 @@ class _VoiceWorkflowScreenState extends ConsumerState<VoiceWorkflowScreen>
   Future<void> _handleVoiceResponse() async {
     if (_currentQuestion == null) return;
 
-    print('🎤 Usuario va a responder por voz a: "$_currentQuestion"');
 
     setState(() => _isListening = true);
 
     try {
       // Transcribir la respuesta del usuario
-      print('🎙️ Iniciando transcripción de respuesta...');
       final userResponse = await widget.voiceService.transcribeAudioOnDevice();
-      print('✅ Usuario respondió: "$userResponse"');
 
       setState(() => _isListening = false);
 
@@ -97,7 +94,6 @@ class _VoiceWorkflowScreenState extends ConsumerState<VoiceWorkflowScreen>
       }
 
     } catch (e) {
-      print('❌ Error al procesar respuesta de voz: $e');
       setState(() => _isListening = false);
       _showError('Error al procesar tu respuesta: ${e.toString()}');
     }
@@ -109,8 +105,6 @@ class _VoiceWorkflowScreenState extends ConsumerState<VoiceWorkflowScreen>
 
     final nextField = _context.currentAction!.missingFields.first;
 
-    print('📝 Recolectando campo: $nextField');
-    print('📝 Respuesta del usuario: "$userResponse"');
 
     // Enviar a Gemini para interpretar la respuesta
     final contextualPrompt = '''
@@ -139,18 +133,15 @@ IMPORTANTE: Devuelve SOLO el JSON del campo "$nextField", sin texto adicional.
         customPrompt: contextualPrompt,
       );
 
-      print('✅ Parámetro extraído: $newParams');
 
       // Actualizar la acción actual con el nuevo parámetro
       final updatedAction = _context.currentAction!.updateParameters(newParams);
 
       if (updatedAction.isReady) {
         // Todos los campos completados → Ejecutar la acción
-        print('✅ Acción lista para ejecutar: ${updatedAction.action}');
         await _executeCurrentAction(updatedAction);
       } else {
         // Aún faltan campos → actualizar contexto y preguntar siguiente campo
-        print('📋 Aún faltan campos: ${updatedAction.missingFields}');
         setState(() {
           _context = _context.startAction(updatedAction);
         });
@@ -158,15 +149,12 @@ IMPORTANTE: Devuelve SOLO el JSON del campo "$nextField", sin texto adicional.
       }
 
     } catch (e) {
-      print('❌ Error interpretando campo: $e');
       _showError('No pude entender tu respuesta. Intenta de nuevo.');
     }
   }
 
   /// Maneja la selección de una acción sugerida
   Future<void> _handleActionSelection(String userResponse) async {
-    print('🤔 Usuario eligiendo acción sugerida...');
-    print('📝 Respuesta: "$userResponse"');
 
     // Analizar si el usuario dijo "no", "nada", "listo", etc. para finalizar
     final lowerResponse = userResponse.toLowerCase().trim();
@@ -175,7 +163,6 @@ IMPORTANTE: Devuelve SOLO el JSON del campo "$nextField", sin texto adicional.
         lowerResponse == 'listo' ||
         lowerResponse == 'ya está' ||
         lowerResponse == 'terminar') {
-      print('✅ Usuario terminó el workflow');
       _finishWorkflow();
       return;
     }
@@ -210,12 +197,10 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
         customPrompt: prompt,
       );
 
-      print('✅ Interpretación de acción: $interpretation');
 
       final selectedAction = interpretation['action'] as String;
 
       if (selectedAction == 'NONE') {
-        print('✅ Usuario no quiere hacer más acciones');
         _finishWorkflow();
         return;
       }
@@ -240,8 +225,6 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
         missingFields: missingFields,
       );
 
-      print('📋 Nueva acción iniciada: $selectedAction');
-      print('📋 Campos faltantes: $missingFields');
 
       setState(() {
         _context = _context.startAction(newAction).updateSuggestions([]);
@@ -249,15 +232,12 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
       _updateCurrentQuestion();
 
     } catch (e) {
-      print('❌ Error seleccionando acción: $e');
       _showError('No entendí qué quieres hacer. ¿Puedes repetir?');
     }
   }
 
   /// Ejecuta la acción actual
   Future<void> _executeCurrentAction(WorkflowAction action) async {
-    print('🚀 Ejecutando acción: ${action.action}');
-    print('📋 Parámetros: ${action.parameters}');
 
     try {
       // Aquí ejecutarías la acción real a través del API
@@ -267,8 +247,6 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
         'parameters': action.parameters,
       });
 
-      print('✅ Acción ejecutada exitosamente');
-      print('📊 Resultado: $result');
 
       // Marcar acción como completada
       final updatedContext = _context.completeCurrentAction(result);
@@ -287,20 +265,17 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
 
       // Si no hay más sugerencias, finalizar
       if (suggestions.isEmpty) {
-        print('✅ No hay más acciones sugeridas, finalizando workflow');
         await Future.delayed(const Duration(seconds: 1));
         _finishWorkflow();
       }
 
     } catch (e) {
-      print('❌ Error ejecutando acción: $e');
       _showError('Error al ejecutar la acción: ${e.toString()}');
     }
   }
 
   /// Finaliza el workflow y cierra la pantalla
   void _finishWorkflow() {
-    print('✅ Workflow completado');
     if (mounted) {
       Navigator.of(context).pop(_context);
     }

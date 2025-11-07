@@ -351,43 +351,34 @@ Respuesta:
     Function(int secondsElapsed)? onProgress,
     Future<void> Function()? waitForStopSignal,
   }) async {
-    print('🎤 INICIO transcribeAudioOnDevice()');
     DebugConfig.info('🎤 Inicializando speech-to-text...', tag: 'VoiceService');
 
     try {
-      print('🎤 Llamando a _speechToText.initialize()...');
       final available = await _speechToText.initialize(
         onError: (error) {
-          print('❌ Speech error: $error');
           DebugConfig.error('❌ Speech error: $error', tag: 'VoiceService');
         },
         onStatus: (status) {
-          print('📊 Speech status: $status');
           DebugConfig.info('📊 Speech status: $status', tag: 'VoiceService');
         },
       );
 
-      print('🎤 Initialize completado. Available: $available');
 
       if (!available) {
-        print('❌ Speech-to-text NO DISPONIBLE');
         DebugConfig.error('❌ Speech-to-text no disponible en este dispositivo', tag: 'VoiceService');
         throw Exception('Speech to text no disponible');
       }
 
-      print('✅ Speech-to-text inicializado correctamente');
       String recognizedText = '';
       bool shouldStop = false;
       int secondsElapsed = 0;
       const maxSeconds = 30;
 
       // Iniciar escucha (duración máxima 30 segundos)
-      print('🎙️ Iniciando escucha (máx 30s)');
       DebugConfig.info('🎙️ Iniciando escucha (habla ahora, máx 30s)...', tag: 'VoiceService');
       await _speechToText.listen(
         onResult: (result) {
           recognizedText = result.recognizedWords;
-          print('🗣️ Texto reconocido: "$recognizedText" (final=${result.finalResult})');
           DebugConfig.info('🗣️ Texto reconocido: "$recognizedText"', tag: 'VoiceService');
         },
         localeId: 'es_ES',
@@ -401,7 +392,6 @@ Respuesta:
           await Future.delayed(const Duration(seconds: 1));
           secondsElapsed++;
           onProgress?.call(secondsElapsed);
-          print('⏱️ Tiempo transcurrido: ${secondsElapsed}s / ${maxSeconds}s');
         }
       });
 
@@ -411,7 +401,6 @@ Respuesta:
         await Future.any([
           waitForStopSignal.call().then((_) {
             shouldStop = true;
-            print('🛑 Usuario detuvo la grabación');
           }),
           progressTimer,
         ]);
@@ -420,15 +409,12 @@ Respuesta:
       }
 
       // Detener la escucha
-      print('🛑 Deteniendo speech-to-text...');
       await _speechToText.stop();
 
       if (secondsElapsed >= maxSeconds) {
-        print('⚠️ Límite de 30 segundos alcanzado');
         DebugConfig.info('⚠️ Límite de 30s alcanzado', tag: 'VoiceService');
       }
 
-      print('✅ Escucha finalizada. Texto final: "$recognizedText"');
       DebugConfig.info('✅ Escucha finalizada. Texto: "$recognizedText"', tag: 'VoiceService');
       return recognizedText;
 
@@ -443,17 +429,11 @@ Respuesta:
   /// Si [customPrompt] se proporciona, se usa en lugar del system prompt por defecto
   @override
   Future<Map<String, dynamic>> interpretWithAI(String transcribedText, {String? customPrompt}) async {
-    print('🤖 ===== LLAMANDO A GEMINI API =====');
     try {
-      print('🤖 Texto a interpretar: "$transcribedText"');
       DebugConfig.info('Enviando a Gemini: $transcribedText', tag: 'VoiceService');
 
       // Crear el prompt completo
       final fullPrompt = customPrompt ?? '$_systemPrompt\n\nComando del usuario: "$transcribedText"';
-      print('🤖 Usando prompt ${customPrompt != null ? "personalizado" : "estándar"}');
-      print('🤖 URL: $_geminiApiUrl');
-      print('🤖 API Key length: ${_geminiApiKey.length} chars');
-      print('🤖 Enviando request a Gemini API...');
 
       final response = await http.post(
         Uri.parse('$_geminiApiUrl?key=$_geminiApiKey'),
@@ -495,23 +475,18 @@ Respuesta:
         }),
       );
 
-      print('🤖 Respuesta recibida de Gemini. Status: ${response.statusCode}');
 
       if (response.statusCode != 200) {
-        print('❌ Error Gemini API: ${response.statusCode}');
-        print('❌ Response body: ${response.body}');
         DebugConfig.error('Error Gemini API: ${response.statusCode} - ${response.body}',
                          tag: 'VoiceService');
         throw Exception('Error al llamar a Gemini API: ${response.statusCode}');
       }
 
-      print('✅ Status 200 OK, parseando respuesta...');
       final responseData = jsonDecode(response.body);
 
       // Extraer el texto de la respuesta de Gemini
       final candidates = responseData['candidates'] as List?;
       if (candidates == null || candidates.isEmpty) {
-        print('❌ No hay candidates en la respuesta');
         throw Exception('No se recibió respuesta de Gemini');
       }
 
@@ -519,34 +494,20 @@ Respuesta:
       final parts = content['parts'] as List;
       final textResponse = parts[0]['text'] as String;
 
-      print('🤖 Respuesta de Gemini (raw):');
-      print('---START---');
-      print(textResponse);
-      print('---END---');
       DebugConfig.info('Respuesta de Gemini: $textResponse', tag: 'VoiceService');
 
       // Limpiar la respuesta (por si viene con markdown)
       String cleanedResponse = textResponse.trim();
       if (cleanedResponse.startsWith('```json')) {
-        print('🧹 Limpiando markdown json...');
         cleanedResponse = cleanedResponse.replaceFirst('```json', '').replaceFirst('```', '').trim();
       } else if (cleanedResponse.startsWith('```')) {
-        print('🧹 Limpiando markdown...');
         cleanedResponse = cleanedResponse.replaceFirst('```', '').replaceFirst('```', '').trim();
       }
 
-      print('🧹 Respuesta limpia:');
-      print(cleanedResponse);
 
       // Parsear la respuesta JSON de Gemini
-      print('📋 Parseando JSON...');
       final interpretation = jsonDecode(cleanedResponse) as Map<String, dynamic>;
 
-      print('✅ JSON parseado correctamente:');
-      print('   - action: ${interpretation['action']}');
-      print('   - confidence: ${interpretation['confidence']}');
-      print('   - parameters: ${interpretation['parameters']}');
-      print('   - user_confirmation_needed: ${interpretation['user_confirmation_needed']}');
 
       return interpretation;
 
@@ -559,55 +520,41 @@ Respuesta:
   /// Ejecuta la acción interpretada por Gemini usando ApiClient
   @override
   Future<dynamic> executeAction(Map<String, dynamic> interpretation) async {
-    print('🔧 ===== EJECUTANDO ACCIÓN EN API =====');
     try {
       final action = interpretation['action'] as String;
       final parameters = interpretation['parameters'] as Map<String, dynamic>;
       final apiClient = ApiClient();
 
-      print('🔧 Acción: $action');
-      print('🔧 Parámetros: $parameters');
       DebugConfig.info('Ejecutando acción: $action con parámetros: $parameters',
                       tag: 'VoiceService');
 
       switch (action) {
         case 'CREATE_EVENT':
-          print('📝 Llamando a apiClient.createEvent()...');
           final result = await apiClient.createEvent(parameters);
-          print('✅ Evento creado: $result');
           return result;
 
         case 'UPDATE_EVENT':
-          print('✏️ Llamando a apiClient.updateEvent()...');
           final eventId = parameters['event_id'] as int;
           parameters.remove('event_id');
           final result = await apiClient.updateEvent(eventId, parameters);
-          print('✅ Evento actualizado: $result');
           return result;
 
         case 'DELETE_EVENT':
-          print('🗑️ Llamando a apiClient.deleteEvent()...');
           final eventId = parameters['event_id'] as int;
           await apiClient.deleteEvent(eventId);
-          print('✅ Evento eliminado');
           return {'success': true, 'message': 'Evento eliminado'};
 
         case 'LIST_EVENTS':
-          print('📋 Llamando a apiClient.fetchEvents()...');
           final result = await apiClient.fetchEvents(
             calendarId: parameters['calendar_id'] as int?,
           );
-          print('✅ Eventos obtenidos: ${result.length} eventos');
           return result;
 
         case 'CREATE_CALENDAR':
-          print('📅 Llamando a apiClient.createCalendar()...');
           final result = await apiClient.createCalendar(parameters);
-          print('✅ Calendario creado: $result');
           return result;
 
         case 'INVITE_USER':
-          print('✉️ Llamando a apiClient.createInteraction()...');
           final eventId = parameters['event_id'] as int;
           final userId = parameters['user_id'] as int?;
           final message = parameters['message'] as String?;
@@ -622,11 +569,9 @@ Respuesta:
             interactionData['note'] = message;
           }
           final result = await apiClient.createInteraction(interactionData);
-          print('✅ Usuario invitado: $result');
           return result;
 
         case 'ADD_EVENT_NOTE':
-          print('📝 Añadiendo nota personal al evento...');
           final eventId = parameters['event_id'] as int;
           final note = parameters['note'] as String;
 
@@ -634,7 +579,6 @@ Respuesta:
           final currentUserId = ConfigService.instance.currentUserId;
 
           // Verificar si ya existe una interacción del owner para este evento
-          print('🔍 Verificando si ya existe interacción del owner...');
           final existingInteractions = await apiClient.fetchInteractions(
             eventId: eventId,
             userId: currentUserId,
@@ -642,18 +586,15 @@ Respuesta:
 
           if (existingInteractions.isNotEmpty) {
             // Ya existe una interacción - actualizar la nota
-            print('♻️ Interacción existente encontrada, actualizando nota...');
             final existingInteraction = existingInteractions.first;
             final interactionId = existingInteraction['id'] as int;
             final result = await apiClient.patchInteraction(
               interactionId,
               {'note': note},
             );
-            print('✅ Nota personal actualizada: $result');
             return result;
           } else {
             // No existe - crear nueva interacción tipo 'joined' para el owner con la nota
-            print('➕ No existe interacción, creando nueva...');
             final interactionData = {
               'event_id': eventId,
               'user_id': currentUserId,
@@ -663,12 +604,10 @@ Respuesta:
               'invited_by_user_id': currentUserId, // El owner se añade a sí mismo
             };
             final result = await apiClient.createInteraction(interactionData);
-            print('✅ Nota personal añadida: $result');
             return result;
           }
 
         case 'UNKNOWN':
-          print('❓ Comando UNKNOWN');
           return {
             'success': false,
             'message': interpretation['clarification_message'] ??
@@ -680,7 +619,6 @@ Respuesta:
       }
 
     } catch (e) {
-      print('❌ ERROR al ejecutar acción: $e');
       DebugConfig.error('Error al ejecutar acción: $e', tag: 'VoiceService');
       rethrow;
     }
@@ -713,7 +651,6 @@ Respuesta:
 
       // 3. SIEMPRE devolver success=true con la interpretación
       // El botón decidirá si falta información y abrirá el diálogo conversacional
-      print('✅ Interpretación completada, devolviendo resultado al botón');
       return VoiceCommandResult(
         success: true,
         message: 'Interpretación completada',
@@ -723,7 +660,6 @@ Respuesta:
       );
 
     } catch (e) {
-      print('❌ ERROR en processVoiceCommand: $e');
       DebugConfig.error('Error en processVoiceCommand: $e', tag: 'VoiceService');
       return VoiceCommandResult(
         success: false,

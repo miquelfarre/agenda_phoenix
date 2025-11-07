@@ -77,12 +77,16 @@ class CRUDGroup(CRUDBase[Group, GroupCreate, GroupBase]):
         obj_in: GroupCreate
     ) -> tuple[Optional[Group], Optional[str]]:
         """
-        Create a new group with validation
+        Create a new group with validation.
+        Automatically creates a group_membership for the owner as admin.
 
         Returns:
             (Group, None) if successful
             (None, error_message) if validation fails
         """
+        from crud.crud_group_membership import group_membership
+        from schemas import GroupMembershipCreate
+
         # Validate owner exists
         owner_exists = db.query(User.id).filter(User.id == obj_in.owner_id).first() is not None
         if not owner_exists:
@@ -90,6 +94,15 @@ class CRUDGroup(CRUDBase[Group, GroupCreate, GroupBase]):
 
         # Create group
         db_group = self.create(db, obj_in=obj_in)
+
+        # Automatically create group_membership for the owner as admin
+        membership_data = GroupMembershipCreate(
+            group_id=db_group.id,
+            user_id=obj_in.owner_id,
+            role="admin"
+        )
+        group_membership.create(db, obj_in=membership_data)
+
         return db_group, None
 
 

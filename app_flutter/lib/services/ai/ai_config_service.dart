@@ -36,26 +36,20 @@ class AIConfigService {
   /// Prioridad: 1) SharedPreferences (configurada por usuario)
   ///            2) dart-defines (configurada en start.sh para desarrollo)
   String? get geminiApiKey {
-    print('🔑 AIConfigService.geminiApiKey getter llamado');
     // Primero verificar si el usuario configuró una manualmente
     final userKey = _prefs.getString(_geminiApiKeyKey);
-    print('🔑 SharedPreferences key: ${userKey != null ? "${userKey.length} chars" : "null"}');
     if (userKey != null && userKey.isNotEmpty) {
-      print('🔑 Usando API key desde SharedPreferences (${userKey.length} chars)');
       DebugConfig.info('🔑 API key cargada desde SharedPreferences (${userKey.length} chars)', tag: 'AIConfig');
       return userKey;
     }
 
     // Fallback: usar la del entorno si está disponible
     const envKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-    print('🔑 Environment key: ${envKey.isNotEmpty ? "${envKey.length} chars" : "vacío"}');
     if (envKey.isNotEmpty) {
-      print('🔑 Usando API key desde .env (${envKey.length} chars)');
       DebugConfig.info('🔑 API key cargada desde .env (${envKey.length} chars)', tag: 'AIConfig');
       return envKey;
     }
 
-    print('⚠️ NO SE ENCONTRÓ API KEY DE GEMINI EN NINGÚN LADO');
     DebugConfig.info('⚠️ No se encontró API key de Gemini', tag: 'AIConfig');
     return null;
   }

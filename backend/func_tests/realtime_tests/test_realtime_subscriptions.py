@@ -90,12 +90,12 @@ class TestSubscriptionRealtimeFlow:
         FLUJO COMPLETO: Suscribirse a usuario
 
         1. GET /users/1/subscriptions -> estado inicial
-        2. POST /users/2/subscribe -> suscribirse a user 2
+        2. POST /users/7/subscribe -> suscribirse a user 7 (public user: fcbarcelona)
         3. Esperar propagación Realtime
-        4. GET /users/1/subscriptions -> verificar que aparece user 2
+        4. GET /users/1/subscriptions -> verificar que aparece user 7
         """
         subscriber_id = 1
-        target_user_id = 2
+        target_user_id = 7  # fcbarcelona (public user)
 
         # 1. Estado inicial
         initial_subscriptions = get_user_subscriptions(subscriber_id)
@@ -142,14 +142,14 @@ class TestSubscriptionRealtimeFlow:
         """
         FLUJO COMPLETO: Desuscribirse de usuario
 
-        1. POST /users/2/subscribe -> suscribirse primero
+        1. POST /users/7/subscribe -> suscribirse primero (public user: fcbarcelona)
         2. GET /users/1/subscriptions -> verificar que existe
-        3. DELETE /users/2/subscribe -> desuscribirse
+        3. DELETE /users/7/subscribe -> desuscribirse
         4. Esperar propagación Realtime
         5. GET /users/1/subscriptions -> verificar que NO aparece
         """
         subscriber_id = 1
-        target_user_id = 2
+        target_user_id = 7  # fcbarcelona (public user)
 
         # 1. Suscribirse primero
         subscribe_response = api_request(
@@ -205,13 +205,13 @@ class TestSubscriptionRealtimeFlow:
         """
         FLUJO COMPLETO: Suscripción incrementa subscribers_count
 
-        1. GET user_subscription_stats de user 2 -> estado inicial
-        2. User 1 se suscribe a user 2
+        1. GET user_subscription_stats de user 7 -> estado inicial
+        2. User 1 se suscribe a user 7 (public user: fcbarcelona)
         3. Esperar propagación (triggers CDC)
-        4. GET user_subscription_stats de user 2 -> verificar incremento
+        4. GET user_subscription_stats de user 7 -> verificar incremento
         """
         subscriber_id = 1
-        target_user_id = 2
+        target_user_id = 7  # fcbarcelona (public user)
 
         # 1. Estado inicial de stats
         initial_stats = get_user_stats(target_user_id)
@@ -252,13 +252,13 @@ class TestSubscriptionRealtimeFlow:
         """
         FLUJO COMPLETO: Desuscripción decrementa subscribers_count
 
-        1. User 1 se suscribe a user 2
+        1. User 1 se suscribe a user 7 (public user: fcbarcelona)
         2. GET user_subscription_stats -> estado después de suscribirse
         3. User 1 se desuscribe
         4. GET user_subscription_stats -> verificar decremento
         """
         subscriber_id = 1
-        target_user_id = 2
+        target_user_id = 7  # fcbarcelona (public user)
 
         # 1. Suscribirse
         subscribe_response = api_request(

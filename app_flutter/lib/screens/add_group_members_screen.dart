@@ -57,10 +57,6 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
 
       if (mounted) {
         setState(() {
-          print('📥 [AddGroupMembers] Total contacts fetched: ${contacts.length}');
-          print('📥 [AddGroupMembers] Group members: ${widget.group.members.map((m) => m.displayName).join(", ")}');
-          print('📥 [AddGroupMembers] Group admins: ${widget.group.admins.map((a) => a.displayName).join(", ")}');
-          print('📥 [AddGroupMembers] Group ownerId: ${widget.group.ownerId}');
 
           _contacts = contacts
               .where((user) {
@@ -74,17 +70,11 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
 
                 final isFiltered = isAlreadyMember || isPublic;
                 if (isFiltered) {
-                  print('❌ [AddGroupMembers] Filtered out: ${user.displayName} (ID: ${user.id}) - isAlreadyMember: $isAlreadyMember, isPublic: $isPublic');
                 }
 
                 return !isAlreadyMember && !isPublic;
               })
               .toList();
-
-          print('✅ [AddGroupMembers] Contacts available to add: ${_contacts.length}');
-          for (var contact in _contacts) {
-            print('  - ${contact.displayName} (ID: ${contact.id})');
-          }
 
           _isLoadingContacts = false;
         });
@@ -264,8 +254,6 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
     }
 
     // Filter contacts by search
-    print('🔍 [AddGroupMembers] Search text: "${_searchController.text}"');
-    print('🔍 [AddGroupMembers] Available contacts before search filter: ${_contacts.length}');
 
     final filteredContacts = _searchController.text.isEmpty
         ? _contacts
@@ -273,14 +261,8 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
             final name = contact.displayName.toLowerCase();
             final searchLower = _searchController.text.toLowerCase();
             final matches = name.contains(searchLower);
-            print('🔍 [AddGroupMembers] Checking "${contact.displayName}" against "$searchLower": $matches');
             return matches;
           }).toList();
-
-    print('✅ [AddGroupMembers] Filtered contacts for display: ${filteredContacts.length}');
-    for (var contact in filteredContacts) {
-      print('  - ${contact.displayName} (ID: ${contact.id})');
-    }
 
     if (filteredContacts.isEmpty) {
       return ListView(

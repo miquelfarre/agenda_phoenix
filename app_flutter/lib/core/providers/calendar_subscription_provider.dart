@@ -25,9 +25,9 @@ class CalendarSubscriptionNotifier extends Notifier<AsyncValue<Set<int>>> {
     state = const AsyncValue.loading();
     try {
       final calendars = await _repo.calendarsStream.first;
-      final ownCalendars = calendars.where((c) => c.isOwnedBy(ConfigService.instance.currentUserId.toString())).toList();
-      final ownIds = ownCalendars.map((c) => int.parse(c.id)).toSet();
-      final subscribedIds = calendars.map((c) => int.parse(c.id)).where((id) => !ownIds.contains(id)).toSet();
+      final ownCalendars = calendars.where((c) => c.isOwnedBy(ConfigService.instance.currentUserId)).toList();
+      final ownIds = ownCalendars.map((c) => c.id).toSet();
+      final subscribedIds = calendars.map((c) => c.id).where((id) => !ownIds.contains(id)).toSet();
 
       state = AsyncValue.data(subscribedIds);
     } catch (error, stack) {

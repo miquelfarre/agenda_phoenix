@@ -152,6 +152,9 @@ class TestEventsRealtimeUPDATE:
         # Update
         update_data = {"name": "Updated Name"}
         response = api_request("PUT", f"/events/{event_id}", json_data=update_data, user_id=user_id)
+        if response.status_code != 200:
+            print(f"ERROR: PUT /events/{event_id} returned {response.status_code}")
+            print(f"Response body: {response.text}")
         assert response.status_code == 200
 
         wait_for_realtime()
@@ -877,7 +880,7 @@ class TestUserSubscriptionStatsRealtimeUPDATE:
     def test_subscribe_increments_subscribers_count(self):
         """POST /users/X/subscribe → Trigger → UPDATE stats → Realtime → subscribers_count++"""
         subscriber_id = 1
-        target_id = 2
+        target_id = 7  # User 7 is public (can be subscribed to)
 
         initial_stats = get_user_stats(target_id)
         initial_subscribers = initial_stats["subscribers_count"]
@@ -901,7 +904,7 @@ class TestUserSubscriptionStatsRealtimeUPDATE:
     def test_unsubscribe_decrements_subscribers_count(self):
         """DELETE /users/X/subscribe → Trigger → UPDATE stats → Realtime → subscribers_count--"""
         subscriber_id = 1
-        target_id = 2
+        target_id = 7  # User 7 is public (can be subscribed to)
 
         # Subscribe first
         api_request("POST", f"/users/{target_id}/subscribe", user_id=subscriber_id)

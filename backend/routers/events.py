@@ -14,7 +14,7 @@ from auth import get_current_user_id, get_current_user_id_optional
 from crud import event, event_cancellation, event_interaction, user
 from dependencies import check_event_permission, check_user_not_banned, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
 from models import EventInteraction, UserBlock
-from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventInteractionUpdate, EventResponse
+from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventInteractionUpdate, EventResponse, EventUpdate
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
 
@@ -37,7 +37,7 @@ async def get_events(
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return event.get_multi_filtered(
+    events = event.get_multi_filtered(
         db,
         owner_id=owner_id,
         calendar_id=calendar_id,
@@ -46,6 +46,8 @@ async def get_events(
         order_by=order_by or "start_date",
         order_dir=order_dir
     )
+
+    return events
 
 
 @router.get("/{event_id}", response_model=EventResponse)
@@ -466,7 +468,7 @@ async def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
 @router.put("/{event_id}", response_model=EventResponse)
 async def update_event(
     event_id: int,
-    event_data: EventCreate,
+    event_data: EventUpdate,
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ):

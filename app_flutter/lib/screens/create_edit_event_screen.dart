@@ -48,7 +48,7 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
   bool get _isRecurringEvent => getFieldValue<bool>('isRecurring') ?? false;
   List<RecurrencePattern> get _patterns => getFieldValue<List<RecurrencePattern>>('patterns') ?? [];
   bool get _isBirthday => getFieldValue<bool>('isBirthday') ?? false;
-  String? get _selectedCalendarId => getFieldValue<String?>('calendarId');
+  int? get _selectedCalendarId => getFieldValue<int?>('calendarId');
 
   static DateTime _normalizeToFiveMinutes(DateTime dateTime) {
     final normalizedMinute = (dateTime.minute / 5).round() * 5;

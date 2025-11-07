@@ -44,53 +44,6 @@
       "Team A",
       "Team C"
     ],
-    "body": [
-      {
-        "name": "Team A",
-        "description": "First team",
-        "id": "{{ID}}",
-        "owner_id": "{{ID}}",
-        "owner": {
-          "username": null,
-          "auth_provider": "phone",
-          "auth_id": "{{ID}}",
-          "is_public": false,
-          "is_admin": false,
-          "profile_picture": null,
-          "id": "{{ID}}",
-          "contact_id": "{{ID}}",
-          "last_login": null,
-          "created_at": "{{TIMESTAMP}}",
-          "updated_at": "{{TIMESTAMP}}"
-        },
-        "members": [],
-        "admins": [],
-        "created_at": "{{TIMESTAMP}}",
-        "updated_at": "{{TIMESTAMP}}"
-      },
-      {
-        "name": "Team C",
-        "description": "Third team",
-        "id": "{{ID}}",
-        "owner_id": "{{ID}}",
-        "owner": {
-          "username": null,
-          "auth_provider": "phone",
-          "auth_id": "{{ID}}",
-          "is_public": false,
-          "is_admin": false,
-          "profile_picture": null,
-          "id": "{{ID}}",
-          "contact_id": "{{ID}}",
-          "last_login": null,
-          "created_at": "{{TIMESTAMP}}",
-          "updated_at": "{{TIMESTAMP}}"
-        },
-        "members": [],
-        "admins": [],
-        "created_at": "{{TIMESTAMP}}",
-        "updated_at": "{{TIMESTAMP}}"
-      }
-    ]
+    "body": []
   }
 }

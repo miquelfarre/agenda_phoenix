@@ -29,7 +29,6 @@ class GroupRepository {
       await initialized;
     } catch (e) {
       // If initialization failed, still emit empty list to avoid infinite loading
-      print('🔴 [GroupRepository] Initialization failed: $e');
     }
 
     // Emit cached groups immediately
@@ -97,7 +96,6 @@ class GroupRepository {
       // Emit current cached groups even on error (offline support)
       _emitCurrentGroups();
       // Log error but don't throw to allow app to continue with cached data
-      print('🔴 [GroupRepository] Error fetching groups: $e');
     }
   }
 

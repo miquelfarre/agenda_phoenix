@@ -133,7 +133,11 @@ class SubscriptionRepository {
   Future<List<models.User>> searchPublicUsers({required String query}) async {
     try {
       final usersData = await _apiClient.fetchUsers(isPublic: true);
-      final results = usersData.map((data) => models.User.fromJson(data)).where((user) => (user.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false) || (user.email?.toLowerCase().contains(query.toLowerCase()) ?? false)).toList();
+      final results = usersData.map((data) => models.User.fromJson(data)).where((user) =>
+        (user.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
+        (user.instagramName?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
+        (user.username?.toLowerCase().contains(query.toLowerCase()) ?? false)
+      ).toList();
       return results;
     } catch (e, _) {
       rethrow;

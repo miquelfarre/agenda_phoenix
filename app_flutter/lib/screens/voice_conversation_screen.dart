@@ -59,7 +59,6 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
   Future<void> _handleVoiceResponse() async {
     if (_currentQuestion == null) return;
 
-    print('🎤 Usuario va a responder por voz a: "$_currentQuestion"');
 
     setState(() {
       _isListening = true;
@@ -69,7 +68,6 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
 
     try {
       // Transcribir la respuesta del usuario con control manual
-      print('🎙️ Iniciando transcripción de respuesta con control manual...');
       final userResponse = await widget.voiceService.transcribeAudioOnDevice(
         onProgress: (seconds) {
           if (mounted) {
@@ -83,7 +81,6 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
           }
         },
       );
-      print('✅ Usuario respondió: "$userResponse"');
 
       setState(() {
         _isListening = false;
@@ -96,10 +93,8 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
       }
 
       // Enviar el contexto completo + nueva respuesta a Gemini para que lo interprete
-      print('🤖 Enviando contexto + respuesta a Gemini...');
       final updatedInterpretation = await _interpretResponseWithContext(userResponse);
 
-      print('✅ Interpretación actualizada: $updatedInterpretation');
 
       // Crear nuevo contexto con los datos actualizados
       final newContext = widget.context.addTurn(
@@ -108,7 +103,6 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
         updatedInterpretation,
       );
 
-      print('📊 Campos que aún faltan: ${newContext.missingFields}');
 
       // Si todavía faltan campos, actualizar la pregunta
       if (!newContext.isComplete) {
@@ -118,13 +112,11 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
         widget.onContextUpdated(newContext);
       } else {
         // ¡Conversación completa! Cerrar el diálogo
-        print('✅ ¡Conversación completa! Todos los campos recolectados');
         if (mounted) {
           Navigator.of(context).pop(newContext);
         }
       }
     } catch (e) {
-      print('❌ Error al procesar respuesta de voz: $e');
       setState(() {
         _isListening = false;
         _recordingSeconds = 0;
@@ -134,7 +126,6 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
   }
 
   void _stopRecording() {
-    print('🛑 Usuario presionó botón de detener');
     setState(() => _shouldStopRecording = true);
   }
 
@@ -179,7 +170,6 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
       }
       return interpretation;
     } catch (e) {
-      print('❌ Error interpretando con contexto: $e');
       rethrow;
     }
   }
