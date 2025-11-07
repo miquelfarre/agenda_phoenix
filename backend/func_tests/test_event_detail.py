@@ -312,8 +312,71 @@ def test_get_event_unauthenticated_no_interactions(client, test_db, test_users):
 def test_get_event_admin_sees_all_interactions(client, test_db, test_users):
     """
     Admin de calendario ve todas las interacciones igual que owner
-
-    Note: This test requires calendar implementation.
-    Skipping for now as it depends on calendar_membership logic.
     """
-    pytest.skip("Calendar admin functionality requires calendar implementation")
+    owner, invitee1, invitee2 = test_users
+
+    # Import necessary modules
+    from crud import calendar as calendar_crud, calendar_membership as membership_crud
+    from schemas import CalendarCreate, CalendarMembershipCreate
+
+    # Create a calendar
+    calendar_data = CalendarCreate(
+        name="Team Calendar",
+        description="Shared team calendar",
+        owner_id=owner.id
+    )
+    db_calendar, error = calendar_crud.create_with_validation(test_db, obj_in=calendar_data)
+    assert error is None
+    assert db_calendar is not None
+
+    # Add invitee1 as admin of the calendar
+    membership_data = CalendarMembershipCreate(
+        calendar_id=db_calendar.id,
+        user_id=invitee1.id,
+        role="admin",
+        status="accepted"
+    )
+    db_membership, error = membership_crud.create_with_validation(test_db, obj_in=membership_data)
+    assert error is None
+
+    # Create event in the calendar (owned by owner, not invitee1)
+    event_data = EventCreate(
+        name="Calendar Event",
+        description="Event in shared calendar",
+        start_date=datetime.now() + timedelta(days=1),
+        owner_id=owner.id,
+        calendar_id=db_calendar.id
+    )
+    event = event_crud.create(test_db, obj_in=event_data)
+
+    # Create interactions - invite invitee2
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=invitee2.id,
+        event_id=event.id,
+        interaction_type="invited",
+        status="pending",
+        invited_by_user_id=owner.id
+    ))
+
+    test_db.commit()
+
+    # Get event as invitee1 (who is admin of calendar, but not owner of event)
+    client._auth_context["user_id"] = invitee1.id
+
+    response = client.get(f"/api/v1/events/{event.id}")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # invitee1 is admin of calendar, so should see ALL interactions like owner
+    assert "interactions" in data
+    assert data["interactions"] is not None
+    assert len(data["interactions"]) == 1  # Should see invitee2's interaction
+
+    # Check interaction data
+    interaction_data = data["interactions"][0]
+    assert interaction_data["user_id"] == invitee2.id
+    assert interaction_data["status"] == "pending"
+
+    # Should also have invitation_stats
+    assert "invitation_stats" in data

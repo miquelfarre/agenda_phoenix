@@ -173,10 +173,10 @@ async def get_event(
         # Check if user is admin of the calendar containing this event
         if db_event.calendar_id:
             from crud import calendar_membership
-            membership = calendar_membership.get_by_calendar_and_user(
+            membership = calendar_membership.get_membership(
                 db, calendar_id=db_event.calendar_id, user_id=current_user_id
             )
-            if membership and membership.role in ["owner", "admin"] and membership.status == "accepted":
+            if membership and membership.role in ["admin"] and membership.status == "accepted":
                 is_admin = True
 
         print(f"🔍 DEBUG BACKEND: is_admin = {is_admin}")

@@ -285,7 +285,9 @@ class EventInteractionWithEventResponse(EventInteractionBase):
 class CalendarBase(BaseModel):
     name: str
     description: Optional[str] = None
+    is_public: bool = False
     is_discoverable: Optional[bool] = None
+    share_hash: Optional[str] = None
 
 
 class CalendarCreate(CalendarBase):

@@ -731,10 +731,12 @@ class TestCalendarMembershipsRealtimeINSERT:
         # Create public calendar
         calendar_data = {"name": "Public Calendar", "is_public": True}
         response = api_request("POST", "/calendars", json_data=calendar_data, user_id=owner_id)
-        calendar_id = response.json()["id"]
+        calendar = response.json()
+        calendar_id = calendar["id"]
+        share_hash = calendar.get("share_hash")
 
-        # Subscribe
-        response = api_request("POST", f"/calendars/{calendar_id}/subscribe", user_id=subscriber_id)
+        # Subscribe using share_hash
+        response = api_request("POST", f"/calendars/{share_hash}/subscribe", user_id=subscriber_id)
         assert response.status_code == 201
 
         wait_for_realtime()
@@ -748,7 +750,7 @@ class TestCalendarMembershipsRealtimeINSERT:
         print(f"✅ INSERT calendar_membership (subscribe): Subscriber sees calendar")
 
         # Cleanup
-        api_request("DELETE", f"/calendars/{calendar_id}/unsubscribe", user_id=subscriber_id)
+        api_request("DELETE", f"/calendars/{share_hash}/subscribe", user_id=subscriber_id)
         api_request("DELETE", f"/calendars/{calendar_id}", user_id=owner_id)
 
 
@@ -763,13 +765,15 @@ class TestCalendarMembershipsRealtimeDELETE:
         # Create and subscribe
         calendar_data = {"name": "Calendar to Unsubscribe", "is_public": True}
         response = api_request("POST", "/calendars", json_data=calendar_data, user_id=owner_id)
-        calendar_id = response.json()["id"]
+        calendar = response.json()
+        calendar_id = calendar["id"]
+        share_hash = calendar["share_hash"]
 
-        api_request("POST", f"/calendars/{calendar_id}/subscribe", user_id=subscriber_id)
+        api_request("POST", f"/calendars/{share_hash}/subscribe", user_id=subscriber_id)
         wait_for_realtime()
 
         # Unsubscribe
-        response = api_request("DELETE", f"/calendars/{calendar_id}/unsubscribe", user_id=subscriber_id)
+        response = api_request("DELETE", f"/calendars/{share_hash}/subscribe", user_id=subscriber_id)
         assert response.status_code == 200
 
         wait_for_realtime()

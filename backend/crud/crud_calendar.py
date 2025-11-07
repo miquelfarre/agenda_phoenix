@@ -113,17 +113,37 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         """
         Create calendar with validation.
         Automatically creates a calendar_membership for the owner as admin.
+        Generates share_hash for public calendars.
 
         Returns:
             (Calendar, None) if successful
             (None, error_message) if validation fails
         """
         from models import User  # Import here to avoid circular dependency
+        import secrets
+        import string
 
         # Optimized: only check if user exists (don't load full object)
         user_exists = db.query(User.id).filter(User.id == obj_in.owner_id).first() is not None
         if not user_exists:
             return None, "User not found"
+
+        # Generate share_hash for public calendars
+        if obj_in.is_public:
+            obj_data = obj_in.model_dump()
+            if not obj_data.get('share_hash'):
+                # Generate unique share_hash (8-char base62)
+                alphabet = string.ascii_letters + string.digits
+                max_attempts = 10
+                for _ in range(max_attempts):
+                    share_hash = ''.join(secrets.choice(alphabet) for _ in range(8))
+                    # Check uniqueness
+                    existing = db.query(Calendar.id).filter(Calendar.share_hash == share_hash).first()
+                    if not existing:
+                        obj_data['share_hash'] = share_hash
+                        break
+                # Recreate obj_in with updated share_hash
+                obj_in = type(obj_in)(**obj_data)
 
         # Create calendar
         db_calendar = self.create(db, obj_in=obj_in)
