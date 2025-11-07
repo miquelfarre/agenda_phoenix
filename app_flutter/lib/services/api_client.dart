@@ -464,13 +464,15 @@ class ApiClient implements IApiClient {
     await delete('/calendars/$calendarId?delete_events=$deleteEvents');
   }
 
-  // Search public calendar by share_hash
+  // Search public calendar by share_hash (direct lookup)
   Future<Map<String, dynamic>?> searchCalendarByHash(String shareHash) async {
-    final result = await get('/calendars/public', queryParams: {'search': shareHash});
-    if (result is List && result.isNotEmpty) {
-      return result.first as Map<String, dynamic>;
+    try {
+      final result = await get('/calendars/share/$shareHash');
+      return result as Map<String, dynamic>;
+    } catch (e) {
+      // Calendar not found or not public
+      return null;
     }
-    return null;
   }
 
   // Subscribe to a public calendar using share_hash

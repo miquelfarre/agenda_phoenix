@@ -301,6 +301,8 @@ class CalendarResponse(CalendarBase):
     category: Optional[str] = None
     share_hash: Optional[str] = None
     subscriber_count: int = 0
+    start_date: Optional[datetime] = None  # For temporal calendars
+    end_date: Optional[datetime] = None    # For temporal calendars
     created_at: datetime
     updated_at: datetime
 

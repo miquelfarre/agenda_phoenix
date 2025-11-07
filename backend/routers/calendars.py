@@ -85,6 +85,22 @@ async def get_public_calendars(
     )
 
 
+@router.get("/share/{share_hash}", response_model=CalendarResponse)
+async def get_calendar_by_share_hash(share_hash: str, db: Session = Depends(get_db)):
+    """
+    Get a public calendar by its share hash.
+
+    This endpoint is for looking up public calendars using their unique 8-character
+    share hash. Returns 403 if the calendar is not public.
+    """
+    db_calendar = calendar.get_by_share_hash(db, share_hash=share_hash)
+    if not db_calendar:
+        raise HTTPException(status_code=404, detail="Calendar not found")
+    if not db_calendar.is_public:
+        raise HTTPException(status_code=403, detail="Calendar is not public")
+    return db_calendar
+
+
 @router.get("/{calendar_id}", response_model=CalendarResponse)
 async def get_calendar(calendar_id: int, db: Session = Depends(get_db)):
     """Get a single calendar by ID"""

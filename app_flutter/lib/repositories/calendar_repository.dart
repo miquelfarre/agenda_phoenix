@@ -37,23 +37,65 @@ class CalendarRepository {
     if (_initCompleter.isCompleted) return;
 
     try {
-      _box = await Hive.openBox<CalendarHive>(_boxName);
+      print('📦 CalendarRepository: Starting initialization...');
+
+      try {
+        _box = await Hive.openBox<CalendarHive>(_boxName);
+        print('✅ CalendarRepository: Hive box opened');
+      } catch (e) {
+        // If there's a schema error, delete the corrupted box and try again
+        if (e.toString().contains('is not a subtype of type')) {
+          print('⚠️  CalendarRepository: Detected schema incompatibility, clearing Hive box...');
+
+          // Try to close the box if it's open
+          try {
+            if (Hive.isBoxOpen(_boxName)) {
+              await Hive.box(_boxName).close();
+              print('📪 CalendarRepository: Closed existing box');
+            }
+          } catch (_) {
+            // Ignore close errors
+          }
+
+          // Delete and recreate
+          try {
+            await Hive.deleteBoxFromDisk(_boxName);
+            print('🗑️  CalendarRepository: Old box deleted');
+          } catch (deleteError) {
+            print('⚠️  CalendarRepository: Could not delete box: $deleteError');
+            // Continue anyway, box might not exist
+          }
+
+          _box = await Hive.openBox<CalendarHive>(_boxName);
+          print('✅ CalendarRepository: New Hive box opened');
+        } else {
+          rethrow;
+        }
+      }
 
       // Load calendars from Hive cache first (if any)
       _loadCalendarsFromHive();
+      print('✅ CalendarRepository: Loaded ${_cachedCalendars.length} calendars from Hive');
 
       // Fetch and sync calendars from API BEFORE subscribing to Realtime
+      print('🌐 CalendarRepository: Fetching from API...');
       await _fetchAndSync();
+      print('✅ CalendarRepository: API fetch complete, ${_cachedCalendars.length} calendars');
 
       // Now subscribe to Realtime for future updates
+      print('🔄 CalendarRepository: Starting realtime subscription...');
       await _startRealtimeSubscription();
+      print('✅ CalendarRepository: Realtime subscription active');
 
       _emitCurrentCalendars();
 
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
       }
-    } catch (e) {
+      print('✅ CalendarRepository: Initialization complete');
+    } catch (e, stackTrace) {
+      print('❌ CalendarRepository: Error during initialization: $e');
+      print('Stack trace: $stackTrace');
       if (!_initCompleter.isCompleted) {
         _initCompleter.completeError(e);
       }
@@ -65,19 +107,29 @@ class CalendarRepository {
     if (_box == null) return;
 
     try {
+      print('📂 CalendarRepository: Loading from Hive, found ${_box!.length} items');
       _cachedCalendars = _box!.values.map((calendarHive) => calendarHive.toCalendar()).toList();
-
-    } catch (e) {
+      print('✅ CalendarRepository: Successfully converted ${_cachedCalendars.length} calendars from Hive');
+    } catch (e, stackTrace) {
+      print('❌ CalendarRepository: Error loading from Hive: $e');
+      print('Stack trace: $stackTrace');
       _cachedCalendars = [];
     }
   }
 
   Future<void> _fetchAndSync() async {
     try {
+      print('🌐 CalendarRepository: Calling API fetchCalendars()...');
       final response = await _apiClient.fetchCalendars();
-      _cachedCalendars = response.map((data) => Calendar.fromJson(data)).toList();
+      print('✅ CalendarRepository: API returned ${response.length} calendars');
 
+      print('🔄 CalendarRepository: Converting from JSON...');
+      _cachedCalendars = response.map((data) => Calendar.fromJson(data)).toList();
+      print('✅ CalendarRepository: Converted ${_cachedCalendars.length} calendars');
+
+      print('💾 CalendarRepository: Updating local cache...');
       await _updateLocalCache(_cachedCalendars);
+      print('✅ CalendarRepository: Local cache updated');
 
       // Set sync timestamp from latest updated_at
       if (_cachedCalendars.isNotEmpty) {
@@ -89,9 +141,10 @@ class CalendarRepository {
       }
 
       _emitCurrentCalendars();
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore realtime errors
+    } catch (e, stackTrace) {
+      print('❌ CalendarRepository: Error in _fetchAndSync: $e');
+      print('Stack trace: $stackTrace');
+      // Intentionally ignore realtime errors but log them
     }
   }
 

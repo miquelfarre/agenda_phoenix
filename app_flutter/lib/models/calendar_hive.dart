@@ -42,7 +42,13 @@ class CalendarHive extends HiveObject {
   @HiveField(14)
   bool isDiscoverable;
 
-  CalendarHive({required this.id, required this.ownerId, required this.name, this.description, required this.createdAt, required this.updatedAt, this.deleteAssociatedEvents = false, this.isPublic = false, this.isDiscoverable = true, this.shareHash, this.category, this.subscriberCount = 0});
+  @HiveField(15)
+  DateTime? startDate;
+
+  @HiveField(16)
+  DateTime? endDate;
+
+  CalendarHive({required this.id, required this.ownerId, required this.name, this.description, required this.createdAt, required this.updatedAt, this.deleteAssociatedEvents = false, this.isPublic = false, this.isDiscoverable = true, this.shareHash, this.category, this.subscriberCount = 0, this.startDate, this.endDate});
 
   factory CalendarHive.fromJson(Map<String, dynamic> json) => CalendarHive(
     id: json['id'] as int,
@@ -57,6 +63,8 @@ class CalendarHive extends HiveObject {
     shareHash: json['share_hash'],
     category: json['category'],
     subscriberCount: json['subscriber_count'] ?? 0,
+    startDate: json['start_date'] != null ? DateTimeUtils.parseAndNormalize(json['start_date']) : null,
+    endDate: json['end_date'] != null ? DateTimeUtils.parseAndNormalize(json['end_date']) : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -72,10 +80,12 @@ class CalendarHive extends HiveObject {
     'share_hash': shareHash,
     'category': category,
     'subscriber_count': subscriberCount,
+    if (startDate != null) 'start_date': startDate!.toIso8601String(),
+    if (endDate != null) 'end_date': endDate!.toIso8601String(),
   };
 
   Calendar toCalendar() {
-    return Calendar(id: id, ownerId: ownerId, name: name, description: description, deleteAssociatedEvents: deleteAssociatedEvents, isPublic: isPublic, isDiscoverable: isDiscoverable, shareHash: shareHash, category: category, subscriberCount: subscriberCount, createdAt: createdAt, updatedAt: updatedAt);
+    return Calendar(id: id, ownerId: ownerId, name: name, description: description, deleteAssociatedEvents: deleteAssociatedEvents, isPublic: isPublic, isDiscoverable: isDiscoverable, shareHash: shareHash, category: category, subscriberCount: subscriberCount, startDate: startDate, endDate: endDate, createdAt: createdAt, updatedAt: updatedAt);
   }
 
   static CalendarHive fromCalendar(Calendar calendar) {
@@ -90,6 +100,8 @@ class CalendarHive extends HiveObject {
       shareHash: calendar.shareHash,
       category: calendar.category,
       subscriberCount: calendar.subscriberCount,
+      startDate: calendar.startDate,
+      endDate: calendar.endDate,
       createdAt: calendar.createdAt,
       updatedAt: calendar.updatedAt,
     );

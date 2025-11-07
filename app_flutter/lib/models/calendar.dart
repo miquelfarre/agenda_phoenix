@@ -13,10 +13,12 @@ class Calendar {
   final String? shareHash;
   final String? category;
   final int subscriberCount;
+  final DateTime? startDate;  // For temporal calendars (e.g., "Olympics 2024")
+  final DateTime? endDate;    // For temporal calendars
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  const Calendar({required this.id, required this.ownerId, required this.name, this.description, this.deleteAssociatedEvents = false, this.isPublic = false, this.isDiscoverable = true, this.shareHash, this.category, this.subscriberCount = 0, required this.createdAt, required this.updatedAt});
+  const Calendar({required this.id, required this.ownerId, required this.name, this.description, this.deleteAssociatedEvents = false, this.isPublic = false, this.isDiscoverable = true, this.shareHash, this.category, this.subscriberCount = 0, this.startDate, this.endDate, required this.createdAt, required this.updatedAt});
 
   factory Calendar.fromJson(Map<String, dynamic> json) {
     return Calendar(
@@ -30,6 +32,8 @@ class Calendar {
       shareHash: json['share_hash'],
       category: json['category'],
       subscriberCount: json['subscriber_count'] ?? 0,
+      startDate: json['start_date'] != null ? DateTimeUtils.parseAndNormalize(json['start_date']) : null,
+      endDate: json['end_date'] != null ? DateTimeUtils.parseAndNormalize(json['end_date']) : null,
       createdAt: DateTimeUtils.parseAndNormalize(json['created_at']),
       updatedAt: DateTimeUtils.parseAndNormalize(json['updated_at']),
     );
@@ -47,12 +51,14 @@ class Calendar {
       'share_hash': shareHash,
       'category': category,
       'subscriber_count': subscriberCount,
+      if (startDate != null) 'start_date': DateTimeUtils.toNormalizedIso8601String(startDate!),
+      if (endDate != null) 'end_date': DateTimeUtils.toNormalizedIso8601String(endDate!),
       'created_at': DateTimeUtils.toNormalizedIso8601String(createdAt),
       'updated_at': DateTimeUtils.toNormalizedIso8601String(updatedAt),
     };
   }
 
-  Calendar copyWith({int? id, int? ownerId, String? name, String? description, bool? deleteAssociatedEvents, bool? isPublic, bool? isDiscoverable, String? shareHash, String? category, int? subscriberCount, DateTime? createdAt, DateTime? updatedAt}) {
+  Calendar copyWith({int? id, int? ownerId, String? name, String? description, bool? deleteAssociatedEvents, bool? isPublic, bool? isDiscoverable, String? shareHash, String? category, int? subscriberCount, DateTime? startDate, DateTime? endDate, DateTime? createdAt, DateTime? updatedAt}) {
     return Calendar(
       id: id ?? this.id,
       ownerId: ownerId ?? this.ownerId,
@@ -64,6 +70,8 @@ class Calendar {
       shareHash: shareHash ?? this.shareHash,
       category: category ?? this.category,
       subscriberCount: subscriberCount ?? this.subscriberCount,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -88,6 +88,8 @@ FLUTTER_MODELS = {
             "share_hash": (str, type(None)),
             "category": (str, type(None)),
             "subscriber_count": (int, type(None)),
+            "start_date": (str, type(None)),  # For temporal calendars
+            "end_date": (str, type(None)),    # For temporal calendars
         },
     },
     "Group": {
