@@ -1483,7 +1483,7 @@ def insert_sample_data():
                     user_id=miquel.id,
                     interaction_type="subscribed",
                     status="accepted",
-                    note=note,
+                    personal_note=note,
                 )
             )
 
@@ -1658,7 +1658,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="accepted",
                 invited_by_user_id=ada.id,
-                note="Llevar disfraz de bruja 🧙‍♀️",
+                personal_note="Llevar disfraz de bruja 🧙‍♀️",
             ),
             EventInteraction(
                 event_id=ada_party.id,
@@ -1705,7 +1705,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="accepted",
                 invited_by_user_id=sara.id,
-                note="¡Ganas de un brunch relajado! ☕",
+                personal_note="¡Ganas de un brunch relajado! ☕",
             )
         )
 
@@ -1823,7 +1823,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="pending",
                 invited_by_user_id=miquel.id,
-                note="¿Vienes al gym conmigo? 💪",
+                personal_note="¿Vienes al gym conmigo? 💪",
             )
         )
 
@@ -1848,7 +1848,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="pending",
                 invited_by_user_id=miquel.id,
-                note="¡Vamos juntos al Clásico! Tengo entradas 🎫⚽",
+                personal_note="¡Vamos juntos al Clásico! Tengo entradas 🎫⚽",
             )
         )
 
@@ -1860,7 +1860,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="pending",
                 invited_by_user_id=ada.id,
-                note="¡Mamá ven a ver mi clase de ballet! 🩰",
+                personal_note="¡Mamá ven a ver mi clase de ballet! 🩰",
             )
         )
 
@@ -1957,7 +1957,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="accepted",
                 invited_by_user_id=sonia.id,
-                note="¡Por fin vacaciones en familia! 🏖️",
+                personal_note="¡Por fin vacaciones en familia! 🏖️",
             ),
             EventInteraction(
                 event_id=family_trip.id,
@@ -1965,7 +1965,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="accepted",
                 invited_by_user_id=sonia.id,
-                note="¡Voy a nadar todos los días! 🏊‍♀️",
+                personal_note="¡Voy a nadar todos los días! 🏊‍♀️",
             ),
             EventInteraction(
                 event_id=family_trip.id,

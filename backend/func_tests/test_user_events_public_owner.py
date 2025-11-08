@@ -6,44 +6,11 @@ Este test detecta el bug donde los owners públicos (restaurantes, gimnasios, et
 no aparecían en la lista de attendees del endpoint /users/{id}/events
 """
 
-import os
 import pytest
-import requests
 from datetime import datetime, timedelta
 
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": int(os.getenv("DB_PORT", "5432")),
-    "database": os.getenv("POSTGRES_DB", "postgres"),
-    "user": os.getenv("POSTGRES_USER", "postgres"),
-    "password": os.getenv("POSTGRES_PASSWORD", "your-super-secret-and-long-postgres-password"),
-}
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8001/api/v1")
-
-
-def api_request(method, endpoint, user_id=None, json=None, params=None):
-    """Make API request with optional X-Test-User-Id header"""
-    url = f"{API_BASE_URL}{endpoint}"
-    headers = {}
-    if user_id is not None:
-        headers["X-Test-User-Id"] = str(user_id)
-
-    if method == "GET":
-        response = requests.get(url, headers=headers, params=params)
-    elif method == "POST":
-        response = requests.post(url, headers=headers, json=json)
-    elif method == "PATCH":
-        response = requests.patch(url, headers=headers, json=json)
-    elif method == "DELETE":
-        response = requests.delete(url, headers=headers)
-    else:
-        raise ValueError(f"Unsupported method: {method}")
-
-    return response
-
-
-def test_user_events_includes_public_owner_in_attendees():
+def test_user_events_includes_public_owner_in_attendees(client):
     """
     Test que verifica que cuando un usuario está suscrito a eventos de un usuario público,
     el endpoint /users/{id}/events incluye:
@@ -58,7 +25,7 @@ def test_user_events_includes_public_owner_in_attendees():
         "name": "Test Restaurant",
         "phone": f"+1000{int(datetime.now().timestamp())}",
     }
-    contact_response = api_request("POST", "/contacts", json=contact_data)
+    contact_response = client.post("/api/v1/contacts", json=contact_data)
     assert contact_response.status_code == 201
     contact = contact_response.json()
 
@@ -70,7 +37,7 @@ def test_user_events_includes_public_owner_in_attendees():
         "auth_id": f"ig_restaurant_{datetime.now().timestamp()}",
         "is_public": True,
     }
-    public_user_response = api_request("POST", "/users", json=public_user_data)
+    public_user_response = client.post("/api/v1/users", json=public_user_data)
     assert public_user_response.status_code == 201
     public_user = public_user_response.json()
 
@@ -83,7 +50,7 @@ def test_user_events_includes_public_owner_in_attendees():
         "auth_id": f"+2000{int(datetime.now().timestamp())}",
         "is_public": False,
     }
-    private_user_response = api_request("POST", "/users", json=private_user_data)
+    private_user_response = client.post("/api/v1/users", json=private_user_data)
     assert private_user_response.status_code == 201
     private_user = private_user_response.json()
 
@@ -94,7 +61,8 @@ def test_user_events_includes_public_owner_in_attendees():
         "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
         "owner_id": public_user["id"],
     }
-    event_response = api_request("POST", "/events", user_id=public_user["id"], json=event_data)
+    client._auth_context["user_id"] = public_user["id"]
+    event_response = client.post("/api/v1/events", json=event_data)
     assert event_response.status_code == 201
     event = event_response.json()
 
@@ -106,7 +74,8 @@ def test_user_events_includes_public_owner_in_attendees():
         "status": "accepted",
         "role": "owner",
     }
-    api_request("POST", "/interactions", user_id=public_user["id"], json=owner_interaction_data)
+    client._auth_context["user_id"] = public_user["id"]
+    client.post("/api/v1/interactions", json=owner_interaction_data)
 
     # Private user subscribes to event
     subscription_data = {
@@ -115,14 +84,16 @@ def test_user_events_includes_public_owner_in_attendees():
         "interaction_type": "subscribed",
         "status": "accepted",
     }
-    sub_response = api_request("POST", "/interactions", user_id=private_user["id"], json=subscription_data)
+    client._auth_context["user_id"] = private_user["id"]
+    sub_response = client.post("/api/v1/interactions", json=subscription_data)
     assert sub_response.status_code == 201
 
     import time
     time.sleep(1)  # Allow realtime to propagate
 
     # Get events for private user using /users/{id}/events endpoint
-    user_events_response = api_request("GET", f"/users/{private_user['id']}/events", user_id=private_user["id"])
+    client._auth_context["user_id"] = private_user["id"]
+    user_events_response = client.get( f"/api/v1/users/{private_user['id']}/events")
     assert user_events_response.status_code == 200
     user_events = user_events_response.json()
 
@@ -170,7 +141,7 @@ def test_user_events_includes_public_owner_in_attendees():
     print(f"   - Public owner NOT in attendees (correct): ✓")
 
 
-def test_user_events_preserves_owner_info_across_updates():
+def test_user_events_preserves_owner_info_across_updates(client):
     """
     Test que verifica que la información del owner no se pierde
     después de actualizaciones del evento.
@@ -185,7 +156,7 @@ def test_user_events_preserves_owner_info_across_updates():
         "name": "Test Gym",
         "phone": f"+3000{int(datetime.now().timestamp())}",
     }
-    contact = api_request("POST", "/contacts", json=contact_data).json()
+    contact = client.post("/api/v1/contacts", json=contact_data).json()
 
     public_user_data = {
         "contact_id": contact["id"],
@@ -194,7 +165,7 @@ def test_user_events_preserves_owner_info_across_updates():
         "auth_id": f"ig_gym_{datetime.now().timestamp()}",
         "is_public": True,
     }
-    public_user = api_request("POST", "/users", json=public_user_data).json()
+    public_user = client.post("/api/v1/users", json=public_user_data).json()
 
     private_user_data = {
         "name": "Test Member",
@@ -202,7 +173,7 @@ def test_user_events_preserves_owner_info_across_updates():
         "auth_provider": "phone",
         "auth_id": f"+4000{int(datetime.now().timestamp())}",
     }
-    private_user = api_request("POST", "/users", json=private_user_data).json()
+    private_user = client.post("/api/v1/users", json=private_user_data).json()
 
     event_data = {
         "name": "Spinning Class",
@@ -210,7 +181,8 @@ def test_user_events_preserves_owner_info_across_updates():
         "start_date": (datetime.now() + timedelta(days=2)).isoformat(),
         "owner_id": public_user["id"],
     }
-    event = api_request("POST", "/events", user_id=public_user["id"], json=event_data).json()
+    client._auth_context["user_id"] = public_user["id"]
+    event = client.post("/api/v1/events", json=event_data).json()
 
     # Create owner interaction
     owner_interaction_data = {
@@ -220,7 +192,8 @@ def test_user_events_preserves_owner_info_across_updates():
         "status": "accepted",
         "role": "owner",
     }
-    api_request("POST", "/interactions", user_id=public_user["id"], json=owner_interaction_data)
+    client._auth_context["user_id"] = public_user["id"]
+    client.post("/api/v1/interactions", json=owner_interaction_data)
 
     subscription_data = {
         "user_id": private_user["id"],
@@ -228,13 +201,15 @@ def test_user_events_preserves_owner_info_across_updates():
         "interaction_type": "subscribed",
         "status": "accepted",
     }
-    api_request("POST", "/interactions", user_id=private_user["id"], json=subscription_data)
+    client._auth_context["user_id"] = private_user["id"]
+    client.post("/api/v1/interactions", json=subscription_data)
 
     import time
     time.sleep(0.5)
 
     # First fetch - should have owner info
-    first_fetch = api_request("GET", f"/users/{private_user['id']}/events", user_id=private_user["id"]).json()
+    client._auth_context["user_id"] = private_user["id"]
+    first_fetch = client.get( f"/api/v1/users/{private_user['id']}/events").json()
     first_event = next((e for e in first_fetch if e["id"] == event["id"]), None)
 
     assert first_event is not None
@@ -243,12 +218,14 @@ def test_user_events_preserves_owner_info_across_updates():
 
     # Simulate an update (change event description)
     update_data = {"description": "Updated: High intensity spinning with music"}
-    api_request("PATCH", f"/events/{event['id']}", user_id=public_user["id"], json=update_data)
+    client._auth_context["user_id"] = public_user["id"]
+    client.patch( f"/api/v1/events/{event['id']}", json=update_data)
 
     time.sleep(1)
 
     # Second fetch - owner info MUST still be present
-    second_fetch = api_request("GET", f"/users/{private_user['id']}/events", user_id=private_user["id"]).json()
+    client._auth_context["user_id"] = private_user["id"]
+    second_fetch = client.get( f"/api/v1/users/{private_user['id']}/events").json()
     second_event = next((e for e in second_fetch if e["id"] == event["id"]), None)
 
     assert second_event is not None, "Event should still be in user's events after update"
