@@ -43,7 +43,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return Alice's event and Bob's event (Alice joined as member)",
+    "personal_note": "Should return Alice's event and Bob's event (Alice joined as member)",
     "body": [
       {
         "name": "Alice Event",
@@ -87,7 +87,7 @@
           "status": "accepted",
           "role": "member",
           "invited_by_user_id": null,
-          "note": null,
+          "personal_note": null,
           "is_attending": false,
           "read_at": null,
           "is_new": true
@@ -106,7 +106,7 @@
           {
             "id": "{{ID}}",
             "full_name": "Alice",
-            "username": null,
+            "instagram_name": null,
             "profile_picture": null
           }
         ],

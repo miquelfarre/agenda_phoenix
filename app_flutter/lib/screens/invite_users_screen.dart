@@ -269,7 +269,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
 
       for (final userId in allUserIds) {
         try {
-          await eventInteractionRepository.sendInvitation(eventId, userId, null);
+          await eventInteractionRepository.sendInvitation(eventId, userId);
           successCount++;
 
           _recentlyInvitedUserIds.add(userId);

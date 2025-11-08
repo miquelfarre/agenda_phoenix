@@ -47,7 +47,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY January events (id=2,3,4), assuming current month is January 2026",
+    "personal_note": "Should return ONLY January events (id=2,3,4), assuming current month is January 2026",
     "body": []
   }
 }

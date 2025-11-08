@@ -47,7 +47,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should filter for 'meeting' (id=1,2,4,5), then skip 1 and return next 2 (id=2,4)",
+    "personal_note": "Should filter for 'meeting' (id=1,2,4,5), then skip 1 and return next 2 (id=2,4)",
     "body": [
       {
         "name": "Meeting 2",

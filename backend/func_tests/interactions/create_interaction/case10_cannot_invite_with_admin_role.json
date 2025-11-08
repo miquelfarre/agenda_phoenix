@@ -36,7 +36,7 @@
   },
   "expected": {
     "status_code": 400,
-    "note": "Cannot invite someone as admin - admins must be added directly using 'joined'",
+    "personal_note": "Cannot invite someone as admin - admins must be added directly using 'joined'",
     "body": {
       "detail": "Admins must be added directly using 'joined' interaction type, not 'invited'. Use 'joined' with role='admin' to add an admin without requiring acceptance."
     }

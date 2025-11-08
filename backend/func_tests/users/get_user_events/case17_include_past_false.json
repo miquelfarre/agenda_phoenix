@@ -35,7 +35,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY future events (id=3), NOT past events (id=1,2)",
+    "personal_note": "Should return ONLY future events (id=3), NOT past events (id=1,2)",
     "body": [
       {
         "name": "Recent Past",

@@ -64,7 +64,7 @@ async def get_current_user(
 
         # Build display name
         contact_name = db_contact.name if db_contact else None
-        username = db_user.username
+        instagram_name = db_user.instagram_name
         if username and contact_name:
             display_name = f"{username} ({contact_name})"
         elif username:
@@ -76,7 +76,7 @@ async def get_current_user(
 
         return UserEnrichedResponse(
             id=db_user.id,
-            username=db_user.username,
+            instagram_name=db_user.instagram_name,
             auth_provider=db_user.auth_provider,
             auth_id=db_user.auth_id,
             is_public=db_user.is_public,
@@ -109,7 +109,7 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
 
         # Build display name
         contact_name = db_contact.name if db_contact else None
-        username = db_user.username
+        instagram_name = db_user.instagram_name
         if username and contact_name:
             display_name = f"{username} ({contact_name})"
         elif username:
@@ -121,7 +121,7 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
 
         return UserEnrichedResponse(
             id=db_user.id,
-            username=db_user.username,
+            instagram_name=db_user.instagram_name,
             auth_provider=db_user.auth_provider,
             auth_id=db_user.auth_id,
             is_public=db_user.is_public,
@@ -394,10 +394,10 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
 
         for user_obj, contact_obj in owners_query:
             # Determine owner name: use contact name if available, otherwise username (for Instagram users)
-            owner_name = contact_obj.name if contact_obj else user_obj.username
+            owner_name = contact_obj.name if contact_obj else user_obj.instagram_name
             logger.info(f"[GET /users/{user_id}/events] OWNER INFO: user_id={user_obj.id}, "
                        f"is_public={user_obj.is_public}, has_contact={contact_obj is not None}, "
-                       f"owner_name={owner_name}, username={user_obj.username}")
+                       f"owner_name={owner_name}, instagram_name={user_obj.instagram_name}")
             owner_info[user_obj.id] = {
                 "name": owner_name,
                 "is_public": user_obj.is_public,
@@ -449,7 +449,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
             attendees_map[event_id].append({
                 "id": user_obj.id,
                 "full_name": contact_obj.name if contact_obj else None,
-                "username": user_obj.username,
+                "instagram_name": user_obj.instagram_name,
                 "profile_picture": user_obj.profile_picture
             })
 
@@ -528,7 +528,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         interaction_user_id = current_user_id if current_user_id is not None else user_id
         interactions = event_interaction.get_by_event_ids_and_user(db, event_ids=visible_event_ids, user_id=interaction_user_id)
         for interaction in interactions:
-            user_interactions[interaction.event_id] = {"id": interaction.id, "interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "note": interaction.note, "is_attending": interaction.is_attending, "read_at": interaction.read_at.isoformat() if interaction.read_at else None, "is_new": interaction.is_new}
+            user_interactions[interaction.event_id] = {"id": interaction.id, "interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "personal_note": interaction.personal_note, "is_attending": interaction.is_attending, "read_at": interaction.read_at.isoformat() if interaction.read_at else None, "is_new": interaction.is_new}
 
     # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)
@@ -825,7 +825,7 @@ async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
         result.append(UserSubscriptionResponse(
             id=public_user.id,
             contact_id=public_user.contact_id,
-            username=public_user.username,
+            instagram_name=public_user.instagram_name,
             auth_provider=public_user.auth_provider,
             auth_id=public_user.auth_id,
             is_public=public_user.is_public,

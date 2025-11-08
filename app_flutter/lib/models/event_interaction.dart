@@ -11,12 +11,11 @@ class EventInteraction {
 
   final int? inviterId;
   final User? inviter;
-  final String? invitationMessage;
   final DateTime? invitedAt;
 
   final String? participationStatus;
   final DateTime? participationDecidedAt;
-  final String? decisionMessage;
+  final String? cancellationNote;
   final DateTime? postponeUntil;
 
   final bool isAttending;
@@ -43,11 +42,10 @@ class EventInteraction {
     this.user,
     this.inviterId,
     this.inviter,
-    this.invitationMessage,
     this.invitedAt,
     this.participationStatus,
     this.participationDecidedAt,
-    this.decisionMessage,
+    this.cancellationNote,
     this.postponeUntil,
     this.isAttending = false,
     this.isEventAdmin = false,
@@ -91,18 +89,17 @@ class EventInteraction {
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       inviterId: json['invited_by_user_id'],
       inviter: json['inviter'] != null ? User.fromJson(json['inviter']) : null,
-      invitationMessage: json['note'],
       invitedAt: json['created_at'] != null ? DateTimeUtils.parseAndNormalize(json['created_at']) : null,
       participationStatus: json['status'],
       participationDecidedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : null,
-      decisionMessage: json['rejection_message'],
+      cancellationNote: json['cancellation_note'],
       postponeUntil: null,
       isAttending: json['is_attending'] == true,
       isEventAdmin: isAdmin,
       viewed: isViewed,
       firstViewedAt: readAt != null ? DateTimeUtils.parseAndNormalize(readAt) : null,
       lastViewedAt: readAt != null ? DateTimeUtils.parseAndNormalize(readAt) : null,
-      personalNote: json['note'],
+      personalNote: json['personal_note'],
       noteUpdatedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : null,
       hidden: false,
       hiddenAt: null,
@@ -119,11 +116,10 @@ class EventInteraction {
       'user': user?.toJson(),
       'inviter_id': inviterId,
       'inviter': inviter?.toJson(),
-      'invitation_message': invitationMessage,
       'invited_at': invitedAt?.toIso8601String(),
       'participation_status': participationStatus,
       'participation_decided_at': participationDecidedAt?.toIso8601String(),
-      'decision_message': decisionMessage,
+      'cancellation_note': cancellationNote,
       'postpone_until': postponeUntil?.toIso8601String(),
       'is_attending': isAttending,
       'is_event_admin': isEventAdmin,
@@ -146,11 +142,10 @@ class EventInteraction {
     User? user,
     int? inviterId,
     User? inviter,
-    String? invitationMessage,
     DateTime? invitedAt,
     String? participationStatus,
     DateTime? participationDecidedAt,
-    String? decisionMessage,
+    String? cancellationNote,
     DateTime? postponeUntil,
     bool? isAttending,
     bool? isEventAdmin,
@@ -171,11 +166,10 @@ class EventInteraction {
       user: user ?? this.user,
       inviterId: inviterId ?? this.inviterId,
       inviter: inviter ?? this.inviter,
-      invitationMessage: invitationMessage ?? this.invitationMessage,
       invitedAt: invitedAt ?? this.invitedAt,
       participationStatus: participationStatus ?? this.participationStatus,
       participationDecidedAt: participationDecidedAt ?? this.participationDecidedAt,
-      decisionMessage: decisionMessage ?? this.decisionMessage,
+      cancellationNote: cancellationNote ?? this.cancellationNote,
       postponeUntil: postponeUntil ?? this.postponeUntil,
       isAttending: isAttending ?? this.isAttending,
       isEventAdmin: isEventAdmin ?? this.isEventAdmin,
@@ -209,11 +203,10 @@ class EventInteraction {
         other.user == user &&
         other.inviterId == inviterId &&
         other.inviter == inviter &&
-        other.invitationMessage == invitationMessage &&
         other.invitedAt == invitedAt &&
         other.participationStatus == participationStatus &&
         other.participationDecidedAt == participationDecidedAt &&
-        other.decisionMessage == decisionMessage &&
+        other.cancellationNote == cancellationNote &&
         other.postponeUntil == postponeUntil &&
         other.isAttending == isAttending &&
         other.isEventAdmin == isEventAdmin &&
@@ -237,11 +230,10 @@ class EventInteraction {
       user,
       inviterId,
       inviter,
-      invitationMessage,
       invitedAt,
       participationStatus,
       participationDecidedAt,
-      decisionMessage,
+      cancellationNote,
       postponeUntil,
       isAttending,
       isEventAdmin,

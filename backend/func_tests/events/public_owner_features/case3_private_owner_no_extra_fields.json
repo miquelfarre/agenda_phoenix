@@ -58,7 +58,7 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": null,
-          "note": null,
+          "personal_note": null,
           "is_attending": false,
           "read_at": null,
           "inviter": null

@@ -102,7 +102,7 @@
       "deleted successfully",
       "instances"
     ],
-    "note": "Should delete base event + 2 instances (total 3) and create 3 cancellations",
+    "personal_note": "Should delete base event + 2 instances (total 3) and create 3 cancellations",
     "body": {
       "message": "Event deleted successfully (single event)",
       "id": "{{ID}}",

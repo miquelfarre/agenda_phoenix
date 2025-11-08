@@ -97,12 +97,12 @@ async def get_event(
         owner_contact = contact_crud.get(db, id=owner.contact_id)
 
     # Determine owner name: use contact name if available, otherwise username (for Instagram users)
-    owner_name = owner_contact.name if owner_contact else owner.username
+    owner_name = owner_contact.name if owner_contact else owner.instagram_name
 
     import logging
     logger = logging.getLogger(__name__)
     logger.info(f"[GET /events/{event_id}] OWNER INFO: user_id={owner.id}, is_public={owner.is_public}, "
-               f"has_contact={owner_contact is not None}, owner_name={owner_name}, username={owner.username}")
+               f"has_contact={owner_contact is not None}, owner_name={owner_name}, instagram_name={owner.instagram_name}")
 
     # Build response dict from event
     response_data = {
@@ -213,7 +213,7 @@ async def get_event(
                     continue
 
                 # Get user display name from contact or username
-                user_name = contact.name if contact else interaction_user.username or f"User {interaction_user.id}"
+                user_name = contact.name if contact else interaction_user.instagram_name or f"User {interaction_user.id}"
                 user_phone = contact.phone if contact else None
 
                 # Get inviter if exists
@@ -225,7 +225,7 @@ async def get_event(
                     if inviter and inviter.contact_id:
                         from crud import contact as contact_crud
                         inviter_contact = contact_crud.get(db, id=inviter.contact_id)
-                    inviter_name = inviter_contact.name if inviter_contact else (inviter.username if inviter else None)
+                    inviter_name = inviter_contact.name if inviter_contact else (inviter.instagram_name if inviter else None)
 
                 interactions_data.append({
                     "id": interaction.id,
@@ -235,21 +235,21 @@ async def get_event(
                     "status": interaction.status,
                     "role": interaction.role,
                     "invited_by_user_id": interaction.invited_by_user_id,
-                    "note": interaction.note,
+                    "personal_note": interaction.personal_note,
                     "read_at": interaction.read_at.isoformat() if interaction.read_at else None,
                     "created_at": interaction.created_at.isoformat(),
                     "updated_at": interaction.updated_at.isoformat(),
                     "user": {
                         "id": interaction_user.id,
                         "full_name": user_name,
-                        "username": interaction_user.username,
+                        "instagram_name": interaction_user.instagram_name,
                         "phone_number": user_phone,
                         "profile_picture": interaction_user.profile_picture,
                     },
                     "inviter": {
                         "id": inviter.id,
                         "full_name": inviter_name,
-                        "username": inviter.username,
+                        "instagram_name": inviter.instagram_name,
                     } if inviter else None
                 })
 
@@ -283,7 +283,7 @@ async def get_event(
                     if inviter and inviter.contact_id:
                         from crud import contact as contact_crud
                         inviter_contact = contact_crud.get(db, id=inviter.contact_id)
-                    inviter_name = inviter_contact.name if inviter_contact else (inviter.username if inviter else None)
+                    inviter_name = inviter_contact.name if inviter_contact else (inviter.instagram_name if inviter else None)
 
                 response_data["interactions"] = [{
                     "id": user_interaction.id,
@@ -293,13 +293,13 @@ async def get_event(
                     "status": user_interaction.status,
                     "role": user_interaction.role,
                     "invited_by_user_id": user_interaction.invited_by_user_id,
-                    "note": user_interaction.note,
+                    "personal_note": user_interaction.personal_note,
                     "is_attending": user_interaction.is_attending,
                     "read_at": user_interaction.read_at.isoformat() if user_interaction.read_at else None,
                     "inviter": {
                         "id": inviter.id,
                         "full_name": inviter_name,
-                        "username": inviter.username,
+                        "instagram_name": inviter.instagram_name,
                     } if inviter else None
                 }]
 
@@ -330,8 +330,8 @@ async def get_event(
             if user_obj:
                 # Get user name from contact or username
                 user_contact = None
-                user_name = user_obj.username or f"User {user_obj.id}"
-                print(f"🔍 DEBUG BACKEND: user_obj.username={user_obj.username}, user_obj.contact_id={user_obj.contact_id}")
+                user_name = user_obj.instagram_name or f"User {user_obj.id}"
+                print(f"🔍 DEBUG BACKEND: user_obj.instagram_name={user_obj.instagram_name}, user_obj.contact_id={user_obj.contact_id}")
                 if user_obj.contact_id:
                     from crud import contact as contact_crud
                     user_contact = contact_crud.get(db, id=user_obj.contact_id)
@@ -344,7 +344,7 @@ async def get_event(
                 attendees.append({
                     "id": user_obj.id,
                     "full_name": user_name,
-                    "username": user_obj.username,
+                    "instagram_name": user_obj.instagram_name,
                     "profile_picture": user_obj.profile_picture,
                 })
 
@@ -378,7 +378,7 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
             continue
 
         # Build display name
-        username = user.username
+        instagram_name = user.instagram_name
         contact_name = contact.name if contact else None
 
         if username and contact_name:
@@ -396,13 +396,13 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
                 "event_id": interaction.event_id,
                 "user_id": interaction.user_id,
                 "user_name": display_name,
-                "user_username": username,
+                "user_instagram_name": username,
                 "user_contact_name": contact_name,
                 "interaction_type": interaction.interaction_type,
                 "status": interaction.status,
                 "role": interaction.role,
-                "note": interaction.note,
-                "rejection_message": interaction.rejection_message,
+                "personal_note": interaction.personal_note,
+                "cancellation_note": interaction.cancellation_note,
                 "invited_by_user_id": interaction.invited_by_user_id,
                 "invited_via_group_id": interaction.invited_via_group_id,
                 "read_at": interaction.read_at,
@@ -428,7 +428,7 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     # Build available invitees list
     available = []
     for user_obj, contact in results:
-        username = user_obj.username
+        instagram_name = user_obj.instagram_name
         contact_name = contact.name if contact else None
 
         # Build display name
@@ -441,7 +441,7 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
         else:
             display_name = f"Usuario #{user_obj.id}"
 
-        available.append({"id": user_obj.id, "username": username, "contact_name": contact_name, "display_name": display_name})
+        available.append({"id": user_obj.id, "instagram_name": username, "contact_name": contact_name, "display_name": display_name})
 
     return available
 
@@ -599,8 +599,8 @@ async def update_current_user_interaction(
             interaction_type=interaction.interaction_type or "subscribed",
             status=interaction.status or "pending",
             role=interaction.role,
-            note=interaction.note,
-            rejection_message=interaction.rejection_message
+            personal_note=interaction.personal_note,
+            cancellation_note=interaction.cancellation_note
         )
         db_interaction = event_interaction.create(db, obj_in=interaction_data)
     else:

@@ -43,7 +43,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return Alice's own event and Bob's event with pending invitation",
+    "personal_note": "Should return Alice's own event and Bob's event with pending invitation",
     "body": [
       {
         "name": "Alice Event",
@@ -87,7 +87,7 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}",
-          "note": null,
+          "personal_note": null,
           "is_attending": false,
           "read_at": null,
           "is_new": true

@@ -53,7 +53,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY instances (id=2,3), NOT base event (id=1) because Alice is owner",
+    "personal_note": "Should return ONLY instances (id=2,3), NOT base event (id=1) because Alice is owner",
     "body": [
       {
         "name": "Weekly Meeting",

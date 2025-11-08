@@ -15,7 +15,7 @@
     "endpoint": "/api/v1/users",
     "body": {
       "contact_id": 1,
-      "username": "sonia_user",
+      "instagram_name": "sonia_user",
       "auth_provider": "phone",
       "auth_id": "+34606014680"
     }

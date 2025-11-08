@@ -446,6 +446,8 @@ def insert_sample_data():
         # 2. Create users
         sonia = User(
             contact_id=contact_sonia.id,
+            name=contact_sonia.name,
+            phone=contact_sonia.phone,
             auth_provider="phone",
             auth_id=contact_sonia.phone,
             is_public=False,
@@ -453,6 +455,8 @@ def insert_sample_data():
         )
         miquel = User(
             contact_id=contact_miquel.id,
+            name=contact_miquel.name,
+            phone=contact_miquel.phone,
             auth_provider="phone",
             auth_id=contact_miquel.phone,
             is_public=False,
@@ -460,6 +464,8 @@ def insert_sample_data():
         )
         ada = User(
             contact_id=contact_ada.id,
+            name=contact_ada.name,
+            phone=contact_ada.phone,
             auth_provider="phone",
             auth_id=contact_ada.phone,
             is_public=False,
@@ -467,6 +473,8 @@ def insert_sample_data():
         )
         sara = User(
             contact_id=contact_sara.id,
+            name=contact_sara.name,
+            phone=contact_sara.phone,
             auth_provider="phone",
             auth_id=contact_sara.phone,
             is_public=False,
@@ -474,6 +482,8 @@ def insert_sample_data():
         )
         tdb = User(
             contact_id=contact_tdb.id,
+            name=contact_tdb.name,
+            phone=contact_tdb.phone,
             auth_provider="phone",
             auth_id=contact_tdb.phone,
             is_public=False,
@@ -481,13 +491,16 @@ def insert_sample_data():
         )
         polr = User(
             contact_id=contact_polr.id,
+            name=contact_polr.name,
+            phone=contact_polr.phone,
             auth_provider="phone",
             auth_id=contact_polr.phone,
             is_public=False,
             last_login=now,
         )
         fcbarcelona = User(
-            username="fcbarcelona",
+            name="FC Barcelona",
+            instagram_name="fcbarcelona",
             auth_provider="instagram",
             auth_id="ig_fcbarcelona",
             is_public=True,
@@ -495,47 +508,31 @@ def insert_sample_data():
             last_login=now,
         )
 
-        # Create public users for subscriptions
-        contact_gym = Contact(
-            name="Gimnasio FitZone",
-            phone="+34900111222",
-        )
-        contact_restaurant = Contact(
-            name="Restaurante El Buen Sabor",
-            phone="+34900333444",
-        )
-        contact_cultural = Contact(
-            name="Centro Cultural La Llotja",
-            phone="+34900555666",
-        )
-
-        db.add_all([contact_gym, contact_restaurant, contact_cultural])
-        db.flush()
-
+        # Create public users for subscriptions (NO tienen Contact, son usuarios públicos de Instagram)
         gym_fitzone = User(
-            username="fitzone_bcn",
+            name="Gimnasio FitZone",
+            instagram_name="fitzone_bcn",
             auth_provider="instagram",
             auth_id="ig_fitzone",
             is_public=True,
-            contact_id=contact_gym.id,
             profile_picture="https://example.com/gym-logo.png",
             last_login=now,
         )
         restaurant_sabor = User(
-            username="elbuen_sabor",
+            name="Restaurante El Buen Sabor",
+            instagram_name="elbuen_sabor",
             auth_provider="instagram",
             auth_id="ig_restaurant",
             is_public=True,
-            contact_id=contact_restaurant.id,
             profile_picture="https://example.com/restaurant-logo.png",
             last_login=now,
         )
         cultural_llotja = User(
-            username="llotja_cultural",
+            name="Centro Cultural La Llotja",
+            instagram_name="llotja_cultural",
             auth_provider="instagram",
             auth_id="ig_cultural",
             is_public=True,
-            contact_id=contact_cultural.id,
             profile_picture="https://example.com/cultural-logo.png",
             last_login=now,
         )
@@ -2035,7 +2032,7 @@ def create_database_views():
                     ei.user_id AS subscriber_id,
                     u.id AS subscribed_to_id,
                     u.contact_id,
-                    u.username AS instagram_name,
+                    u.instagram_name,
                     u.auth_provider,
                     u.auth_id,
                     u.is_public,

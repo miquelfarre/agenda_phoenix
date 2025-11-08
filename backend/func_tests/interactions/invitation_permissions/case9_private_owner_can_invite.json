@@ -37,13 +37,13 @@
   },
   "expected": {
     "status_code": 201,
-    "note": "Alice (private owner) CAN invite Bob - this contrasts with case7 where public owner cannot",
+    "personal_note": "Alice (private owner) CAN invite Bob - this contrasts with case7 where public owner cannot",
     "body": {
       "interaction_type": "invited",
       "status": "pending",
       "role": null,
-      "note": null,
-      "rejection_message": null,
+      "personal_note": null,
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

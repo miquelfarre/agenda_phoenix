@@ -41,7 +41,7 @@
   },
   "expected": {
     "status_code": 422,
-    "note": "Should return ONLY events with id=2,3 (within December 2025 range)",
+    "personal_note": "Should return ONLY events with id=2,3 (within December 2025 range)",
     "body": {
       "detail": [
         {

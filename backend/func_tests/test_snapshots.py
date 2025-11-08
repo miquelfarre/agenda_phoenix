@@ -34,10 +34,6 @@ def setup_test_data(db, setup_config: Dict):
     # Crear usuarios
     if "users" in setup_config:
         for user_config in setup_config["users"]:
-            contact = Contact(name=user_config["name"], phone=user_config.get("phone"))
-            db.add(contact)
-            db.flush()
-
             # Determinar is_public basado en auth_provider o campo explícito
             is_public = user_config.get("is_public", False)
             auth_provider = user_config.get("auth_provider", "phone")
@@ -46,12 +42,31 @@ def setup_test_data(db, setup_config: Dict):
             if auth_provider == "instagram":
                 is_public = True
 
+            # Usuarios públicos NO tienen Contact (se autentican por Instagram)
+            # Usuarios privados SÍ tienen Contact (se autentican por teléfono)
+            contact_id = None
+            auth_id = None
+
+            if is_public:
+                # Usuario público: username como auth_id, sin Contact
+                auth_id = user_config.get("instagram_name", user_config["name"].lower().replace(" ", ""))
+            else:
+                # Usuario privado: crear Contact con teléfono
+                phone = user_config.get("phone")
+                if not phone:
+                    raise ValueError(f"Private user {user_config['name']} must have a phone number")
+                contact = Contact(name=user_config["name"], phone=phone)
+                db.add(contact)
+                db.flush()
+                contact_id = contact.id
+                auth_id = phone
+
             user = User(
                 id=user_config.get("id"),
-                contact_id=contact.id,
-                username=user_config.get("username"),
+                contact_id=contact_id,
+                instagram_name=user_config.get("instagram_name"),
                 auth_provider=auth_provider,
-                auth_id=contact.phone,
+                auth_id=auth_id,
                 is_public=is_public,
                 is_admin=user_config.get("is_admin", False),
                 profile_picture=user_config.get("profile_picture")

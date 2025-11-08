@@ -5,8 +5,9 @@
       {
         "id": 1,
         "name": "FC Barcelona",
-        "phone": "+34123456789",
-        "is_public": true
+        "is_public": true,
+        "instagram_name": "fcbarcelona",
+        "auth_provider": "instagram"
       },
       {
         "id": 2,
@@ -63,8 +64,10 @@
   "expected": {
     "status_code": 200,
     "body": {
+      "name": null,
+      "instagram_name": "fcbarcelona",
+      "phone": null,
       "user_id": "{{ID}}",
-      "username": null,
       "total_subscribers": 2,
       "total_events": 2,
       "events_stats": [

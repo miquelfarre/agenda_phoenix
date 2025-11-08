@@ -5,9 +5,9 @@
       {
         "id": 1,
         "name": "FC Barcelona",
-        "phone": "+34900000001",
         "auth_provider": "instagram",
-        "is_public": true
+        "is_public": true,
+        "instagram_name": "fcbarcelona"
       },
       {
         "id": 2,

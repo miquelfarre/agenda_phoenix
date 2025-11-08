@@ -30,7 +30,7 @@
     "method": "PATCH",
     "endpoint": "/api/v1/interactions/1",
     "body": {
-      "note": "llevar los patines"
+      "personal_note": "llevar los patines"
     },
     "auth_user_id": 1
   },
@@ -43,8 +43,8 @@
       "interaction_type": "joined",
       "status": "accepted",
       "role": "owner",
-      "note": "llevar los patines",
-      "rejection_message": null,
+      "personal_note": "llevar los patines",
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

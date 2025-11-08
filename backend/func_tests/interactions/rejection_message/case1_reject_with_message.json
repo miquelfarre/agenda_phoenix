@@ -36,7 +36,7 @@
     "endpoint": "/api/v1/interactions/1",
     "body": {
       "status": "rejected",
-      "rejection_message": "No puedo asistir, tengo otro compromiso"
+      "cancellation_note": "No puedo asistir, tengo otro compromiso"
     },
     "auth_user_id": 2
   },
@@ -50,8 +50,8 @@
       "interaction_type": "invited",
       "status": "rejected",
       "role": null,
-      "note": null,
-      "rejection_message": "No puedo asistir, tengo otro compromiso",
+      "personal_note": null,
+      "cancellation_note": "No puedo asistir, tengo otro compromiso",
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

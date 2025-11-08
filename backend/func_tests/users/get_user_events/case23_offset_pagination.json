@@ -47,7 +47,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should skip first 2 events and return id=3,4,5",
+    "personal_note": "Should skip first 2 events and return id=3,4,5",
     "body": [
       {
         "name": "Event 1",

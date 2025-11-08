@@ -67,7 +67,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY instances (id=2,3), NOT base event (id=1) because invitation is accepted",
+    "personal_note": "Should return ONLY instances (id=2,3), NOT base event (id=1) because invitation is accepted",
     "body": []
   }
 }

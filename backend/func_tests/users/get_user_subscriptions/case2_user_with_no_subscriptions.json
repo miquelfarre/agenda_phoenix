@@ -11,8 +11,9 @@
       {
         "id": 2,
         "name": "FC Barcelona",
-        "phone": "+34600000002",
-        "is_public": true
+        "is_public": true,
+        "instagram_name": "fcbarcelona",
+        "auth_provider": "instagram"
       }
     ],
     "events": [

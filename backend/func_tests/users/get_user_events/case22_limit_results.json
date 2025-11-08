@@ -47,7 +47,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return exactly 3 events (likely id=1,2,3), not all 5",
+    "personal_note": "Should return exactly 3 events (likely id=1,2,3), not all 5",
     "body": [
       {
         "name": "Event 1",

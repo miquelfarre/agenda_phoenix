@@ -41,7 +41,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY today's events (id=2,3), assuming today is 2026-01-15",
+    "personal_note": "Should return ONLY today's events (id=2,3), assuming today is 2026-01-15",
     "body": []
   }
 }

@@ -176,9 +176,9 @@ class EventRepository {
     }
   }
 
-  Future<void> sendInvitation(int eventId, int invitedUserId, String? invitationMessage) async {
+  Future<void> sendInvitation(int eventId, int invitedUserId) async {
     try {
-      await _apiClient.createInteraction({'event_id': eventId, 'user_id': invitedUserId, 'interaction_type': 'invited', 'status': 'pending', if (invitationMessage != null) 'note': invitationMessage});
+      await _apiClient.createInteraction({'event_id': eventId, 'user_id': invitedUserId, 'interaction_type': 'invited', 'status': 'pending'});
       await _fetchAndSync();
       _emitInteractions();
     } catch (e, _) {

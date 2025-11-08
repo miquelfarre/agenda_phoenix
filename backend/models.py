@@ -49,7 +49,9 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=True, unique=True, index=True)
-    username = Column(String(100), nullable=True, index=True)  # For Instagram users
+    name = Column(String(200), nullable=True)  # Display name for both types
+    instagram_name = Column(String(100), nullable=True, index=True)  # For Instagram users (public)
+    phone = Column(String(20), nullable=True, index=True)  # For phone users (private)
     auth_provider = Column(String(20), nullable=False)  # 'phone' or 'instagram'
     auth_id = Column(String(255), nullable=False, unique=True, index=True)  # Phone number or Instagram user ID
     is_public = Column(Boolean, nullable=False, default=False, index=True)  # True for instagram users, False for phone users
@@ -361,8 +363,8 @@ class EventInteraction(Base):
     role = Column(String(50), nullable=True)  # 'owner', 'admin', null (member)
     invited_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     invited_via_group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
-    note = Column(Text, nullable=True)  # Personal note for this event
-    rejection_message = Column(Text, nullable=True)  # Message when rejecting invitation
+    personal_note = Column(Text, nullable=True)  # Personal reminder note ("bring skates to skating class")
+    cancellation_note = Column(Text, nullable=True)  # Cancellation/rejection note ("canceling the event because it's too late")
     is_attending = Column(Boolean, default=False, nullable=True)  # Whether user is attending despite rejecting invitation (for public events)
     read_at = Column(TIMESTAMP(timezone=True), nullable=True)  # Timestamp when interaction was marked as read
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
@@ -425,8 +427,8 @@ class EventInteraction(Base):
             "role": self.role,
             "invited_by_user_id": self.invited_by_user_id,
             "invited_via_group_id": self.invited_via_group_id,
-            "note": self.note,
-            "rejection_message": self.rejection_message,
+            "personal_note": self.personal_note,
+            "cancellation_note": self.cancellation_note,
             "read_at": self.read_at.isoformat() if self.read_at else None,
             "is_new": self.is_new,
             "created_at": self.created_at.isoformat() if self.created_at else None,

@@ -81,7 +81,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY base event (id=1), NOT instances (id=2,3) because invitation is pending",
+    "personal_note": "Should return ONLY base event (id=1), NOT instances (id=2,3) because invitation is pending",
     "body": [
       {
         "name": "Weekly Meeting",
@@ -100,7 +100,7 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}",
-          "note": null,
+          "personal_note": null,
           "is_attending": false,
           "read_at": null,
           "is_new": true
@@ -135,7 +135,7 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}",
-          "note": null,
+          "personal_note": null,
           "is_attending": false,
           "read_at": null,
           "is_new": true
@@ -170,7 +170,7 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": "{{ID}}",
-          "note": null,
+          "personal_note": null,
           "is_attending": false,
           "read_at": null,
           "is_new": true

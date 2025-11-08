@@ -58,7 +58,7 @@
           "status": "accepted",
           "role": null,
           "invited_by_user_id": null,
-          "note": null,
+          "personal_note": null,
           "is_attending": false,
           "read_at": null,
           "inviter": null
@@ -77,7 +77,7 @@
         {
           "id": "{{ID}}",
           "full_name": "Bob (Invitee)",
-          "username": null,
+          "instagram_name": null,
           "profile_picture": null
         }
       ],

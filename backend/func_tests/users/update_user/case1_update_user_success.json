@@ -15,7 +15,7 @@
     "endpoint": "/api/v1/users/1",
     "body": {
       "contact_id": 1,
-      "username": "sonia_updated",
+      "instagram_name": "sonia_updated",
       "auth_provider": "phone",
       "auth_id": "+34606014680"
     },
@@ -27,7 +27,9 @@
   "expected": {
     "status_code": 200,
     "body": {
-      "username": "sonia_updated",
+      "name": null,
+      "instagram_name": "sonia_updated",
+      "phone": null,
       "auth_provider": "phone",
       "auth_id": "{{ID}}",
       "is_public": false,

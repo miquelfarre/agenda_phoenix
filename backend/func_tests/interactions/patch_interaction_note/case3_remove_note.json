@@ -23,7 +23,7 @@
         "interaction_type": "joined",
         "status": "accepted",
         "role": "owner",
-        "note": "llevar los patines"
+        "personal_note": "llevar los patines"
       }
     ]
   },
@@ -31,7 +31,7 @@
     "method": "PATCH",
     "endpoint": "/api/v1/interactions/1",
     "body": {
-      "note": null
+      "personal_note": null
     },
     "auth_user_id": 1
   },
@@ -41,8 +41,8 @@
       "interaction_type": "joined",
       "status": "accepted",
       "role": "owner",
-      "note": null,
-      "rejection_message": null,
+      "personal_note": null,
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

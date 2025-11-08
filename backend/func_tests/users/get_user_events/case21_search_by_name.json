@@ -41,7 +41,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return events with 'team' in name (id=1,2,4), case-insensitive, NOT id=3",
+    "personal_note": "Should return events with 'team' in name (id=1,2,4), case-insensitive, NOT id=3",
     "body": [
       {
         "name": "Team Meeting",

@@ -38,7 +38,9 @@ class ContactResponse(ContactBase):
 
 
 class UserBase(BaseModel):
-    username: Optional[str] = None
+    name: Optional[str] = None  # Display name for both types
+    instagram_name: Optional[str] = None  # Instagram username for public users
+    phone: Optional[str] = None  # Phone number for private users
     auth_provider: str
     auth_id: str
     is_public: bool = False
@@ -104,7 +106,7 @@ class UserPublicStats(BaseModel):
     """Statistics for a public user"""
 
     user_id: int
-    username: Optional[str]
+    instagram_name: Optional[str]
     total_subscribers: int  # Total number of subscribers
     total_events: int  # Total number of events created
     events_stats: List[EventStats]  # Stats for each event
@@ -195,8 +197,8 @@ class EventInteractionBase(BaseModel):
     interaction_type: str
     status: Optional[str] = None
     role: Optional[str] = None
-    note: Optional[str] = None
-    rejection_message: Optional[str] = None
+    personal_note: Optional[str] = None
+    cancellation_note: Optional[str] = None
     is_attending: Optional[bool] = None
 
 
@@ -213,8 +215,8 @@ class EventInteractionUpdate(BaseModel):
     interaction_type: Optional[str] = None
     status: Optional[str] = None
     role: Optional[str] = None
-    note: Optional[str] = None
-    rejection_message: Optional[str] = None
+    personal_note: Optional[str] = None
+    cancellation_note: Optional[str] = None
     is_attending: Optional[bool] = None
 
 
@@ -238,8 +240,8 @@ class EventInteractionEnrichedResponse(EventInteractionBase):
     id: int
     event_id: int
     user_id: int
-    user_name: str  # Display name (username or contact name)
-    user_username: Optional[str]
+    user_name: str  # Display name (name or contact name)
+    user_instagram_name: Optional[str]
     user_contact_name: Optional[str]
     invited_by_user_id: Optional[int]
     invited_via_group_id: Optional[int]
@@ -253,7 +255,7 @@ class AvailableInviteeResponse(BaseModel):
     """User available to be invited to an event"""
 
     id: int
-    username: Optional[str]
+    instagram_name: Optional[str]
     contact_name: Optional[str]
     display_name: str  # Computed display name
 

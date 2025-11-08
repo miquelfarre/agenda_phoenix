@@ -38,7 +38,7 @@
       "id": "{{ID}}",
       "owner_id": "{{ID}}",
       "owner": {
-        "username": null,
+        "instagram_name": null,
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
         "is_public": false,

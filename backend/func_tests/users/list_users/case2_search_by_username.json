@@ -7,19 +7,19 @@
         "id": 1,
         "name": "John Doe",
         "phone": "+1234567890",
-        "username": "john_doe"
+        "instagram_name": "john_doe"
       },
       {
         "id": 2,
         "name": "Jane Smith",
         "phone": "+1234567891",
-        "username": "jane_smith"
+        "instagram_name": "jane_smith"
       },
       {
         "id": 3,
         "name": "Johnny Walker",
         "phone": "+1234567892",
-        "username": "johnny_walker"
+        "instagram_name": "johnny_walker"
       }
     ]
   },
@@ -31,7 +31,7 @@
     "status_code": 200,
     "body": [
       {
-        "username": "john_doe",
+        "instagram_name": "john_doe",
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
         "is_public": false,
@@ -44,7 +44,7 @@
         "updated_at": "{{TIMESTAMP}}"
       },
       {
-        "username": "johnny_walker",
+        "instagram_name": "johnny_walker",
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
         "is_public": false,

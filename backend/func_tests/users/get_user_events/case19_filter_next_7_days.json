@@ -47,7 +47,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return events in next 7 days (id=2,3,4), NOT id=1 (past) or id=5 (8 days away), assuming today is 2026-01-15",
+    "personal_note": "Should return events in next 7 days (id=2,3,4), NOT id=1 (past) or id=5 (8 days away), assuming today is 2026-01-15",
     "body": []
   }
 }

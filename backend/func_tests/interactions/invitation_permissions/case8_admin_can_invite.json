@@ -50,13 +50,13 @@
   },
   "expected": {
     "status_code": 201,
-    "note": "Bob (admin with accepted status) can invite Charlie to the event",
+    "personal_note": "Bob (admin with accepted status) can invite Charlie to the event",
     "body": {
       "interaction_type": "invited",
       "status": "pending",
       "role": null,
-      "note": null,
-      "rejection_message": null,
+      "personal_note": null,
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

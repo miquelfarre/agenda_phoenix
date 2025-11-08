@@ -22,7 +22,7 @@ FLUTTER_MODELS = {
         },
         "optional_fields": {
             "contact_id": (int, type(None)),
-            "username": (str, type(None)),  # For private users or public users
+            "instagram_name": (str, type(None)),  # For private users or public users
             "auth_provider": (str, type(None)),
             "auth_id": (str, type(None)),
             "is_admin": (bool, type(None)),
@@ -118,7 +118,11 @@ FLUTTER_MODELS = {
             "status": (str, type(None)),
             "role": (str, type(None)),
             "invited_by_user_id": (int, type(None)),
-            "note": (str, type(None)),
+            "invited_via_group_id": (int, type(None)),
+            "personal_note": (str, type(None)),
+            "cancellation_note": (str, type(None)),
+            "is_attending": (bool, type(None)),
+            "read_at": (str, type(None)),
             "is_new": (bool, type(None)),
             "created_at": (str, type(None)),
             "updated_at": (str, type(None)),
@@ -200,7 +204,7 @@ def sample_data(test_db):
     user1 = User(
         id=1,
         contact_id=1,
-        username="Alice",
+        instagram_name="Alice",
         auth_provider="phone",
         auth_id="+1234567890",
         is_public=False,
@@ -211,7 +215,7 @@ def sample_data(test_db):
     user2 = User(
         id=2,
         contact_id=2,
-        username="bob_insta",
+        instagram_name="bob_insta",
         auth_provider="instagram",
         auth_id="12345",
         is_public=True,

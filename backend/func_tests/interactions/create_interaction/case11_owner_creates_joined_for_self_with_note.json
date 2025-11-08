@@ -25,19 +25,19 @@
       "user_id": 1,
       "interaction_type": "joined",
       "status": "accepted",
-      "note": "Llevar el vino y los platos",
+      "personal_note": "Llevar el vino y los platos",
       "invited_by_user_id": 1
     }
   },
   "expected": {
     "status_code": 201,
-    "note": "Owner (Alice) can add themselves to their own event with a personal note - useful for reminders",
+    "personal_note": "Owner (Alice) can add themselves to their own event with a personal note - useful for reminders",
     "body": {
       "interaction_type": "joined",
       "status": "accepted",
       "role": null,
-      "note": "Llevar el vino y los platos",
-      "rejection_message": null,
+      "personal_note": "Llevar el vino y los platos",
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

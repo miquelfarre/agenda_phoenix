@@ -41,7 +41,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return Alice's own event (id=1) and Bob's event (id=2) that Alice subscribed to",
+    "personal_note": "Should return Alice's own event (id=1) and Bob's event (id=2) that Alice subscribed to",
     "body": [
       {
         "name": "Alice Event",
@@ -85,7 +85,7 @@
           "status": null,
           "role": null,
           "invited_by_user_id": null,
-          "note": null,
+          "personal_note": null,
           "is_attending": false,
           "read_at": null,
           "is_new": true

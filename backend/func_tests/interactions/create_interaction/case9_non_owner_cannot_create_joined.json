@@ -50,7 +50,7 @@
   },
   "expected": {
     "status_code": 403,
-    "note": "Bob (admin but not owner) cannot add Charlie with 'joined' type - only owner can",
+    "personal_note": "Bob (admin but not owner) cannot add Charlie with 'joined' type - only owner can",
     "body": {
       "detail": "Only the event owner can add users directly with 'joined' interaction type."
     }

@@ -26,7 +26,7 @@
     "status_code": 200,
     "body": [
       {
-        "username": null,
+        "instagram_name": null,
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
         "is_public": false,
@@ -39,7 +39,7 @@
         "updated_at": "{{TIMESTAMP}}"
       },
       {
-        "username": null,
+        "instagram_name": null,
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
         "is_public": false,

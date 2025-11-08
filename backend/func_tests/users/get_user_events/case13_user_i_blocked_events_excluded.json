@@ -49,7 +49,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY Alice's event (id=1), NOT Bob's event (Alice blocked Bob)",
+    "personal_note": "Should return ONLY Alice's event (id=1), NOT Bob's event (Alice blocked Bob)",
     "body": [
       {
         "name": "Alice Event",

@@ -33,7 +33,7 @@
   "request": {
     "method": "POST",
     "endpoint": "/api/v1/interactions/1/mark-read",
-    "note": "This test calls mark-read twice to verify idempotency. The snapshot framework doesn't support multiple requests, so this just verifies the second call succeeds."
+    "personal_note": "This test calls mark-read twice to verify idempotency. The snapshot framework doesn't support multiple requests, so this just verifies the second call succeeds."
   },
   "expected": {
     "status_code": 200,
@@ -41,8 +41,8 @@
       "interaction_type": "invited",
       "status": "pending",
       "role": null,
-      "note": null,
-      "rejection_message": null,
+      "personal_note": null,
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

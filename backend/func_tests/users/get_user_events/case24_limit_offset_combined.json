@@ -53,7 +53,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should skip first 2 events and return next 2 (id=3,4), simulating page 2 with page_size=2",
+    "personal_note": "Should skip first 2 events and return next 2 (id=3,4), simulating page 2 with page_size=2",
     "body": [
       {
         "name": "Event 3",

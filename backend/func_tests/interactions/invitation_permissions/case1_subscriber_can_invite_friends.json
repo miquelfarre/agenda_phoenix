@@ -5,9 +5,9 @@
       {
         "id": 1,
         "name": "FC Barcelona",
-        "phone": "+34900000001",
         "auth_provider": "instagram",
-        "is_public": true
+        "is_public": true,
+        "instagram_name": "fcbarcelona"
       },
       {
         "id": 2,
@@ -52,13 +52,13 @@
   },
   "expected": {
     "status_code": 201,
-    "note": "Juan (subscriber with accepted status) can invite Luis to the event",
+    "personal_note": "Juan (subscriber with accepted status) can invite Luis to the event",
     "body": {
       "interaction_type": "invited",
       "status": "pending",
       "role": null,
-      "note": null,
-      "rejection_message": null,
+      "personal_note": null,
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

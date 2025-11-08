@@ -43,7 +43,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return ONLY Alice's own event (id=1), NOT Bob's event (rejected invitation)",
+    "personal_note": "Should return ONLY Alice's own event (id=1), NOT Bob's event (rejected invitation)",
     "body": [
       {
         "name": "Alice Event",

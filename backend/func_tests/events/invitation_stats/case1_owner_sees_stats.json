@@ -80,14 +80,14 @@
           "status": "accepted",
           "role": null,
           "invited_by_user_id": null,
-          "note": null,
+          "personal_note": null,
           "read_at": null,
           "created_at": "{{TIMESTAMP}}",
           "updated_at": "{{TIMESTAMP}}",
           "user": {
             "id": "{{ID}}",
             "full_name": "Bob",
-            "username": null,
+            "instagram_name": null,
             "phone_number": "+1234567891",
             "profile_picture": null
           },
@@ -101,14 +101,14 @@
           "status": "pending",
           "role": null,
           "invited_by_user_id": null,
-          "note": null,
+          "personal_note": null,
           "read_at": null,
           "created_at": "{{TIMESTAMP}}",
           "updated_at": "{{TIMESTAMP}}",
           "user": {
             "id": "{{ID}}",
             "full_name": "Charlie",
-            "username": null,
+            "instagram_name": null,
             "phone_number": "+1234567892",
             "profile_picture": null
           },
@@ -122,14 +122,14 @@
           "status": "rejected",
           "role": null,
           "invited_by_user_id": null,
-          "note": null,
+          "personal_note": null,
           "read_at": null,
           "created_at": "{{TIMESTAMP}}",
           "updated_at": "{{TIMESTAMP}}",
           "user": {
             "id": "{{ID}}",
             "full_name": "David",
-            "username": null,
+            "instagram_name": null,
             "phone_number": "+1234567893",
             "profile_picture": null
           },
@@ -149,7 +149,7 @@
         {
           "id": "{{ID}}",
           "full_name": "Bob",
-          "username": null,
+          "instagram_name": null,
           "profile_picture": null
         }
       ],

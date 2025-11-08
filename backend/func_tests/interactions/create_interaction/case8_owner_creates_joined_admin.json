@@ -35,13 +35,13 @@
   },
   "expected": {
     "status_code": 201,
-    "note": "Owner (Alice) can add Bob directly as admin using 'joined' - no acceptance required",
+    "personal_note": "Owner (Alice) can add Bob directly as admin using 'joined' - no acceptance required",
     "body": {
       "interaction_type": "joined",
       "status": "accepted",
       "role": "admin",
-      "note": null,
-      "rejection_message": null,
+      "personal_note": null,
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

@@ -41,7 +41,7 @@
   },
   "expected": {
     "status_code": 422,
-    "note": "Should return events with id=2,3,4 (from 2025-12-01 onwards), NOT id=1",
+    "personal_note": "Should return events with id=2,3,4 (from 2025-12-01 onwards), NOT id=1",
     "body": {
       "detail": [
         {

@@ -23,7 +23,7 @@
         "interaction_type": "joined",
         "status": "accepted",
         "role": "owner",
-        "note": "old note"
+        "personal_note": "old note"
       }
     ]
   },
@@ -31,7 +31,7 @@
     "method": "PATCH",
     "endpoint": "/api/v1/interactions/1",
     "body": {
-      "note": "llevar agua y patines"
+      "personal_note": "llevar agua y patines"
     },
     "auth_user_id": 1
   },
@@ -44,8 +44,8 @@
       "interaction_type": "joined",
       "status": "accepted",
       "role": "owner",
-      "note": "llevar agua y patines",
-      "rejection_message": null,
+      "personal_note": "llevar agua y patines",
+      "cancellation_note": null,
       "is_attending": false,
       "id": "{{ID}}",
       "event_id": "{{ID}}",

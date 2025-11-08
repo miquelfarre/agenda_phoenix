@@ -47,7 +47,7 @@
     "body_contains": [
       "deleted successfully"
     ],
-    "note": "No cancellation record should be created",
+    "personal_note": "No cancellation record should be created",
     "body": {
       "message": "Event deleted successfully (single event)",
       "id": "{{ID}}",

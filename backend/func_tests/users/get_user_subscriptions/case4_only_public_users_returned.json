@@ -11,8 +11,9 @@
       {
         "id": 2,
         "name": "FC Barcelona",
-        "phone": "+34600000002",
-        "is_public": true
+        "is_public": true,
+        "instagram_name": "fcbarcelona",
+        "auth_provider": "instagram"
       },
       {
         "id": 3,
@@ -56,14 +57,14 @@
     "status_code": 200,
     "body": [
       {
-        "id": "{{ID}}",
-        "contact_id": "{{ID}}",
-        "username": null,
-        "auth_provider": "phone",
+        "instagram_name": "fcbarcelona",
+        "auth_provider": "instagram",
         "auth_id": "{{ID}}",
         "is_public": true,
         "is_admin": false,
         "profile_picture": null,
+        "id": "{{ID}}",
+        "contact_id": null,
         "last_login": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",

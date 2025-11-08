@@ -51,7 +51,7 @@
   },
   "expected": {
     "status_code": 200,
-    "note": "Should return Alice's event and Team Meeting (Alice is admin in calendar)",
+    "personal_note": "Should return Alice's event and Team Meeting (Alice is admin in calendar)",
     "body": [
       {
         "name": "Alice Event",
