@@ -23,9 +23,9 @@ import '../widgets/adaptive/adaptive_button.dart';
 import '../widgets/adaptive/configs/button_config.dart';
 import '../widgets/personal_note_widget.dart';
 import '../widgets/user_avatar.dart';
-import 'public_user_events_screen.dart';
-import 'calendar_events_screen.dart';
-import 'event_series_screen.dart';
+import 'subscription_detail_screen.dart';
+import 'calendar_detail_screen.dart';
+import 'event_series_detail_screen.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
   final Event event;
@@ -1193,7 +1193,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     if (event.calendarId != null && event.calendarName != null) {
       Navigator.of(context).push(
         CupertinoPageRoute<void>(
-          builder: (context) => CalendarEventsScreen(
+          builder: (context) => CalendarDetailScreen(
             calendarId: event.calendarId!,
             calendarName: event.calendarName!,
             calendarColor: event.calendarColor,
@@ -1210,7 +1210,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       Navigator.of(context).push(
         CupertinoPageRoute<void>(
           builder: (context) =>
-              PublicUserEventsScreen(publicUser: event.owner!.toUser()),
+              SubscriptionDetailScreen(publicUser: event.owner!.toUser()),
         ),
       );
     }
@@ -1264,7 +1264,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         Navigator.of(context).push(
           CupertinoPageRoute(
             builder: (context) =>
-                EventSeriesScreen(events: seriesEvents, seriesName: event.name),
+                EventSeriesDetailScreen(events: seriesEvents, seriesName: event.name),
           ),
         );
       }

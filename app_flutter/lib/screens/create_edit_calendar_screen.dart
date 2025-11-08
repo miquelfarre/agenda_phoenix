@@ -10,28 +10,35 @@ import '../utils/calendar_permissions.dart';
 import '../utils/error_message_parser.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 
-class EditCalendarScreen extends ConsumerStatefulWidget {
-  final String calendarId;
+class CreateEditCalendarScreen extends ConsumerStatefulWidget {
+  final String? calendarId; // null = create mode, non-null = edit mode
 
-  const EditCalendarScreen({super.key, required this.calendarId});
+  const CreateEditCalendarScreen({super.key, this.calendarId});
 
   @override
-  ConsumerState<EditCalendarScreen> createState() => _EditCalendarScreenState();
+  ConsumerState<CreateEditCalendarScreen> createState() =>
+      _CreateEditCalendarScreenState();
 }
 
-class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
+class _CreateEditCalendarScreenState
+    extends ConsumerState<CreateEditCalendarScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
+  bool _isPublic = false;
   bool _isDiscoverable = true;
   bool _deleteAssociatedEvents = false;
-  bool _isLoading = true;
+  bool _isLoading = false;
   Calendar? _calendar;
+
+  bool get _isEditMode => widget.calendarId != null;
 
   @override
   void initState() {
     super.initState();
-    _loadCalendar();
+    if (_isEditMode) {
+      _loadCalendar();
+    }
   }
 
   @override
@@ -42,10 +49,12 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
   }
 
   Future<void> _loadCalendar() async {
+    setState(() => _isLoading = true);
+
     try {
       final calendarRepository = ref.read(calendarRepositoryProvider);
       final calendar = calendarRepository.getCalendarById(
-        int.parse(widget.calendarId),
+        int.parse(widget.calendarId!),
       );
 
       if (calendar == null) {
@@ -78,6 +87,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         _calendar = calendar;
         _nameController.text = calendar.name;
         _descriptionController.text = calendar.description ?? '';
+        _isPublic = calendar.isPublic;
         _isDiscoverable = calendar.isDiscoverable;
         _deleteAssociatedEvents = calendar.deleteAssociatedEvents;
         _isLoading = false;
@@ -92,7 +102,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     }
   }
 
-  Future<void> _updateCalendar() async {
+  Future<void> _saveCalendar() async {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
@@ -120,19 +130,30 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final updateData = <String, dynamic>{
-        'name': name,
-        'description': description.isEmpty ? null : description,
-        'is_discoverable': _isDiscoverable,
-      };
-      await ref
-          .read(calendarRepositoryProvider)
-          .updateCalendar(int.parse(widget.calendarId), updateData);
+      final calendarRepository = ref.read(calendarRepositoryProvider);
+
+      if (_isEditMode) {
+        // Update existing calendar
+        final updateData = <String, dynamic>{
+          'name': name,
+          'description': description.isEmpty ? null : description,
+          'is_discoverable': _isDiscoverable,
+        };
+        await calendarRepository.updateCalendar(
+          int.parse(widget.calendarId!),
+          updateData,
+        );
+      } else {
+        // Create new calendar
+        await calendarRepository.createCalendar(
+          name: name,
+          description: description.isEmpty ? null : description,
+          isPublic: _isPublic,
+        );
+      }
 
       // Realtime handles refresh automatically via CalendarRepository
 
@@ -145,9 +166,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       DialogHelpers.showErrorDialogWithIcon(context, errorMessage);
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -156,15 +175,11 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     final confirmed = await _showDeleteConfirmation();
     if (!confirmed) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      await ref
-          .read(calendarRepositoryProvider)
-          .deleteCalendar(
-            int.parse(widget.calendarId),
+      await ref.read(calendarRepositoryProvider).deleteCalendar(
+            int.parse(widget.calendarId!),
             deleteAssociatedEvents: _deleteAssociatedEvents,
           );
 
@@ -179,9 +194,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       DialogHelpers.showErrorDialogWithIcon(context, errorMessage);
 
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -217,7 +230,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    if (_isLoading && _calendar == null) {
+    if (_isEditMode && _isLoading && _calendar == null) {
       return AdaptivePageScaffold(
         title: l10n.editCalendar,
         body: const Center(child: CupertinoActivityIndicator()),
@@ -225,7 +238,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     }
 
     return AdaptivePageScaffold(
-      title: l10n.editCalendar,
+      title: _isEditMode ? l10n.editCalendar : l10n.createCalendar,
       leading: CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: () => context.pop(),
@@ -234,17 +247,54 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       actions: [
         CupertinoButton(
           padding: EdgeInsets.zero,
-          onPressed: _isLoading ? null : _updateCalendar,
+          onPressed: _isLoading ? null : _saveCalendar,
           child: _isLoading
               ? const CupertinoActivityIndicator()
-              : Text(l10n.save),
+              : Text(_isEditMode ? l10n.save : l10n.create),
         ),
       ],
-      body: _buildContent(),
+      body: _isEditMode ? _buildEditContent() : _buildCreateContent(),
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildCreateContent() {
+    final l10n = context.l10n;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        CupertinoTextField(
+          controller: _nameController,
+          placeholder: l10n.calendarName,
+          maxLength: 100,
+          enabled: !_isLoading,
+        ),
+        const SizedBox(height: 16),
+        CupertinoTextField(
+          controller: _descriptionController,
+          placeholder: l10n.calendarDescription,
+          maxLines: 3,
+          maxLength: 500,
+          enabled: !_isLoading,
+        ),
+        const SizedBox(height: 24),
+        CupertinoListTile(
+          title: Text(l10n.publicCalendar),
+          subtitle: Text(l10n.othersCanSearchAndSubscribe),
+          trailing: CupertinoSwitch(
+            value: _isPublic,
+            onChanged: _isLoading
+                ? null
+                : (value) {
+                    setState(() => _isPublic = value);
+                  },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditContent() {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -315,7 +365,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
             ),
             trailing: CupertinoSwitch(
               value: _calendar!.isPublic,
-              onChanged: null,
+              onChanged: null, // Cannot change after creation
             ),
             padding: EdgeInsets.zero,
           ),
@@ -353,9 +403,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
               onChanged: _isLoading
                   ? null
                   : (value) {
-                      setState(() {
-                        _isDiscoverable = value;
-                      });
+                      setState(() => _isDiscoverable = value);
                     },
             ),
             padding: EdgeInsets.zero,
@@ -418,9 +466,7 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
               onChanged: _isLoading
                   ? null
                   : (value) {
-                      setState(() {
-                        _deleteAssociatedEvents = value;
-                      });
+                      setState(() => _deleteAssociatedEvents = value);
                     },
             ),
             padding: EdgeInsets.zero,

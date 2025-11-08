@@ -11,7 +11,7 @@ import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
-import 'public_user_events_screen.dart';
+import 'subscription_detail_screen.dart';
 import '../utils/error_message_parser.dart';
 
 class SubscriptionsScreen extends ConsumerStatefulWidget {
@@ -213,7 +213,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   void _showUserDetails(User user) {
     Navigator.of(context).push(
       CupertinoPageRoute(
-        builder: (_) => PublicUserEventsScreen(publicUser: user),
+        builder: (_) => SubscriptionDetailScreen(publicUser: user),
       ),
     );
   }

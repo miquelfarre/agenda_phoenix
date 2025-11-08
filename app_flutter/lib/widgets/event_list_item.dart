@@ -15,6 +15,7 @@ class EventListItem extends StatelessWidget {
   final bool hideInvitationStatus;
   final bool showDate;
   final bool showNewBadge;
+  final bool hideCalendarBadge;
 
   const EventListItem({
     super.key,
@@ -25,6 +26,7 @@ class EventListItem extends StatelessWidget {
     this.hideInvitationStatus = false,
     this.showDate = false,
     this.showNewBadge = true,
+    this.hideCalendarBadge = false,
   });
 
   @override
@@ -39,6 +41,7 @@ class EventListItem extends StatelessWidget {
         showNewBadge: showNewBadge,
         showInvitationStatus: !hideInvitationStatus,
         showDate: showDate,
+        showCalendarBadge: !hideCalendarBadge,
       ),
     );
   }

@@ -22,7 +22,7 @@ class EventCardBadges extends StatelessWidget {
     }
 
     // Calendar badge
-    if (event.calendarId != null && event.calendarName != null) {
+    if (config.showCalendarBadge && event.calendarId != null && event.calendarName != null) {
       badges.add(_buildCalendarBadge());
     }
 

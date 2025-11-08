@@ -8,8 +8,7 @@ import '../../screens/access_denied_screen.dart';
 import '../../screens/login/phone_login_screen.dart';
 import '../../screens/events_screen.dart';
 import '../../screens/subscriptions_screen.dart';
-import '../../screens/create_calendar_screen.dart';
-import '../../screens/edit_calendar_screen.dart';
+import '../../screens/create_edit_calendar_screen.dart';
 import '../../screens/calendars_screen.dart';
 import '../../screens/birthdays_screen.dart';
 import '../../screens/settings_screen.dart';
@@ -117,7 +116,7 @@ class AppRouter {
               GoRoute(
                 path: 'create',
                 name: 'calendar-create',
-                builder: (context, state) => const CreateCalendarScreen(),
+                builder: (context, state) => const CreateEditCalendarScreen(),
               ),
 
               GoRoute(
@@ -132,7 +131,7 @@ class AppRouter {
                       message: 'Invalid calendar ID',
                     );
                   }
-                  return EditCalendarScreen(calendarId: calendarId);
+                  return CreateEditCalendarScreen(calendarId: calendarId);
                 },
               ),
             ],

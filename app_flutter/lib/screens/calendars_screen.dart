@@ -9,7 +9,7 @@ import '../widgets/empty_state.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import '../core/state/app_state.dart';
 import '../models/calendar.dart';
-import 'calendar_events_screen.dart';
+import 'calendar_detail_screen.dart';
 import '../utils/error_message_parser.dart';
 import '../utils/calendar_operations.dart';
 import '../utils/calendar_permissions.dart';
@@ -420,7 +420,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       onTap: () {
         Navigator.of(context).push(
           CupertinoPageRoute(
-            builder: (context) => CalendarEventsScreen(
+            builder: (context) => CalendarDetailScreen(
               calendarId: calendar.id,
               calendarName: calendar.name,
             ),
