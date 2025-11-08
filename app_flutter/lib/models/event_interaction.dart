@@ -4,34 +4,30 @@ import 'user.dart';
 
 @immutable
 class EventInteraction {
-  final int? id; // Primary key from database
+  final int? id;
   final int userId;
   final int eventId;
   final User? user;
 
-  final int? inviterId;
+  // Invitation fields
+  final int? invitedByUserId;
   final User? inviter;
-  final DateTime? invitedAt;
+  final int? invitedViaGroupId;
 
-  final String? participationStatus;
-  final DateTime? participationDecidedAt;
+  // Interaction metadata
+  final String? interactionType; // 'invited', 'requested', 'joined', 'subscribed'
+  final String? status; // 'pending', 'accepted', 'rejected'
+  final String? role; // 'owner', 'admin', null (member)
   final String? cancellationNote;
-  final DateTime? postponeUntil;
-
   final bool isAttending;
 
-  final bool isEventAdmin;
+  // Read tracking
+  final DateTime? readAt;
 
-  final bool viewed;
-  final DateTime? firstViewedAt;
-  final DateTime? lastViewedAt;
-
+  // Personal notes
   final String? personalNote;
-  final DateTime? noteUpdatedAt;
 
-  final bool hidden;
-  final DateTime? hiddenAt;
-
+  // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -40,79 +36,50 @@ class EventInteraction {
     required this.userId,
     required this.eventId,
     this.user,
-    this.inviterId,
+    this.invitedByUserId,
     this.inviter,
-    this.invitedAt,
-    this.participationStatus,
-    this.participationDecidedAt,
+    this.invitedViaGroupId,
+    this.interactionType,
+    this.status,
+    this.role,
     this.cancellationNote,
-    this.postponeUntil,
     this.isAttending = false,
-    this.isEventAdmin = false,
-    this.viewed = false,
-    this.firstViewedAt,
-    this.lastViewedAt,
+    this.readAt,
     this.personalNote,
-    this.noteUpdatedAt,
-    this.hidden = false,
-    this.hiddenAt,
     required this.createdAt,
     required this.updatedAt,
   });
 
+  // Computed getters
   bool get hasNote => personalNote != null && personalNote!.isNotEmpty;
-
-  bool get wasInvited => inviterId != null;
-
-  bool get isPending => participationStatus == 'pending';
-
-  bool get isAccepted => participationStatus == 'accepted';
-
-  bool get isDeclined => participationStatus == 'declined';
-
-  bool get isPostponed => participationStatus == 'postponed';
-
+  bool get wasInvited => invitedByUserId != null || interactionType == 'invited';
+  bool get isPending => status == 'pending';
+  bool get isAccepted => status == 'accepted';
+  bool get isDeclined => status == 'rejected';
   bool get hasDecided => isAccepted || isDeclined;
-
-  bool get hasAnyInteraction => wasInvited || viewed || hasNote || hidden;
+  bool get hasAnyInteraction => wasInvited || readAt != null || hasNote;
+  bool get isEventAdmin => role == 'admin';
+  bool get isEventOwner => role == 'owner';
+  bool get isNew => readAt == null && createdAt.isAfter(DateTime.now().subtract(Duration(hours: 24)));
 
   factory EventInteraction.fromJson(Map<String, dynamic> json) {
-    final role = json['role'];
-    final isAdmin = role == 'admin';
-    final readAt = json['read_at'];
-    final isViewed = readAt != null;
-
     return EventInteraction(
       id: json['id'],
       userId: json['user_id'],
       eventId: json['event_id'],
       user: json['user'] != null ? User.fromJson(json['user']) : null,
-      inviterId: json['invited_by_user_id'],
+      invitedByUserId: json['invited_by_user_id'],
       inviter: json['inviter'] != null ? User.fromJson(json['inviter']) : null,
-      invitedAt: json['created_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['created_at'])
-          : null,
-      participationStatus: json['status'],
-      participationDecidedAt: json['updated_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
-          : null,
+      invitedViaGroupId: json['invited_via_group_id'],
+      interactionType: json['interaction_type'],
+      status: json['status'],
+      role: json['role'],
       cancellationNote: json['cancellation_note'],
-      postponeUntil: null,
       isAttending: json['is_attending'] == true,
-      isEventAdmin: isAdmin,
-      viewed: isViewed,
-      firstViewedAt: readAt != null
-          ? DateTimeUtils.parseAndNormalize(readAt)
-          : null,
-      lastViewedAt: readAt != null
-          ? DateTimeUtils.parseAndNormalize(readAt)
+      readAt: json['read_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['read_at'])
           : null,
       personalNote: json['personal_note'],
-      noteUpdatedAt: json['updated_at'] != null
-          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
-          : null,
-      hidden: false,
-      hiddenAt: null,
       createdAt: json['created_at'] != null
           ? DateTimeUtils.parseAndNormalize(json['created_at'])
           : DateTime.now(),
@@ -127,84 +94,27 @@ class EventInteraction {
       if (id != null) 'id': id,
       'user_id': userId,
       'event_id': eventId,
-      'user': user?.toJson(),
-      'inviter_id': inviterId,
-      'inviter': inviter?.toJson(),
-      'invited_at': invitedAt?.toIso8601String(),
-      'participation_status': participationStatus,
-      'participation_decided_at': participationDecidedAt?.toIso8601String(),
-      'cancellation_note': cancellationNote,
-      'postpone_until': postponeUntil?.toIso8601String(),
+      if (user != null) 'user': user!.toJson(),
+      if (invitedByUserId != null) 'invited_by_user_id': invitedByUserId,
+      if (inviter != null) 'inviter': inviter!.toJson(),
+      if (invitedViaGroupId != null) 'invited_via_group_id': invitedViaGroupId,
+      if (interactionType != null) 'interaction_type': interactionType,
+      if (status != null) 'status': status,
+      if (role != null) 'role': role,
+      if (cancellationNote != null) 'cancellation_note': cancellationNote,
       'is_attending': isAttending,
-      'is_event_admin': isEventAdmin,
-      'viewed': viewed,
-      'first_viewed_at': firstViewedAt?.toIso8601String(),
-      'last_viewed_at': lastViewedAt?.toIso8601String(),
-      'personal_note': personalNote,
-      'note_updated_at': noteUpdatedAt?.toIso8601String(),
-      'hidden': hidden,
-      'hidden_at': hiddenAt?.toIso8601String(),
+      if (readAt != null) 'read_at': readAt!.toIso8601String(),
+      if (personalNote != null) 'personal_note': personalNote,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
   }
 
-  EventInteraction copyWith({
-    int? id,
-    int? userId,
-    int? eventId,
-    User? user,
-    int? inviterId,
-    User? inviter,
-    DateTime? invitedAt,
-    String? participationStatus,
-    DateTime? participationDecidedAt,
-    String? cancellationNote,
-    DateTime? postponeUntil,
-    bool? isAttending,
-    bool? isEventAdmin,
-    bool? viewed,
-    DateTime? firstViewedAt,
-    DateTime? lastViewedAt,
-    String? personalNote,
-    DateTime? noteUpdatedAt,
-    bool? hidden,
-    DateTime? hiddenAt,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return EventInteraction(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      eventId: eventId ?? this.eventId,
-      user: user ?? this.user,
-      inviterId: inviterId ?? this.inviterId,
-      inviter: inviter ?? this.inviter,
-      invitedAt: invitedAt ?? this.invitedAt,
-      participationStatus: participationStatus ?? this.participationStatus,
-      participationDecidedAt:
-          participationDecidedAt ?? this.participationDecidedAt,
-      cancellationNote: cancellationNote ?? this.cancellationNote,
-      postponeUntil: postponeUntil ?? this.postponeUntil,
-      isAttending: isAttending ?? this.isAttending,
-      isEventAdmin: isEventAdmin ?? this.isEventAdmin,
-      viewed: viewed ?? this.viewed,
-      firstViewedAt: firstViewedAt ?? this.firstViewedAt,
-      lastViewedAt: lastViewedAt ?? this.lastViewedAt,
-      personalNote: personalNote ?? this.personalNote,
-      noteUpdatedAt: noteUpdatedAt ?? this.noteUpdatedAt,
-      hidden: hidden ?? this.hidden,
-      hiddenAt: hiddenAt ?? this.hiddenAt,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-
   @override
   String toString() {
     return 'EventInteraction(userId: $userId, eventId: $eventId, '
-        'status: $participationStatus, viewed: $viewed, '
-        'hasNote: $hasNote, hidden: $hidden)';
+        'type: $interactionType, status: $status, role: $role, '
+        'isNew: $isNew, hasNote: $hasNote)';
   }
 
   @override
@@ -216,51 +126,39 @@ class EventInteraction {
         other.userId == userId &&
         other.eventId == eventId &&
         other.user == user &&
-        other.inviterId == inviterId &&
+        other.invitedByUserId == invitedByUserId &&
         other.inviter == inviter &&
-        other.invitedAt == invitedAt &&
-        other.participationStatus == participationStatus &&
-        other.participationDecidedAt == participationDecidedAt &&
+        other.invitedViaGroupId == invitedViaGroupId &&
+        other.interactionType == interactionType &&
+        other.status == status &&
+        other.role == role &&
         other.cancellationNote == cancellationNote &&
-        other.postponeUntil == postponeUntil &&
         other.isAttending == isAttending &&
-        other.isEventAdmin == isEventAdmin &&
-        other.viewed == viewed &&
-        other.firstViewedAt == firstViewedAt &&
-        other.lastViewedAt == lastViewedAt &&
+        other.readAt == readAt &&
         other.personalNote == personalNote &&
-        other.noteUpdatedAt == noteUpdatedAt &&
-        other.hidden == hidden &&
-        other.hiddenAt == hiddenAt &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
 
   @override
   int get hashCode {
-    return Object.hashAll([
+    return Object.hash(
       id,
       userId,
       eventId,
       user,
-      inviterId,
+      invitedByUserId,
       inviter,
-      invitedAt,
-      participationStatus,
-      participationDecidedAt,
+      invitedViaGroupId,
+      interactionType,
+      status,
+      role,
       cancellationNote,
-      postponeUntil,
       isAttending,
-      isEventAdmin,
-      viewed,
-      firstViewedAt,
-      lastViewedAt,
+      readAt,
       personalNote,
-      noteUpdatedAt,
-      hidden,
-      hiddenAt,
       createdAt,
       updatedAt,
-    ]);
+    );
   }
 }

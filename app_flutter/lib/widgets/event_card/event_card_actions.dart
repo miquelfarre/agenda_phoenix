@@ -29,7 +29,7 @@ class EventCardActions extends ConsumerWidget {
     final isOwner = EventPermissions.isOwner(event);
 
     // If there's an invitation, show accept/reject buttons
-    if (interaction != null && interaction!.inviterId != null) {
+    if (interaction != null && interaction!.invitedByUserId != null) {
       return _buildInvitationActions(context, ref);
     }
 

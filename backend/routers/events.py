@@ -210,7 +210,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "updated_at": interaction.updated_at.isoformat(),
                         "user": {
                             "id": interaction_user.id,
-                            "full_name": user_name,
+                            "contact_name": user_name,
                             "instagram_name": interaction_user.instagram_name,
                             "phone_number": user_phone,
                             "profile_picture": interaction_user.profile_picture,
@@ -218,7 +218,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "inviter": (
                             {
                                 "id": inviter.id,
-                                "full_name": inviter_name,
+                                "contact_name": inviter_name,
                                 "instagram_name": inviter.instagram_name,
                             }
                             if inviter
@@ -272,7 +272,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "inviter": (
                             {
                                 "id": inviter.id,
-                                "full_name": inviter_name,
+                                "contact_name": inviter_name,
                                 "instagram_name": inviter.instagram_name,
                             }
                             if inviter
@@ -317,7 +317,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                 attendees.append(
                     {
                         "id": user_obj.id,
-                        "full_name": user_name,
+                        "contact_name": user_name,
                         "instagram_name": user_obj.instagram_name,
                         "profile_picture": user_obj.profile_picture,
                     }

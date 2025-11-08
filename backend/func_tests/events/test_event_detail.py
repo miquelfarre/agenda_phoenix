@@ -87,14 +87,14 @@ def test_get_event_as_owner_includes_all_interactions(client, test_event_with_in
     # Check user object is complete
     assert "user" in interaction_data
     assert interaction_data["user"]["id"] == invitee1.id
-    assert interaction_data["user"]["full_name"] == "Invitee One"
+    assert interaction_data["user"]["contact_name"] == "Invitee One"
     assert interaction_data["user"]["instagram_name"] == "invitee1"
     assert interaction_data["user"]["phone_number"] == "+1234567891"
 
     # Check inviter object is complete
     assert "inviter" in interaction_data
     assert interaction_data["inviter"]["id"] == owner.id
-    assert interaction_data["inviter"]["full_name"] == "Owner User"
+    assert interaction_data["inviter"]["contact_name"] == "Owner User"
     assert interaction_data["inviter"]["instagram_name"] == "owner"
 
     # Check second interaction (invitee2 - accepted)
@@ -131,7 +131,7 @@ def test_get_event_as_invitee_includes_only_own_interaction(client, test_event_w
     # Inviter should be present and complete
     assert "inviter" in interaction_data
     assert interaction_data["inviter"]["id"] == owner.id
-    assert interaction_data["inviter"]["full_name"] == "Owner User"
+    assert interaction_data["inviter"]["contact_name"] == "Owner User"
     assert interaction_data["inviter"]["instagram_name"] == "owner"
 
 
@@ -171,7 +171,7 @@ def test_get_event_attendees_populated(client, test_db, test_users):
 
     attendee = data["attendees"][0]
     assert attendee["id"] == invitee1.id
-    assert attendee["full_name"] == "Invitee One"
+    assert attendee["contact_name"] == "Invitee One"
     assert attendee["instagram_name"] == "invitee1"
     assert "profile_picture" in attendee
 
@@ -209,7 +209,7 @@ def test_get_event_inviter_object_complete(client, test_db, test_users):
     assert "inviter" in interaction
     assert interaction["inviter"] is not None
     assert interaction["inviter"]["id"] == owner.id
-    assert interaction["inviter"]["full_name"] == "Owner User"
+    assert interaction["inviter"]["contact_name"] == "Owner User"
     assert interaction["inviter"]["instagram_name"] == "owner"
 
 

@@ -394,7 +394,7 @@ async def get_user_events(
         for event_id, user_obj, contact_obj in attendees_query:
             if event_id not in attendees_map:
                 attendees_map[event_id] = []
-            attendees_map[event_id].append({"id": user_obj.id, "full_name": contact_obj.name if contact_obj else None, "instagram_name": user_obj.instagram_name, "profile_picture": user_obj.profile_picture})
+            attendees_map[event_id].append({"id": user_obj.id, "contact_name": contact_obj.name if contact_obj else None, "instagram_name": user_obj.instagram_name, "profile_picture": user_obj.profile_picture})
 
     # ============================================================
     # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)

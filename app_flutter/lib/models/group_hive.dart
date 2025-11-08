@@ -29,7 +29,7 @@ class GroupHive extends HiveObject {
   final List<String?> memberNames;
 
   @HiveField(7)
-  final List<String?> memberFullNames;
+  final List<String?> memberContactNames;
 
   @HiveField(8)
   final List<bool?> memberIsPublic;
@@ -59,7 +59,7 @@ class GroupHive extends HiveObject {
     required this.createdAt,
     this.memberIds = const [],
     this.memberNames = const [],
-    this.memberFullNames = const [],
+    this.memberContactNames = const [],
     this.memberIsPublic = const [],
 
     this.adminIds,
@@ -75,7 +75,7 @@ class GroupHive extends HiveObject {
       members.add({
         'id': memberIds[i],
         'instagram_name': i < memberNames.length ? memberNames[i] : null,
-        'full_name': i < memberFullNames.length ? memberFullNames[i] : null,
+        'contact_name': i < memberContactNames.length ? memberContactNames[i] : null,
         'is_public': i < memberIsPublic.length ? memberIsPublic[i] : false,
       });
     }
@@ -95,7 +95,7 @@ class GroupHive extends HiveObject {
     final memberNames = group.members
         .map((member) => member.instagramName)
         .toList();
-    final memberFullNames = group.members
+    final memberContactNames = group.members
         .map((member) => member.contactName)
         .toList();
     final memberIsPublic = group.members.map((member) => false).toList();
@@ -110,7 +110,7 @@ class GroupHive extends HiveObject {
       createdAt: DateTime.now(),
       memberIds: memberIds,
       memberNames: memberNames.cast<String?>(),
-      memberFullNames: memberFullNames,
+      memberContactNames: memberContactNames,
       memberIsPublic: memberIsPublic,
       adminIds: adminIds,
     );
@@ -121,14 +121,14 @@ class GroupHive extends HiveObject {
 
     final memberIds = <int>[];
     final memberNames = <String?>[];
-    final memberFullNames = <String?>[];
+    final memberContactNames = <String?>[];
     final memberIsPublic = <bool?>[];
 
     for (final member in members) {
       if (member is Map<String, dynamic>) {
         memberIds.add(member['id'] as int);
         memberNames.add(member['instagram_name'] as String?);
-        memberFullNames.add(member['full_name'] as String?);
+        memberContactNames.add(member['contact_name'] as String?);
         memberIsPublic.add(member['is_public'] as bool? ?? false);
       }
     }
@@ -145,7 +145,7 @@ class GroupHive extends HiveObject {
           : DateTime.now(),
       memberIds: memberIds,
       memberNames: memberNames,
-      memberFullNames: memberFullNames,
+      memberContactNames: memberContactNames,
       memberIsPublic: memberIsPublic,
     );
   }
@@ -182,7 +182,7 @@ class GroupHive extends HiveObject {
       createdAt: createdAt,
       memberIds: memberIds,
       memberNames: memberNames,
-      memberFullNames: memberFullNames,
+      memberContactNames: memberContactNames,
       memberIsPublic: memberIsPublic,
       adminIds: newAdminIds,
       pendingOperationIds: pendingOperationIds,
@@ -204,7 +204,7 @@ class GroupHive extends HiveObject {
       createdAt: createdAt,
       memberIds: memberIds,
       memberNames: memberNames,
-      memberFullNames: memberFullNames,
+      memberContactNames: memberContactNames,
       memberIsPublic: memberIsPublic,
       adminIds: newAdminIds,
       pendingOperationIds: pendingOperationIds,
@@ -228,7 +228,7 @@ class GroupHive extends HiveObject {
       createdAt: createdAt,
       memberIds: memberIds,
       memberNames: memberNames,
-      memberFullNames: memberFullNames,
+      memberContactNames: memberContactNames,
       memberIsPublic: memberIsPublic,
       adminIds: adminIds,
       pendingOperationIds: newPendingOps,
@@ -245,8 +245,8 @@ class GroupHive extends HiveObject {
         User(
           id: memberIds[i],
           instagramName: i < memberNames.length ? (memberNames[i] ?? '') : '',
-          contactName: i < memberFullNames.length
-              ? (memberFullNames[i] ?? '')
+          contactName: i < memberContactNames.length
+              ? (memberContactNames[i] ?? '')
               : '',
           isPublic: i < memberIsPublic.length
               ? (memberIsPublic[i] ?? false)
@@ -266,8 +266,8 @@ class GroupHive extends HiveObject {
               instagramName: adminIndex < memberNames.length
                   ? (memberNames[adminIndex] ?? '')
                   : '',
-              contactName: adminIndex < memberFullNames.length
-                  ? (memberFullNames[adminIndex] ?? '')
+              contactName: adminIndex < memberContactNames.length
+                  ? (memberContactNames[adminIndex] ?? '')
                   : '',
               isPublic: adminIndex < memberIsPublic.length
                   ? (memberIsPublic[adminIndex] ?? false)

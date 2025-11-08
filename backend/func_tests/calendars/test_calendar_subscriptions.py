@@ -101,7 +101,7 @@ def test_subscribe_to_calendar_via_share_hash():
     # Create a test user
     random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
     user_data = {
-        "full_name": "Test Subscriber",
+        "contact_name": "Test Subscriber",
         "phone_number": f"+9999{random_suffix}",
         "auth_provider": "phone",
         "auth_id": f"+9999{random_suffix}",
@@ -167,7 +167,7 @@ def test_subscribed_calendar_events_in_user_events():
 
     # Create test user
     user_data = {
-        "full_name": "Football Fan",
+        "contact_name": "Football Fan",
         "phone_number": f"+8888{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+8888{int(datetime.now().timestamp())}",
@@ -210,7 +210,7 @@ def test_subscriber_count_trigger():
     user_ids = []
     for i in range(3):
         user_data = {
-            "full_name": f"Gym Member {i}",
+            "contact_name": f"Gym Member {i}",
             "phone_number": f"+7777{int(datetime.now().timestamp())}{i}",
             "auth_provider": "phone",
             "auth_id": f"+7777{int(datetime.now().timestamp())}{i}",
@@ -243,7 +243,7 @@ def test_accessible_calendar_ids():
     """Test GET /users/{id}/accessible-calendar-ids includes subscribed calendars"""
     # Create user
     user_data = {
-        "full_name": "Calendar Collector",
+        "contact_name": "Calendar Collector",
         "phone_number": f"+6666{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+6666{int(datetime.now().timestamp())}",
@@ -276,7 +276,7 @@ def test_accessible_calendar_ids():
 def test_invalid_share_hash():
     """Test subscribing with invalid share_hash returns 404"""
     user_data = {
-        "full_name": "Test User",
+        "contact_name": "Test User",
         "phone_number": f"+5555{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+5555{int(datetime.now().timestamp())}",
@@ -338,7 +338,7 @@ def test_get_user_calendars_own_calendars():
     """Test that GET /calendars returns user's own calendars"""
     # Create user
     user_data = {
-        "full_name": "Calendar Owner",
+        "contact_name": "Calendar Owner",
         "phone_number": f"+4444{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+4444{int(datetime.now().timestamp())}",
@@ -373,7 +373,7 @@ def test_get_user_calendars_excludes_public_user_calendars():
     """Test that GET /calendars excludes calendars from public users"""
     # Create a private user
     user_data = {
-        "full_name": "Private User",
+        "contact_name": "Private User",
         "phone_number": f"+3333{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+3333{int(datetime.now().timestamp())}",
@@ -401,7 +401,7 @@ def test_get_user_calendars_includes_subscriptions():
     """Test that GET /calendars includes subscribed public calendars (not from public users)"""
     # Create user
     user_data = {
-        "full_name": "Subscriber",
+        "contact_name": "Subscriber",
         "phone_number": f"+2222{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+2222{int(datetime.now().timestamp())}",
@@ -440,7 +440,7 @@ def test_get_user_calendars_includes_memberships():
     """Test that GET /calendars includes calendars where user is a member"""
     # Create two users
     user1_data = {
-        "full_name": "Calendar Owner",
+        "contact_name": "Calendar Owner",
         "phone_number": f"+1111{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+1111{int(datetime.now().timestamp())}",
@@ -450,7 +450,7 @@ def test_get_user_calendars_includes_memberships():
     user1_id = user1["id"]
 
     user2_data = {
-        "full_name": "Calendar Member",
+        "contact_name": "Calendar Member",
         "phone_number": f"+1112{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+1112{int(datetime.now().timestamp())}",

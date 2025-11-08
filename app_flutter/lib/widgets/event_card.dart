@@ -35,7 +35,7 @@ class EventCard extends ConsumerWidget {
         .where((i) => i.eventId == event.id)
         .firstOrNull;
 
-    final participationStatus = interaction?.participationStatus;
+    final participationStatus = interaction?.status;
 
     // Only show invitation status if config allows it AND there's a participation status
     final effectiveConfig =

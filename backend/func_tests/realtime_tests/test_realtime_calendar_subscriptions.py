@@ -155,7 +155,7 @@ class TestCalendarSubscriptionRealtimeFlow:
         # 2. Crear usuario de test
         random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
         user_data = {
-            "full_name": "Realtime Test User",
+            "contact_name": "Realtime Test User",
             "phone_number": f"+8888{random_suffix}",
             "auth_provider": "phone",
             "auth_id": f"+8888{random_suffix}",
@@ -216,7 +216,7 @@ class TestCalendarSubscriptionRealtimeFlow:
         # 2. Crear usuario y suscribirse
         random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
         user_data = {
-            "full_name": "Realtime Test User 2",
+            "contact_name": "Realtime Test User 2",
             "phone_number": f"+7777{random_suffix}",
             "auth_provider": "phone",
             "auth_id": f"+7777{random_suffix}",
@@ -284,7 +284,7 @@ class TestCalendarSubscriptionRealtimeFlow:
         for i in range(3):
             random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
             user_data = {
-                "full_name": f"Realtime Test User {i+1}",
+                "contact_name": f"Realtime Test User {i+1}",
                 "phone_number": f"+6666{random_suffix}",
                 "auth_provider": "phone",
                 "auth_id": f"+6666{random_suffix}",

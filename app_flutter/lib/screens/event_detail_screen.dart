@@ -109,7 +109,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         });
 
         // Mark interaction as read if it exists and hasn't been read yet
-        if (interaction != null && !interaction.viewed) {
+        if (interaction != null && interaction.readAt == null) {
           _markInteractionAsRead();
         }
       }
@@ -341,7 +341,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           if (!isEventOwner &&
               _interaction != null &&
               _interaction!.wasInvited &&
-              _interaction!.participationStatus != 'pending') ...[
+              _interaction!.status != 'pending') ...[
             const SizedBox(height: 8),
             _buildParticipationStatusRow(),
           ],
@@ -1310,7 +1310,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               ...invitations.where((invitation) => invitation.user != null).map(
                 (invitation) {
                   final user = invitation.user!;
-                  final status = invitation.participationStatus ?? 'pending';
+                  final status = invitation.status ?? 'pending';
 
                   final statusColor = _getStatusColor(status);
                   final statusText = _getStatusText(status);
@@ -1416,7 +1416,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final l10n = context.l10n;
     if (_interaction == null) return const SizedBox.shrink();
 
-    final status = _interaction!.participationStatus ?? 'pending';
+    final status = _interaction!.status ?? 'pending';
     final isDeclinedButAttending =
         status == 'rejected' && (_interaction!.isAttending == true);
 
@@ -1476,7 +1476,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
     if (_interaction == null) return const SizedBox.shrink();
 
-    final status = _interaction!.participationStatus ?? 'pending';
+    final status = _interaction!.status ?? 'pending';
     final isAccepted = status == 'accepted';
     final isDeclined = status == 'rejected';
     final isDeclinedNotAttending =
