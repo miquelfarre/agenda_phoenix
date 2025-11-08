@@ -2,13 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
-import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import '../models/user.dart';
 import '../core/state/app_state.dart';
 import '../widgets/subscription_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
+import '../widgets/searchable_list.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
 import 'subscription_detail_screen.dart';
@@ -23,53 +23,10 @@ class SubscriptionsScreen extends ConsumerStatefulWidget {
 
 class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     with WidgetsBindingObserver {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    _searchController.addListener(() {
-      if (mounted) {
-        setState(() {
-          _searchQuery = _searchController.text;
-        });
-      }
-    });
-  }
-
-  Widget _buildSearchField(bool isIOS) {
-    final l10n = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: PlatformWidgets.platformTextField(
-        controller: _searchController,
-        placeholder: l10n.searchSubscriptions,
-        prefixIcon: PlatformWidgets.platformIcon(
-          CupertinoIcons.search,
-          color: AppStyles.grey600,
-        ),
-        suffixIcon: _searchController.text.isNotEmpty
-            ? CupertinoButton(
-                key: const Key('subscriptions_search_clear_button'),
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() {
-                    _searchQuery = '';
-                  });
-                },
-                child: PlatformWidgets.platformIcon(
-                  CupertinoIcons.clear_circled_solid,
-                  color: AppStyles.grey600,
-                  size: 18,
-                ),
-              )
-            : null,
-      ),
-    );
   }
 
   Widget _buildScrollableContent(
@@ -78,28 +35,25 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
     AppLocalizations l10n,
     WidgetRef ref,
   ) {
-    return SafeArea(
-      child: CustomScrollView(
-        physics: const ClampingScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(child: _buildSearchField(isIOS)),
-          if (users.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: EmptyState(
-                message: l10n.noSubscriptions,
-                icon: isIOS ? CupertinoIcons.person_2 : CupertinoIcons.person_2,
-              ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final user = users[index];
-                return _buildUserItem(user, isIOS, l10n, ref);
-              }, childCount: users.length),
+    return CustomScrollView(
+      physics: const ClampingScrollPhysics(),
+      slivers: [
+        if (users.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: EmptyState(
+              message: l10n.noSubscriptions,
+              icon: isIOS ? CupertinoIcons.person_2 : CupertinoIcons.person_2,
             ),
-        ],
-      ),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final user = users[index];
+              return _buildUserItem(user, isIOS, l10n, ref);
+            }, childCount: users.length),
+          ),
+      ],
     );
   }
 
@@ -122,7 +76,6 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -174,36 +127,39 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             ),
           ),
       ],
-      body: SafeArea(
-        child: subscriptionsAsync.when(
-          data: (users) {
-            final filteredUsers = users.where((user) {
-              if (_searchQuery.isEmpty) return true;
-              final query = _searchQuery.toLowerCase();
-              return (user.contactName?.toLowerCase().contains(query) ?? false) ||
-                  (user.instagramName?.toLowerCase().contains(query) ?? false);
-            }).toList();
-
-            return _buildScrollableContent(filteredUsers, isIOS, l10n, ref);
-          },
-          loading: () => const Center(child: CupertinoActivityIndicator()),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '${l10n.error}: $error',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 16),
-                CupertinoButton(
-                  onPressed: () {
-                    ref.read(subscriptionRepositoryProvider).refresh();
-                  },
-                  child: Text(l10n.retry),
-                ),
-              ],
+      body: subscriptionsAsync.when(
+        data: (users) {
+          return SafeArea(
+            child: SearchableList<User>(
+              items: users,
+              filterFunction: (user, query) {
+                return (user.contactName?.toLowerCase().contains(query) ?? false) ||
+                    (user.instagramName?.toLowerCase().contains(query) ?? false);
+              },
+              listBuilder: (context, filteredUsers) {
+                return _buildScrollableContent(filteredUsers, isIOS, l10n, ref);
+              },
+              searchPlaceholder: l10n.searchSubscriptions,
             ),
+          );
+        },
+        loading: () => const Center(child: CupertinoActivityIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${l10n.error}: $error',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              CupertinoButton(
+                onPressed: () {
+                  ref.read(subscriptionRepositoryProvider).refresh();
+                },
+                child: Text(l10n.retry),
+              ),
+            ],
           ),
         ),
       ),

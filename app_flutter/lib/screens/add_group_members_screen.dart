@@ -12,6 +12,7 @@ import '../widgets/adaptive/adaptive_button.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/user_avatar.dart';
+import '../widgets/searchable_list.dart';
 import '../core/state/app_state.dart';
 
 class AddGroupMembersScreen extends ConsumerStatefulWidget {
@@ -30,7 +31,6 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
   bool _isLoadingContacts = false;
   bool _isAdding = false;
   String? _errorMessage;
-  final TextEditingController _searchController = TextEditingController();
 
   int get currentUserId => ConfigService.instance.currentUserId;
 
@@ -38,12 +38,6 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
   void initState() {
     super.initState();
     _loadContacts();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadContacts() async {
@@ -263,25 +257,25 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
       );
     }
 
-    // Filter contacts by search
+    return SearchableList<User>(
+      items: _contacts,
+      filterFunction: (contact, query) {
+        return contact.displayName.toLowerCase().contains(query);
+      },
+      listBuilder: (context, filteredContacts) {
+        return _buildContactsContent(context, filteredContacts, l10n);
+      },
+      searchPlaceholder: l10n.searchContacts,
+    );
+  }
 
-    final filteredContacts = _searchController.text.isEmpty
-        ? _contacts
-        : _contacts.where((contact) {
-            final name = contact.displayName.toLowerCase();
-            final searchLower = _searchController.text.toLowerCase();
-            final matches = name.contains(searchLower);
-            return matches;
-          }).toList();
-
+  Widget _buildContactsContent(BuildContext context, List<User> filteredContacts, dynamic l10n) {
     if (filteredContacts.isEmpty) {
-      return ListView(
+      return CustomScrollView(
         physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-        children: [
-          _buildSearchField(l10n),
-          Padding(
-            padding: const EdgeInsets.all(32.0),
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
             child: EmptyState(
               icon: CupertinoIcons.search,
               message: l10n.noContactsFoundWithSearch,
@@ -297,7 +291,6 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
       physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
       children: [
-        _buildSearchField(l10n),
         if (filteredContacts.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -418,20 +411,6 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
           );
         }),
       ],
-    );
-  }
-
-  Widget _buildSearchField(dynamic l10n) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: CupertinoSearchTextField(
-        controller: _searchController,
-        placeholder: l10n.searchContacts,
-        onChanged: (_) => setState(() {}),
-        style: TextStyle(color: AppStyles.grey700),
-        backgroundColor: AppStyles.grey100,
-        borderRadius: BorderRadius.circular(12),
-      ),
     );
   }
 }

@@ -7,6 +7,7 @@ import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
+import '../widgets/searchable_list.dart';
 import '../services/config_service.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
@@ -32,7 +33,6 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
   bool _isLoading = false;
   bool isSending = false;
   String? _error;
-  String searchQuery = '';
 
   @override
   void initState() {
@@ -121,54 +121,15 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
     });
   }
 
-  List<User> _getFilteredUsers() {
-    final filteredUsers = _availableUsers.where((user) {
+  List<User> _getBaseUsers() {
+    return _availableUsers.where((user) {
       return !_recentlyInvitedUserIds.contains(user.id);
     }).toList();
-
-    if (searchQuery.isEmpty) return filteredUsers;
-
-    final query = searchQuery.toLowerCase();
-    return filteredUsers.where((user) {
-      return user.displayName.toLowerCase().contains(query) ||
-          (user.displaySubtitle?.toLowerCase().contains(query) ?? false);
-    }).toList();
-  }
-
-  List<Group> _getFilteredGroups() {
-    if (searchQuery.isEmpty) return _groups;
-
-    final query = searchQuery.toLowerCase();
-    return _groups.where((group) {
-      return group.name.toLowerCase().contains(query) ||
-          group.description.toLowerCase().contains(query);
-    }).toList();
-  }
-
-  Widget _buildSearchField() {
-    final l10n = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: CupertinoSearchTextField(
-        placeholder: l10n.search,
-        onChanged: (value) {
-          setState(() {
-            searchQuery = value;
-          });
-        },
-        style: TextStyle(color: AppStyles.grey700),
-        backgroundColor: AppStyles.grey100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
   }
 
   Widget _buildBody(BuildContext context) {
-    return SafeArea(child: _buildContent());
-  }
-
-  Widget _buildContent() {
     final l10n = context.l10n;
+
     if (_isLoading) {
       return Center(
         child: PlatformWidgets.platformLoadingIndicator(radius: 16),
@@ -206,22 +167,47 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
       );
     }
 
-    final users = _getFilteredUsers();
-    final groups = _getFilteredGroups();
+    final baseUsers = _getBaseUsers();
 
-    if (users.isEmpty && groups.isEmpty && searchQuery.isEmpty) {
-      return EmptyState(
-        message: l10n.noUsersOrGroupsAvailable,
-        icon: CupertinoIcons.person_badge_plus,
+    if (baseUsers.isEmpty && _groups.isEmpty) {
+      return SafeArea(
+        child: EmptyState(
+          message: l10n.noUsersOrGroupsAvailable,
+          icon: CupertinoIcons.person_badge_plus,
+        ),
       );
     }
+
+    return SafeArea(
+      child: SearchableList<dynamic>(
+        items: [...baseUsers, ..._groups],
+        filterFunction: (item, query) {
+          if (item is User) {
+            return item.displayName.toLowerCase().contains(query) ||
+                (item.displaySubtitle?.toLowerCase().contains(query) ?? false);
+          } else if (item is Group) {
+            return item.name.toLowerCase().contains(query) ||
+                item.description.toLowerCase().contains(query);
+          }
+          return false;
+        },
+        listBuilder: (context, filteredItems) {
+          return _buildContent(context, filteredItems, l10n);
+        },
+        searchPlaceholder: l10n.search,
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, List<dynamic> filteredItems, dynamic l10n) {
+    final users = filteredItems.whereType<User>().toList();
+    final groups = filteredItems.whereType<Group>().toList();
 
     return ListView(
       physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
       children: [
-        _buildSearchField(),
-        if (searchQuery.isNotEmpty && users.isEmpty && groups.isEmpty) ...[
+        if (filteredItems.isEmpty) ...[
           Padding(
             padding: const EdgeInsets.all(32.0),
             child: EmptyState(

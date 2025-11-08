@@ -5,6 +5,7 @@ import '../models/event.dart';
 import '../core/state/app_state.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_card/event_card_config.dart';
+import '../widgets/searchable_list.dart';
 import 'event_detail_screen.dart';
 import '../ui/styles/app_styles.dart';
 import '../utils/datetime_utils.dart';
@@ -17,33 +18,6 @@ class BirthdaysScreen extends ConsumerStatefulWidget {
 }
 
 class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(_filterBirthdays);
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _filterBirthdays() {
-    if (mounted) setState(() {});
-  }
-
-  List<Event> _applySearchFilter(List<Event> birthdays) {
-    final query = _searchController.text.trim().toLowerCase();
-    if (query.isEmpty) return birthdays;
-
-    return birthdays.where((event) {
-      return event.title.toLowerCase().contains(query) ||
-          (event.description?.toLowerCase().contains(query) ?? false);
-    }).toList();
-  }
 
   List<Event> _sortByUpcomingBirthdays(List<Event> birthdays) {
     final now = DateTime.now();
@@ -140,8 +114,6 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
 
     final sortedBirthdays = _sortByUpcomingBirthdays(birthdayEvents);
 
-    final eventsToShow = _applySearchFilter(sortedBirthdays);
-
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
@@ -150,25 +122,26 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
           style: const TextStyle(fontSize: 16),
         ),
       ),
-      child: SafeArea(child: _buildContent(eventsToShow)),
+      child: SafeArea(
+        child: SearchableList<Event>(
+          items: sortedBirthdays,
+          filterFunction: (event, query) {
+            return event.title.toLowerCase().contains(query) ||
+                (event.description?.toLowerCase().contains(query) ?? false);
+          },
+          listBuilder: (context, filteredEvents) {
+            return _buildContent(context, filteredEvents);
+          },
+          searchPlaceholder: AppLocalizations.of(context)!.searchBirthdays,
+        ),
+      ),
     );
   }
 
-  Widget _buildContent(List<Event> eventsToShow) {
+  Widget _buildContent(BuildContext context, List<Event> eventsToShow) {
     return CustomScrollView(
       physics: const ClampingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(
-              controller: _searchController,
-              placeholder: AppLocalizations.of(context)!.searchBirthdays,
-              backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context),
-            ),
-          ),
-        ),
-
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -202,9 +175,7 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _searchController.text.isNotEmpty
-                        ? AppLocalizations.of(context)!.noBirthdaysFound
-                        : AppLocalizations.of(context)!.noBirthdays,
+                    AppLocalizations.of(context)!.noBirthdaysFound,
                     style: const TextStyle(
                       color: CupertinoColors.systemGrey,
                       fontSize: 16,

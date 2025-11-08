@@ -75,8 +75,6 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
       final userRepo = ref.read(userRepositoryProvider);
       final contacts = await userRepo.fetchContacts(userId);
 
-      for (var _ in contacts) {}
-
       if (mounted) {
         setState(() {
           _contacts = contacts;

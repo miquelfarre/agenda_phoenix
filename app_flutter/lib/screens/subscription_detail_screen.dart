@@ -5,10 +5,11 @@ import '../models/event.dart';
 import '../models/user.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 import '../widgets/event_list_item.dart';
+import '../widgets/searchable_list.dart';
 import 'event_detail_screen.dart';
 import '../core/state/app_state.dart';
-import '../ui/styles/app_styles.dart';
-import '../ui/helpers/l10n/l10n_helpers.dart';
+import '../utils/event_date_utils.dart';
+import '../widgets/event_date_section.dart';
 
 class SubscriptionDetailScreen extends ConsumerStatefulWidget {
   final User publicUser;
@@ -22,7 +23,6 @@ class SubscriptionDetailScreen extends ConsumerStatefulWidget {
 
 class _SubscriptionDetailScreenState
     extends ConsumerState<SubscriptionDetailScreen> {
-  final TextEditingController _searchController = TextEditingController();
   bool _isProcessingSubscription = false;
 
   final Set<int> _hiddenEventIds = <int>{};
@@ -35,18 +35,7 @@ class _SubscriptionDetailScreenState
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_filterEvents);
     _loadData();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _filterEvents() {
-    if (mounted) setState(() {});
   }
 
   Future<void> _loadData() async {
@@ -172,20 +161,6 @@ class _SubscriptionDetailScreenState
     }
   }
 
-  List<Event> _applySearchAndStatusFilters(List<Event> events) {
-    final query = _searchController.text.trim().toLowerCase();
-    Iterable<Event> result = events;
-
-    if (query.isNotEmpty) {
-      result = result.where(
-        (event) =>
-            event.title.toLowerCase().contains(query) ||
-            (event.description?.toLowerCase().contains(query) ?? false),
-      );
-    }
-
-    return result.toList();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -251,23 +226,25 @@ class _SubscriptionDetailScreenState
         .where((e) => e.id == null || !_hiddenEventIds.contains(e.id))
         .toList();
 
-    final eventsToShow = _applySearchAndStatusFilters(baseEvents);
-    final groupedEvents = _groupEventsByDate(eventsToShow);
+    return SearchableList<Event>(
+      items: baseEvents,
+      filterFunction: (event, query) {
+        return event.title.toLowerCase().contains(query) ||
+            (event.description?.toLowerCase().contains(query) ?? false);
+      },
+      listBuilder: (context, filteredEvents) {
+        return _buildEventsList(context, filteredEvents);
+      },
+      searchPlaceholder: AppLocalizations.of(context)!.searchEvents,
+    );
+  }
+
+  Widget _buildEventsList(BuildContext context, List<Event> eventsToShow) {
+    final groupedEvents = EventDateUtils.groupEventsByDate(eventsToShow);
 
     return CustomScrollView(
       physics: const ClampingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(
-              controller: _searchController,
-              placeholder: AppLocalizations.of(context)!.searchEvents,
-              backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context),
-            ),
-          ),
-        ),
-
         if (eventsToShow.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
@@ -282,9 +259,7 @@ class _SubscriptionDetailScreenState
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _searchController.text.isNotEmpty
-                        ? AppLocalizations.of(context)!.noEventsFound
-                        : AppLocalizations.of(context)!.noEvents,
+                    AppLocalizations.of(context)!.noEventsFound,
                     style: const TextStyle(
                       color: CupertinoColors.systemGrey,
                       fontSize: 16,
@@ -304,132 +279,24 @@ class _SubscriptionDetailScreenState
     );
   }
 
-  List<Map<String, dynamic>> _groupEventsByDate(List<Event> events) {
-    final Map<String, List<Event>> groupedMap = {};
-
-    for (final event in events) {
-      final eventDate = event.date;
-      final dateKey =
-          '${eventDate.year}-${eventDate.month.toString().padLeft(2, '0')}-${eventDate.day.toString().padLeft(2, '0')}';
-
-      if (!groupedMap.containsKey(dateKey)) {
-        groupedMap[dateKey] = [];
-      }
-      groupedMap[dateKey]!.add(event);
-    }
-
-    for (final eventList in groupedMap.values) {
-      eventList.sort((a, b) {
-        if (a.isBirthday && !b.isBirthday) return -1;
-        if (!a.isBirthday && b.isBirthday) return 1;
-
-        final timeA = a.date;
-        final timeB = b.date;
-        return timeA.compareTo(timeB);
-      });
-    }
-
-    final groupedList = groupedMap.entries.map((entry) {
-      return {'date': entry.key, 'events': entry.value};
-    }).toList();
-
-    groupedList.sort(
-      (a, b) => (a['date'] as String).compareTo(b['date'] as String),
-    );
-
-    return groupedList;
-  }
-
   Widget _buildDateGroup(BuildContext context, Map<String, dynamic> group) {
-    final dateStr = group['date'] as String;
-    final events = group['events'] as List<Event>;
-
-    DateTime date;
-    try {
-      date = DateTime.parse('${dateStr}T00:00:00');
-    } catch (_) {
-      date = DateTime.now();
-    }
-
-    final formattedDate = _formatDate(context, date);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              formattedDate,
-              style: AppStyles.bodyText.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppStyles.grey700,
+    return EventDateSection(
+      dateGroup: group,
+      eventBuilder: (event) {
+        return EventListItem(
+          event: event,
+          onTap: (event) {
+            Navigator.of(context).push(
+              CupertinoPageRoute<void>(
+                builder: (_) => EventDetailScreen(event: event),
               ),
-            ),
-          ),
-          ...events.map((event) {
-            return EventListItem(
-              event: event,
-              onTap: (event) {
-                Navigator.of(context).push(
-                  CupertinoPageRoute<void>(
-                    builder: (_) => EventDetailScreen(event: event),
-                  ),
-                );
-              },
-              onDelete: _deleteEvent,
-              navigateAfterDelete: false,
             );
-          }),
-          const SizedBox(height: 16),
-        ],
-      ),
+          },
+          onDelete: _deleteEvent,
+          navigateAfterDelete: false,
+        );
+      },
     );
-  }
-
-  String _formatDate(BuildContext context, DateTime date) {
-    final l10n = context.l10n;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final eventDate = DateTime(date.year, date.month, date.day);
-
-    if (eventDate == today) {
-      return l10n.today;
-    } else if (eventDate == today.add(const Duration(days: 1))) {
-      return l10n.tomorrow;
-    } else if (eventDate == today.subtract(const Duration(days: 1))) {
-      return l10n.yesterday;
-    } else {
-      final weekdays = [
-        l10n.monday,
-        l10n.tuesday,
-        l10n.wednesday,
-        l10n.thursday,
-        l10n.friday,
-        l10n.saturday,
-        l10n.sunday,
-      ];
-      final months = [
-        l10n.january,
-        l10n.february,
-        l10n.march,
-        l10n.april,
-        l10n.may,
-        l10n.june,
-        l10n.july,
-        l10n.august,
-        l10n.september,
-        l10n.october,
-        l10n.november,
-        l10n.december,
-      ];
-
-      final weekday = weekdays[date.weekday - 1];
-      final month = months[date.month - 1];
-
-      return '$weekday, ${date.day} ${l10n.dotSeparator} $month';
-    }
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {

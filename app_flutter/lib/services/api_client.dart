@@ -358,7 +358,8 @@ class ApiClient implements IApiClient {
   }) async {
     // Contacts are private users (is_public=false) who have logged into the app
     // NOT the contacts table, which contains phone contacts
-    final result = await get('/users?public=false&enriched=true');
+    // Exclude the current user from their own contacts list
+    final result = await get('/users?public=false&enriched=true&exclude_user_id=$currentUserId');
     return List<Map<String, dynamic>>.from(result);
   }
 

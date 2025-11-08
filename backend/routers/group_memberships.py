@@ -101,26 +101,62 @@ async def delete_group_membership(membership_id: int, current_user_id: int = Dep
     Requires JWT authentication - provide token in Authorization header.
     Either the group creator, admins, OR the user themselves can delete the membership.
     """
+    print(f"\n{'='*80}")
+    print(f"[DELETE GROUP MEMBERSHIP] Starting deletion process")
+    print(f"  membership_id: {membership_id}")
+    print(f"  current_user_id: {current_user_id}")
+
     db_membership = group_membership.get(db, id=membership_id)
     if not db_membership:
+        print(f"  ❌ ERROR: Membership {membership_id} not found")
+        print(f"{'='*80}\n")
         raise HTTPException(status_code=404, detail="Group membership not found")
+
+    print(f"  ✓ Membership found:")
+    print(f"    - group_id: {db_membership.group_id}")
+    print(f"    - user_id: {db_membership.user_id}")
+    print(f"    - role: {db_membership.role}")
 
     # Get group to check creator
     group = db.query(Group).filter(Group.id == db_membership.group_id).first()
     if not group:
+        print(f"  ❌ ERROR: Group {db_membership.group_id} not found")
+        print(f"{'='*80}\n")
         raise HTTPException(status_code=404, detail="Group not found")
+
+    print(f"  ✓ Group found:")
+    print(f"    - group name: {group.name}")
+    print(f"    - owner_id: {group.owner_id}")
 
     # Check if user is group owner
     is_creator = group.owner_id == current_user_id
+    print(f"  → is_creator: {is_creator} (owner_id={group.owner_id} == current_user_id={current_user_id})")
 
     # Check if user is admin
-    is_admin = db.query(GroupMembership).filter(GroupMembership.group_id == db_membership.group_id, GroupMembership.user_id == current_user_id, GroupMembership.role == "admin").first() is not None
+    admin_membership = db.query(GroupMembership).filter(
+        GroupMembership.group_id == db_membership.group_id,
+        GroupMembership.user_id == current_user_id,
+        GroupMembership.role == "admin"
+    ).first()
+    is_admin = admin_membership is not None
+    print(f"  → is_admin: {is_admin} (admin_membership={'found' if admin_membership else 'NOT found'})")
 
     # Check if user is the member themselves
     is_self = db_membership.user_id == current_user_id
+    print(f"  → is_self: {is_self} (membership.user_id={db_membership.user_id} == current_user_id={current_user_id})")
+
+    print(f"  → Permission check: is_creator={is_creator} OR is_admin={is_admin} OR is_self={is_self}")
 
     if not (is_creator or is_admin or is_self):
+        print(f"  ❌ PERMISSION DENIED!")
+        print(f"     - User {current_user_id} cannot delete membership {membership_id}")
+        print(f"     - Membership belongs to user {db_membership.user_id}")
+        print(f"     - Group owner is {group.owner_id}")
+        print(f"{'='*80}\n")
         raise HTTPException(status_code=403, detail="You don't have permission to delete this membership. Only the group creator, admins, or the member themselves can do this.")
 
+    print(f"  ✅ PERMISSION GRANTED - Proceeding with deletion")
     group_membership.delete(db, id=membership_id)
+    print(f"  ✅ Membership {membership_id} deleted successfully")
+    print(f"{'='*80}\n")
     return {"message": "Group membership deleted successfully", "id": membership_id}

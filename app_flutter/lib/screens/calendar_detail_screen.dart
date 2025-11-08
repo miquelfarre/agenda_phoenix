@@ -6,12 +6,15 @@ import '../models/event.dart';
 import '../models/calendar.dart';
 import '../core/state/app_state.dart';
 import '../widgets/event_list_item.dart';
+import '../widgets/searchable_list.dart';
 import 'event_detail_screen.dart';
 import '../ui/styles/app_styles.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../utils/calendar_permissions.dart';
 import '../utils/event_operations.dart';
 import '../utils/calendar_operations.dart';
+import '../utils/event_date_utils.dart';
+import '../widgets/event_date_section.dart';
 
 class CalendarDetailScreen extends ConsumerStatefulWidget {
   final int calendarId;
@@ -31,33 +34,6 @@ class CalendarDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(_filterEvents);
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _filterEvents() {
-    if (mounted) setState(() {});
-  }
-
-  List<Event> _applySearchFilter(List<Event> events) {
-    final query = _searchController.text.trim().toLowerCase();
-    if (query.isEmpty) return events;
-
-    return events.where((event) {
-      return event.title.toLowerCase().contains(query) ||
-          (event.description?.toLowerCase().contains(query) ?? false);
-    }).toList();
-  }
 
   Calendar? get _calendar {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
@@ -170,8 +146,6 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
 
     calendarEvents.sort((a, b) => a.startDate.compareTo(b.startDate));
 
-    final eventsToShow = _applySearchFilter(calendarEvents);
-
     final calendarColor = _parseCalendarColor();
 
     return CupertinoPageScaffold(
@@ -204,27 +178,28 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
           child: const Icon(CupertinoIcons.ellipsis_circle, size: 28),
         ),
       ),
-      child: SafeArea(child: _buildContent(eventsToShow)),
+      child: SafeArea(
+        child: SearchableList<Event>(
+          items: calendarEvents,
+          filterFunction: (event, query) {
+            return event.title.toLowerCase().contains(query) ||
+                (event.description?.toLowerCase().contains(query) ?? false);
+          },
+          listBuilder: (context, filteredEvents) {
+            return _buildContent(context, filteredEvents);
+          },
+          searchPlaceholder: AppLocalizations.of(context)!.searchEvents,
+        ),
+      ),
     );
   }
 
-  Widget _buildContent(List<Event> eventsToShow) {
-    final groupedEvents = _groupEventsByDate(eventsToShow);
+  Widget _buildContent(BuildContext context, List<Event> eventsToShow) {
+    final groupedEvents = EventDateUtils.groupEventsByDate(eventsToShow);
 
     return CustomScrollView(
       physics: const ClampingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(
-              controller: _searchController,
-              placeholder: AppLocalizations.of(context)!.searchEvents,
-              backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context),
-            ),
-          ),
-        ),
-
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -258,9 +233,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _searchController.text.isNotEmpty
-                        ? AppLocalizations.of(context)!.noEventsFound
-                        : AppLocalizations.of(context)!.noEvents,
+                    AppLocalizations.of(context)!.noEventsFound,
                     style: const TextStyle(
                       color: CupertinoColors.systemGrey,
                       fontSize: 16,
@@ -280,134 +253,26 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     );
   }
 
-  List<Map<String, dynamic>> _groupEventsByDate(List<Event> events) {
-    final Map<String, List<Event>> groupedMap = {};
-
-    for (final event in events) {
-      final eventDate = event.date;
-      final dateKey =
-          '${eventDate.year}-${eventDate.month.toString().padLeft(2, '0')}-${eventDate.day.toString().padLeft(2, '0')}';
-
-      if (!groupedMap.containsKey(dateKey)) {
-        groupedMap[dateKey] = [];
-      }
-      groupedMap[dateKey]!.add(event);
-    }
-
-    for (final eventList in groupedMap.values) {
-      eventList.sort((a, b) {
-        if (a.isBirthday && !b.isBirthday) return -1;
-        if (!a.isBirthday && b.isBirthday) return 1;
-
-        final timeA = a.date;
-        final timeB = b.date;
-        return timeA.compareTo(timeB);
-      });
-    }
-
-    final groupedList = groupedMap.entries.map((entry) {
-      return {'date': entry.key, 'events': entry.value};
-    }).toList();
-
-    groupedList.sort(
-      (a, b) => (a['date'] as String).compareTo(b['date'] as String),
-    );
-
-    return groupedList;
-  }
-
   Widget _buildDateGroup(BuildContext context, Map<String, dynamic> group) {
-    final dateStr = group['date'] as String;
-    final events = group['events'] as List<Event>;
-
-    DateTime date;
-    try {
-      date = DateTime.parse('${dateStr}T00:00:00');
-    } catch (_) {
-      date = DateTime.now();
-    }
-
-    final formattedDate = _formatDate(context, date);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              formattedDate,
-              style: AppStyles.bodyText.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppStyles.grey700,
+    return EventDateSection(
+      dateGroup: group,
+      eventBuilder: (event) {
+        return EventListItem(
+          event: event,
+          onTap: (event) {
+            Navigator.of(context).push(
+              CupertinoPageRoute<void>(
+                builder: (_) => EventDetailScreen(event: event),
               ),
-            ),
-          ),
-          ...events.map((event) {
-            return EventListItem(
-              event: event,
-              onTap: (event) {
-                Navigator.of(context).push(
-                  CupertinoPageRoute<void>(
-                    builder: (_) => EventDetailScreen(event: event),
-                  ),
-                );
-              },
-              onDelete: _deleteEvent,
-              navigateAfterDelete: false,
-              hideCalendarBadge: true,
-              hideInvitationStatus: true,
             );
-          }),
-          const SizedBox(height: 16),
-        ],
-      ),
+          },
+          onDelete: _deleteEvent,
+          navigateAfterDelete: false,
+          hideCalendarBadge: true,
+          hideInvitationStatus: true,
+        );
+      },
     );
-  }
-
-  String _formatDate(BuildContext context, DateTime date) {
-    final l10n = context.l10n;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final eventDate = DateTime(date.year, date.month, date.day);
-
-    if (eventDate == today) {
-      return l10n.today;
-    } else if (eventDate == today.add(const Duration(days: 1))) {
-      return l10n.tomorrow;
-    } else if (eventDate == today.subtract(const Duration(days: 1))) {
-      return l10n.yesterday;
-    } else {
-      final weekdays = [
-        l10n.monday,
-        l10n.tuesday,
-        l10n.wednesday,
-        l10n.thursday,
-        l10n.friday,
-        l10n.saturday,
-        l10n.sunday,
-      ];
-      final months = [
-        l10n.january,
-        l10n.february,
-        l10n.march,
-        l10n.april,
-        l10n.may,
-        l10n.june,
-        l10n.july,
-        l10n.august,
-        l10n.september,
-        l10n.october,
-        l10n.november,
-        l10n.december,
-      ];
-
-      final weekday = weekdays[date.weekday - 1];
-      final month = months[date.month - 1];
-
-      return '$weekday, ${date.day} ${l10n.dotSeparator} $month';
-    }
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
