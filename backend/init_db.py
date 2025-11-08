@@ -45,7 +45,7 @@ def generate_share_hash(length: int = 8) -> str:
         Random string of specified length using base62 characters
     """
     alphabet = string.ascii_letters + string.digits  # a-z, A-Z, 0-9 (base62)
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 def drop_all_tables():
@@ -53,15 +53,7 @@ def drop_all_tables():
     logger.info("🗑️  Dropping all tables...")
     try:
         # Tables managed by Supabase Realtime - DO NOT DROP
-        realtime_tables = {
-            'tenants',
-            'extensions',
-            'schema_migrations',
-            'messages',
-            'broadcast_policies',
-            'presence_policies',
-            'channels'
-        }
+        realtime_tables = {"tenants", "extensions", "schema_migrations", "messages", "broadcast_policies", "presence_policies", "channels"}
 
         # Use inspector to get all tables and drop them with CASCADE
         # This handles circular foreign key dependencies
@@ -107,7 +99,9 @@ def create_subscription_stats_triggers():
         with engine.connect() as conn:
             # CREATE TABLE user_subscription_stats
             # This table maintains pre-calculated statistics updated by triggers
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE TABLE IF NOT EXISTS user_subscription_stats (
                     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
                     new_events_count INTEGER DEFAULT 0 NOT NULL,
@@ -116,11 +110,15 @@ def create_subscription_stats_triggers():
                     last_event_date TIMESTAMP WITH TIME ZONE,
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
                 );
-            """))
+            """
+                )
+            )
             logger.info("  ✓ Created user_subscription_stats table")
 
             # TRIGGER 1: Update stats when event is created
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE OR REPLACE FUNCTION update_stats_on_event_insert()
                 RETURNS TRIGGER AS $$
                 BEGIN
@@ -158,10 +156,14 @@ def create_subscription_stats_triggers():
                 AFTER INSERT ON events
                 FOR EACH ROW
                 EXECUTE FUNCTION update_stats_on_event_insert();
-            """))
+            """
+                )
+            )
 
             # TRIGGER 2: Update stats when event is deleted
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE OR REPLACE FUNCTION update_stats_on_event_delete()
                 RETURNS TRIGGER AS $$
                 BEGIN
@@ -183,10 +185,14 @@ def create_subscription_stats_triggers():
                 AFTER DELETE ON events
                 FOR EACH ROW
                 EXECUTE FUNCTION update_stats_on_event_delete();
-            """))
+            """
+                )
+            )
 
             # TRIGGER 3: Update subscriber count on subscription (count DISTINCT users)
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE OR REPLACE FUNCTION update_stats_on_subscription()
                 RETURNS TRIGGER AS $$
                 DECLARE
@@ -227,10 +233,14 @@ def create_subscription_stats_triggers():
                 FOR EACH ROW
                 WHEN (NEW.interaction_type = 'subscribed')
                 EXECUTE FUNCTION update_stats_on_subscription();
-            """))
+            """
+                )
+            )
 
             # TRIGGER 4: Update subscriber count on unsubscription (count DISTINCT users)
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE OR REPLACE FUNCTION update_stats_on_unsubscription()
                 RETURNS TRIGGER AS $$
                 DECLARE
@@ -265,24 +275,36 @@ def create_subscription_stats_triggers():
                 FOR EACH ROW
                 WHEN (OLD.interaction_type = 'subscribed')
                 EXECUTE FUNCTION update_stats_on_unsubscription();
-            """))
+            """
+                )
+            )
 
             # Create indexes for performance
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE INDEX IF NOT EXISTS idx_user_stats_updated ON user_subscription_stats(updated_at);
                 CREATE INDEX IF NOT EXISTS idx_user_stats_user_id ON user_subscription_stats(user_id);
-            """))
+            """
+                )
+            )
 
             # Set REPLICA IDENTITY for realtime CDC
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 ALTER TABLE user_subscription_stats REPLICA IDENTITY FULL;
                 GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO postgres;
                 GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO anon;
                 GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO authenticated;
-            """))
+            """
+                )
+            )
 
             # Initialize stats from existing data
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 INSERT INTO user_subscription_stats (user_id, total_events_count, new_events_count, subscribers_count, last_event_date, updated_at)
                 SELECT
                     u.id as user_id,
@@ -308,7 +330,9 @@ def create_subscription_stats_triggers():
                     GROUP BY e.owner_id
                 ) s ON u.id = s.owner_id
                 ON CONFLICT (user_id) DO NOTHING;
-            """))
+            """
+                )
+            )
 
             conn.commit()
 
@@ -317,7 +341,6 @@ def create_subscription_stats_triggers():
     except Exception as e:
         logger.error(f"❌ Error creating user_subscription_stats: {e}")
         raise
-
 
 
 def create_calendar_subscription_triggers():
@@ -330,7 +353,9 @@ def create_calendar_subscription_triggers():
     try:
         with engine.connect() as conn:
             # TRIGGER: Update subscriber_count on INSERT/DELETE/UPDATE
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE OR REPLACE FUNCTION update_calendar_subscriber_count()
                 RETURNS TRIGGER AS $$
                 BEGIN
@@ -371,13 +396,19 @@ def create_calendar_subscription_triggers():
                 AFTER INSERT OR DELETE OR UPDATE ON calendar_subscriptions
                 FOR EACH ROW
                 EXECUTE FUNCTION update_calendar_subscriber_count();
-            """))
+            """
+                )
+            )
             logger.info("  ✓ Created calendar_subscription_count_trigger")
 
             # Enable REPLICA IDENTITY for realtime
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 ALTER TABLE calendar_subscriptions REPLICA IDENTITY FULL;
-            """))
+            """
+                )
+            )
             logger.info("  ✓ Enabled REPLICA IDENTITY FULL for calendar_subscriptions")
 
             conn.commit()
@@ -387,6 +418,7 @@ def create_calendar_subscription_triggers():
     except Exception as e:
         logger.error(f"❌ Error creating calendar subscription triggers: {e}")
         raise
+
 
 def grant_supabase_permissions():
     """
@@ -548,53 +580,14 @@ def insert_sample_data():
         cal_esqui_temporal = Calendar(owner_id=sonia.id, name="Temporada Esquí 2025-2026", start_date=in_30_days, end_date=in_120_days)
 
         # Public user calendars (NO share_hash - accessible via user subscription)
-        cal_fcbarcelona = Calendar(
-            owner_id=fcbarcelona.id,
-            name="Partidos FC Barcelona",
-            description="Calendario oficial de partidos del FC Barcelona - Liga, Champions y Copa",
-            category="sports",
-            is_public=True,
-            is_discoverable=True
-        )
-        cal_gym_classes = Calendar(
-            owner_id=gym_fitzone.id,
-            name="Clases FitZone",
-            description="Horario de clases grupales del gimnasio FitZone - Spinning, Yoga, Pilates",
-            category="sports",
-            is_public=True,
-            is_discoverable=True
-        )
-        cal_restaurant_events = Calendar(
-            owner_id=restaurant_sabor.id,
-            name="Eventos Restaurante Sabor",
-            description="Catas de vino, menús especiales y eventos culinarios",
-            category="food",
-            is_public=True,
-            is_discoverable=True
-        )
-        cal_cultural = Calendar(
-            owner_id=cultural_llotja.id,
-            name="Programación Llotja",
-            description="Exposiciones, conciertos y eventos culturales en La Llotja",
-            category="culture",
-            is_public=True,
-            is_discoverable=True
-        )
+        cal_fcbarcelona = Calendar(owner_id=fcbarcelona.id, name="Partidos FC Barcelona", description="Calendario oficial de partidos del FC Barcelona - Liga, Champions y Copa", category="sports", is_public=True, is_discoverable=True)
+        cal_gym_classes = Calendar(owner_id=gym_fitzone.id, name="Clases FitZone", description="Horario de clases grupales del gimnasio FitZone - Spinning, Yoga, Pilates", category="sports", is_public=True, is_discoverable=True)
+        cal_restaurant_events = Calendar(owner_id=restaurant_sabor.id, name="Eventos Restaurante Sabor", description="Catas de vino, menús especiales y eventos culinarios", category="food", is_public=True, is_discoverable=True)
+        cal_cultural = Calendar(owner_id=cultural_llotja.id, name="Programación Llotja", description="Exposiciones, conciertos y eventos culturales en La Llotja", category="culture", is_public=True, is_discoverable=True)
         # Create a public calendar owned by a private user (RandomUser scenario from datos.txt)
-        cal_festivos_bcn = Calendar(
-            owner_id=sara.id,  # Sara creates this public calendar
-            name="Festivos Barcelona 2025",
-            description="Calendario de festivos oficiales de Barcelona y Catalunya",
-            category="holidays",
-            is_public=True,
-            is_discoverable=True,
-            share_hash=generate_share_hash()
-        )
+        cal_festivos_bcn = Calendar(owner_id=sara.id, name="Festivos Barcelona 2025", description="Calendario de festivos oficiales de Barcelona y Catalunya", category="holidays", is_public=True, is_discoverable=True, share_hash=generate_share_hash())  # Sara creates this public calendar
 
-        db.add_all([
-            cal_family, cal_birthdays, cal_esqui_temporal,
-            cal_fcbarcelona, cal_gym_classes, cal_restaurant_events, cal_cultural, cal_festivos_bcn
-        ])
+        db.add_all([cal_family, cal_birthdays, cal_esqui_temporal, cal_fcbarcelona, cal_gym_classes, cal_restaurant_events, cal_cultural, cal_festivos_bcn])
         db.flush()
         logger.info(f"  ✓ Inserted 8 calendars (3 private, 5 public)")
 
@@ -634,79 +627,26 @@ def insert_sample_data():
         from models import CalendarSubscription
 
         # Sonia subscribes to FC Barcelona matches and gym classes
-        sub_sonia_fcb = CalendarSubscription(
-            calendar_id=cal_fcbarcelona.id,
-            user_id=sonia.id,
-            status="active"
-        )
-        sub_sonia_gym = CalendarSubscription(
-            calendar_id=cal_gym_classes.id,
-            user_id=sonia.id,
-            status="active"
-        )
+        sub_sonia_fcb = CalendarSubscription(calendar_id=cal_fcbarcelona.id, user_id=sonia.id, status="active")
+        sub_sonia_gym = CalendarSubscription(calendar_id=cal_gym_classes.id, user_id=sonia.id, status="active")
 
         # Miquel subscribes to FC Barcelona, restaurant events, and cultural events
-        sub_miquel_fcb = CalendarSubscription(
-            calendar_id=cal_fcbarcelona.id,
-            user_id=miquel.id,
-            status="active"
-        )
-        sub_miquel_restaurant = CalendarSubscription(
-            calendar_id=cal_restaurant_events.id,
-            user_id=miquel.id,
-            status="active"
-        )
-        sub_miquel_cultural = CalendarSubscription(
-            calendar_id=cal_cultural.id,
-            user_id=miquel.id,
-            status="active"
-        )
+        sub_miquel_fcb = CalendarSubscription(calendar_id=cal_fcbarcelona.id, user_id=miquel.id, status="active")
+        sub_miquel_restaurant = CalendarSubscription(calendar_id=cal_restaurant_events.id, user_id=miquel.id, status="active")
+        sub_miquel_cultural = CalendarSubscription(calendar_id=cal_cultural.id, user_id=miquel.id, status="active")
 
         # Ada subscribes to gym and cultural events
-        sub_ada_gym = CalendarSubscription(
-            calendar_id=cal_gym_classes.id,
-            user_id=ada.id,
-            status="active"
-        )
-        sub_ada_cultural = CalendarSubscription(
-            calendar_id=cal_cultural.id,
-            user_id=ada.id,
-            status="active"
-        )
+        sub_ada_gym = CalendarSubscription(calendar_id=cal_gym_classes.id, user_id=ada.id, status="active")
+        sub_ada_cultural = CalendarSubscription(calendar_id=cal_cultural.id, user_id=ada.id, status="active")
 
         # Everyone subscribes to Barcelona holidays
-        sub_sonia_festivos = CalendarSubscription(
-            calendar_id=cal_festivos_bcn.id,
-            user_id=sonia.id,
-            status="active"
-        )
-        sub_miquel_festivos = CalendarSubscription(
-            calendar_id=cal_festivos_bcn.id,
-            user_id=miquel.id,
-            status="active"
-        )
-        sub_ada_festivos = CalendarSubscription(
-            calendar_id=cal_festivos_bcn.id,
-            user_id=ada.id,
-            status="active"
-        )
-        sub_tdb_festivos = CalendarSubscription(
-            calendar_id=cal_festivos_bcn.id,
-            user_id=tdb.id,
-            status="active"
-        )
-        sub_polr_festivos = CalendarSubscription(
-            calendar_id=cal_festivos_bcn.id,
-            user_id=polr.id,
-            status="active"
-        )
+        sub_sonia_festivos = CalendarSubscription(calendar_id=cal_festivos_bcn.id, user_id=sonia.id, status="active")
+        sub_miquel_festivos = CalendarSubscription(calendar_id=cal_festivos_bcn.id, user_id=miquel.id, status="active")
+        sub_ada_festivos = CalendarSubscription(calendar_id=cal_festivos_bcn.id, user_id=ada.id, status="active")
+        sub_tdb_festivos = CalendarSubscription(calendar_id=cal_festivos_bcn.id, user_id=tdb.id, status="active")
+        sub_polr_festivos = CalendarSubscription(calendar_id=cal_festivos_bcn.id, user_id=polr.id, status="active")
 
-        db.add_all([
-            sub_sonia_fcb, sub_sonia_gym, sub_sonia_festivos,
-            sub_miquel_fcb, sub_miquel_restaurant, sub_miquel_cultural, sub_miquel_festivos,
-            sub_ada_gym, sub_ada_cultural, sub_ada_festivos,
-            sub_tdb_festivos, sub_polr_festivos
-        ])
+        db.add_all([sub_sonia_fcb, sub_sonia_gym, sub_sonia_festivos, sub_miquel_fcb, sub_miquel_restaurant, sub_miquel_cultural, sub_miquel_festivos, sub_ada_gym, sub_ada_cultural, sub_ada_festivos, sub_tdb_festivos, sub_polr_festivos])
         db.flush()
         logger.info(f"  ✓ Inserted 12 calendar subscriptions")
 
@@ -1008,14 +948,7 @@ def insert_sample_data():
 
         # 10. Create FC Barcelona match events with descriptions
         # El Clásico - saved as variable for later reference in invitations
-        fcb_el_clasico = Event(
-            name="Real Madrid vs FC Barcelona",
-            description="🏟️ Santiago Bernabéu • LaLiga EA Sports • El Clásico",
-            start_date=in_3_days.replace(hour=16, minute=15),
-            event_type="regular",
-            owner_id=fcbarcelona.id,
-            calendar_id=cal_fcbarcelona.id
-        )
+        fcb_el_clasico = Event(name="Real Madrid vs FC Barcelona", description="🏟️ Santiago Bernabéu • LaLiga EA Sports • El Clásico", start_date=in_3_days.replace(hour=16, minute=15), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id)
 
         fcb_matches = [
             Event(name="FC Barcelona vs Girona", description="🏟️ Spotify Camp Nou • LaLiga EA Sports", start_date=tomorrow.replace(hour=16, minute=15), event_type="regular", owner_id=fcbarcelona.id, calendar_id=cal_fcbarcelona.id),
@@ -1356,11 +1289,7 @@ def insert_sample_data():
             owner_id=cultural_llotja.id,
         )
 
-        db.add_all([
-            gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba,
-            restaurant_tasting, restaurant_cooking, restaurant_brunch,
-            cultural_concert, cultural_expo, cultural_theater, cultural_workshop
-        ])
+        db.add_all([gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba, restaurant_tasting, restaurant_cooking, restaurant_brunch, cultural_concert, cultural_expo, cultural_theater, cultural_workshop])
         db.flush()
         logger.info(f"  ✓ Inserted 12 events for public venues (5 gym, 3 restaurant, 4 cultural)")
 
@@ -1619,22 +1548,24 @@ def insert_sample_data():
         # === INVITATIONS TO MIQUEL'S EVENTS ===
 
         # Miquel's dinner - invites Sonia (accepted) and Sara (pending)
-        interactions.extend([
-            EventInteraction(
-                event_id=miquel_dinner.id,
-                user_id=sonia.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=miquel.id,
-            ),
-            EventInteraction(
-                event_id=miquel_dinner.id,
-                user_id=sara.id,
-                interaction_type="invited",
-                status="pending",
-                invited_by_user_id=miquel.id,
-            ),
-        ])
+        interactions.extend(
+            [
+                EventInteraction(
+                    event_id=miquel_dinner.id,
+                    user_id=sonia.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=miquel.id,
+                ),
+                EventInteraction(
+                    event_id=miquel_dinner.id,
+                    user_id=sara.id,
+                    interaction_type="invited",
+                    status="pending",
+                    invited_by_user_id=miquel.id,
+                ),
+            ]
+        )
 
         # Miquel's meeting - invites Sara (accepted)
         interactions.append(
@@ -1651,49 +1582,53 @@ def insert_sample_data():
         # === INVITATIONS TO ADA'S EVENTS ===
 
         # Ada's Halloween party - invites everyone
-        interactions.extend([
-            EventInteraction(
-                event_id=ada_party.id,
-                user_id=sonia.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=ada.id,
-                personal_note="Llevar disfraz de bruja 🧙‍♀️",
-            ),
-            EventInteraction(
-                event_id=ada_party.id,
-                user_id=miquel.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=ada.id,
-            ),
-            EventInteraction(
-                event_id=ada_party.id,
-                user_id=sara.id,
-                interaction_type="invited",
-                status="rejected",
-                invited_by_user_id=ada.id,
-                cancellation_note="Lo siento, tengo otro compromiso ese día",
-            ),
-        ])
+        interactions.extend(
+            [
+                EventInteraction(
+                    event_id=ada_party.id,
+                    user_id=sonia.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=ada.id,
+                    personal_note="Llevar disfraz de bruja 🧙‍♀️",
+                ),
+                EventInteraction(
+                    event_id=ada_party.id,
+                    user_id=miquel.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=ada.id,
+                ),
+                EventInteraction(
+                    event_id=ada_party.id,
+                    user_id=sara.id,
+                    interaction_type="invited",
+                    status="rejected",
+                    invited_by_user_id=ada.id,
+                    cancellation_note="Lo siento, tengo otro compromiso ese día",
+                ),
+            ]
+        )
 
         # Ada's movie - invites family
-        interactions.extend([
-            EventInteraction(
-                event_id=ada_movie.id,
-                user_id=sonia.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=ada.id,
-            ),
-            EventInteraction(
-                event_id=ada_movie.id,
-                user_id=miquel.id,
-                interaction_type="invited",
-                status="pending",
-                invited_by_user_id=ada.id,
-            ),
-        ])
+        interactions.extend(
+            [
+                EventInteraction(
+                    event_id=ada_movie.id,
+                    user_id=sonia.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=ada.id,
+                ),
+                EventInteraction(
+                    event_id=ada_movie.id,
+                    user_id=miquel.id,
+                    interaction_type="invited",
+                    status="pending",
+                    invited_by_user_id=ada.id,
+                ),
+            ]
+        )
 
         # === INVITATIONS TO SARA'S EVENTS ===
 
@@ -1878,103 +1813,109 @@ def insert_sample_data():
         # === FAMILY EVENTS INTERACTIONS ===
 
         # Family dinner - Sonia is owner, everyone else invited
-        interactions.extend([
-            EventInteraction(
-                event_id=family_dinner.id,
-                user_id=sonia.id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
-            ),
-            EventInteraction(
-                event_id=family_dinner.id,
-                user_id=miquel.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=sonia.id,
-            ),
-            EventInteraction(
-                event_id=family_dinner.id,
-                user_id=ada.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=sonia.id,
-            ),
-            EventInteraction(
-                event_id=family_dinner.id,
-                user_id=sara.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=sonia.id,
-            ),
-        ])
+        interactions.extend(
+            [
+                EventInteraction(
+                    event_id=family_dinner.id,
+                    user_id=sonia.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                ),
+                EventInteraction(
+                    event_id=family_dinner.id,
+                    user_id=miquel.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=sonia.id,
+                ),
+                EventInteraction(
+                    event_id=family_dinner.id,
+                    user_id=ada.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=sonia.id,
+                ),
+                EventInteraction(
+                    event_id=family_dinner.id,
+                    user_id=sara.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=sonia.id,
+                ),
+            ]
+        )
 
         # Family picnic - Miquel is owner, everyone else invited
-        interactions.extend([
-            EventInteraction(
-                event_id=family_picnic.id,
-                user_id=miquel.id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
-            ),
-            EventInteraction(
-                event_id=family_picnic.id,
-                user_id=sonia.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=miquel.id,
-            ),
-            EventInteraction(
-                event_id=family_picnic.id,
-                user_id=ada.id,
-                interaction_type="invited",
-                status="pending",
-                invited_by_user_id=miquel.id,
-            ),
-            EventInteraction(
-                event_id=family_picnic.id,
-                user_id=sara.id,
-                interaction_type="invited",
-                status="rejected",
-                invited_by_user_id=miquel.id,
-                cancellation_note="Tengo la conferencia tech ese fin de semana",
-            ),
-        ])
+        interactions.extend(
+            [
+                EventInteraction(
+                    event_id=family_picnic.id,
+                    user_id=miquel.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                ),
+                EventInteraction(
+                    event_id=family_picnic.id,
+                    user_id=sonia.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=miquel.id,
+                ),
+                EventInteraction(
+                    event_id=family_picnic.id,
+                    user_id=ada.id,
+                    interaction_type="invited",
+                    status="pending",
+                    invited_by_user_id=miquel.id,
+                ),
+                EventInteraction(
+                    event_id=family_picnic.id,
+                    user_id=sara.id,
+                    interaction_type="invited",
+                    status="rejected",
+                    invited_by_user_id=miquel.id,
+                    cancellation_note="Tengo la conferencia tech ese fin de semana",
+                ),
+            ]
+        )
 
         # Family trip - Sonia is owner, everyone else invited
-        interactions.extend([
-            EventInteraction(
-                event_id=family_trip.id,
-                user_id=sonia.id,
-                interaction_type="joined",
-                status="accepted",
-                role="owner",
-            ),
-            EventInteraction(
-                event_id=family_trip.id,
-                user_id=miquel.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=sonia.id,
-                personal_note="¡Por fin vacaciones en familia! 🏖️",
-            ),
-            EventInteraction(
-                event_id=family_trip.id,
-                user_id=ada.id,
-                interaction_type="invited",
-                status="accepted",
-                invited_by_user_id=sonia.id,
-                personal_note="¡Voy a nadar todos los días! 🏊‍♀️",
-            ),
-            EventInteraction(
-                event_id=family_trip.id,
-                user_id=sara.id,
-                interaction_type="invited",
-                status="pending",
-                invited_by_user_id=sonia.id,
-            ),
-        ])
+        interactions.extend(
+            [
+                EventInteraction(
+                    event_id=family_trip.id,
+                    user_id=sonia.id,
+                    interaction_type="joined",
+                    status="accepted",
+                    role="owner",
+                ),
+                EventInteraction(
+                    event_id=family_trip.id,
+                    user_id=miquel.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=sonia.id,
+                    personal_note="¡Por fin vacaciones en familia! 🏖️",
+                ),
+                EventInteraction(
+                    event_id=family_trip.id,
+                    user_id=ada.id,
+                    interaction_type="invited",
+                    status="accepted",
+                    invited_by_user_id=sonia.id,
+                    personal_note="¡Voy a nadar todos los días! 🏊‍♀️",
+                ),
+                EventInteraction(
+                    event_id=family_trip.id,
+                    user_id=sara.id,
+                    interaction_type="invited",
+                    status="pending",
+                    invited_by_user_id=sonia.id,
+                ),
+            ]
+        )
 
         db.add_all(interactions)
         db.flush()
@@ -2026,7 +1967,9 @@ def create_database_views():
             # 2. total_events_count: Total events owned by user (pre-calculated by triggers)
             # 3. subscribers_count: Unique subscribers to user's events (pre-calculated by triggers)
             # Performance: Uses LEFT JOIN with user_subscription_stats instead of 3 subqueries
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE OR REPLACE VIEW user_subscriptions_with_stats AS
                 SELECT DISTINCT
                     ei.user_id AS subscriber_id,
@@ -2051,7 +1994,9 @@ def create_database_views():
                 LEFT JOIN user_subscription_stats uss ON uss.user_id = u.id
                 WHERE ei.interaction_type = 'subscribed'
                 AND u.is_public = TRUE
-            """))
+            """
+                )
+            )
             logger.info("  ✓ Created view: user_subscriptions_with_stats")
 
             conn.commit()
@@ -2081,15 +2026,11 @@ def setup_realtime():
             # If not, create it
             pub_is_for_all_tables = False
             try:
-                result = conn.execute(text(
-                    "SELECT puballtables FROM pg_publication WHERE pubname = 'supabase_realtime'"
-                ))
+                result = conn.execute(text("SELECT puballtables FROM pg_publication WHERE pubname = 'supabase_realtime'"))
                 row = result.fetchone()
                 if row is None:
                     # Publication doesn't exist, create it without tables (we'll add them individually)
-                    conn.execute(text(
-                        "CREATE PUBLICATION supabase_realtime"
-                    ))
+                    conn.execute(text("CREATE PUBLICATION supabase_realtime"))
                     logger.info("  ✓ Created supabase_realtime publication (empty)")
                     conn.commit()
                 else:
@@ -2103,26 +2044,11 @@ def setup_realtime():
                 conn.rollback()  # Reset the transaction after error
 
             # List of tables to enable realtime sync
-            realtime_tables = [
-                'events',
-                'event_interactions',
-                'users',
-                'calendars',
-                'calendar_memberships',
-                'calendar_subscriptions',
-                'groups',
-                'group_memberships',
-                'contacts',
-                'event_bans',
-                'user_blocks',
-                'recurring_event_configs',
-                'event_cancellations',
-                'user_subscription_stats'
-            ]
+            realtime_tables = ["events", "event_interactions", "users", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "contacts", "event_bans", "user_blocks", "recurring_event_configs", "event_cancellations", "user_subscription_stats"]
 
             for table in realtime_tables:
                 # Set REPLICA IDENTITY FULL (required for Supabase Realtime)
-                conn.execute(text(f'ALTER TABLE {table} REPLICA IDENTITY FULL'))
+                conn.execute(text(f"ALTER TABLE {table} REPLICA IDENTITY FULL"))
                 logger.info(f"  ✓ Set REPLICA IDENTITY FULL for '{table}'")
 
                 # Add table to Supabase Realtime publication
@@ -2132,12 +2058,12 @@ def setup_realtime():
                     logger.info(f"  ℹ️  '{table}' already in FOR ALL TABLES publication (skipping)")
                 else:
                     try:
-                        conn.execute(text(f'ALTER PUBLICATION supabase_realtime ADD TABLE {table}'))
+                        conn.execute(text(f"ALTER PUBLICATION supabase_realtime ADD TABLE {table}"))
                         logger.info(f"  ✓ Added '{table}' to supabase_realtime publication")
                     except Exception as e:
                         # Table might already be in publication, that's ok
                         error_msg = str(e).lower()
-                        if 'already a member' in error_msg or 'already exists' in error_msg:
+                        if "already a member" in error_msg or "already exists" in error_msg:
                             logger.info(f"  ℹ️  '{table}' already in publication (skipping)")
                         else:
                             logger.warning(f"  ⚠️  Could not add '{table}' to publication: {e}")
@@ -2167,6 +2093,7 @@ def setup_realtime_tenant():
     logger.info("🔧 Setting up Realtime tenant and extension (idempotent)...")
 
     import time
+
     max_retries = 10
     retry_delay = 2  # seconds
 
@@ -2174,13 +2101,17 @@ def setup_realtime_tenant():
         try:
             with engine.connect() as conn:
                 # Check if tenants table exists (created by Realtime migrations)
-                result = conn.execute(text("""
+                result = conn.execute(
+                    text(
+                        """
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables
                         WHERE table_schema = 'public'
                         AND table_name = 'tenants'
                     )
-                """))
+                """
+                    )
+                )
                 table_exists = result.scalar()
 
                 if not table_exists:
@@ -2218,21 +2149,21 @@ def setup_realtime_tenant():
                 # Default to 'plaintext' which matches current Realtime image expectations in this stack.
                 secret_mode = os.getenv("REALTIME_TENANT_SECRET_MODE", "plaintext").lower()
                 if secret_mode not in ("encrypted", "plaintext"):
-                    logger.warning(
-                        f"  ⚠️  Unknown REALTIME_TENANT_SECRET_MODE='{secret_mode}', falling back to 'plaintext'"
-                    )
+                    logger.warning(f"  ⚠️  Unknown REALTIME_TENANT_SECRET_MODE='{secret_mode}', falling back to 'plaintext'")
                     secret_mode = "plaintext"
 
                 # Determine tenants schema shape (some Realtime versions have external_id, others don't)
                 tenants_has_external_id = False
                 try:
-                    res = conn.execute(text(
-                        """
+                    res = conn.execute(
+                        text(
+                            """
                         SELECT 1
                         FROM information_schema.columns
                         WHERE table_schema = 'public' AND table_name = 'tenants' AND column_name = 'external_id'
                         """
-                    ))
+                        )
+                    )
                     tenants_has_external_id = res.fetchone() is not None
                 except Exception:
                     tenants_has_external_id = False
@@ -2244,103 +2175,116 @@ def setup_realtime_tenant():
                 if tenants_has_external_id:
                     tenant_external_id = os.getenv("REALTIME_TENANT_EXTERNAL_ID", "supabase")
                     # Read current value first to avoid unnecessary writes and flip-flops
-                    current = conn.execute(text(
-                        """
+                    current = conn.execute(
+                        text(
+                            """
                         SELECT jwt_secret FROM tenants WHERE external_id = :external_id LIMIT 1
                         """
-                    ), {"external_id": tenant_external_id}).fetchone()
+                        ),
+                        {"external_id": tenant_external_id},
+                    ).fetchone()
 
                     if current is None:
                         # Ensure row exists with desired value
-                        conn.execute(text(
-                            """
+                        conn.execute(
+                            text(
+                                """
                             INSERT INTO tenants (id, external_id, jwt_secret, inserted_at, updated_at)
                             VALUES (gen_random_uuid(), :external_id, :jwt_secret, NOW(), NOW())
                             """
-                        ), {"external_id": tenant_external_id, "jwt_secret": desired_secret})
-                        logger.info(
-                            f"  ✓ Inserted tenants row (external_id='{tenant_external_id}') in {secret_mode} mode"
+                            ),
+                            {"external_id": tenant_external_id, "jwt_secret": desired_secret},
                         )
+                        logger.info(f"  ✓ Inserted tenants row (external_id='{tenant_external_id}') in {secret_mode} mode")
                     else:
                         current_secret = current[0]
                         if current_secret == desired_secret:
-                            logger.info(
-                                f"  ✓ Tenants jwt_secret already in desired {secret_mode} format (no change)"
-                            )
+                            logger.info(f"  ✓ Tenants jwt_secret already in desired {secret_mode} format (no change)")
                         elif current_secret == alt_secret:
                             # Normalize to desired format
-                            conn.execute(text(
-                                """
+                            conn.execute(
+                                text(
+                                    """
                                 UPDATE tenants
                                 SET jwt_secret = :jwt_secret, updated_at = NOW()
                                 WHERE external_id = :external_id
                                 """
-                            ), {"external_id": tenant_external_id, "jwt_secret": desired_secret})
-                            logger.info(
-                                f"  ✓ Normalized tenants jwt_secret to {secret_mode} format"
+                                ),
+                                {"external_id": tenant_external_id, "jwt_secret": desired_secret},
                             )
+                            logger.info(f"  ✓ Normalized tenants jwt_secret to {secret_mode} format")
                         else:
                             # Unknown value; set to desired
-                            conn.execute(text(
-                                """
+                            conn.execute(
+                                text(
+                                    """
                                 UPDATE tenants
                                 SET jwt_secret = :jwt_secret, updated_at = NOW()
                                 WHERE external_id = :external_id
                                 """
-                            ), {"external_id": tenant_external_id, "jwt_secret": desired_secret})
-                            logger.info(
-                                f"  ✓ Updated tenants jwt_secret to desired {secret_mode} format"
+                                ),
+                                {"external_id": tenant_external_id, "jwt_secret": desired_secret},
                             )
+                            logger.info(f"  ✓ Updated tenants jwt_secret to desired {secret_mode} format")
                     logger.info(f"  ✓ Ensured tenants row (external_id='{tenant_external_id}') with correct jwt_secret")
                 else:
                     # Schema without external_id: assume single-tenant. Update first row, or insert if empty.
-                    existing = conn.execute(text(
-                        """
+                    existing = conn.execute(
+                        text(
+                            """
                         SELECT id, jwt_secret FROM tenants LIMIT 1
                         """
-                    )).fetchone()
+                        )
+                    ).fetchone()
                     if existing is None:
-                        conn.execute(text(
-                            """
+                        conn.execute(
+                            text(
+                                """
                             INSERT INTO tenants (id, jwt_secret, inserted_at, updated_at)
                             VALUES (gen_random_uuid(), :jwt_secret, NOW(), NOW())
                             """
-                        ), {"jwt_secret": desired_secret})
+                            ),
+                            {"jwt_secret": desired_secret},
+                        )
                         logger.info("  ✓ Inserted tenants row (no external_id) with desired jwt_secret")
                     else:
                         current_secret = existing[1]
                         if current_secret == desired_secret:
-                            logger.info(
-                                f"  ✓ Tenants jwt_secret already in desired {secret_mode} format (no change)"
-                            )
+                            logger.info(f"  ✓ Tenants jwt_secret already in desired {secret_mode} format (no change)")
                         elif current_secret == alt_secret:
-                            conn.execute(text(
-                                """
+                            conn.execute(
+                                text(
+                                    """
                                 UPDATE tenants SET jwt_secret = :jwt_secret, updated_at = NOW()
                                 """
-                            ), {"jwt_secret": desired_secret})
-                            logger.info(
-                                f"  ✓ Normalized tenants jwt_secret to {secret_mode} format"
+                                ),
+                                {"jwt_secret": desired_secret},
                             )
+                            logger.info(f"  ✓ Normalized tenants jwt_secret to {secret_mode} format")
                         else:
-                            conn.execute(text(
-                                """
+                            conn.execute(
+                                text(
+                                    """
                                 UPDATE tenants SET jwt_secret = :jwt_secret, updated_at = NOW()
                                 """
-                            ), {"jwt_secret": desired_secret})
-                            logger.info(
-                                f"  ✓ Updated tenants jwt_secret to desired {secret_mode} format"
+                                ),
+                                {"jwt_secret": desired_secret},
                             )
+                            logger.info(f"  ✓ Updated tenants jwt_secret to desired {secret_mode} format")
                     logger.info("  ✓ Ensured tenants row (no external_id) with correct jwt_secret")
 
                 # Check if extensions table exists
-                result = conn.execute(text("""
+                result = conn.execute(
+                    text(
+                        """
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables
                         WHERE table_schema = 'public'
                         AND table_name = 'extensions'
                     )
-                """))
+                """
+                    )
+                )
                 extensions_table_exists = result.scalar()
 
                 if extensions_table_exists:
@@ -2378,49 +2322,63 @@ def setup_realtime_tenant():
                     # Some versions may not have tenant_external_id; handle both
                     ext_has_tenant_external_id = False
                     try:
-                        res = conn.execute(text(
-                            """
+                        res = conn.execute(
+                            text(
+                                """
                             SELECT 1
                             FROM information_schema.columns
                             WHERE table_schema = 'public' AND table_name = 'extensions' AND column_name = 'tenant_external_id'
                             """
-                        ))
+                            )
+                        )
                         ext_has_tenant_external_id = res.fetchone() is not None
                     except Exception:
                         ext_has_tenant_external_id = False
 
                     if ext_has_tenant_external_id:
                         # Update if changed, else ensure exists
-                        updated = conn.execute(text(
-                            """
+                        updated = conn.execute(
+                            text(
+                                """
                             UPDATE extensions
                             SET settings = CAST(:settings AS jsonb), updated_at = NOW()
                             WHERE type = :type AND tenant_external_id = :tenant
                             """
-                        ), {"settings": json.dumps(settings), "type": "postgres_cdc_rls", "tenant": os.getenv("REALTIME_TENANT_EXTERNAL_ID", "supabase")}).rowcount
+                            ),
+                            {"settings": json.dumps(settings), "type": "postgres_cdc_rls", "tenant": os.getenv("REALTIME_TENANT_EXTERNAL_ID", "supabase")},
+                        ).rowcount
                         if updated == 0:
-                            conn.execute(text(
-                                """
+                            conn.execute(
+                                text(
+                                    """
                                 INSERT INTO extensions (id, type, settings, tenant_external_id, inserted_at, updated_at)
                                 VALUES (gen_random_uuid(), :type, CAST(:settings AS jsonb), :tenant, NOW(), NOW())
                                 """
-                            ), {"type": "postgres_cdc_rls", "tenant": os.getenv("REALTIME_TENANT_EXTERNAL_ID", "supabase"), "settings": json.dumps(settings)})
+                                ),
+                                {"type": "postgres_cdc_rls", "tenant": os.getenv("REALTIME_TENANT_EXTERNAL_ID", "supabase"), "settings": json.dumps(settings)},
+                            )
                     else:
                         # No tenant_external_id: assume single-tenant and single row per type
-                        updated = conn.execute(text(
-                            """
+                        updated = conn.execute(
+                            text(
+                                """
                             UPDATE extensions
                             SET settings = CAST(:settings AS jsonb), updated_at = NOW()
                             WHERE type = :type
                             """
-                        ), {"settings": json.dumps(settings), "type": "postgres_cdc_rls"}).rowcount
+                            ),
+                            {"settings": json.dumps(settings), "type": "postgres_cdc_rls"},
+                        ).rowcount
                         if updated == 0:
-                            conn.execute(text(
-                                """
+                            conn.execute(
+                                text(
+                                    """
                                 INSERT INTO extensions (id, type, settings, inserted_at, updated_at)
                                 VALUES (gen_random_uuid(), :type, CAST(:settings AS jsonb), NOW(), NOW())
                                 """
-                            ), {"type": "postgres_cdc_rls", "settings": json.dumps(settings)})
+                                ),
+                                {"type": "postgres_cdc_rls", "settings": json.dumps(settings)},
+                            )
                     logger.info(f"  ✓ Ensured extension 'postgres_cdc_rls' settings (password: {secret_mode})")
                 else:
                     logger.info("  ℹ️  Extensions table doesn't exist yet - will be created by Realtime migrations")
@@ -2454,11 +2412,8 @@ def create_supabase_auth_users():
     logger.info("👤 Creating Supabase Auth users...")
 
     # Supabase configuration
-    SUPABASE_URL = os.getenv('SUPABASE_URL', 'http://localhost:8000')
-    SUPABASE_SERVICE_ROLE_KEY = os.getenv(
-        'SUPABASE_SERVICE_ROLE_KEY',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
-    )
+    SUPABASE_URL = os.getenv("SUPABASE_URL", "http://localhost:8000")
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU")
 
     try:
         # Create Supabase admin client (using service_role key to bypass RLS)
@@ -2468,12 +2423,12 @@ def create_supabase_auth_users():
 
         # Test users to create
         test_users = [
-            {'phone': '+34606014680', 'password': 'testpass123', 'name': 'Sonia'},
-            {'phone': '+34626034421', 'password': 'testpass123', 'name': 'Miquel'},
-            {'phone': '+34623949193', 'password': 'testpass123', 'name': 'Ada'},
-            {'phone': '+34611223344', 'password': 'testpass123', 'name': 'Sara'},
-            {'phone': '+34600000001', 'password': 'testpass123', 'name': 'TDB'},
-            {'phone': '+34600000002', 'password': 'testpass123', 'name': 'PolR'},
+            {"phone": "+34606014680", "password": "testpass123", "name": "Sonia"},
+            {"phone": "+34626034421", "password": "testpass123", "name": "Miquel"},
+            {"phone": "+34623949193", "password": "testpass123", "name": "Ada"},
+            {"phone": "+34611223344", "password": "testpass123", "name": "Sara"},
+            {"phone": "+34600000001", "password": "testpass123", "name": "TDB"},
+            {"phone": "+34600000002", "password": "testpass123", "name": "PolR"},
         ]
 
         created_count = 0
@@ -2482,14 +2437,7 @@ def create_supabase_auth_users():
         for user_data in test_users:
             try:
                 # Try to create user with phone authentication
-                result = supabase.auth.admin.create_user({
-                    'phone': user_data['phone'],
-                    'password': user_data['password'],
-                    'phone_confirm': True,  # Auto-confirm phone
-                    'user_metadata': {
-                        'name': user_data['name']
-                    }
-                })
+                result = supabase.auth.admin.create_user({"phone": user_data["phone"], "password": user_data["password"], "phone_confirm": True, "user_metadata": {"name": user_data["name"]}})  # Auto-confirm phone
 
                 if result:
                     logger.info(f"  ✓ Created user: {user_data['name']} ({user_data['phone']})")
@@ -2498,7 +2446,7 @@ def create_supabase_auth_users():
             except Exception as e:
                 error_msg = str(e).lower()
                 # Skip if user already exists
-                if 'already registered' in error_msg or 'already exists' in error_msg or 'duplicate' in error_msg:
+                if "already registered" in error_msg or "already exists" in error_msg or "duplicate" in error_msg:
                     logger.info(f"  ℹ️  User already exists: {user_data['name']} ({user_data['phone']})")
                     skipped_count += 1
                 else:

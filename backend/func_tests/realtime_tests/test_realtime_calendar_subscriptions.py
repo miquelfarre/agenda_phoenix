@@ -73,7 +73,7 @@ def get_calendar_from_db(calendar_id: int) -> Optional[Dict]:
                 FROM calendars
                 WHERE id = %s
                 """,
-                (calendar_id,)
+                (calendar_id,),
             )
             result = cursor.fetchone()
             return dict(result) if result else None
@@ -91,7 +91,7 @@ def get_calendar_subscriptions_from_db(calendar_id: int) -> List[Dict]:
                 WHERE calendar_id = %s
                 ORDER BY subscribed_at DESC
                 """,
-                (calendar_id,)
+                (calendar_id,),
             )
             results = cursor.fetchall()
             return [dict(row) for row in results]
@@ -112,11 +112,10 @@ def verify_replica_identity():
             results = cursor.fetchall()
 
             for row in results:
-                table_name = row['relname']
-                replica_identity = row['relreplident']
+                table_name = row["relname"]
+                replica_identity = row["relreplident"]
                 # 'f' = FULL, 'd' = DEFAULT, 'n' = NOTHING, 'i' = INDEX
-                assert replica_identity == 'f', \
-                    f"Table {table_name} should have REPLICA IDENTITY FULL, got '{replica_identity}'"
+                assert replica_identity == "f", f"Table {table_name} should have REPLICA IDENTITY FULL, got '{replica_identity}'"
 
             print(f"✅ REPLICA IDENTITY FULL verified for calendars and calendar_subscriptions")
 
@@ -181,15 +180,13 @@ class TestCalendarSubscriptionRealtimeFlow:
         updated_calendar = calendar_response.json()
 
         expected_count = initial_count + 1
-        assert updated_calendar["subscriber_count"] == expected_count, \
-            f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
+        assert updated_calendar["subscriber_count"] == expected_count, f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
 
         print(f"   ✅ API subscriber_count: {initial_count} -> {updated_calendar['subscriber_count']}")
 
         # 6. Verificar subscriber_count via BD directa
         calendar_from_db = get_calendar_from_db(calendar_id)
-        assert calendar_from_db["subscriber_count"] == expected_count, \
-            f"DB subscriber count should be {expected_count}, got {calendar_from_db['subscriber_count']}"
+        assert calendar_from_db["subscriber_count"] == expected_count, f"DB subscriber count should be {expected_count}, got {calendar_from_db['subscriber_count']}"
 
         print(f"   ✅ DB subscriber_count: {calendar_from_db['subscriber_count']}")
         print(f"   ✅ Realtime CDC working correctly!")
@@ -250,15 +247,13 @@ class TestCalendarSubscriptionRealtimeFlow:
         updated_calendar = calendar_response.json()
 
         expected_count = initial_count
-        assert updated_calendar["subscriber_count"] == expected_count, \
-            f"Subscriber count should return to {expected_count}, got {updated_calendar['subscriber_count']}"
+        assert updated_calendar["subscriber_count"] == expected_count, f"Subscriber count should return to {expected_count}, got {updated_calendar['subscriber_count']}"
 
         print(f"   ✅ API subscriber_count: {count_after_subscribe} -> {updated_calendar['subscriber_count']}")
 
         # 6. Verificar subscriber_count via BD directa
         calendar_from_db = get_calendar_from_db(calendar_id)
-        assert calendar_from_db["subscriber_count"] == expected_count, \
-            f"DB subscriber count should be {expected_count}, got {calendar_from_db['subscriber_count']}"
+        assert calendar_from_db["subscriber_count"] == expected_count, f"DB subscriber count should be {expected_count}, got {calendar_from_db['subscriber_count']}"
 
         print(f"   ✅ DB subscriber_count: {calendar_from_db['subscriber_count']}")
         print(f"   ✅ Realtime CDC working correctly!")
@@ -314,8 +309,7 @@ class TestCalendarSubscriptionRealtimeFlow:
         updated_calendar = calendar_response.json()
 
         expected_count = initial_count + 3
-        assert updated_calendar["subscriber_count"] == expected_count, \
-            f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
+        assert updated_calendar["subscriber_count"] == expected_count, f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
 
         print(f"   ✅ API subscriber_count: {initial_count} -> {updated_calendar['subscriber_count']}")
 

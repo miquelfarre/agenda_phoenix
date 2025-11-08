@@ -24,14 +24,27 @@ class SubscriptionHive extends HiveObject {
   @HiveField(5)
   final bool? subscribedUserIsPublic;
 
-  SubscriptionHive({required this.id, required this.userId, required this.subscribedToId, this.subscribedUserName, this.subscribedUserFullName, this.subscribedUserIsPublic});
+  SubscriptionHive({
+    required this.id,
+    required this.userId,
+    required this.subscribedToId,
+    this.subscribedUserName,
+    this.subscribedUserFullName,
+    this.subscribedUserIsPublic,
+  });
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'user_id': userId,
       'subscribed_to_id': subscribedToId,
-      'followed': subscribedUserName != null ? {'instagram_name': subscribedUserName, 'full_name': subscribedUserFullName, 'is_public': subscribedUserIsPublic} : null,
+      'followed': subscribedUserName != null
+          ? {
+              'instagram_name': subscribedUserName,
+              'full_name': subscribedUserFullName,
+              'is_public': subscribedUserIsPublic,
+            }
+          : null,
     };
   }
 
@@ -60,10 +73,19 @@ class SubscriptionHive extends HiveObject {
       throw Exception('SubscriptionHive.fromJson: userId cannot be null');
     }
     if (subscribedToId == null) {
-      throw Exception('SubscriptionHive.fromJson: subscribedToId cannot be null');
+      throw Exception(
+        'SubscriptionHive.fromJson: subscribedToId cannot be null',
+      );
     }
 
-    return SubscriptionHive(id: id as int, userId: userId as int, subscribedToId: subscribedToId as int, subscribedUserName: followed?['instagram_name'], subscribedUserFullName: followed?['full_name'], subscribedUserIsPublic: followed?['is_public']);
+    return SubscriptionHive(
+      id: id as int,
+      userId: userId as int,
+      subscribedToId: subscribedToId as int,
+      subscribedUserName: followed?['instagram_name'],
+      subscribedUserFullName: followed?['full_name'],
+      subscribedUserIsPublic: followed?['is_public'],
+    );
   }
 
   Subscription toSubscription() {
@@ -71,7 +93,14 @@ class SubscriptionHive extends HiveObject {
       id: id,
       userId: userId,
       subscribedToId: subscribedToId,
-      subscribed: subscribedUserName != null ? User(id: subscribedToId, instagramName: subscribedUserName!, fullName: subscribedUserFullName ?? '', isPublic: subscribedUserIsPublic ?? false) : null,
+      subscribed: subscribedUserName != null
+          ? User(
+              id: subscribedToId,
+              instagramName: subscribedUserName!,
+              fullName: subscribedUserFullName ?? '',
+              isPublic: subscribedUserIsPublic ?? false,
+            )
+          : null,
     );
   }
 }

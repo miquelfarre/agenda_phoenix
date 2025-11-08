@@ -28,27 +28,14 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 @router.get("")
 async def get_users(public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all users, optionally filtered by public status, with optional search by username/contact name, optionally enriched with contact info"""
-    result = user.get_multi_with_optional_enrichment(
-        db,
-        public=public,
-        enriched=enriched,
-        search=search,
-        skip=offset,
-        limit=limit,
-        order_by=order_by or "id",
-        order_dir=order_dir
-    )
+    result = user.get_multi_with_optional_enrichment(db, public=public, enriched=enriched, search=search, skip=offset, limit=limit, order_by=order_by or "id", order_dir=order_dir)
     # When enriched=True, result is list of dicts; when False, result is list of User ORM objects
     # Return as-is and let FastAPI serialize appropriately
     return result
 
 
 @router.get("/me", response_model=Union[UserResponse, UserEnrichedResponse])
-async def get_current_user(
-    current_user_id: int = Depends(get_current_user_id),
-    enriched: bool = False,
-    db: Session = Depends(get_db)
-):
+async def get_current_user(current_user_id: int = Depends(get_current_user_id), enriched: bool = False, db: Session = Depends(get_db)):
     """Get the current authenticated user's information.
 
     Requires JWT authentication - provide token in Authorization header."""
@@ -177,12 +164,7 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-async def update_user(
-    user_id: int,
-    user_data: UserCreate,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_user(user_id: int, user_data: UserCreate, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update an existing user.
 
@@ -196,21 +178,14 @@ async def update_user(
 
     # Check if user is updating their own account
     if user_id != current_user_id:
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to update this user. You can only update your own account."
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission to update this user. You can only update your own account.")
 
     updated_user = user.update(db, db_obj=db_user, obj_in=user_data)
     return updated_user
 
 
 @router.delete("/{user_id}")
-async def delete_user(
-    user_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def delete_user(user_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Delete a user.
 
@@ -224,17 +199,25 @@ async def delete_user(
 
     # Check if user is deleting their own account
     if user_id != current_user_id:
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to delete this user. You can only delete your own account."
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission to delete this user. You can only delete your own account.")
 
     user.delete(db, id=user_id)
     return {"message": "User deleted successfully", "id": user_id}
 
 
 @router.get("/{user_id}/events", response_model=List[EventResponse])
-async def get_user_events(user_id: int, include_past: bool = False, from_date: Optional[datetime] = None, to_date: Optional[datetime] = None, search: Optional[str] = None, filter: Optional[str] = None, limit: Optional[int] = None, offset: int = 0, current_user_id: Optional[int] = Depends(get_current_user_id_optional), db: Session = Depends(get_db)):
+async def get_user_events(
+    user_id: int,
+    include_past: bool = False,
+    from_date: Optional[datetime] = None,
+    to_date: Optional[datetime] = None,
+    search: Optional[str] = None,
+    filter: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
+    current_user_id: Optional[int] = Depends(get_current_user_id_optional),
+    db: Session = Depends(get_db),
+):
     """
     Get all events for a user from multiple sources:
     - Own events (where user is owner)
@@ -315,13 +298,8 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
             event_sources[event_id] = "subscribed"
 
     # Invited events (exclude rejected statuses - those should not be visible)
-    invited_interactions = event_interaction.get_by_user(
-        db, user_id=user_id, interaction_type="invited"
-    )
-    invited_event_ids = [
-        i.event_id for i in invited_interactions
-        if i.status not in ["rejected", "rejected_invitation_accepted_event"]
-    ]
+    invited_interactions = event_interaction.get_by_user(db, user_id=user_id, interaction_type="invited")
+    invited_event_ids = [i.event_id for i in invited_interactions if i.status not in ["rejected", "rejected_invitation_accepted_event"]]
     for event_id in invited_event_ids:
         if event_id not in event_sources:
             event_sources[event_id] = "invited"
@@ -336,11 +314,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
                 event_sources[event_id] = "calendar"
 
     # Subscribed calendar events (via CalendarSubscription - lowest priority)
-    subscribed_calendar_ids = calendar_subscription.get_calendar_ids_by_user(
-        db,
-        user_id=user_id,
-        status="active"
-    )
+    subscribed_calendar_ids = calendar_subscription.get_calendar_ids_by_user(db, user_id=user_id, status="active")
 
     if subscribed_calendar_ids:
         subscribed_calendar_event_ids = event.get_event_ids_by_calendars(db, calendar_ids=subscribed_calendar_ids)
@@ -354,13 +328,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     # ============================================================
     # 3. FETCH EVENTS (single query)
     # ============================================================
-    events = event.get_by_ids_in_date_range(
-        db,
-        event_ids=list(event_sources.keys()),
-        from_date=from_date,
-        to_date=to_date,
-        search=search
-    )
+    events = event.get_by_ids_in_date_range(db, event_ids=list(event_sources.keys()), from_date=from_date, to_date=to_date, search=search)
 
     if not events:
         return []
@@ -388,34 +356,21 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     # Fetch owner info (name, is_public, profile_picture)
     owner_info = {}  # owner_id -> {name, is_public, profile_picture}
     if owner_ids:
-        owners_query = db.query(models.User, models.Contact).join(
-            models.Contact, models.User.contact_id == models.Contact.id, isouter=True
-        ).filter(models.User.id.in_(owner_ids)).all()
+        owners_query = db.query(models.User, models.Contact).join(models.Contact, models.User.contact_id == models.Contact.id, isouter=True).filter(models.User.id.in_(owner_ids)).all()
 
         for user_obj, contact_obj in owners_query:
             # Determine owner name: use contact name if available, otherwise instagram_name (for Instagram users)
             owner_name = contact_obj.name if contact_obj else user_obj.instagram_name
-            logger.info(f"[GET /users/{user_id}/events] OWNER INFO: user_id={user_obj.id}, "
-                       f"is_public={user_obj.is_public}, has_contact={contact_obj is not None}, "
-                       f"owner_name={owner_name}, instagram_name={user_obj.instagram_name}")
-            owner_info[user_obj.id] = {
-                "name": owner_name,
-                "is_public": user_obj.is_public,
-                "profile_picture": user_obj.profile_picture
-            }
+            logger.info(f"[GET /users/{user_id}/events] OWNER INFO: user_id={user_obj.id}, " f"is_public={user_obj.is_public}, has_contact={contact_obj is not None}, " f"owner_name={owner_name}, instagram_name={user_obj.instagram_name}")
+            owner_info[user_obj.id] = {"name": owner_name, "is_public": user_obj.is_public, "profile_picture": user_obj.profile_picture}
 
     # Fetch calendar info (name, color) - assuming calendars table has these fields
     calendar_info = {}  # calendar_id -> {name, color}
     if calendar_ids:
-        calendars_query = db.query(models.Calendar).filter(
-            models.Calendar.id.in_(calendar_ids)
-        ).all()
+        calendars_query = db.query(models.Calendar).filter(models.Calendar.id.in_(calendar_ids)).all()
 
         for cal in calendars_query:
-            calendar_info[cal.id] = {
-                "name": cal.name,
-                "color": getattr(cal, 'color', None) if hasattr(cal, 'color') else None
-            }
+            calendar_info[cal.id] = {"name": cal.name, "color": getattr(cal, "color", None) if hasattr(cal, "color") else None}
 
     # Fetch attendees for all events (users with accepted interactions OR rejected with is_attending=True)
     # Exclude public users from attendees (they are organizations, not physical people)
@@ -423,35 +378,23 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
     attendees_map = {}  # event_id -> [user_dict]
     if event_ids:
         from sqlalchemy import and_, or_
-        attendees_query = db.query(
-            models.EventInteraction.event_id,
-            models.User,
-            models.Contact
-        ).join(
-            models.User, models.EventInteraction.user_id == models.User.id
-        ).join(
-            models.Contact, models.User.contact_id == models.Contact.id, isouter=True
-        ).filter(
-            models.EventInteraction.event_id.in_(event_ids),
-            or_(
-                models.EventInteraction.status == "accepted",
-                and_(
-                    models.EventInteraction.status == "rejected",
-                    models.EventInteraction.is_attending == True
-                )
-            ),
-            models.User.is_public == False  # Exclude public users (they are not physical attendees)
-        ).all()
+
+        attendees_query = (
+            db.query(models.EventInteraction.event_id, models.User, models.Contact)
+            .join(models.User, models.EventInteraction.user_id == models.User.id)
+            .join(models.Contact, models.User.contact_id == models.Contact.id, isouter=True)
+            .filter(
+                models.EventInteraction.event_id.in_(event_ids),
+                or_(models.EventInteraction.status == "accepted", and_(models.EventInteraction.status == "rejected", models.EventInteraction.is_attending == True)),
+                models.User.is_public == False,  # Exclude public users (they are not physical attendees)
+            )
+            .all()
+        )
 
         for event_id, user_obj, contact_obj in attendees_query:
             if event_id not in attendees_map:
                 attendees_map[event_id] = []
-            attendees_map[event_id].append({
-                "id": user_obj.id,
-                "full_name": contact_obj.name if contact_obj else None,
-                "instagram_name": user_obj.instagram_name,
-                "profile_picture": user_obj.profile_picture
-            })
+            attendees_map[event_id].append({"id": user_obj.id, "full_name": contact_obj.name if contact_obj else None, "instagram_name": user_obj.instagram_name, "profile_picture": user_obj.profile_picture})
 
     # ============================================================
     # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
@@ -528,7 +471,17 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         interaction_user_id = current_user_id if current_user_id is not None else user_id
         interactions = event_interaction.get_by_event_ids_and_user(db, event_ids=visible_event_ids, user_id=interaction_user_id)
         for interaction in interactions:
-            user_interactions[interaction.event_id] = {"id": interaction.id, "interaction_type": interaction.interaction_type, "status": interaction.status, "role": interaction.role, "invited_by_user_id": interaction.invited_by_user_id, "personal_note": interaction.personal_note, "is_attending": interaction.is_attending, "read_at": interaction.read_at.isoformat() if interaction.read_at else None, "is_new": interaction.is_new}
+            user_interactions[interaction.event_id] = {
+                "id": interaction.id,
+                "interaction_type": interaction.interaction_type,
+                "status": interaction.status,
+                "role": interaction.role,
+                "invited_by_user_id": interaction.invited_by_user_id,
+                "personal_note": interaction.personal_note,
+                "is_attending": interaction.is_attending,
+                "read_at": interaction.read_at.isoformat() if interaction.read_at else None,
+                "is_new": interaction.is_new,
+            }
 
     # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)
@@ -593,10 +546,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
 
 
 @router.get("/{user_id}/accessible-calendar-ids", response_model=List[int])
-async def get_accessible_calendar_ids(
-    user_id: int,
-    db: Session = Depends(get_db)
-):
+async def get_accessible_calendar_ids(user_id: int, db: Session = Depends(get_db)):
     """
     Get all calendar IDs accessible to a user.
 
@@ -614,18 +564,10 @@ async def get_accessible_calendar_ids(
     owned_calendar_ids = [cal.id for cal in owned_calendars]
 
     # Get calendars where user is a member (accepted memberships)
-    member_calendar_ids = calendar_membership.get_calendar_ids_by_user(
-        db,
-        user_id=user_id,
-        status="accepted"
-    )
+    member_calendar_ids = calendar_membership.get_calendar_ids_by_user(db, user_id=user_id, status="accepted")
 
     # Get subscribed public calendars (active subscriptions)
-    subscribed_calendar_ids = calendar_subscription.get_calendar_ids_by_user(
-        db,
-        user_id=user_id,
-        status="active"
-    )
+    subscribed_calendar_ids = calendar_subscription.get_calendar_ids_by_user(db, user_id=user_id, status="active")
 
     # Combine all IDs (use set to avoid duplicates)
     all_calendar_ids = list(set(owned_calendar_ids + member_calendar_ids + subscribed_calendar_ids))
@@ -634,11 +576,7 @@ async def get_accessible_calendar_ids(
 
 
 @router.post("/{target_user_id}/subscribe", status_code=201)
-async def subscribe_to_user(
-    target_user_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def subscribe_to_user(target_user_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Subscribe the authenticated user to all events of another user (bulk operation).
 
@@ -704,11 +642,7 @@ async def subscribe_to_user(
 
 
 @router.delete("/{target_user_id}/subscribe")
-async def unsubscribe_from_user(
-    target_user_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def unsubscribe_from_user(target_user_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Unsubscribe the authenticated user from all events of another user (bulk operation).
 
@@ -788,11 +722,7 @@ async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
         db.query(models.User)
         .join(models.Event, models.Event.owner_id == models.User.id)
         .join(models.EventInteraction, models.EventInteraction.event_id == models.Event.id)
-        .filter(
-            models.EventInteraction.user_id == user_id,
-            models.EventInteraction.interaction_type == "subscribed",
-            models.User.is_public == True
-        )
+        .filter(models.EventInteraction.user_id == user_id, models.EventInteraction.interaction_type == "subscribed", models.User.is_public == True)
         .distinct()
         .all()
     )
@@ -803,40 +733,32 @@ async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
 
     for public_user in subscribed_users:
         # Count total events
-        total_events = db.query(func.count(models.Event.id)).filter(
-            models.Event.owner_id == public_user.id
-        ).scalar()
+        total_events = db.query(func.count(models.Event.id)).filter(models.Event.owner_id == public_user.id).scalar()
 
         # Count new events (created in last 7 days)
-        new_events = db.query(func.count(models.Event.id)).filter(
-            models.Event.owner_id == public_user.id,
-            models.Event.created_at >= seven_days_ago
-        ).scalar()
+        new_events = db.query(func.count(models.Event.id)).filter(models.Event.owner_id == public_user.id, models.Event.created_at >= seven_days_ago).scalar()
 
         # Count unique subscribers (distinct users subscribed to any event of this owner)
-        subscribers = db.query(func.count(distinct(models.EventInteraction.user_id))).join(
-            models.Event, models.Event.id == models.EventInteraction.event_id
-        ).filter(
-            models.Event.owner_id == public_user.id,
-            models.EventInteraction.interaction_type == "subscribed"
-        ).scalar()
+        subscribers = db.query(func.count(distinct(models.EventInteraction.user_id))).join(models.Event, models.Event.id == models.EventInteraction.event_id).filter(models.Event.owner_id == public_user.id, models.EventInteraction.interaction_type == "subscribed").scalar()
 
         # Build response
-        result.append(UserSubscriptionResponse(
-            id=public_user.id,
-            contact_id=public_user.contact_id,
-            instagram_name=public_user.instagram_name,
-            auth_provider=public_user.auth_provider,
-            auth_id=public_user.auth_id,
-            is_public=public_user.is_public,
-            is_admin=public_user.is_admin,
-            profile_picture=public_user.profile_picture,
-            last_login=public_user.last_login,
-            created_at=public_user.created_at,
-            updated_at=public_user.updated_at,
-            new_events_count=new_events or 0,
-            total_events_count=total_events or 0,
-            subscribers_count=subscribers or 0,
-        ))
+        result.append(
+            UserSubscriptionResponse(
+                id=public_user.id,
+                contact_id=public_user.contact_id,
+                instagram_name=public_user.instagram_name,
+                auth_provider=public_user.auth_provider,
+                auth_id=public_user.auth_id,
+                is_public=public_user.is_public,
+                is_admin=public_user.is_admin,
+                profile_picture=public_user.profile_picture,
+                last_login=public_user.last_login,
+                created_at=public_user.created_at,
+                updated_at=public_user.updated_at,
+                new_events_count=new_events or 0,
+                total_events_count=total_events or 0,
+                subscribers_count=subscribers or 0,
+            )
+        )
 
     return result

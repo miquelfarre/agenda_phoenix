@@ -43,7 +43,7 @@ class _VoiceCommandConfirmationScreenState
       {
         'action': widget.interpretation['action'],
         'parameters': widget.interpretation['parameters'],
-      }
+      },
     ];
   }
 
@@ -54,38 +54,36 @@ class _VoiceCommandConfirmationScreenState
     });
 
     try {
-
       final actions = _getActions();
 
       for (int i = 0; i < actions.length; i++) {
         final action = actions[i];
         final actionType = action['action'] as String;
         final parameters = action['parameters'] as Map<String, dynamic>;
-        final dependsOnPrevious = action['depends_on_previous'] as bool? ?? false;
+        final dependsOnPrevious =
+            action['depends_on_previous'] as bool? ?? false;
 
-
-        if (dependsOnPrevious) {
-        }
+        if (dependsOnPrevious) {}
 
         // Mostrar endpoint REST
         _getRestEndpointInfo(actionType, parameters);
 
         // Mostrar el body JSON formateado
-        final bodyJson = const JsonEncoder.withIndent('│       ').convert(parameters);
+        final bodyJson = const JsonEncoder.withIndent(
+          '│       ',
+        ).convert(parameters);
         for (final line in bodyJson.split('\n').skip(1)) {
           if (line.trim() == '}') {
-          } else {
-          }
+          } else {}
         }
-
       }
 
-
       // Ejecutar la acción
-      final result = await widget.voiceService.executeAction(widget.interpretation);
+      final result = await widget.voiceService.executeAction(
+        widget.interpretation,
+      );
 
       if (!mounted) return;
-
 
       // Mostrar resultado y volver
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,9 +95,7 @@ class _VoiceCommandConfirmationScreenState
       );
 
       Navigator.of(context).pop(result);
-
     } catch (e, _) {
-
       setState(() {
         _errorMessage = e.toString();
         _isExecuting = false;
@@ -107,7 +103,10 @@ class _VoiceCommandConfirmationScreenState
     }
   }
 
-  Map<String, String> _getRestEndpointInfo(String actionType, Map<String, dynamic> parameters) {
+  Map<String, String> _getRestEndpointInfo(
+    String actionType,
+    Map<String, dynamic> parameters,
+  ) {
     switch (actionType) {
       case 'CREATE_CALENDAR':
         return {
@@ -127,10 +126,7 @@ class _VoiceCommandConfirmationScreenState
           'url': 'http://localhost:8001/api/v1/calendars/$calendarId',
         };
       case 'CREATE_EVENT':
-        return {
-          'method': 'POST',
-          'url': 'http://localhost:8001/api/v1/events',
-        };
+        return {'method': 'POST', 'url': 'http://localhost:8001/api/v1/events'};
       case 'UPDATE_EVENT':
         final eventId = parameters['event_id'];
         return {
@@ -159,15 +155,9 @@ class _VoiceCommandConfirmationScreenState
           'url': 'http://localhost:8001/api/v1/interactions',
         };
       case 'LIST_EVENTS':
-        return {
-          'method': 'GET',
-          'url': 'http://localhost:8001/api/v1/events',
-        };
+        return {'method': 'GET', 'url': 'http://localhost:8001/api/v1/events'};
       default:
-        return {
-          'method': 'UNKNOWN',
-          'url': 'UNKNOWN',
-        };
+        return {'method': 'UNKNOWN', 'url': 'UNKNOWN'};
     }
   }
 
@@ -242,7 +232,9 @@ class _VoiceCommandConfirmationScreenState
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+                borderRadius: BorderRadius.circular(
+                  AppConstants.defaultBorderRadius,
+                ),
               ),
               child: Row(
                 children: [
@@ -251,10 +243,7 @@ class _VoiceCommandConfirmationScreenState
                   Expanded(
                     child: Text(
                       'Si quieres cambiar algo, dilo por voz después de confirmar',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
                     ),
                   ),
                 ],
@@ -274,7 +263,8 @@ class _VoiceCommandConfirmationScreenState
   Widget _buildActionCard(Map<String, dynamic> actionData, int number) {
     final actionType = actionData['action'] as String;
     final parameters = actionData['parameters'] as Map<String, dynamic>;
-    final dependsOnPrevious = actionData['depends_on_previous'] as bool? ?? false;
+    final dependsOnPrevious =
+        actionData['depends_on_previous'] as bool? ?? false;
 
     return Card(
       elevation: 3,
@@ -340,11 +330,7 @@ class _VoiceCommandConfirmationScreenState
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Icon(
-                              Icons.link,
-                              size: 14,
-                              color: Colors.grey[600],
-                            ),
+                            Icon(Icons.link, size: 14, color: Colors.grey[600]),
                             const SizedBox(width: 4),
                             Text(
                               'Depende de la acción anterior',
@@ -375,7 +361,11 @@ class _VoiceCommandConfirmationScreenState
     );
   }
 
-  Widget _buildObjectDetails(String actionType, Map<String, dynamic> parameters, int actionNumber) {
+  Widget _buildObjectDetails(
+    String actionType,
+    Map<String, dynamic> parameters,
+    int actionNumber,
+  ) {
     switch (actionType) {
       case 'CREATE_CALENDAR':
         return _buildCalendarDetails(parameters);
@@ -404,7 +394,11 @@ class _VoiceCommandConfirmationScreenState
       children: [
         _buildDetailRow(Icons.label, 'Nombre', params['name'] ?? 'Sin nombre'),
         if (params['description'] != null)
-          _buildDetailRow(Icons.description, 'Descripción', params['description']),
+          _buildDetailRow(
+            Icons.description,
+            'Descripción',
+            params['description'],
+          ),
         if (params['color'] != null)
           _buildDetailRow(Icons.palette, 'Color', params['color']),
         if (params['is_public'] != null)
@@ -423,9 +417,17 @@ class _VoiceCommandConfirmationScreenState
       children: [
         _buildDetailRow(Icons.title, 'Título', params['title'] ?? 'Sin título'),
         if (params['start_datetime'] != null)
-          _buildDetailRow(Icons.schedule, 'Fecha y hora', _formatDateTime(params['start_datetime'])),
+          _buildDetailRow(
+            Icons.schedule,
+            'Fecha y hora',
+            _formatDateTime(params['start_datetime']),
+          ),
         if (params['end_datetime'] != null)
-          _buildDetailRow(Icons.schedule_send, 'Termina', _formatDateTime(params['end_datetime'])),
+          _buildDetailRow(
+            Icons.schedule_send,
+            'Termina',
+            _formatDateTime(params['end_datetime']),
+          ),
         if (params['location'] != null)
           _buildDetailRow(Icons.location_on, 'Ubicación', params['location']),
         if (params['description'] != null)
@@ -447,7 +449,10 @@ class _VoiceCommandConfirmationScreenState
     );
   }
 
-  Widget _buildInvitationDetails(Map<String, dynamic> params, int actionNumber) {
+  Widget _buildInvitationDetails(
+    Map<String, dynamic> params,
+    int actionNumber,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -456,11 +461,23 @@ class _VoiceCommandConfirmationScreenState
         if (params['email'] != null)
           _buildDetailRow(Icons.email, 'Email', params['email']),
         if (params['contact_names'] != null)
-          _buildDetailRow(Icons.group, 'Contactos', (params['contact_names'] as List).join(', ')),
+          _buildDetailRow(
+            Icons.group,
+            'Contactos',
+            (params['contact_names'] as List).join(', '),
+          ),
         if (params['user_emails'] != null)
-          _buildDetailRow(Icons.group, 'Usuarios', (params['user_emails'] as List).join(', ')),
+          _buildDetailRow(
+            Icons.group,
+            'Usuarios',
+            (params['user_emails'] as List).join(', '),
+          ),
         if (params['calendar_id'] != null && params['calendar_name'] != null)
-          _buildDetailRow(Icons.calendar_month, 'Al calendario', params['calendar_name']),
+          _buildDetailRow(
+            Icons.calendar_month,
+            'Al calendario',
+            params['calendar_name'],
+          ),
         if (params['calendar_id'] != null && params['calendar_name'] == null)
           _buildDetailRow(
             Icons.calendar_month,
@@ -483,7 +500,8 @@ class _VoiceCommandConfirmationScreenState
               'event',
             ),
           ),
-        if (params['message'] != null && params['message'].toString().isNotEmpty)
+        if (params['message'] != null &&
+            params['message'].toString().isNotEmpty)
           _buildDetailRow(Icons.note, 'Nota personal', params['message']),
       ],
     );
@@ -506,7 +524,11 @@ class _VoiceCommandConfirmationScreenState
         if (params['name'] != null)
           _buildDetailRow(Icons.label, 'Nuevo nombre', params['name']),
         if (params['description'] != null)
-          _buildDetailRow(Icons.description, 'Nueva descripción', params['description']),
+          _buildDetailRow(
+            Icons.description,
+            'Nueva descripción',
+            params['description'],
+          ),
         if (params['is_public'] != null)
           _buildDetailRow(
             params['is_public'] ? Icons.public : Icons.lock,
@@ -524,9 +546,17 @@ class _VoiceCommandConfirmationScreenState
         if (params['title'] != null)
           _buildDetailRow(Icons.title, 'Nuevo título', params['title']),
         if (params['start_datetime'] != null)
-          _buildDetailRow(Icons.schedule, 'Nueva fecha', _formatDateTime(params['start_datetime'])),
+          _buildDetailRow(
+            Icons.schedule,
+            'Nueva fecha',
+            _formatDateTime(params['start_datetime']),
+          ),
         if (params['location'] != null)
-          _buildDetailRow(Icons.location_on, 'Nueva ubicación', params['location']),
+          _buildDetailRow(
+            Icons.location_on,
+            'Nueva ubicación',
+            params['location'],
+          ),
       ],
     );
   }
@@ -543,7 +573,11 @@ class _VoiceCommandConfirmationScreenState
         if (params['event_name'] != null)
           _buildDetailRow(Icons.event, 'Evento', params['event_name']),
         if (params['calendar_name'] != null)
-          _buildDetailRow(Icons.calendar_month, 'Calendario', params['calendar_name']),
+          _buildDetailRow(
+            Icons.calendar_month,
+            'Calendario',
+            params['calendar_name'],
+          ),
       ],
     );
   }
@@ -558,8 +592,8 @@ class _VoiceCommandConfirmationScreenState
       final value = entry.value?.toString() ?? '';
       // Ocultar placeholders y campos con _id
       return !value.contains('{{') &&
-             !value.contains('}}') &&
-             !entry.key.endsWith('_id');
+          !value.contains('}}') &&
+          !entry.key.endsWith('_id');
     }).toList();
 
     if (visibleParams.isEmpty) {
@@ -618,7 +652,20 @@ class _VoiceCommandConfirmationScreenState
     if (datetime == null) return '';
     try {
       final dt = DateTime.parse(datetime.toString());
-      final months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      final months = [
+        'ene',
+        'feb',
+        'mar',
+        'abr',
+        'may',
+        'jun',
+        'jul',
+        'ago',
+        'sep',
+        'oct',
+        'nov',
+        'dic',
+      ];
       return '${dt.day} ${months[dt.month - 1]} ${dt.year} a las ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return datetime.toString();
@@ -771,10 +818,7 @@ class _VoiceCommandConfirmationScreenState
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 LinearProgressIndicator(
@@ -886,7 +930,9 @@ class _VoiceCommandConfirmationScreenState
             Expanded(
               child: AdaptiveButton(
                 config: AdaptiveButtonConfig.secondary(),
-                onPressed: _isExecuting ? null : () => Navigator.of(context).pop(),
+                onPressed: _isExecuting
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 text: 'Cancelar',
               ),
             ),
@@ -907,7 +953,6 @@ class _VoiceCommandConfirmationScreenState
   }
 
   Future<void> _correctWithVoice() async {
-
     // Mostrar diálogo de grabación
     final recordingSecondsNotifier = ValueNotifier<int>(0);
     bool shouldStopRecording = false;
@@ -955,9 +1000,9 @@ class _VoiceCommandConfirmationScreenState
         return;
       }
 
-
       // Crear un prompt especial para que Gemini interprete la corrección
-      final correctionPrompt = '''
+      final correctionPrompt =
+          '''
 Contexto: El usuario había pedido realizar estas acciones:
 "${widget.transcribedText}"
 
@@ -975,13 +1020,11 @@ Si el usuario quiere eliminar una acción, no la incluyas en la respuesta.
 IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo formato JSON que antes.
 ''';
 
-
       // Interpretar la corrección
       final updatedInterpretation = await widget.voiceService.interpretWithAI(
         correctionText,
         customPrompt: correctionPrompt,
       );
-
 
       // Cerrar esta pantalla y volver al FAB con la nueva interpretación
       // El FAB volverá a abrir la pantalla de confirmación con los datos actualizados
@@ -993,7 +1036,8 @@ IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo forma
         final executionResult = await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => VoiceCommandConfirmationScreen(
-              transcribedText: '$widget.transcribedText\n[Corrección: $correctionText]',
+              transcribedText:
+                  '$widget.transcribedText\n[Corrección: $correctionText]',
               interpretation: updatedInterpretation,
               voiceService: widget.voiceService,
             ),
@@ -1005,9 +1049,7 @@ IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo forma
           Navigator.of(context).pop(executionResult);
         }
       }
-
     } catch (e, _) {
-
       recordingSecondsNotifier.dispose();
 
       // Cerrar diálogo si está abierto
@@ -1054,7 +1096,11 @@ IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo forma
         children: [
           Row(
             children: [
-              Icon(Icons.lightbulb_outline, color: Colors.purple[700], size: 20),
+              Icon(
+                Icons.lightbulb_outline,
+                color: Colors.purple[700],
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Sugerencias',
@@ -1067,25 +1113,24 @@ IMPORTANTE: Devuelve la interpretación completa y actualizada en el mismo forma
             ],
           ),
           const SizedBox(height: 12),
-          ...suggestions.map((suggestion) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.circle, size: 6, color: Colors.purple[400]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        suggestion,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.purple[900],
-                        ),
-                      ),
+          ...suggestions.map(
+            (suggestion) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.circle, size: 6, color: Colors.purple[400]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      suggestion,
+                      style: TextStyle(fontSize: 14, color: Colors.purple[900]),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

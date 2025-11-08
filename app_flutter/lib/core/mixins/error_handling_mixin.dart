@@ -1,7 +1,13 @@
 mixin ErrorHandlingMixin {
   String get serviceName => runtimeType.toString();
 
-  Future<T> withErrorHandling<T>(String operationName, Future<T> Function() operation, {String? customMessage, bool shouldRethrow = true, T? defaultValue}) async {
+  Future<T> withErrorHandling<T>(
+    String operationName,
+    Future<T> Function() operation, {
+    String? customMessage,
+    bool shouldRethrow = true,
+    T? defaultValue,
+  }) async {
     try {
       return await operation();
     } catch (e) {
@@ -17,7 +23,13 @@ mixin ErrorHandlingMixin {
     }
   }
 
-  T withErrorHandlingSync<T>(String operationName, T Function() operation, {String? customMessage, bool shouldRethrow = true, T? defaultValue}) {
+  T withErrorHandlingSync<T>(
+    String operationName,
+    T Function() operation, {
+    String? customMessage,
+    bool shouldRethrow = true,
+    T? defaultValue,
+  }) {
     try {
       return operation();
     } catch (e) {

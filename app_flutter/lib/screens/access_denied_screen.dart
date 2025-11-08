@@ -11,7 +11,11 @@ class AccessDeniedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AdaptivePageScaffold(key: const Key('access_denied_screen_scaffold'), title: l10n.error, body: _buildContent(l10n));
+    return AdaptivePageScaffold(
+      key: const Key('access_denied_screen_scaffold'),
+      title: l10n.error,
+      body: _buildContent(l10n),
+    );
   }
 
   Widget _buildContent(AppLocalizations l10n) {
@@ -26,18 +30,42 @@ class AccessDeniedScreen extends StatelessWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [AppStyles.grey400, AppStyles.grey600, AppStyles.grey700]),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppStyles.grey400,
+                      AppStyles.grey600,
+                      AppStyles.grey700,
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(24),
-                  boxShadow: [BoxShadow(color: AppStyles.colorWithOpacity(AppStyles.black87, 0.1), blurRadius: 20, offset: const Offset(0, 10))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppStyles.colorWithOpacity(AppStyles.black87, 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                child: PlatformWidgets.platformIcon(CupertinoIcons.clear_thick, color: AppStyles.white, size: 60),
+                child: PlatformWidgets.platformIcon(
+                  CupertinoIcons.clear_thick,
+                  color: AppStyles.white,
+                  size: 60,
+                ),
               ),
 
               const SizedBox(height: 32),
 
               Text(
                 l10n.accessDeniedTitle,
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppStyles.black87, letterSpacing: -0.5, decoration: TextDecoration.none),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppStyles.black87,
+                  letterSpacing: -0.5,
+                  decoration: TextDecoration.none,
+                ),
                 textAlign: TextAlign.center,
               ),
 
@@ -45,7 +73,13 @@ class AccessDeniedScreen extends StatelessWidget {
 
               Text(
                 l10n.accessDeniedMessagePrimary,
-                style: TextStyle(fontSize: 16, color: AppStyles.grey700, fontWeight: FontWeight.w500, decoration: TextDecoration.none, height: 1.5),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppStyles.grey700,
+                  fontWeight: FontWeight.w500,
+                  decoration: TextDecoration.none,
+                  height: 1.5,
+                ),
                 textAlign: TextAlign.center,
               ),
 
@@ -53,7 +87,12 @@ class AccessDeniedScreen extends StatelessWidget {
 
               Text(
                 l10n.accessDeniedMessageSecondary,
-                style: TextStyle(fontSize: 14, color: AppStyles.grey600, decoration: TextDecoration.none, height: 1.5),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppStyles.grey600,
+                  decoration: TextDecoration.none,
+                  height: 1.5,
+                ),
                 textAlign: TextAlign.center,
               ),
 
@@ -68,12 +107,21 @@ class AccessDeniedScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    PlatformWidgets.platformIcon(CupertinoIcons.info, color: AppStyles.blue600, size: 24),
+                    PlatformWidgets.platformIcon(
+                      CupertinoIcons.info,
+                      color: AppStyles.blue600,
+                      size: 24,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         l10n.contactAdminIfError,
-                        style: TextStyle(fontSize: 14, color: AppStyles.blue600, fontWeight: FontWeight.w500, decoration: TextDecoration.none),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppStyles.blue600,
+                          fontWeight: FontWeight.w500,
+                          decoration: TextDecoration.none,
+                        ),
                       ),
                     ),
                   ],

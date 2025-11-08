@@ -13,15 +13,7 @@ from schemas import CalendarSubscriptionBase, CalendarSubscriptionCreate
 class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscriptionCreate, CalendarSubscriptionBase]):
     """CRUD operations for CalendarSubscription model with specific methods"""
 
-    def get_by_calendar(
-        self,
-        db: Session,
-        *,
-        calendar_id: int,
-        status: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 100
-    ) -> List[CalendarSubscription]:
+    def get_by_calendar(self, db: Session, *, calendar_id: int, status: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[CalendarSubscription]:
         """
         Get all subscriptions for a calendar.
 
@@ -40,15 +32,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
             filters["status"] = status
         return self.get_multi(db, skip=skip, limit=limit, filters=filters)
 
-    def get_by_user(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        status: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 100
-    ) -> List[CalendarSubscription]:
+    def get_by_user(self, db: Session, *, user_id: int, status: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[CalendarSubscription]:
         """
         Get all subscriptions for a user.
 
@@ -67,13 +51,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
             filters["status"] = status
         return self.get_multi(db, skip=skip, limit=limit, filters=filters)
 
-    def get_subscription(
-        self,
-        db: Session,
-        *,
-        calendar_id: int,
-        user_id: int
-    ) -> Optional[CalendarSubscription]:
+    def get_subscription(self, db: Session, *, calendar_id: int, user_id: int) -> Optional[CalendarSubscription]:
         """
         Get subscription for a specific calendar-user pair.
 
@@ -85,18 +63,9 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         Returns:
             Subscription or None
         """
-        return db.query(CalendarSubscription).filter(
-            CalendarSubscription.calendar_id == calendar_id,
-            CalendarSubscription.user_id == user_id
-        ).first()
+        return db.query(CalendarSubscription).filter(CalendarSubscription.calendar_id == calendar_id, CalendarSubscription.user_id == user_id).first()
 
-    def exists_subscription(
-        self,
-        db: Session,
-        *,
-        calendar_id: int,
-        user_id: int
-    ) -> bool:
+    def exists_subscription(self, db: Session, *, calendar_id: int, user_id: int) -> bool:
         """
         Check if a subscription exists for calendar-user pair (optimized).
 
@@ -108,23 +77,9 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         Returns:
             True if exists, False otherwise
         """
-        return db.query(CalendarSubscription.id).filter(
-            CalendarSubscription.calendar_id == calendar_id,
-            CalendarSubscription.user_id == user_id
-        ).first() is not None
+        return db.query(CalendarSubscription.id).filter(CalendarSubscription.calendar_id == calendar_id, CalendarSubscription.user_id == user_id).first() is not None
 
-    def get_multi_filtered(
-        self,
-        db: Session,
-        *,
-        calendar_id: Optional[int] = None,
-        user_id: Optional[int] = None,
-        status: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "subscribed_at",
-        order_dir: str = "desc"
-    ) -> List[CalendarSubscription]:
+    def get_multi_filtered(self, db: Session, *, calendar_id: Optional[int] = None, user_id: Optional[int] = None, status: Optional[str] = None, skip: int = 0, limit: int = 50, order_by: str = "subscribed_at", order_dir: str = "desc") -> List[CalendarSubscription]:
         """
         Get subscriptions with multiple filters and pagination.
 
@@ -160,18 +115,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         # Apply pagination
         return query.offset(skip).limit(limit).all()
 
-    def get_enriched(
-        self,
-        db: Session,
-        *,
-        calendar_id: Optional[int] = None,
-        user_id: Optional[int] = None,
-        status: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "subscribed_at",
-        order_dir: str = "desc"
-    ) -> List[tuple[CalendarSubscription, Calendar, Optional[str]]]:
+    def get_enriched(self, db: Session, *, calendar_id: Optional[int] = None, user_id: Optional[int] = None, status: Optional[str] = None, skip: int = 0, limit: int = 50, order_by: str = "subscribed_at", order_dir: str = "desc") -> List[tuple[CalendarSubscription, Calendar, Optional[str]]]:
         """
         Get subscriptions with calendar and owner info (enriched) using JOIN.
 
@@ -190,17 +134,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         from models import User  # Import here to avoid circular dependency
 
         # Build JOIN query to get calendar and owner info
-        query = db.query(
-            CalendarSubscription,
-            Calendar,
-            Contact.name.label("owner_name")
-        ).join(
-            Calendar, CalendarSubscription.calendar_id == Calendar.id
-        ).join(
-            User, Calendar.owner_id == User.id
-        ).outerjoin(
-            Contact, User.contact_id == Contact.id
-        )
+        query = db.query(CalendarSubscription, Calendar, Contact.name.label("owner_name")).join(Calendar, CalendarSubscription.calendar_id == Calendar.id).join(User, Calendar.owner_id == User.id).outerjoin(Contact, User.contact_id == Contact.id)
 
         # Apply filters
         if calendar_id:
@@ -220,12 +154,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         # Apply pagination
         return query.offset(skip).limit(limit).all()
 
-    def create_with_validation(
-        self,
-        db: Session,
-        *,
-        obj_in: CalendarSubscriptionCreate
-    ) -> tuple[Optional[CalendarSubscription], Optional[str]]:
+    def create_with_validation(self, db: Session, *, obj_in: CalendarSubscriptionCreate) -> tuple[Optional[CalendarSubscription], Optional[str]]:
         """
         Create subscription with validation.
 
@@ -241,9 +170,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         from models import User  # Import here to avoid circular dependency
 
         # Check if calendar exists and is public (optimized single query)
-        calendar = db.query(Calendar.id, Calendar.is_public).filter(
-            Calendar.id == obj_in.calendar_id
-        ).first()
+        calendar = db.query(Calendar.id, Calendar.is_public).filter(Calendar.id == obj_in.calendar_id).first()
 
         if not calendar:
             return None, "Calendar not found"
@@ -264,13 +191,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         db_subscription = self.create(db, obj_in=obj_in)
         return db_subscription, None
 
-    def get_calendar_ids_by_user(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        status: Optional[str] = "active"
-    ) -> List[int]:
+    def get_calendar_ids_by_user(self, db: Session, *, user_id: int, status: Optional[str] = "active") -> List[int]:
         """
         Get list of calendar IDs that a user is subscribed to.
 
@@ -286,14 +207,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         """
         from models import User
 
-        query = db.query(CalendarSubscription.calendar_id).join(
-            Calendar, CalendarSubscription.calendar_id == Calendar.id
-        ).join(
-            User, Calendar.owner_id == User.id
-        ).filter(
-            CalendarSubscription.user_id == user_id,
-            User.is_public == False  # Exclude calendars from public users
-        )
+        query = db.query(CalendarSubscription.calendar_id).join(Calendar, CalendarSubscription.calendar_id == Calendar.id).join(User, Calendar.owner_id == User.id).filter(CalendarSubscription.user_id == user_id, User.is_public == False)  # Exclude calendars from public users
 
         if status:
             query = query.filter(CalendarSubscription.status == status)
@@ -301,15 +215,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         results = query.all()
         return [cid for (cid,) in results]
 
-    def get_public_calendars(
-        self,
-        db: Session,
-        *,
-        category: Optional[str] = None,
-        search: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 50
-    ) -> List[Calendar]:
+    def get_public_calendars(self, db: Session, *, category: Optional[str] = None, search: Optional[str] = None, skip: int = 0, limit: int = 50) -> List[Calendar]:
         """
         Get public calendars that are discoverable.
 
@@ -331,18 +237,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         if search:
             search_pattern = f"%{search}%"
             # Check if exact share_hash match OR discoverable calendars matching name/description
-            query = query.filter(
-                or_(
-                    Calendar.share_hash == search,  # Exact share_hash (no need for is_discoverable)
-                    and_(
-                        Calendar.is_discoverable == True,
-                        or_(
-                            Calendar.name.ilike(search_pattern),
-                            Calendar.description.ilike(search_pattern)
-                        )
-                    )
-                )
-            )
+            query = query.filter(or_(Calendar.share_hash == search, and_(Calendar.is_discoverable == True, or_(Calendar.name.ilike(search_pattern), Calendar.description.ilike(search_pattern)))))  # Exact share_hash (no need for is_discoverable)
         else:
             # No search - only show discoverable calendars
             query = query.filter(Calendar.is_discoverable == True)

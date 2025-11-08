@@ -11,7 +11,10 @@ final settingsProvider = FutureProvider<AppSettings>((ref) async {
   return await repository.loadSettings();
 });
 
-final settingsNotifierProvider = NotifierProvider<SettingsNotifier, AsyncValue<AppSettings>>(SettingsNotifier.new);
+final settingsNotifierProvider =
+    NotifierProvider<SettingsNotifier, AsyncValue<AppSettings>>(
+      SettingsNotifier.new,
+    );
 
 class SettingsNotifier extends Notifier<AsyncValue<AppSettings>> {
   late final SettingsRepository _repository;

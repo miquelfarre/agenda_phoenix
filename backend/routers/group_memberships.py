@@ -19,29 +19,13 @@ router = APIRouter(prefix="/api/v1/group_memberships", tags=["group_memberships"
 
 
 @router.get("", response_model=List[GroupMembershipResponse])
-async def get_group_memberships(
-    group_id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_group_memberships(group_id: Optional[int] = None, user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all group memberships, optionally filtered by group_id and/or user_id, with pagination and ordering"""
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return group_membership.get_multi_filtered(
-        db,
-        group_id=group_id,
-        user_id=user_id,
-        skip=offset,
-        limit=limit,
-        order_by=order_by,
-        order_dir=order_dir
-    )
+    return group_membership.get_multi_filtered(db, group_id=group_id, user_id=user_id, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
 
 @router.get("/{membership_id}", response_model=GroupMembershipResponse)
@@ -73,12 +57,7 @@ async def create_group_membership(membership_data: GroupMembershipCreate, db: Se
 
 
 @router.put("/{membership_id}", response_model=GroupMembershipResponse)
-async def update_group_membership(
-    membership_id: int,
-    membership_data: GroupMembershipUpdate,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_group_membership(membership_id: int, membership_data: GroupMembershipUpdate, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update a group membership (currently only role can be updated).
 
@@ -100,36 +79,22 @@ async def update_group_membership(
     is_creator = group.owner_id == current_user_id
 
     # Check if user is admin
-    is_admin = db.query(GroupMembership).filter(
-        GroupMembership.group_id == db_membership.group_id,
-        GroupMembership.user_id == current_user_id,
-        GroupMembership.role == "admin"
-    ).first() is not None
+    is_admin = db.query(GroupMembership).filter(GroupMembership.group_id == db_membership.group_id, GroupMembership.user_id == current_user_id, GroupMembership.role == "admin").first() is not None
 
     # Only group creator or admins can update memberships
     if not (is_creator or is_admin):
-        raise HTTPException(
-            status_code=403,
-            detail="Only the group creator or admins can update memberships"
-        )
+        raise HTTPException(status_code=403, detail="Only the group creator or admins can update memberships")
 
     # Validate role if provided
     if membership_data.role and membership_data.role not in ["admin", "member"]:
-        raise HTTPException(
-            status_code=400,
-            detail="Role must be 'admin' or 'member'"
-        )
+        raise HTTPException(status_code=400, detail="Role must be 'admin' or 'member'")
 
     updated = group_membership.update(db, db_obj=db_membership, obj_in=membership_data)
     return updated
 
 
 @router.delete("/{membership_id}")
-async def delete_group_membership(
-    membership_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def delete_group_membership(membership_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Remove a user from a group.
 
@@ -149,20 +114,13 @@ async def delete_group_membership(
     is_creator = group.owner_id == current_user_id
 
     # Check if user is admin
-    is_admin = db.query(GroupMembership).filter(
-        GroupMembership.group_id == db_membership.group_id,
-        GroupMembership.user_id == current_user_id,
-        GroupMembership.role == "admin"
-    ).first() is not None
+    is_admin = db.query(GroupMembership).filter(GroupMembership.group_id == db_membership.group_id, GroupMembership.user_id == current_user_id, GroupMembership.role == "admin").first() is not None
 
     # Check if user is the member themselves
     is_self = db_membership.user_id == current_user_id
 
     if not (is_creator or is_admin or is_self):
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to delete this membership. Only the group creator, admins, or the member themselves can do this."
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission to delete this membership. Only the group creator, admins, or the member themselves can do this.")
 
     group_membership.delete(db, id=membership_id)
     return {"message": "Group membership deleted successfully", "id": membership_id}

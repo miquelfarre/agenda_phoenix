@@ -39,7 +39,9 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
         if (_hasApiKey) {
           // Mostrar solo los últimos 4 caracteres
           final apiKey = config.geminiApiKey!;
-          final visiblePart = apiKey.length > 4 ? apiKey.substring(apiKey.length - 4) : apiKey;
+          final visiblePart = apiKey.length > 4
+              ? apiKey.substring(apiKey.length - 4)
+              : apiKey;
           _apiKeyController.text = '••••$visiblePart';
         }
         _isLoading = false;
@@ -246,12 +248,19 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green.shade700,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
                       '100% GRATIS - 1500 requests/día sin tarjeta de crédito',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -308,10 +317,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
               children: [
                 const Text(
                   'Google Gemini API Key',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 if (_hasApiKey)
                   Container(
@@ -326,8 +332,11 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle,
-                            size: 16, color: Colors.green.shade700),
+                        Icon(
+                          Icons.check_circle,
+                          size: 16,
+                          color: Colors.green.shade700,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Configurada',
@@ -355,7 +364,9 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                   children: [
                     IconButton(
                       icon: Icon(
-                        _obscureApiKey ? Icons.visibility : Icons.visibility_off,
+                        _obscureApiKey
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() => _obscureApiKey = !_obscureApiKey);

@@ -89,11 +89,12 @@ def test_user_events_includes_public_owner_in_attendees(client):
     assert sub_response.status_code == 201
 
     import time
+
     time.sleep(1)  # Allow realtime to propagate
 
     # Get events for private user using /users/{id}/events endpoint
     client._auth_context["user_id"] = private_user["id"]
-    user_events_response = client.get( f"/api/v1/users/{private_user['id']}/events")
+    user_events_response = client.get(f"/api/v1/users/{private_user['id']}/events")
     assert user_events_response.status_code == 200
     user_events = user_events_response.json()
 
@@ -105,34 +106,23 @@ def test_user_events_includes_public_owner_in_attendees(client):
 
     # 1. Check owner_name is present
     assert "owner_name" in subscribed_event, "owner_name field must be present"
-    assert subscribed_event["owner_name"] == contact_data["name"], \
-        f"owner_name should be '{contact_data['name']}', got '{subscribed_event.get('owner_name')}'"
+    assert subscribed_event["owner_name"] == contact_data["name"], f"owner_name should be '{contact_data['name']}', got '{subscribed_event.get('owner_name')}'"
 
     # 2. Check is_owner_public is correct
     assert "is_owner_public" in subscribed_event, "is_owner_public field must be present"
-    assert subscribed_event["is_owner_public"] is True, \
-        "is_owner_public should be True for public owner"
+    assert subscribed_event["is_owner_public"] is True, "is_owner_public should be True for public owner"
 
     # 3. Check attendees does NOT include the public owner (public users are not physical attendees)
     assert "attendees" in subscribed_event, "attendees field must be present"
     assert subscribed_event["attendees"] is not None, "attendees should not be None"
 
     # Public owner should NOT be in attendees (they are organizations, not physical people)
-    owner_in_attendees = next(
-        (a for a in subscribed_event["attendees"] if a["id"] == public_user["id"]),
-        None
-    )
-    assert owner_in_attendees is None, \
-        f"Public owner (id={public_user['id']}) should NOT be in attendees list. " \
-        f"Public users (restaurants, gyms) are not physical attendees."
+    owner_in_attendees = next((a for a in subscribed_event["attendees"] if a["id"] == public_user["id"]), None)
+    assert owner_in_attendees is None, f"Public owner (id={public_user['id']}) should NOT be in attendees list. " f"Public users (restaurants, gyms) are not physical attendees."
 
     # 4. Check that subscriber IS in attendees
-    subscriber_in_attendees = next(
-        (a for a in subscribed_event["attendees"] if a["id"] == private_user["id"]),
-        None
-    )
-    assert subscriber_in_attendees is not None, \
-        "Subscriber should also be in attendees"
+    subscriber_in_attendees = next((a for a in subscribed_event["attendees"] if a["id"] == private_user["id"]), None)
+    assert subscriber_in_attendees is not None, "Subscriber should also be in attendees"
 
     print("✅ All checks passed: Public owner info correctly provided in /users/{id}/events")
     print(f"   - owner_name: {subscribed_event['owner_name']}")
@@ -205,11 +195,12 @@ def test_user_events_preserves_owner_info_across_updates(client):
     client.post("/api/v1/interactions", json=subscription_data)
 
     import time
+
     time.sleep(0.5)
 
     # First fetch - should have owner info
     client._auth_context["user_id"] = private_user["id"]
-    first_fetch = client.get( f"/api/v1/users/{private_user['id']}/events").json()
+    first_fetch = client.get(f"/api/v1/users/{private_user['id']}/events").json()
     first_event = next((e for e in first_fetch if e["id"] == event["id"]), None)
 
     assert first_event is not None
@@ -219,29 +210,23 @@ def test_user_events_preserves_owner_info_across_updates(client):
     # Simulate an update (change event description)
     update_data = {"description": "Updated: High intensity spinning with music"}
     client._auth_context["user_id"] = public_user["id"]
-    client.patch( f"/api/v1/events/{event['id']}", json=update_data)
+    client.patch(f"/api/v1/events/{event['id']}", json=update_data)
 
     time.sleep(1)
 
     # Second fetch - owner info MUST still be present
     client._auth_context["user_id"] = private_user["id"]
-    second_fetch = client.get( f"/api/v1/users/{private_user['id']}/events").json()
+    second_fetch = client.get(f"/api/v1/users/{private_user['id']}/events").json()
     second_event = next((e for e in second_fetch if e["id"] == event["id"]), None)
 
     assert second_event is not None, "Event should still be in user's events after update"
 
     # CRITICAL: Owner info must not be lost after update
-    assert second_event["owner_name"] == contact_data["name"], \
-        "owner_name must be preserved after event update"
-    assert second_event["is_owner_public"] is True, \
-        "is_owner_public must be preserved after event update"
+    assert second_event["owner_name"] == contact_data["name"], "owner_name must be preserved after event update"
+    assert second_event["is_owner_public"] is True, "is_owner_public must be preserved after event update"
 
     # Check attendees still does NOT include public owner (they are not physical attendees)
-    owner_still_in_attendees = any(
-        a["id"] == public_user["id"]
-        for a in second_event.get("attendees", [])
-    )
-    assert not owner_still_in_attendees, \
-        "Public owner should NOT be in attendees (they are organizations, not physical people)"
+    owner_still_in_attendees = any(a["id"] == public_user["id"] for a in second_event.get("attendees", []))
+    assert not owner_still_in_attendees, "Public owner should NOT be in attendees (they are organizations, not physical people)"
 
     print("✅ Owner info preserved across updates")

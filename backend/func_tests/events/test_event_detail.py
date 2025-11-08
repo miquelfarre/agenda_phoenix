@@ -25,27 +25,9 @@ def test_users(test_db):
     test_db.commit()
 
     # Create users with contact references
-    user1_data = UserCreate(
-        instagram_name="owner",
-        auth_provider="test",
-        auth_id="test_owner_123",
-        is_public=False,
-        contact_id=contact1.id
-    )
-    user2_data = UserCreate(
-        instagram_name="invitee1",
-        auth_provider="test",
-        auth_id="test_invitee1_456",
-        is_public=False,
-        contact_id=contact2.id
-    )
-    user3_data = UserCreate(
-        instagram_name="invitee2",
-        auth_provider="test",
-        auth_id="test_invitee2_789",
-        is_public=False,
-        contact_id=contact3.id
-    )
+    user1_data = UserCreate(instagram_name="owner", auth_provider="test", auth_id="test_owner_123", is_public=False, contact_id=contact1.id)
+    user2_data = UserCreate(instagram_name="invitee1", auth_provider="test", auth_id="test_invitee1_456", is_public=False, contact_id=contact2.id)
+    user3_data = UserCreate(instagram_name="invitee2", auth_provider="test", auth_id="test_invitee2_789", is_public=False, contact_id=contact3.id)
 
     user1 = user_crud.create(test_db, obj_in=user1_data)
     user2 = user_crud.create(test_db, obj_in=user2_data)
@@ -62,32 +44,15 @@ def test_event_with_invitations(test_db, test_users):
     owner, invitee1, invitee2 = test_users
 
     # Create event
-    event_data = EventCreate(
-        name="Test Event",
-        description="Event with invitations",
-        start_date=datetime.now() + timedelta(days=1),
-        owner_id=owner.id
-    )
+    event_data = EventCreate(name="Test Event", description="Event with invitations", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
     event = event_crud.create(test_db, obj_in=event_data)
 
     # Create invitations
     # Invitee 1 - pending
-    interaction1 = interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee1.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="pending",
-        invited_by_user_id=owner.id
-    ))
+    interaction1 = interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee1.id, event_id=event.id, interaction_type="invited", status="pending", invited_by_user_id=owner.id))
 
     # Invitee 2 - accepted
-    interaction2 = interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee2.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="accepted",
-        invited_by_user_id=owner.id
-    ))
+    interaction2 = interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee2.id, event_id=event.id, interaction_type="invited", status="accepted", invited_by_user_id=owner.id))
 
     test_db.commit()
 
@@ -177,31 +142,14 @@ def test_get_event_attendees_populated(client, test_db, test_users):
     owner, invitee1, invitee2 = test_users
 
     # Create event
-    event_data = EventCreate(
-        name="Event with Attendees",
-        description="Some accept, some reject",
-        start_date=datetime.now() + timedelta(days=1),
-        owner_id=owner.id
-    )
+    event_data = EventCreate(name="Event with Attendees", description="Some accept, some reject", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
     event = event_crud.create(test_db, obj_in=event_data)
 
     # Invitee 1 - accepts
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee1.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="accepted",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee1.id, event_id=event.id, interaction_type="invited", status="accepted", invited_by_user_id=owner.id))
 
     # Invitee 2 - rejects
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee2.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="rejected",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee2.id, event_id=event.id, interaction_type="invited", status="rejected", invited_by_user_id=owner.id))
 
     test_db.commit()
 
@@ -235,22 +183,11 @@ def test_get_event_inviter_object_complete(client, test_db, test_users):
     owner, invitee1, invitee2 = test_users
 
     # Create event
-    event_data = EventCreate(
-        name="Event to test inviter",
-        description="Testing inviter object",
-        start_date=datetime.now() + timedelta(days=1),
-        owner_id=owner.id
-    )
+    event_data = EventCreate(name="Event to test inviter", description="Testing inviter object", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
     event = event_crud.create(test_db, obj_in=event_data)
 
     # Owner invites invitee1
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee1.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="pending",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee1.id, event_id=event.id, interaction_type="invited", status="pending", invited_by_user_id=owner.id))
 
     test_db.commit()
 
@@ -283,12 +220,7 @@ def test_get_event_unauthenticated_no_interactions(client, test_db, test_users):
     owner, invitee1, invitee2 = test_users
 
     # Create public event
-    event_data = EventCreate(
-        name="Public Event",
-        description="Should not show interactions to unauthenticated users",
-        start_date=datetime.now() + timedelta(days=1),
-        owner_id=owner.id
-    )
+    event_data = EventCreate(name="Public Event", description="Should not show interactions to unauthenticated users", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
     event = event_crud.create(test_db, obj_in=event_data)
     test_db.commit()
 
@@ -320,43 +252,22 @@ def test_get_event_admin_sees_all_interactions(client, test_db, test_users):
     from schemas import CalendarCreate, CalendarMembershipCreate
 
     # Create a calendar
-    calendar_data = CalendarCreate(
-        name="Team Calendar",
-        description="Shared team calendar",
-        owner_id=owner.id
-    )
+    calendar_data = CalendarCreate(name="Team Calendar", description="Shared team calendar", owner_id=owner.id)
     db_calendar, error = calendar_crud.create_with_validation(test_db, obj_in=calendar_data)
     assert error is None
     assert db_calendar is not None
 
     # Add invitee1 as admin of the calendar
-    membership_data = CalendarMembershipCreate(
-        calendar_id=db_calendar.id,
-        user_id=invitee1.id,
-        role="admin",
-        status="accepted"
-    )
+    membership_data = CalendarMembershipCreate(calendar_id=db_calendar.id, user_id=invitee1.id, role="admin", status="accepted")
     db_membership, error = membership_crud.create_with_validation(test_db, obj_in=membership_data)
     assert error is None
 
     # Create event in the calendar (owned by owner, not invitee1)
-    event_data = EventCreate(
-        name="Calendar Event",
-        description="Event in shared calendar",
-        start_date=datetime.now() + timedelta(days=1),
-        owner_id=owner.id,
-        calendar_id=db_calendar.id
-    )
+    event_data = EventCreate(name="Calendar Event", description="Event in shared calendar", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id, calendar_id=db_calendar.id)
     event = event_crud.create(test_db, obj_in=event_data)
 
     # Create interactions - invite invitee2
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee2.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="pending",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee2.id, event_id=event.id, interaction_type="invited", status="pending", invited_by_user_id=owner.id))
 
     test_db.commit()
 

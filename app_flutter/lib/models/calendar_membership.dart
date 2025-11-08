@@ -7,8 +7,8 @@ class CalendarMembership {
   final int id;
   final int calendarId;
   final int userId;
-  final String role;  // 'owner', 'admin', 'member'
-  final String status;  // 'pending', 'accepted', 'rejected'
+  final String role; // 'owner', 'admin', 'member'
+  final String status; // 'pending', 'accepted', 'rejected'
   final int? invitedByUserId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -16,8 +16,8 @@ class CalendarMembership {
   // Optional enriched fields (only when enriched=true)
   final String? calendarName;
   final int? calendarOwnerId;
-  final User? user;  // User object when enriched
-  final User? inviter;  // Inviter user object when enriched
+  final User? user; // User object when enriched
+  final User? inviter; // Inviter user object when enriched
 
   const CalendarMembership({
     required this.id,
@@ -50,25 +50,29 @@ class CalendarMembership {
           : json['updated_at'] as DateTime,
       calendarName: json['calendar_name'] as String?,
       calendarOwnerId: json['calendar_owner_id'] as int?,
-      user: json['user'] != null ? User.fromJson(json['user'] as Map<String, dynamic>) : null,
-      inviter: json['inviter'] != null ? User.fromJson(json['inviter'] as Map<String, dynamic>) : null,
+      user: json['user'] != null
+          ? User.fromJson(json['user'] as Map<String, dynamic>)
+          : null,
+      inviter: json['inviter'] != null
+          ? User.fromJson(json['inviter'] as Map<String, dynamic>)
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'calendar_id': calendarId,
-        'user_id': userId,
-        'role': role,
-        'status': status,
-        'invited_by_user_id': invitedByUserId,
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
-        if (calendarName != null) 'calendar_name': calendarName,
-        if (calendarOwnerId != null) 'calendar_owner_id': calendarOwnerId,
-        if (user != null) 'user': user!.toJson(),
-        if (inviter != null) 'inviter': inviter!.toJson(),
-      };
+    'id': id,
+    'calendar_id': calendarId,
+    'user_id': userId,
+    'role': role,
+    'status': status,
+    'invited_by_user_id': invitedByUserId,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+    if (calendarName != null) 'calendar_name': calendarName,
+    if (calendarOwnerId != null) 'calendar_owner_id': calendarOwnerId,
+    if (user != null) 'user': user!.toJson(),
+    if (inviter != null) 'inviter': inviter!.toJson(),
+  };
 
   CalendarMembership copyWith({
     int? id,

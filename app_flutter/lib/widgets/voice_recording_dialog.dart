@@ -64,11 +64,7 @@ class _VoiceRecordingDialogState extends State<VoiceRecordingDialog>
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.mic,
-                      size: 50,
-                      color: Colors.white,
-                    ),
+                    child: const Icon(Icons.mic, size: 50, color: Colors.white),
                   ),
                 );
               },
@@ -78,18 +74,12 @@ class _VoiceRecordingDialogState extends State<VoiceRecordingDialog>
             // Texto "Grabando..."
             const Text(
               'Grabando...',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             const Text(
               'Habla ahora',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
 
@@ -133,8 +123,14 @@ class _VoiceRecordingDialogState extends State<VoiceRecordingDialog>
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

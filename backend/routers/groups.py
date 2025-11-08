@@ -37,29 +37,11 @@ def _enrich_group_with_members(db: Session, db_group: Group) -> GroupResponse:
                 members_list.append(membership.user)
 
     # Create response with all data
-    return GroupResponse(
-        id=db_group.id,
-        name=db_group.name,
-        description=db_group.description,
-        owner_id=db_group.owner_id,
-        owner=db_group.owner,
-        members=members_list,
-        admins=admins_list,
-        created_at=db_group.created_at,
-        updated_at=db_group.updated_at
-    )
+    return GroupResponse(id=db_group.id, name=db_group.name, description=db_group.description, owner_id=db_group.owner_id, owner=db_group.owner, members=members_list, admins=admins_list, created_at=db_group.created_at, updated_at=db_group.updated_at)
 
 
 @router.get("", response_model=List[GroupResponse])
-async def get_groups(
-    current_user_id: int = Depends(get_current_user_id),
-    owner_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_groups(current_user_id: int = Depends(get_current_user_id), owner_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """
     Get groups where the authenticated user is a member (owner, admin, or member).
 
@@ -96,7 +78,7 @@ async def get_groups(
         groups.sort(key=lambda g: g.id, reverse=(order_dir == "desc"))
 
     # Apply pagination
-    groups = groups[offset:offset + limit]
+    groups = groups[offset : offset + limit]
 
     # Enrich each group with members and admins
     return [_enrich_group_with_members(db, g) for g in groups]
@@ -112,18 +94,10 @@ async def get_group(group_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=GroupResponse, status_code=201)
-async def create_group(
-    group_data: GroupBase,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def create_group(group_data: GroupBase, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Create a new group"""
     # Create GroupCreate with owner_id from authenticated user
-    create_data = GroupCreate(
-        name=group_data.name,
-        description=group_data.description,
-        owner_id=current_user_id
-    )
+    create_data = GroupCreate(name=group_data.name, description=group_data.description, owner_id=current_user_id)
 
     # Create with validation (all checks in CRUD layer)
     db_group, error = group.create_with_validation(db, obj_in=create_data)
@@ -135,12 +109,7 @@ async def create_group(
 
 
 @router.put("/{group_id}", response_model=GroupResponse)
-async def update_group(
-    group_id: int,
-    group_data: GroupBase,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_group(group_id: int, group_data: GroupBase, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update an existing group.
 
@@ -159,11 +128,7 @@ async def update_group(
 
 
 @router.delete("/{group_id}")
-async def delete_group(
-    group_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def delete_group(group_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Delete a group.
 
@@ -182,12 +147,7 @@ async def delete_group(
 
 
 @router.post("/{group_id}/members", response_model=GroupResponse, status_code=201)
-async def add_group_member(
-    group_id: int,
-    member_data: dict,  # {"user_id": int, "role": "member" | "admin"}
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def add_group_member(group_id: int, member_data: dict, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):  # {"user_id": int, "role": "member" | "admin"}
     """
     Add a member to a group.
 
@@ -230,11 +190,7 @@ async def add_group_member(
         raise HTTPException(status_code=400, detail="User is already a member of this group")
 
     # Create membership
-    membership_data = GroupMembershipCreate(
-        group_id=group_id,
-        user_id=user_id,
-        role=role
-    )
+    membership_data = GroupMembershipCreate(group_id=group_id, user_id=user_id, role=role)
     group_membership.create(db, obj_in=membership_data)
 
     # Return updated group with members
@@ -242,12 +198,7 @@ async def add_group_member(
 
 
 @router.delete("/{group_id}/members/{user_id}", response_model=GroupResponse)
-async def remove_group_member(
-    group_id: int,
-    user_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def remove_group_member(group_id: int, user_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Remove a member from a group.
 
@@ -281,11 +232,7 @@ async def remove_group_member(
 
 
 @router.delete("/{group_id}/leave", response_model=dict)
-async def leave_group(
-    group_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def leave_group(group_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Leave a group (remove yourself as a member).
 
@@ -301,10 +248,7 @@ async def leave_group(
 
     # Check if user is the owner (can't leave own group)
     if current_user_id == db_group.owner_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Group owner cannot leave their own group. Delete the group instead."
-        )
+        raise HTTPException(status_code=400, detail="Group owner cannot leave their own group. Delete the group instead.")
 
     # Find and delete membership
     memberships = group_membership.get_multi(db, filters={"group_id": group_id, "user_id": current_user_id})

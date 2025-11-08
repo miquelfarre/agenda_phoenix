@@ -12,7 +12,14 @@ class PlatformAction<T> {
 }
 
 class PlatformDialogHelpers {
-  static Future<bool?> showPlatformConfirmDialog(BuildContext context, {required String title, required String message, String? confirmText, String? cancelText, bool isDestructive = false}) {
+  static Future<bool?> showPlatformConfirmDialog(
+    BuildContext context, {
+    required String title,
+    required String message,
+    String? confirmText,
+    String? cancelText,
+    bool isDestructive = false,
+  }) {
     final l10n = _l10n(context);
     if (PlatformDetection.isIOS) {
       return showCupertinoDialog<bool>(
@@ -21,8 +28,15 @@ class PlatformDialogHelpers {
           title: Text(title),
           content: Text(message),
           actions: [
-            CupertinoDialogAction(onPressed: () => Navigator.of(context).pop(false), child: Text(cancelText ?? l10n['cancel']!)),
-            CupertinoDialogAction(isDestructiveAction: isDestructive, onPressed: () => Navigator.of(context).pop(true), child: Text(confirmText ?? l10n['confirm']!)),
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(cancelText ?? l10n['cancel']!),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: isDestructive,
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(confirmText ?? l10n['confirm']!),
+            ),
           ],
         ),
       );
@@ -34,14 +48,27 @@ class PlatformDialogHelpers {
         title: title.isNotEmpty ? Text(title) : null,
         content: Text(message),
         actions: [
-          CupertinoDialogAction(onPressed: () => Navigator.of(ctx).pop(false), child: Text(cancelText ?? l10n['cancel'] ?? 'Cancel')),
-          CupertinoDialogAction(onPressed: () => Navigator.of(ctx).pop(true), child: Text(confirmText ?? l10n['confirm'] ?? 'OK')),
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(cancelText ?? l10n['cancel'] ?? 'Cancel'),
+          ),
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(confirmText ?? l10n['confirm'] ?? 'OK'),
+          ),
         ],
       ),
     );
   }
 
-  static Future<T?> showPlatformActionSheet<T>(BuildContext context, {required String title, String? message, required List<dynamic> actions, bool showCancel = true, String? cancelText}) {
+  static Future<T?> showPlatformActionSheet<T>(
+    BuildContext context, {
+    required String title,
+    String? message,
+    required List<dynamic> actions,
+    bool showCancel = true,
+    String? cancelText,
+  }) {
     final l10n = _l10n(context);
     if (PlatformDetection.isIOS) {
       return showCupertinoModalPopup<T>(
@@ -49,8 +76,22 @@ class PlatformDialogHelpers {
         builder: (context) => CupertinoActionSheet(
           title: Text(title),
           message: message != null ? Text(message) : null,
-          actions: actions.map((action) => CupertinoActionSheetAction(onPressed: () => Navigator.of(context).pop(action.value), isDestructiveAction: action.isDestructive ?? false, child: Text(action.text ?? ''))).toList(),
-          cancelButton: showCancel ? CupertinoActionSheetAction(onPressed: () => Navigator.of(context).pop(), isDefaultAction: true, child: Text(cancelText ?? l10n['cancel']!)) : null,
+          actions: actions
+              .map(
+                (action) => CupertinoActionSheetAction(
+                  onPressed: () => Navigator.of(context).pop(action.value),
+                  isDestructiveAction: action.isDestructive ?? false,
+                  child: Text(action.text ?? ''),
+                ),
+              )
+              .toList(),
+          cancelButton: showCancel
+              ? CupertinoActionSheetAction(
+                  onPressed: () => Navigator.of(context).pop(),
+                  isDefaultAction: true,
+                  child: Text(cancelText ?? l10n['cancel']!),
+                )
+              : null,
         ),
       );
     }
@@ -73,16 +114,34 @@ class PlatformDialogHelpers {
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            if (title.isNotEmpty) Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                            if (message != null) ...[const SizedBox(height: 8), Text(message, textAlign: TextAlign.center)],
+                            if (title.isNotEmpty)
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            if (message != null) ...[
+                              const SizedBox(height: 8),
+                              Text(message, textAlign: TextAlign.center),
+                            ],
                           ],
                         ),
                       ),
-                    ...actions.map((action) => CupertinoButton(onPressed: () => Navigator.of(ctx).pop(action.value), child: Text(action.text ?? ''))),
+                    ...actions.map(
+                      (action) => CupertinoButton(
+                        onPressed: () => Navigator.of(ctx).pop(action.value),
+                        child: Text(action.text ?? ''),
+                      ),
+                    ),
                     if (showCancel)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: CupertinoButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(cancelText ?? l10n['cancel']!)),
+                        child: CupertinoButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: Text(cancelText ?? l10n['cancel']!),
+                        ),
                       ),
                     const SizedBox(height: 16),
                   ],
@@ -93,7 +152,10 @@ class PlatformDialogHelpers {
         );
       },
       transitionsBuilder: (ctx, animation, secondary, child) {
-        final offset = Tween(begin: const Offset(0, 1), end: Offset.zero).animate(animation);
+        final offset = Tween(
+          begin: const Offset(0, 1),
+          end: Offset.zero,
+        ).animate(animation);
         return SlideTransition(position: offset, child: child);
       },
     );
@@ -101,7 +163,11 @@ class PlatformDialogHelpers {
     return Navigator.of(context).push<T>(route);
   }
 
-  static void showPlatformLoadingDialog(BuildContext context, {String? message, bool barrierDismissible = false}) {
+  static void showPlatformLoadingDialog(
+    BuildContext context, {
+    String? message,
+    bool barrierDismissible = false,
+  }) {
     showCupertinoDialog<void>(
       context: context,
       barrierDismissible: barrierDismissible,
@@ -117,28 +183,62 @@ class PlatformDialogHelpers {
     );
   }
 
-  static void showGlobalPlatformMessage({BuildContext? context, required String message, bool isError = false, Duration duration = const Duration(seconds: 3)}) {
+  static void showGlobalPlatformMessage({
+    BuildContext? context,
+    required String message,
+    bool isError = false,
+    Duration duration = const Duration(seconds: 3),
+  }) {
     if (context != null) {
-      _showOverlayNotification(context, message, isError: isError, duration: duration);
+      _showOverlayNotification(
+        context,
+        message,
+        isError: isError,
+        duration: duration,
+      );
       return;
     }
     // No context available - message cannot be shown
   }
 
-  static void showSnackBar({BuildContext? context, required String message, bool isError = false, Duration duration = const Duration(seconds: 3), String? actionLabel, VoidCallback? onAction}) {
-    showGlobalPlatformMessage(context: context, message: message, isError: isError, duration: duration);
+  static void showSnackBar({
+    BuildContext? context,
+    required String message,
+    bool isError = false,
+    Duration duration = const Duration(seconds: 3),
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    showGlobalPlatformMessage(
+      context: context,
+      message: message,
+      isError: isError,
+      duration: duration,
+    );
   }
 
   static void showError(BuildContext context, String message) {
-    showGlobalPlatformMessage(context: context, message: message, isError: true);
+    showGlobalPlatformMessage(
+      context: context,
+      message: message,
+      isError: true,
+    );
   }
 
   static void showSuccess(BuildContext context, String message) {
-    showGlobalPlatformMessage(context: context, message: message, isError: false);
+    showGlobalPlatformMessage(
+      context: context,
+      message: message,
+      isError: false,
+    );
   }
 
   static void showInfo(BuildContext context, String message) {
-    showGlobalPlatformMessage(context: context, message: message, isError: false);
+    showGlobalPlatformMessage(
+      context: context,
+      message: message,
+      isError: false,
+    );
   }
 
   static void showCleanError(BuildContext context, dynamic error) {
@@ -146,13 +246,31 @@ class PlatformDialogHelpers {
     showError(context, cleanedError);
   }
 
-  static void showNetworkError(BuildContext context, {required VoidCallback onRetry, String? message}) {
+  static void showNetworkError(
+    BuildContext context, {
+    required VoidCallback onRetry,
+    String? message,
+  }) {
     final errorMessage = message ?? context.l10n.noInternetConnection;
 
-    _showDismissibleBanner(context, message: errorMessage, isError: true, actionLabel: context.l10n.retry, onAction: onRetry, duration: const Duration(seconds: 5));
+    _showDismissibleBanner(
+      context,
+      message: errorMessage,
+      isError: true,
+      actionLabel: context.l10n.retry,
+      onAction: onRetry,
+      duration: const Duration(seconds: 5),
+    );
   }
 
-  static void _showDismissibleBanner(BuildContext context, {required String message, bool isError = false, String? actionLabel, VoidCallback? onAction, Duration duration = const Duration(seconds: 3)}) {
+  static void _showDismissibleBanner(
+    BuildContext context, {
+    required String message,
+    bool isError = false,
+    String? actionLabel,
+    VoidCallback? onAction,
+    Duration duration = const Duration(seconds: 3),
+  }) {
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
 
@@ -171,8 +289,14 @@ class PlatformDialogHelpers {
                 } catch (_) {}
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(color: isError ? AppStyles.red600 : AppStyles.grey700, borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isError ? AppStyles.red600 : AppStyles.grey700,
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -184,7 +308,10 @@ class PlatformDialogHelpers {
                     if (actionLabel != null && onAction != null) ...[
                       const SizedBox(width: 8),
                       CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         color: CupertinoColors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                         onPressed: () {
@@ -195,7 +322,11 @@ class PlatformDialogHelpers {
                         },
                         child: Text(
                           actionLabel,
-                          style: const TextStyle(color: CupertinoColors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            color: CupertinoColors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -218,7 +349,12 @@ class PlatformDialogHelpers {
     } catch (_) {}
   }
 
-  static void _showOverlayNotification(BuildContext context, String message, {bool isError = false, Duration duration = const Duration(seconds: 3)}) {
+  static void _showOverlayNotification(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+    Duration duration = const Duration(seconds: 3),
+  }) {
     final overlay = Overlay.of(context);
     final entry = OverlayEntry(
       builder: (ctx) {
@@ -230,7 +366,10 @@ class PlatformDialogHelpers {
             minimum: const EdgeInsets.only(top: 0),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(color: isError ? AppStyles.red600 : AppStyles.grey700, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: isError ? AppStyles.red600 : AppStyles.grey700,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: DefaultTextStyle(
                 style: const TextStyle(color: CupertinoColors.white),
                 child: Text(message),
@@ -258,21 +397,68 @@ class PlatformDialogHelpers {
 }
 
 class DialogHelpers {
-  static Future<bool?> showConfirmationDialog(BuildContext context, {required String title, required String content, String? confirmText, String? cancelText, bool isDestructive = false}) {
-    return PlatformDialogHelpers.showPlatformConfirmDialog(context, title: title, message: content, confirmText: confirmText, cancelText: cancelText, isDestructive: isDestructive);
+  static Future<bool?> showConfirmationDialog(
+    BuildContext context, {
+    required String title,
+    required String content,
+    String? confirmText,
+    String? cancelText,
+    bool isDestructive = false,
+  }) {
+    return PlatformDialogHelpers.showPlatformConfirmDialog(
+      context,
+      title: title,
+      message: content,
+      confirmText: confirmText,
+      cancelText: cancelText,
+      isDestructive: isDestructive,
+    );
   }
 
-  static Future<void> showInfoDialog(BuildContext context, {required String title, required String content, String? buttonText}) {
-    return PlatformDialogHelpers.showPlatformConfirmDialog(context, title: title, message: content, confirmText: buttonText).then((_) => null);
+  static Future<void> showInfoDialog(
+    BuildContext context, {
+    required String title,
+    required String content,
+    String? buttonText,
+  }) {
+    return PlatformDialogHelpers.showPlatformConfirmDialog(
+      context,
+      title: title,
+      message: content,
+      confirmText: buttonText,
+    ).then((_) => null);
   }
 
-  static Future<T?> showSelectionDialog<T>(BuildContext context, {required String title, required List<T> items, required String Function(T) itemDisplayName, String? cancelText}) {
-    final actions = items.map((item) => PlatformAction(text: itemDisplayName(item), value: item)).toList();
-    return PlatformDialogHelpers.showPlatformActionSheet<T>(context, title: title, actions: actions, cancelText: cancelText);
+  static Future<T?> showSelectionDialog<T>(
+    BuildContext context, {
+    required String title,
+    required List<T> items,
+    required String Function(T) itemDisplayName,
+    String? cancelText,
+  }) {
+    final actions = items
+        .map((item) => PlatformAction(text: itemDisplayName(item), value: item))
+        .toList();
+    return PlatformDialogHelpers.showPlatformActionSheet<T>(
+      context,
+      title: title,
+      actions: actions,
+      cancelText: cancelText,
+    );
   }
 
-  static Future<void> showErrorDialog(BuildContext context, {required String title, required String content, String? buttonText}) {
-    return showInfoDialog(context, title: title, content: content, buttonText: buttonText);
+  static Future<void> showErrorDialog(
+    BuildContext context, {
+    required String title,
+    required String content,
+    String? buttonText,
+  }) {
+    return showInfoDialog(
+      context,
+      title: title,
+      content: content,
+      buttonText: buttonText,
+    );
   }
 
   /// Show error dialog with error icon (red triangle)
@@ -281,7 +467,10 @@ class DialogHelpers {
   /// - Red triangle icon next to title
   /// - Error message
   /// - OK button
-  static Future<void> showErrorDialogWithIcon(BuildContext context, String message) {
+  static Future<void> showErrorDialogWithIcon(
+    BuildContext context,
+    String message,
+  ) {
     final l10n = context.l10n;
     return showCupertinoDialog(
       context: context,
@@ -289,18 +478,25 @@ class DialogHelpers {
       builder: (context) => CupertinoAlertDialog(
         title: Row(
           children: [
-            const Icon(CupertinoIcons.exclamationmark_triangle, color: CupertinoColors.systemRed, size: 20),
+            const Icon(
+              CupertinoIcons.exclamationmark_triangle,
+              color: CupertinoColors.systemRed,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(l10n.error),
           ],
         ),
-        content: Padding(padding: const EdgeInsets.only(top: 8), child: Text(message)),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(message),
+        ),
         actions: [
           CupertinoDialogAction(
             isDefaultAction: true,
             child: Text(l10n.ok),
             onPressed: () => Navigator.of(context).pop(),
-          )
+          ),
         ],
       ),
     );

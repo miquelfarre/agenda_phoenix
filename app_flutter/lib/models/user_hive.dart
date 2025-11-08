@@ -75,9 +75,17 @@ class UserHive extends HiveObject {
     phoneNumber: json['phone_number'],
     profilePicture: json['profile_picture'],
     isBanned: json['is_banned'] ?? false,
-    lastSeen: json['last_seen'] != null ? (json['last_seen'] is String ? DateTimeUtils.parseAndNormalize(json['last_seen']) : json['last_seen']) : null,
+    lastSeen: json['last_seen'] != null
+        ? (json['last_seen'] is String
+              ? DateTimeUtils.parseAndNormalize(json['last_seen'])
+              : json['last_seen'])
+        : null,
     isOnline: json['is_online'] ?? false,
-    registeredAt: json['registered_at'] != null ? (json['registered_at'] is String ? DateTimeUtils.parseAndNormalize(json['registered_at']) : json['registered_at']) : null,
+    registeredAt: json['registered_at'] != null
+        ? (json['registered_at'] is String
+              ? DateTimeUtils.parseAndNormalize(json['registered_at'])
+              : json['registered_at'])
+        : null,
     newEventsCount: json['new_events_count'],
     totalEventsCount: json['total_events_count'],
     subscribersCount: json['subscribers_count'],

@@ -48,7 +48,22 @@ class CalendarHive extends HiveObject {
   @HiveField(16)
   DateTime? endDate;
 
-  CalendarHive({required this.id, required this.ownerId, required this.name, this.description, required this.createdAt, required this.updatedAt, this.deleteAssociatedEvents = false, this.isPublic = false, this.isDiscoverable = true, this.shareHash, this.category, this.subscriberCount = 0, this.startDate, this.endDate});
+  CalendarHive({
+    required this.id,
+    required this.ownerId,
+    required this.name,
+    this.description,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deleteAssociatedEvents = false,
+    this.isPublic = false,
+    this.isDiscoverable = true,
+    this.shareHash,
+    this.category,
+    this.subscriberCount = 0,
+    this.startDate,
+    this.endDate,
+  });
 
   factory CalendarHive.fromJson(Map<String, dynamic> json) => CalendarHive(
     id: json['id'] as int,
@@ -63,8 +78,12 @@ class CalendarHive extends HiveObject {
     shareHash: json['share_hash'],
     category: json['category'],
     subscriberCount: json['subscriber_count'] ?? 0,
-    startDate: json['start_date'] != null ? DateTimeUtils.parseAndNormalize(json['start_date']) : null,
-    endDate: json['end_date'] != null ? DateTimeUtils.parseAndNormalize(json['end_date']) : null,
+    startDate: json['start_date'] != null
+        ? DateTimeUtils.parseAndNormalize(json['start_date'])
+        : null,
+    endDate: json['end_date'] != null
+        ? DateTimeUtils.parseAndNormalize(json['end_date'])
+        : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -85,7 +104,22 @@ class CalendarHive extends HiveObject {
   };
 
   Calendar toCalendar() {
-    return Calendar(id: id, ownerId: ownerId, name: name, description: description, deleteAssociatedEvents: deleteAssociatedEvents, isPublic: isPublic, isDiscoverable: isDiscoverable, shareHash: shareHash, category: category, subscriberCount: subscriberCount, startDate: startDate, endDate: endDate, createdAt: createdAt, updatedAt: updatedAt);
+    return Calendar(
+      id: id,
+      ownerId: ownerId,
+      name: name,
+      description: description,
+      deleteAssociatedEvents: deleteAssociatedEvents,
+      isPublic: isPublic,
+      isDiscoverable: isDiscoverable,
+      shareHash: shareHash,
+      category: category,
+      subscriberCount: subscriberCount,
+      startDate: startDate,
+      endDate: endDate,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
   }
 
   static CalendarHive fromCalendar(Calendar calendar) {

@@ -12,14 +12,23 @@ import 'voice_recording_dialog.dart';
 
 /// Provider para el servicio de voz (Gemini u Ollama según configuración)
 final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
-  DebugConfig.info('🔄 ===== INICIALIZANDO PROVIDER DE VOZ =====', tag: 'VoiceButton');
+  DebugConfig.info(
+    '🔄 ===== INICIALIZANDO PROVIDER DE VOZ =====',
+    tag: 'VoiceButton',
+  );
   try {
     DebugConfig.info('📋 Obteniendo AIConfigService...', tag: 'VoiceButton');
     final config = await AIConfigService.getInstance();
 
     DebugConfig.info('🔍 Verificando configuración...', tag: 'VoiceButton');
-    DebugConfig.info('   - AI Provider: ${config.aiProvider}', tag: 'VoiceButton');
-    DebugConfig.info('   - voiceCommandsEnabled: ${config.voiceCommandsEnabled}', tag: 'VoiceButton');
+    DebugConfig.info(
+      '   - AI Provider: ${config.aiProvider}',
+      tag: 'VoiceButton',
+    );
+    DebugConfig.info(
+      '   - voiceCommandsEnabled: ${config.voiceCommandsEnabled}',
+      tag: 'VoiceButton',
+    );
 
     if (!config.voiceCommandsEnabled) {
       DebugConfig.info('⚠️ Comandos de voz deshabilitados', tag: 'VoiceButton');
@@ -28,7 +37,10 @@ final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
 
     // Crear el servicio según el provider configurado
     if (config.aiProvider == AIProvider.ollama) {
-      DebugConfig.info('✅ Usando Ollama (${config.ollamaModel})', tag: 'VoiceButton');
+      DebugConfig.info(
+        '✅ Usando Ollama (${config.ollamaModel})',
+        tag: 'VoiceButton',
+      );
 
       return OllamaVoiceService(
         ollamaBaseUrl: config.ollamaBaseUrl,
@@ -46,7 +58,10 @@ final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
       return GeminiVoiceService(geminiApiKey: apiKey);
     }
   } catch (e) {
-    DebugConfig.error('❌ Error al inicializar servicio de voz: $e', tag: 'VoiceButton');
+    DebugConfig.error(
+      '❌ Error al inicializar servicio de voz: $e',
+      tag: 'VoiceButton',
+    );
     return null;
   }
 });
@@ -95,7 +110,10 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
   }
 
   Future<void> _handleVoiceCommand() async {
-    DebugConfig.info('🎤 ===== BOTÓN DE VOZ PRESIONADO =====', tag: 'VoiceButton');
+    DebugConfig.info(
+      '🎤 ===== BOTÓN DE VOZ PRESIONADO =====',
+      tag: 'VoiceButton',
+    );
 
     // Mostrar un diálogo visual para confirmar que el botón funciona
     if (mounted) {
@@ -119,15 +137,20 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         return null;
       },
       error: (error, stack) {
-        DebugConfig.error('❌ Error en servicio de voz: $error', tag: 'VoiceButton');
+        DebugConfig.error(
+          '❌ Error en servicio de voz: $error',
+          tag: 'VoiceButton',
+        );
         return null;
       },
     );
 
     if (voiceService == null) {
       DebugConfig.error('❌ Servicio de voz no disponible', tag: 'VoiceButton');
-      _showError('Servicio de IA no configurado. '
-                'Ve a Configuración para añadir tu API key.');
+      _showError(
+        'Servicio de IA no configurado. '
+        'Ve a Configuración para añadir tu API key.',
+      );
       return;
     }
 
@@ -136,11 +159,20 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
       setState(() => _isRecording = true);
 
       // 1. Grabar audio y transcribir
-      DebugConfig.info('🎙️ Llamando a processVoiceCommand()...', tag: 'VoiceButton');
+      DebugConfig.info(
+        '🎙️ Llamando a processVoiceCommand()...',
+        tag: 'VoiceButton',
+      );
       final result = await voiceService.processVoiceCommand();
 
-      DebugConfig.info('📥 Resultado recibido: success=${result.success}, needsConfirmation=${result.needsConfirmation}', tag: 'VoiceButton');
-      DebugConfig.info('📝 Texto transcrito: "${result.transcribedText}"', tag: 'VoiceButton');
+      DebugConfig.info(
+        '📥 Resultado recibido: success=${result.success}, needsConfirmation=${result.needsConfirmation}',
+        tag: 'VoiceButton',
+      );
+      DebugConfig.info(
+        '📝 Texto transcrito: "${result.transcribedText}"',
+        tag: 'VoiceButton',
+      );
 
       setState(() => _isRecording = false);
 
@@ -151,26 +183,30 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         return;
       }
 
-
       // 2. Verificar si tenemos interpretación
       if (result.interpretation == null) {
-        DebugConfig.info('⚠️ No hay interpretación para mostrar', tag: 'VoiceButton');
+        DebugConfig.info(
+          '⚠️ No hay interpretación para mostrar',
+          tag: 'VoiceButton',
+        );
         _showError('No se pudo interpretar el comando');
         return;
       }
 
-
       // 3. Verificar si faltan campos obligatorios
       final action = result.interpretation!['action'] as String;
 
-      final parameters = result.interpretation!['parameters'] as Map<String, dynamic>;
+      final parameters =
+          result.interpretation!['parameters'] as Map<String, dynamic>;
 
       final missingFields = RequiredFields.findMissing(action, parameters);
 
-
       if (missingFields.isNotEmpty) {
         // Faltan campos obligatorios → Iniciar diálogo conversacional
-        DebugConfig.info('🗣️ Iniciando diálogo conversacional para recolectar: $missingFields', tag: 'VoiceButton');
+        DebugConfig.info(
+          '🗣️ Iniciando diálogo conversacional para recolectar: $missingFields',
+          tag: 'VoiceButton',
+        );
 
         await _startConversationalDialog(
           voiceService,
@@ -181,7 +217,10 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         );
       } else {
         // Todos los campos están completos → Ir a confirmación final
-        DebugConfig.info('✅ Mostrando pantalla de confirmación', tag: 'VoiceButton');
+        DebugConfig.info(
+          '✅ Mostrando pantalla de confirmación',
+          tag: 'VoiceButton',
+        );
 
         await _showConfirmationScreen(
           voiceService,
@@ -189,9 +228,11 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
           result.interpretation!,
         );
       }
-
     } catch (e, stackTrace) {
-      DebugConfig.error('❌ ERROR CRÍTICO en comando de voz: $e', tag: 'VoiceButton');
+      DebugConfig.error(
+        '❌ ERROR CRÍTICO en comando de voz: $e',
+        tag: 'VoiceButton',
+      );
       DebugConfig.error('Stack trace: $stackTrace', tag: 'VoiceButton');
       setState(() {
         _isRecording = false;
@@ -211,7 +252,6 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
   ) async {
     if (!mounted) return;
 
-
     // Crear contexto inicial
     var conversationContext = VoiceConversationContext(
       originalCommand: originalCommand,
@@ -222,26 +262,27 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
     );
 
     // Abrir la pantalla conversacional
-    final completedContext = await Navigator.of(context).push<VoiceConversationContext>(
-      MaterialPageRoute(
-        builder: (ctx) => VoiceConversationScreen(
-          context: conversationContext,
-          voiceService: voiceService,
-          onContextUpdated: (updatedContext) {
-            conversationContext = updatedContext;
-          },
-        ),
-      ),
-    );
+    final completedContext = await Navigator.of(context)
+        .push<VoiceConversationContext>(
+          MaterialPageRoute(
+            builder: (ctx) => VoiceConversationScreen(
+              context: conversationContext,
+              voiceService: voiceService,
+              onContextUpdated: (updatedContext) {
+                conversationContext = updatedContext;
+              },
+            ),
+          ),
+        );
 
     // Si el usuario completó el diálogo, mostrar confirmación final
     if (completedContext != null && mounted) {
-
       // Crear interpretación completa para la pantalla de confirmación
       final finalInterpretation = {
         'action': completedContext.action,
         'parameters': completedContext.collectedParameters,
-        'confidence': 0.95, // Alta confianza porque el usuario lo completó manualmente
+        'confidence':
+            0.95, // Alta confianza porque el usuario lo completó manualmente
         'user_confirmation_needed': false,
       };
 
@@ -250,8 +291,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         completedContext.originalCommand,
         finalInterpretation,
       );
-    } else {
-    }
+    } else {}
   }
 
   Future<void> _showConfirmationScreen(
@@ -310,14 +350,12 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
     );
 
     return FloatingActionButton.extended(
-      onPressed: _isRecording || _isProcessing
-          ? null
-          : _handleVoiceCommand,
+      onPressed: _isRecording || _isProcessing ? null : _handleVoiceCommand,
       backgroundColor: _isRecording
           ? Colors.red
           : isDisabled
-              ? Colors.grey
-              : (widget.backgroundColor ?? Theme.of(context).primaryColor),
+          ? Colors.grey
+          : (widget.backgroundColor ?? Theme.of(context).primaryColor),
       icon: _buildIcon(),
       label: Text(_getButtonText()),
       heroTag: 'voice_command_button',
@@ -342,19 +380,13 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         builder: (context, child) {
           return Transform.scale(
             scale: 1.0 + (_pulseController.value * 0.3),
-            child: Icon(
-              widget.icon ?? Icons.mic,
-              color: Colors.white,
-            ),
+            child: Icon(widget.icon ?? Icons.mic, color: Colors.white),
           );
         },
       );
     }
 
-    return Icon(
-      widget.icon ?? Icons.mic,
-      color: Colors.white,
-    );
+    return Icon(widget.icon ?? Icons.mic, color: Colors.white);
   }
 
   String _getButtonText() {
@@ -404,7 +436,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
   }
 
   Future<void> _handleVoiceCommand() async {
-
     final voiceServiceAsync = ref.read(voiceServiceProvider);
 
     final voiceService = voiceServiceAsync.when(
@@ -414,7 +445,9 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
     );
 
     if (voiceService == null) {
-      _showError('Servicio de IA no configurado. Ve a Configuración → Configurar IA.');
+      _showError(
+        'Servicio de IA no configurado. Ve a Configuración → Configurar IA.',
+      );
       return;
     }
 
@@ -471,7 +504,9 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       }
 
       // Interpretar con IA (Gemini u Ollama)
-      final interpretation = await voiceService.interpretWithAI(transcribedText);
+      final interpretation = await voiceService.interpretWithAI(
+        transcribedText,
+      );
 
       // Crear result object
       final result = VoiceCommandResult(
@@ -491,7 +526,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
         _showError('No se pudo interpretar el comando');
         return;
       }
-
 
       // Verificar si hay múltiples acciones o una sola
       final hasMultipleActions = result.interpretation!.containsKey('actions');
@@ -523,9 +557,9 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       } else {
         // Una sola acción - verificar campos faltantes
         final action = result.interpretation!['action'] as String;
-        final parameters = result.interpretation!['parameters'] as Map<String, dynamic>;
+        final parameters =
+            result.interpretation!['parameters'] as Map<String, dynamic>;
         final missingFields = RequiredFields.findMissing(action, parameters);
-
 
         if (missingFields.isNotEmpty) {
           // Faltan campos obligatorios → Iniciar pantalla conversacional
@@ -556,7 +590,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
           }
         }
       }
-
     } catch (e) {
       setState(() => _isRecording = false);
       _showError(e.toString());
@@ -573,7 +606,6 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
   ) async {
     if (!mounted) return;
 
-
     // Crear contexto inicial
     var conversationContext = VoiceConversationContext(
       originalCommand: originalCommand,
@@ -584,21 +616,21 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
     );
 
     // Abrir la pantalla conversacional
-    final completedContext = await Navigator.of(context).push<VoiceConversationContext>(
-      MaterialPageRoute(
-        builder: (ctx) => VoiceConversationScreen(
-          context: conversationContext,
-          voiceService: voiceService,
-          onContextUpdated: (updatedContext) {
-            conversationContext = updatedContext;
-          },
-        ),
-      ),
-    );
+    final completedContext = await Navigator.of(context)
+        .push<VoiceConversationContext>(
+          MaterialPageRoute(
+            builder: (ctx) => VoiceConversationScreen(
+              context: conversationContext,
+              voiceService: voiceService,
+              onContextUpdated: (updatedContext) {
+                conversationContext = updatedContext;
+              },
+            ),
+          ),
+        );
 
     // Si el usuario completó la conversación, mostrar confirmación final
     if (completedContext != null && mounted) {
-
       // Crear interpretación completa para la pantalla de confirmación
       final finalInterpretation = {
         'action': completedContext.action,
@@ -620,17 +652,13 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       if (executionResult != null && widget.onCommandExecuted != null) {
         widget.onCommandExecuted!(executionResult);
       }
-    } else {
-    }
+    } else {}
   }
 
   void _showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -649,8 +677,8 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       backgroundColor: _isRecording
           ? Colors.red
           : isDisabled
-              ? Colors.grey
-              : (widget.backgroundColor ?? Theme.of(context).primaryColor),
+          ? Colors.grey
+          : (widget.backgroundColor ?? Theme.of(context).primaryColor),
       child: _isRecording
           ? AnimatedBuilder(
               animation: _pulseController,

@@ -25,7 +25,6 @@ class EventOperations {
     bool shouldNavigate = false,
     bool showSuccessMessage = true,
   }) async {
-
     try {
       if (event.id == null) {
         throw Exception('Event ID is null');
@@ -64,7 +63,6 @@ class EventOperations {
 
       return true;
     } catch (e, _) {
-
       if (context.mounted) {
         final errorMessage = ErrorMessageParser.parse(e, context);
         PlatformDialogHelpers.showSnackBar(
@@ -98,9 +96,7 @@ class EventOperations {
       builder: (context) => CupertinoAlertDialog(
         title: Text(canEdit ? l10n.deleteEvent : l10n.leaveEvent),
         content: Text(
-          canEdit
-            ? l10n.confirmCancelEvent
-            : l10n.confirmRemoveFromList,
+          canEdit ? l10n.confirmCancelEvent : l10n.confirmRemoveFromList,
         ),
         actions: [
           CupertinoDialogAction(

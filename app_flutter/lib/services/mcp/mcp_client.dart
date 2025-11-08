@@ -9,7 +9,8 @@ class MCPClient {
   Process? _process;
   StreamSubscription? _stdoutSubscription;
   StreamSubscription? _stderrSubscription;
-  final _responseController = StreamController<Map<String, dynamic>>.broadcast();
+  final _responseController =
+      StreamController<Map<String, dynamic>>.broadcast();
   final _pendingRequests = <String, Completer<Map<String, dynamic>>>{};
   int _requestIdCounter = 0;
 
@@ -31,10 +32,16 @@ class MCPClient {
       final dockerRunning = await _isDockerMCPRunning();
 
       if (dockerRunning) {
-        DebugConfig.info('Usando servidor MCP en Docker (puerto 8002)', tag: 'MCP');
+        DebugConfig.info(
+          'Usando servidor MCP en Docker (puerto 8002)',
+          tag: 'MCP',
+        );
         await _connectToDockerMCP();
       } else {
-        DebugConfig.info('Docker MCP no disponible, iniciando en modo local', tag: 'MCP');
+        DebugConfig.info(
+          'Docker MCP no disponible, iniciando en modo local',
+          tag: 'MCP',
+        );
         await _connectToLocalMCP();
       }
 
@@ -45,12 +52,8 @@ class MCPClient {
       await _sendRequest('initialize', {
         'protocolVersion': '2024-11-05',
         'capabilities': {},
-        'clientInfo': {
-          'name': 'eventypop-flutter',
-          'version': '1.0.0',
-        },
+        'clientInfo': {'name': 'eventypop-flutter', 'version': '1.0.0'},
       });
-
     } catch (e, stackTrace) {
       DebugConfig.error('Error conectando al servidor MCP: $e', tag: 'MCP');
       DebugConfig.error('Stack trace: $stackTrace', tag: 'MCP');
@@ -78,10 +81,13 @@ class MCPClient {
   /// Conecta al servidor MCP en Docker
   Future<void> _connectToDockerMCP() async {
     // Iniciar proceso que se conecta al contenedor Docker via docker exec
-    _process = await Process.start(
-      'docker',
-      ['exec', '-i', 'agenda_phoenix_mcp', 'python', 'server.py'],
-    );
+    _process = await Process.start('docker', [
+      'exec',
+      '-i',
+      'agenda_phoenix_mcp',
+      'python',
+      'server.py',
+    ]);
 
     DebugConfig.info('Conectado a servidor MCP en Docker', tag: 'MCP');
 
@@ -100,7 +106,8 @@ class MCPClient {
 
   /// Conecta al servidor MCP en modo local (desarrollo)
   Future<void> _connectToLocalMCP() async {
-    final mcpServerPath = '/Users/miquelfarre/development/agenda_phoenix/eventypop_mcp';
+    final mcpServerPath =
+        '/Users/miquelfarre/development/agenda_phoenix/eventypop_mcp';
     final serverScript = '$mcpServerPath/server.py';
 
     // Verificar que el servidor existe
@@ -109,13 +116,14 @@ class MCPClient {
     }
 
     // Iniciar el proceso del servidor MCP en modo local
-    _process = await Process.start(
-      'python3',
-      [serverScript],
-      workingDirectory: mcpServerPath,
-    );
+    _process = await Process.start('python3', [
+      serverScript,
+    ], workingDirectory: mcpServerPath);
 
-    DebugConfig.info('Servidor MCP iniciado en modo local, PID: ${_process!.pid}', tag: 'MCP');
+    DebugConfig.info(
+      'Servidor MCP iniciado en modo local, PID: ${_process!.pid}',
+      tag: 'MCP',
+    );
 
     // Escuchar stdout
     _stdoutSubscription = _process!.stdout
@@ -180,7 +188,10 @@ class MCPClient {
   }
 
   /// Envía una solicitud al servidor MCP
-  Future<Map<String, dynamic>> _sendRequest(String method, Map<String, dynamic> params) async {
+  Future<Map<String, dynamic>> _sendRequest(
+    String method,
+    Map<String, dynamic> params,
+  ) async {
     if (!_isConnected) {
       throw Exception('MCP client not connected');
     }
@@ -213,7 +224,10 @@ class MCPClient {
   }
 
   /// Llama a una herramienta del servidor MCP
-  Future<Map<String, dynamic>> callTool(String toolName, Map<String, dynamic> arguments) async {
+  Future<Map<String, dynamic>> callTool(
+    String toolName,
+    Map<String, dynamic> arguments,
+  ) async {
     final response = await _sendRequest('tools/call', {
       'name': toolName,
       'arguments': arguments,
@@ -238,8 +252,14 @@ class MCPClient {
   }
 
   /// Obtiene el schema de una operación
-  Future<OperationSchema> getOperationSchema(String operation, {String language = 'es'}) async {
-    DebugConfig.info('Obteniendo schema para operación: $operation', tag: 'MCP');
+  Future<OperationSchema> getOperationSchema(
+    String operation, {
+    String language = 'es',
+  }) async {
+    DebugConfig.info(
+      'Obteniendo schema para operación: $operation',
+      tag: 'MCP',
+    );
 
     final response = await callTool('get_operation_schema', {
       'operation': operation,
@@ -256,7 +276,10 @@ class MCPClient {
     Map<String, dynamic>? parameters,
     String language = 'es',
   }) async {
-    DebugConfig.info('Obteniendo sugerencias para: $completedAction', tag: 'MCP');
+    DebugConfig.info(
+      'Obteniendo sugerencias para: $completedAction',
+      tag: 'MCP',
+    );
 
     final response = await callTool('get_workflow_suggestions', {
       'completed_action': completedAction,
@@ -269,7 +292,10 @@ class MCPClient {
   }
 
   /// Valida parámetros antes de enviar al backend
-  Future<ValidationResult> validateParameters(String operation, Map<String, dynamic> parameters) async {
+  Future<ValidationResult> validateParameters(
+    String operation,
+    Map<String, dynamic> parameters,
+  ) async {
     DebugConfig.info('Validando parámetros para: $operation', tag: 'MCP');
 
     final response = await callTool('validate_parameters', {
@@ -285,12 +311,16 @@ class MCPClient {
     final response = await callTool('list_operations', {});
     final operations = response['operations'] as List<dynamic>;
 
-    return operations.map((op) => OperationInfo.fromJson(op as Map<String, dynamic>)).toList();
+    return operations
+        .map((op) => OperationInfo.fromJson(op as Map<String, dynamic>))
+        .toList();
   }
 
   /// Obtiene solo los campos obligatorios de una operación
   Future<List<String>> getRequiredFields(String operation) async {
-    final response = await callTool('get_required_fields', {'operation': operation});
+    final response = await callTool('get_required_fields', {
+      'operation': operation,
+    });
     return List<String>.from(response['required_fields'] as List<dynamic>);
   }
 }
@@ -380,7 +410,9 @@ class FieldSchema {
       autoFromContext: json['auto_from_context'] as bool? ?? false,
       maxLength: json['max_length'] as int?,
       format: json['format'] as String?,
-      options: json['options'] != null ? List<String>.from(json['options'] as List<dynamic>) : null,
+      options: json['options'] != null
+          ? List<String>.from(json['options'] as List<dynamic>)
+          : null,
       question: json['question'] as String?,
       validation: json['validation'] as Map<String, dynamic>?,
       dependsOn: json['depends_on'] as Map<String, dynamic>?,
@@ -449,7 +481,9 @@ class ValidationResult {
 
     return ValidationResult(
       valid: json['valid'] as bool,
-      missingRequired: List<String>.from(json['missing_required'] as List<dynamic>),
+      missingRequired: List<String>.from(
+        json['missing_required'] as List<dynamic>,
+      ),
       validationErrors: errors,
     );
   }

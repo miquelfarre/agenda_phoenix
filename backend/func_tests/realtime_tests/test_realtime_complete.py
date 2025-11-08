@@ -81,10 +81,7 @@ def get_user_calendars(user_id: int) -> List[Dict]:
 def get_user_stats(user_id: int) -> Dict:
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM user_subscription_stats WHERE user_id = %s",
-                (user_id,)
-            )
+            cursor.execute("SELECT * FROM user_subscription_stats WHERE user_id = %s", (user_id,))
             result = cursor.fetchone()
             return dict(result) if result else None
 
@@ -96,6 +93,7 @@ def wait_for_realtime(seconds: float = 2.0):
 # ============================================================================
 # EVENTS TABLE - INSERT, UPDATE, DELETE
 # ============================================================================
+
 
 class TestEventsRealtimeINSERT:
     """Tabla: events - Evento: INSERT"""
@@ -211,6 +209,7 @@ class TestEventsRealtimeDELETE:
 # EVENT_INTERACTIONS TABLE - INSERT, UPDATE, DELETE
 # ============================================================================
 
+
 class TestEventInteractionsRealtimeINSERT:
     """Tabla: event_interactions - Evento: INSERT"""
 
@@ -300,8 +299,7 @@ class TestEventInteractionsRealtimeUPDATE:
         events_after = get_user_events(invitee_id)
         event_after = next((e for e in events_after if e["id"] == event_id), None)
 
-        assert event_after["interaction"]["status"] == "accepted", \
-            f"Expected status='accepted', got '{event_after['interaction']['status']}'"
+        assert event_after["interaction"]["status"] == "accepted", f"Expected status='accepted', got '{event_after['interaction']['status']}'"
 
         print(f"✅ UPDATE interaction: Status changed to accepted via Realtime")
 
@@ -422,7 +420,7 @@ class TestEventInteractionsRealtimeUPDATE:
         wait_for_realtime()
 
         # Set note
-        note_data = {"note": "My personal note"}
+        note_data = {"personal_note": "My personal note"}
         response = api_request("PATCH", f"/interactions/{interaction_id}", json_data=note_data, user_id=invitee_id)
         assert response.status_code == 200
 
@@ -432,7 +430,7 @@ class TestEventInteractionsRealtimeUPDATE:
         events = get_user_events(invitee_id)
         event = next((e for e in events if e["id"] == event_id), None)
 
-        assert event["interaction"].get("note") == "My personal note"
+        assert event["interaction"].get("personal_note") == "My personal note"
 
         print(f"✅ UPDATE interaction (note): note updated via Realtime")
 
@@ -501,6 +499,7 @@ class TestEventInteractionsRealtimeDELETE:
 # ============================================================================
 # GROUPS TABLE - INSERT, UPDATE, DELETE
 # ============================================================================
+
 
 class TestGroupsRealtimeINSERT:
     """Tabla: groups - Evento: INSERT"""
@@ -695,6 +694,7 @@ class TestGroupsRealtimeDELETE:
 # CALENDAR_MEMBERSHIPS TABLE - INSERT, DELETE
 # ============================================================================
 
+
 class TestCalendarMembershipsRealtimeINSERT:
     """Tabla: calendar_memberships - Evento: INSERT"""
 
@@ -819,6 +819,7 @@ class TestCalendarMembershipsRealtimeDELETE:
 # USER_SUBSCRIPTION_STATS TABLE - UPDATE (via triggers)
 # ============================================================================
 
+
 class TestUserSubscriptionStatsRealtimeUPDATE:
     """Tabla: user_subscription_stats - Evento: UPDATE (triggers CDC)"""
 
@@ -843,8 +844,7 @@ class TestUserSubscriptionStatsRealtimeUPDATE:
         final_stats = get_user_stats(user_id)
         final_count = final_stats["total_events_count"]
 
-        assert final_count == initial_count + 1, \
-            f"Expected {initial_count + 1}, got {final_count}"
+        assert final_count == initial_count + 1, f"Expected {initial_count + 1}, got {final_count}"
 
         print(f"✅ UPDATE stats (trigger): total_events_count incremented")
 
@@ -876,8 +876,7 @@ class TestUserSubscriptionStatsRealtimeUPDATE:
         stats_after_delete = get_user_stats(user_id)
         count_after_delete = stats_after_delete["total_events_count"]
 
-        assert count_after_delete == count_after_create - 1, \
-            f"Expected {count_after_create - 1}, got {count_after_delete}"
+        assert count_after_delete == count_after_create - 1, f"Expected {count_after_create - 1}, got {count_after_delete}"
 
         print(f"✅ UPDATE stats (trigger): total_events_count decremented")
 
@@ -897,8 +896,7 @@ class TestUserSubscriptionStatsRealtimeUPDATE:
         final_stats = get_user_stats(target_id)
         final_subscribers = final_stats["subscribers_count"]
 
-        assert final_subscribers == initial_subscribers + 1, \
-            f"Expected {initial_subscribers + 1}, got {final_subscribers}"
+        assert final_subscribers == initial_subscribers + 1, f"Expected {initial_subscribers + 1}, got {final_subscribers}"
 
         print(f"✅ UPDATE stats (trigger): subscribers_count incremented")
 
@@ -926,8 +924,7 @@ class TestUserSubscriptionStatsRealtimeUPDATE:
         stats_after_unsubscribe = get_user_stats(target_id)
         subscribers_after_unsubscribe = stats_after_unsubscribe["subscribers_count"]
 
-        assert subscribers_after_unsubscribe == subscribers_after_subscribe - 1, \
-            f"Expected {subscribers_after_subscribe - 1}, got {subscribers_after_unsubscribe}"
+        assert subscribers_after_unsubscribe == subscribers_after_subscribe - 1, f"Expected {subscribers_after_subscribe - 1}, got {subscribers_after_unsubscribe}"
 
         print(f"✅ UPDATE stats (trigger): subscribers_count decremented")
 

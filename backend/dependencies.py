@@ -84,22 +84,13 @@ def check_event_permission(event_id: int, current_user_id: int, db: Session) -> 
         return  # Owner has permission
 
     # Check if user is admin of this event
-    interaction = db.query(EventInteraction).filter(
-        EventInteraction.event_id == event_id,
-        EventInteraction.user_id == current_user_id,
-        EventInteraction.interaction_type == "joined",
-        EventInteraction.role == "admin",
-        EventInteraction.status == "accepted"
-    ).first()
+    interaction = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id, EventInteraction.interaction_type == "joined", EventInteraction.role == "admin", EventInteraction.status == "accepted").first()
 
     if interaction:
         return  # Admin has permission
 
     # No permission
-    raise HTTPException(
-        status_code=403,
-        detail="You don't have permission to modify this event. Only the event owner or admins can perform this action."
-    )
+    raise HTTPException(status_code=403, detail="You don't have permission to modify this event. Only the event owner or admins can perform this action.")
 
 
 def check_calendar_permission(calendar_id: int, current_user_id: int, db: Session) -> None:
@@ -128,21 +119,13 @@ def check_calendar_permission(calendar_id: int, current_user_id: int, db: Sessio
         return  # Owner has permission
 
     # Check if user is admin of this calendar
-    membership = db.query(CalendarMembership).filter(
-        CalendarMembership.calendar_id == calendar_id,
-        CalendarMembership.user_id == current_user_id,
-        CalendarMembership.role == "admin",
-        CalendarMembership.status == "accepted"
-    ).first()
+    membership = db.query(CalendarMembership).filter(CalendarMembership.calendar_id == calendar_id, CalendarMembership.user_id == current_user_id, CalendarMembership.role == "admin", CalendarMembership.status == "accepted").first()
 
     if membership:
         return  # Admin has permission
 
     # No permission
-    raise HTTPException(
-        status_code=403,
-        detail="You don't have permission to modify this calendar. Only the calendar owner or admins can perform this action."
-    )
+    raise HTTPException(status_code=403, detail="You don't have permission to modify this calendar. Only the calendar owner or admins can perform this action.")
 
 
 def check_group_permission(group_id: int, current_user_id: int, db: Session) -> None:
@@ -171,20 +154,13 @@ def check_group_permission(group_id: int, current_user_id: int, db: Session) -> 
         return  # Owner has permission
 
     # Check if user is admin of this group
-    membership = db.query(GroupMembership).filter(
-        GroupMembership.group_id == group_id,
-        GroupMembership.user_id == current_user_id,
-        GroupMembership.role == "admin"
-    ).first()
+    membership = db.query(GroupMembership).filter(GroupMembership.group_id == group_id, GroupMembership.user_id == current_user_id, GroupMembership.role == "admin").first()
 
     if membership:
         return  # Admin has permission
 
     # No permission
-    raise HTTPException(
-        status_code=403,
-        detail="You don't have permission to modify this group. Only the group creator or admins can perform this action."
-    )
+    raise HTTPException(status_code=403, detail="You don't have permission to modify this group. Only the group creator or admins can perform this action.")
 
 
 def is_event_owner_or_admin(event_id: int, user_id: int, db: Session) -> bool:
@@ -209,13 +185,7 @@ def is_event_owner_or_admin(event_id: int, user_id: int, db: Session) -> bool:
         return True
 
     # Check if user is admin
-    interaction = db.query(EventInteraction).filter(
-        EventInteraction.event_id == event_id,
-        EventInteraction.user_id == user_id,
-        EventInteraction.interaction_type == "joined",
-        EventInteraction.role == "admin",
-        EventInteraction.status == "accepted"
-    ).first()
+    interaction = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == user_id, EventInteraction.interaction_type == "joined", EventInteraction.role == "admin", EventInteraction.status == "accepted").first()
 
     return interaction is not None
 
@@ -242,12 +212,7 @@ def is_calendar_owner_or_admin(calendar_id: int, user_id: int, db: Session) -> b
         return True
 
     # Check if user is admin
-    membership = db.query(CalendarMembership).filter(
-        CalendarMembership.calendar_id == calendar_id,
-        CalendarMembership.user_id == user_id,
-        CalendarMembership.role == "admin",
-        CalendarMembership.status == "accepted"
-    ).first()
+    membership = db.query(CalendarMembership).filter(CalendarMembership.calendar_id == calendar_id, CalendarMembership.user_id == user_id, CalendarMembership.role == "admin", CalendarMembership.status == "accepted").first()
 
     return membership is not None
 
@@ -274,11 +239,7 @@ def is_group_creator_or_admin(group_id: int, user_id: int, db: Session) -> bool:
         return True
 
     # Check if user is admin
-    membership = db.query(GroupMembership).filter(
-        GroupMembership.group_id == group_id,
-        GroupMembership.user_id == user_id,
-        GroupMembership.role == "admin"
-    ).first()
+    membership = db.query(GroupMembership).filter(GroupMembership.group_id == group_id, GroupMembership.user_id == user_id, GroupMembership.role == "admin").first()
 
     return membership is not None
 
@@ -305,17 +266,11 @@ def check_contact_permission(contact_id: int, current_user_id: int, db: Session)
 
     # Contacts without owner (representing registered users) cannot be edited
     if contact.owner_id is None:
-        raise HTTPException(
-            status_code=403,
-            detail="This contact represents a registered user and cannot be edited directly."
-        )
+        raise HTTPException(status_code=403, detail="This contact represents a registered user and cannot be edited directly.")
 
     # Check if user is owner
     if contact.owner_id != current_user_id:
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to modify this contact. Only the contact owner can perform this action."
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission to modify this contact. Only the contact owner can perform this action.")
 
 
 def check_is_admin(current_user_id: int, db: Session) -> None:
@@ -337,10 +292,7 @@ def check_is_admin(current_user_id: int, db: Session) -> None:
 
     # Check if user is admin
     if not user.is_admin:
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to perform this action. Only administrators can perform this action."
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission to perform this action. Only administrators can perform this action.")
 
 
 def check_user_not_public(user_id: int, db: Session, action_description: str = "this action") -> None:
@@ -364,10 +316,7 @@ def check_user_not_public(user_id: int, db: Session, action_description: str = "
 
     # Check if user is public
     if user.is_public:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Public users cannot {action_description}. Only private users can perform this action."
-        )
+        raise HTTPException(status_code=403, detail=f"Public users cannot {action_description}. Only private users can perform this action.")
 
 
 def handle_recurring_event_rejection_cascade(db: Session, interaction: EventInteraction, db_event: Event) -> None:
@@ -383,9 +332,7 @@ def handle_recurring_event_rejection_cascade(db: Session, interaction: EventInte
         db_event: The event associated with the interaction
     """
     # Only cascade if it's a recurring event invitation being rejected
-    if not (db_event.event_type == "recurring" and
-            interaction.interaction_type == "invited" and
-            interaction.status == "rejected"):
+    if not (db_event.event_type == "recurring" and interaction.interaction_type == "invited" and interaction.status == "rejected"):
         return
 
     # Import here to avoid circular imports
@@ -403,8 +350,4 @@ def handle_recurring_event_rejection_cascade(db: Session, interaction: EventInte
 
     if instance_event_ids:
         # Update all pending invitations to these instances to 'rejected'
-        event_interaction.bulk_reject_pending_instances(
-            db,
-            instance_event_ids=instance_event_ids,
-            user_id=interaction.user_id
-        )
+        event_interaction.bulk_reject_pending_instances(db, instance_event_ids=instance_event_ids, user_id=interaction.user_id)

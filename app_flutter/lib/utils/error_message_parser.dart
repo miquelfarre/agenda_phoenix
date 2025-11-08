@@ -58,7 +58,11 @@ class ErrorMessageParser {
   }
 
   /// Parse calendar-specific errors
-  static String parseCalendarError(dynamic error, BuildContext context, String operation) {
+  static String parseCalendarError(
+    dynamic error,
+    BuildContext context,
+    String operation,
+  ) {
     final l10n = context.l10n;
     final parsed = parse(error, context);
 

@@ -23,12 +23,15 @@ class CalendarPermissions {
 
     // Check if user is admin of this calendar
     try {
-      final memberships = await repository.fetchCalendarMemberships(calendar.id);
+      final memberships = await repository.fetchCalendarMemberships(
+        calendar.id,
+      );
       final userMembership = memberships.firstWhere(
         (m) => m['user_id'].toString() == userId.toString(),
         orElse: () => <String, dynamic>{},
       );
-      return userMembership['role'] == 'admin' && userMembership['status'] == 'accepted';
+      return userMembership['role'] == 'admin' &&
+          userMembership['status'] == 'accepted';
     } catch (e) {
       return false;
     }

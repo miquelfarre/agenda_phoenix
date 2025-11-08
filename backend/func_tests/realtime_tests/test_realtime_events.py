@@ -122,12 +122,9 @@ class TestEventRealtimeFlow:
         print(f"📊 Final state: {final_count} events")
 
         # ASSERTIONS
-        assert event_id in final_event_ids, \
-            f"Event {event_id} NOT FOUND in user events after creation! " \
-            f"Expected in {final_event_ids}, but missing."
+        assert event_id in final_event_ids, f"Event {event_id} NOT FOUND in user events after creation! " f"Expected in {final_event_ids}, but missing."
 
-        assert final_count == initial_count + 1, \
-            f"Expected {initial_count + 1} events, got {final_count}"
+        assert final_count == initial_count + 1, f"Expected {initial_count + 1} events, got {final_count}"
 
         # Cleanup
         api_request("DELETE", f"/events/{event_id}", user_id=user_id)
@@ -164,15 +161,13 @@ class TestEventRealtimeFlow:
         events_before = get_user_events(user_id)
         event_ids_before = {e["id"] for e in events_before}
 
-        assert event_id in event_ids_before, \
-            f"Event {event_id} should exist before deletion"
+        assert event_id in event_ids_before, f"Event {event_id} should exist before deletion"
 
         print(f"✅ Event {event_id} confirmed in user events")
 
         # 3. Eliminar evento
         delete_response = api_request("DELETE", f"/events/{event_id}", user_id=user_id)
-        assert delete_response.status_code == 200, \
-            f"Delete failed: {delete_response.text}"
+        assert delete_response.status_code == 200, f"Delete failed: {delete_response.text}"
 
         print(f"✅ DELETE request returned 200")
 
@@ -186,12 +181,9 @@ class TestEventRealtimeFlow:
         print(f"📊 Events before: {len(events_before)}, after: {len(events_after)}")
 
         # CRITICAL ASSERTION
-        assert event_id not in event_ids_after, \
-            f"❌ FATAL: Event {event_id} STILL EXISTS after deletion! " \
-            f"Found in: {event_ids_after}"
+        assert event_id not in event_ids_after, f"❌ FATAL: Event {event_id} STILL EXISTS after deletion! " f"Found in: {event_ids_after}"
 
-        assert len(events_after) == len(events_before) - 1, \
-            f"Expected {len(events_before) - 1} events after deletion, got {len(events_after)}"
+        assert len(events_after) == len(events_before) - 1, f"Expected {len(events_before) - 1} events after deletion, got {len(events_after)}"
 
         print(f"✅ Event {event_id} successfully removed from user events")
 
@@ -235,11 +227,9 @@ class TestEventRealtimeFlow:
         events = get_user_events(user_id)
         updated_event = next((e for e in events if e["id"] == event_id), None)
 
-        assert updated_event is not None, \
-            f"Event {event_id} not found after update"
+        assert updated_event is not None, f"Event {event_id} not found after update"
 
-        assert updated_event["name"] == "Updated Name", \
-            f"Expected name='Updated Name', got '{updated_event['name']}'"
+        assert updated_event["name"] == "Updated Name", f"Expected name='Updated Name', got '{updated_event['name']}'"
 
         print(f"✅ Event name updated correctly in user events")
 
@@ -303,8 +293,7 @@ class TestEventRealtimeFlow:
         invitee_events_before = get_user_events(invitee_id)
         invitee_event_ids_before = {e["id"] for e in invitee_events_before}
 
-        assert event_id in invitee_event_ids_before, \
-            f"Event {event_id} should appear in user {invitee_id} events after accepting"
+        assert event_id in invitee_event_ids_before, f"Event {event_id} should appear in user {invitee_id} events after accepting"
 
         print(f"✅ Event {event_id} confirmed in user {invitee_id} events")
 
@@ -321,8 +310,7 @@ class TestEventRealtimeFlow:
         invitee_events_after = get_user_events(invitee_id)
         invitee_event_ids_after = {e["id"] for e in invitee_events_after}
 
-        assert event_id not in invitee_event_ids_after, \
-            f"❌ FATAL: Event {event_id} STILL in user {invitee_id} events after leaving!"
+        assert event_id not in invitee_event_ids_after, f"❌ FATAL: Event {event_id} STILL in user {invitee_id} events after leaving!"
 
         print(f"✅ Event {event_id} removed from user {invitee_id} events")
 
@@ -330,8 +318,7 @@ class TestEventRealtimeFlow:
         owner_events = get_user_events(owner_id)
         owner_event_ids = {e["id"] for e in owner_events}
 
-        assert event_id in owner_event_ids, \
-            f"Event {event_id} should STILL appear in owner (user {owner_id}) events"
+        assert event_id in owner_event_ids, f"Event {event_id} should STILL appear in owner (user {owner_id}) events"
 
         print(f"✅ Event {event_id} still exists for owner (user {owner_id})")
 
@@ -382,8 +369,7 @@ class TestEventRealtimeFlow:
         invitee_events_before = get_user_events(invitee_id)
         invitee_event_ids_before = {e["id"] for e in invitee_events_before}
 
-        assert event_id in invitee_event_ids_before, \
-            f"Event {event_id} should appear in user {invitee_id} events (pending)"
+        assert event_id in invitee_event_ids_before, f"Event {event_id} should appear in user {invitee_id} events (pending)"
 
         print(f"✅ Event {event_id} visible to user {invitee_id} (pending)")
 
@@ -401,8 +387,7 @@ class TestEventRealtimeFlow:
         invitee_events_after = get_user_events(invitee_id)
         invitee_event_ids_after = {e["id"] for e in invitee_events_after}
 
-        assert event_id not in invitee_event_ids_after, \
-            f"❌ FATAL: Event {event_id} STILL in user {invitee_id} events after rejection!"
+        assert event_id not in invitee_event_ids_after, f"❌ FATAL: Event {event_id} STILL in user {invitee_id} events after rejection!"
 
         print(f"✅ Event {event_id} removed from user {invitee_id} events after rejection")
 
@@ -471,8 +456,7 @@ class TestEventInteractionRealtimeFlow:
         event_after = next((e for e in events_after if e["id"] == event_id), None)
 
         assert event_after is not None
-        assert event_after.get("interaction", {}).get("status") == "accepted", \
-            f"Expected status='accepted', got '{event_after.get('interaction', {}).get('status')}'"
+        assert event_after.get("interaction", {}).get("status") == "accepted", f"Expected status='accepted', got '{event_after.get('interaction', {}).get('status')}'"
 
         print(f"✅ Status updated to: accepted")
 

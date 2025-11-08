@@ -20,16 +20,7 @@ router = APIRouter(prefix="/api/v1/events", tags=["events"])
 
 
 @router.get("", response_model=List[EventResponse])
-async def get_events(
-    owner_id: Optional[int] = None,
-    calendar_id: Optional[int] = None,
-    current_user_id: Optional[int] = Depends(get_current_user_id_optional),
-    limit: int = 50,
-    offset: int = 0,
-    order_by: Optional[str] = "start_date",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_events(owner_id: Optional[int] = None, calendar_id: Optional[int] = None, current_user_id: Optional[int] = Depends(get_current_user_id_optional), limit: int = 50, offset: int = 0, order_by: Optional[str] = "start_date", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all events, optionally filtered by owner_id or calendar_id.
 
     Authentication is optional - provide JWT token in Authorization header for authenticated access."""
@@ -37,25 +28,13 @@ async def get_events(
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    events = event.get_multi_filtered(
-        db,
-        owner_id=owner_id,
-        calendar_id=calendar_id,
-        skip=offset,
-        limit=limit,
-        order_by=order_by or "start_date",
-        order_dir=order_dir
-    )
+    events = event.get_multi_filtered(db, owner_id=owner_id, calendar_id=calendar_id, skip=offset, limit=limit, order_by=order_by or "start_date", order_dir=order_dir)
 
     return events
 
 
 @router.get("/{event_id}", response_model=EventResponse)
-async def get_event(
-    event_id: int,
-    current_user_id: Optional[int] = Depends(get_current_user_id_optional),
-    db: Session = Depends(get_db)
-):
+async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_current_user_id_optional), db: Session = Depends(get_db)):
     """
     Get a single event by ID.
 
@@ -92,6 +71,7 @@ async def get_event(
 
     # Get owner contact for full name
     from crud import contact as contact_crud
+
     owner_contact = None
     if owner.contact_id:
         owner_contact = contact_crud.get(db, id=owner.contact_id)
@@ -100,9 +80,9 @@ async def get_event(
     owner_name = owner_contact.name if owner_contact else owner.instagram_name
 
     import logging
+
     logger = logging.getLogger(__name__)
-    logger.info(f"[GET /events/{event_id}] OWNER INFO: user_id={owner.id}, is_public={owner.is_public}, "
-               f"has_contact={owner_contact is not None}, owner_name={owner_name}, instagram_name={owner.instagram_name}")
+    logger.info(f"[GET /events/{event_id}] OWNER INFO: user_id={owner.id}, is_public={owner.is_public}, " f"has_contact={owner_contact is not None}, owner_name={owner_name}, instagram_name={owner.instagram_name}")
 
     # Build response dict from event
     response_data = {
@@ -125,20 +105,11 @@ async def get_event(
     if owner.is_public and current_user_id is not None:
         # Check if user is subscribed to owner (any event from this owner)
         # A subscription is an interaction of type "subscribed" to any event owned by the public user
-        subscriptions = db.query(EventInteraction).join(
-            event.model, EventInteraction.event_id == event.model.id
-        ).filter(
-            event.model.owner_id == owner.id,
-            EventInteraction.user_id == current_user_id,
-            EventInteraction.interaction_type == "subscribed"
-        ).first()
+        subscriptions = db.query(EventInteraction).join(event.model, EventInteraction.event_id == event.model.id).filter(event.model.owner_id == owner.id, EventInteraction.user_id == current_user_id, EventInteraction.interaction_type == "subscribed").first()
         is_subscribed = subscriptions is not None
 
         # Check if there's a block between users
-        is_blocked = db.query(UserBlock).filter(
-            ((UserBlock.blocker_user_id == current_user_id) & (UserBlock.blocked_user_id == owner.id)) |
-            ((UserBlock.blocker_user_id == owner.id) & (UserBlock.blocked_user_id == current_user_id))
-        ).first() is not None
+        is_blocked = db.query(UserBlock).filter(((UserBlock.blocker_user_id == current_user_id) & (UserBlock.blocked_user_id == owner.id)) | ((UserBlock.blocker_user_id == owner.id) & (UserBlock.blocked_user_id == current_user_id))).first() is not None
 
         # User can subscribe if not already subscribed and not blocked
         can_subscribe = not is_subscribed and not is_blocked
@@ -173,19 +144,15 @@ async def get_event(
         # Check if user is admin of the calendar containing this event
         if db_event.calendar_id:
             from crud import calendar_membership
-            membership = calendar_membership.get_membership(
-                db, calendar_id=db_event.calendar_id, user_id=current_user_id
-            )
+
+            membership = calendar_membership.get_membership(db, calendar_id=db_event.calendar_id, user_id=current_user_id)
             if membership and membership.role in ["admin"] and membership.status == "accepted":
                 is_admin = True
 
         print(f"🔍 DEBUG BACKEND: is_admin = {is_admin}")
 
         # Check if user is an accepted participant who can invite others
-        user_interaction_for_permission = db.query(EventInteraction).filter(
-            EventInteraction.event_id == event_id,
-            EventInteraction.user_id == current_user_id
-        ).first()
+        user_interaction_for_permission = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id).first()
 
         can_invite = False
         if is_owner or is_admin:
@@ -224,34 +191,41 @@ async def get_event(
                     inviter = user.get(db, id=interaction.invited_by_user_id)
                     if inviter and inviter.contact_id:
                         from crud import contact as contact_crud
+
                         inviter_contact = contact_crud.get(db, id=inviter.contact_id)
                     inviter_name = inviter_contact.name if inviter_contact else (inviter.instagram_name if inviter else None)
 
-                interactions_data.append({
-                    "id": interaction.id,
-                    "user_id": interaction.user_id,
-                    "event_id": interaction.event_id,
-                    "interaction_type": interaction.interaction_type,
-                    "status": interaction.status,
-                    "role": interaction.role,
-                    "invited_by_user_id": interaction.invited_by_user_id,
-                    "personal_note": interaction.personal_note,
-                    "read_at": interaction.read_at.isoformat() if interaction.read_at else None,
-                    "created_at": interaction.created_at.isoformat(),
-                    "updated_at": interaction.updated_at.isoformat(),
-                    "user": {
-                        "id": interaction_user.id,
-                        "full_name": user_name,
-                        "instagram_name": interaction_user.instagram_name,
-                        "phone_number": user_phone,
-                        "profile_picture": interaction_user.profile_picture,
-                    },
-                    "inviter": {
-                        "id": inviter.id,
-                        "full_name": inviter_name,
-                        "instagram_name": inviter.instagram_name,
-                    } if inviter else None
-                })
+                interactions_data.append(
+                    {
+                        "id": interaction.id,
+                        "user_id": interaction.user_id,
+                        "event_id": interaction.event_id,
+                        "interaction_type": interaction.interaction_type,
+                        "status": interaction.status,
+                        "role": interaction.role,
+                        "invited_by_user_id": interaction.invited_by_user_id,
+                        "personal_note": interaction.personal_note,
+                        "read_at": interaction.read_at.isoformat() if interaction.read_at else None,
+                        "created_at": interaction.created_at.isoformat(),
+                        "updated_at": interaction.updated_at.isoformat(),
+                        "user": {
+                            "id": interaction_user.id,
+                            "full_name": user_name,
+                            "instagram_name": interaction_user.instagram_name,
+                            "phone_number": user_phone,
+                            "profile_picture": interaction_user.profile_picture,
+                        },
+                        "inviter": (
+                            {
+                                "id": inviter.id,
+                                "full_name": inviter_name,
+                                "instagram_name": inviter.instagram_name,
+                            }
+                            if inviter
+                            else None
+                        ),
+                    }
+                )
 
             response_data["interactions"] = interactions_data
 
@@ -260,10 +234,7 @@ async def get_event(
             print(f"🔍 DEBUG BACKEND: Entering REGULAR USER block")
             print(f"🔍 DEBUG BACKEND: current_user_id = {current_user_id}, event_id = {event_id}")
             # Get current user's interaction only
-            user_interaction = db.query(EventInteraction).filter(
-                EventInteraction.event_id == event_id,
-                EventInteraction.user_id == current_user_id
-            ).first()
+            user_interaction = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id).first()
 
             print(f"🔍 DEBUG BACKEND: user_interaction found = {user_interaction is not None}")
             if user_interaction:
@@ -282,45 +253,46 @@ async def get_event(
                     inviter = user.get(db, id=user_interaction.invited_by_user_id)
                     if inviter and inviter.contact_id:
                         from crud import contact as contact_crud
+
                         inviter_contact = contact_crud.get(db, id=inviter.contact_id)
                     inviter_name = inviter_contact.name if inviter_contact else (inviter.instagram_name if inviter else None)
 
-                response_data["interactions"] = [{
-                    "id": user_interaction.id,
-                    "user_id": user_interaction.user_id,
-                    "event_id": user_interaction.event_id,
-                    "interaction_type": user_interaction.interaction_type,
-                    "status": user_interaction.status,
-                    "role": user_interaction.role,
-                    "invited_by_user_id": user_interaction.invited_by_user_id,
-                    "personal_note": user_interaction.personal_note,
-                    "is_attending": user_interaction.is_attending,
-                    "read_at": user_interaction.read_at.isoformat() if user_interaction.read_at else None,
-                    "inviter": {
-                        "id": inviter.id,
-                        "full_name": inviter_name,
-                        "instagram_name": inviter.instagram_name,
-                    } if inviter else None
-                }]
+                response_data["interactions"] = [
+                    {
+                        "id": user_interaction.id,
+                        "user_id": user_interaction.user_id,
+                        "event_id": user_interaction.event_id,
+                        "interaction_type": user_interaction.interaction_type,
+                        "status": user_interaction.status,
+                        "role": user_interaction.role,
+                        "invited_by_user_id": user_interaction.invited_by_user_id,
+                        "personal_note": user_interaction.personal_note,
+                        "is_attending": user_interaction.is_attending,
+                        "read_at": user_interaction.read_at.isoformat() if user_interaction.read_at else None,
+                        "inviter": (
+                            {
+                                "id": inviter.id,
+                                "full_name": inviter_name,
+                                "instagram_name": inviter.instagram_name,
+                            }
+                            if inviter
+                            else None
+                        ),
+                    }
+                ]
 
     # Get accepted users (attendees) - available for all authenticated users
     # Include users who accepted OR rejected but are attending (for public events)
     # Exclude public users (they don't attend their own events)
     if current_user_id is not None:
         from models import User
-        accepted_interactions = db.query(EventInteraction).join(
-            User, EventInteraction.user_id == User.id
-        ).filter(
-            EventInteraction.event_id == event_id,
-            or_(
-                EventInteraction.status == "accepted",
-                and_(
-                    EventInteraction.status == "rejected",
-                    EventInteraction.is_attending == True
-                )
-            ),
-            User.is_public == False  # Exclude public users
-        ).all()
+
+        accepted_interactions = (
+            db.query(EventInteraction)
+            .join(User, EventInteraction.user_id == User.id)
+            .filter(EventInteraction.event_id == event_id, or_(EventInteraction.status == "accepted", and_(EventInteraction.status == "rejected", EventInteraction.is_attending == True)), User.is_public == False)  # Exclude public users
+            .all()
+        )
 
         attendees = []
         print(f"🔍 DEBUG BACKEND: Building attendees list from {len(accepted_interactions)} accepted interactions")
@@ -334,6 +306,7 @@ async def get_event(
                 print(f"🔍 DEBUG BACKEND: user_obj.instagram_name={user_obj.instagram_name}, user_obj.contact_id={user_obj.contact_id}")
                 if user_obj.contact_id:
                     from crud import contact as contact_crud
+
                     user_contact = contact_crud.get(db, id=user_obj.contact_id)
                     print(f"🔍 DEBUG BACKEND: contact found={user_contact is not None}")
                     if user_contact:
@@ -341,12 +314,14 @@ async def get_event(
                     user_name = user_contact.name if user_contact else user_name
 
                 print(f"🔍 DEBUG BACKEND: Final user_name={user_name}, profile_picture={user_obj.profile_picture}")
-                attendees.append({
-                    "id": user_obj.id,
-                    "full_name": user_name,
-                    "instagram_name": user_obj.instagram_name,
-                    "profile_picture": user_obj.profile_picture,
-                })
+                attendees.append(
+                    {
+                        "id": user_obj.id,
+                        "full_name": user_name,
+                        "instagram_name": user_obj.instagram_name,
+                        "profile_picture": user_obj.profile_picture,
+                    }
+                )
 
         response_data["attendees"] = attendees
 
@@ -466,12 +441,7 @@ async def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{event_id}", response_model=EventResponse)
-async def update_event(
-    event_id: int,
-    event_data: EventUpdate,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_event(event_id: int, event_data: EventUpdate, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update an existing event.
 
@@ -495,12 +465,7 @@ async def update_event(
 
 
 @router.delete("/{event_id}")
-async def delete_event(
-    event_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    delete_request: Optional[EventDeleteRequest] = None,
-    db: Session = Depends(get_db)
-):
+async def delete_event(event_id: int, current_user_id: int = Depends(get_current_user_id), delete_request: Optional[EventDeleteRequest] = None, db: Session = Depends(get_db)):
     """
     Delete an event and optionally create cancellation notifications.
 
@@ -518,38 +483,22 @@ async def delete_event(
     # If delete_request is provided, verify cancelled_by_user_id matches current_user_id
     if delete_request and delete_request.cancelled_by_user_id:
         if delete_request.cancelled_by_user_id != current_user_id:
-            raise HTTPException(
-                status_code=400,
-                detail="cancelled_by_user_id in request body must match current_user_id"
-            )
+            raise HTTPException(status_code=400, detail="cancelled_by_user_id in request body must match current_user_id")
 
     # Delete with cancellations (using CRUD method)
     cancelled_by = delete_request.cancelled_by_user_id if delete_request else None
     cancellation_msg = delete_request.cancellation_message if delete_request else None
 
-    deleted_count, error = event.delete_with_cancellations(
-        db,
-        event_id=event_id,
-        cancelled_by_user_id=cancelled_by,
-        cancellation_message=cancellation_msg
-    )
+    deleted_count, error = event.delete_with_cancellations(db, event_id=event_id, cancelled_by_user_id=cancelled_by, cancellation_message=cancellation_msg)
 
     if error:
         raise HTTPException(status_code=404, detail=error)
 
-    return {
-        "message": f"Event deleted successfully ({'with ' + str(deleted_count - 1) + ' instances' if deleted_count > 1 else 'single event'})",
-        "id": event_id,
-        "deleted_count": deleted_count
-    }
+    return {"message": f"Event deleted successfully ({'with ' + str(deleted_count - 1) + ' instances' if deleted_count > 1 else 'single event'})", "id": event_id, "deleted_count": deleted_count}
 
 
 @router.get("/{event_id}/interaction", response_model=EventInteractionResponse)
-async def get_current_user_interaction(
-    event_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def get_current_user_interaction(event_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Get the current user's interaction with this event.
 
@@ -564,12 +513,7 @@ async def get_current_user_interaction(
 
 
 @router.patch("/{event_id}/interaction", response_model=EventInteractionResponse)
-async def update_current_user_interaction(
-    event_id: int,
-    interaction: EventInteractionUpdate,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_current_user_interaction(event_id: int, interaction: EventInteractionUpdate, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update or create the current user's interaction with this event.
 
@@ -594,13 +538,7 @@ async def update_current_user_interaction(
     if not db_interaction:
         # Create new interaction with provided fields
         interaction_data = EventInteractionCreate(
-            event_id=event_id,
-            user_id=current_user_id,
-            interaction_type=interaction.interaction_type or "subscribed",
-            status=interaction.status or "pending",
-            role=interaction.role,
-            personal_note=interaction.personal_note,
-            cancellation_note=interaction.cancellation_note
+            event_id=event_id, user_id=current_user_id, interaction_type=interaction.interaction_type or "subscribed", status=interaction.status or "pending", role=interaction.role, personal_note=interaction.personal_note, cancellation_note=interaction.cancellation_note
         )
         db_interaction = event_interaction.create(db, obj_in=interaction_data)
     else:
@@ -619,11 +557,7 @@ async def update_current_user_interaction(
 
 
 @router.delete("/{event_id}/interaction")
-async def delete_current_user_interaction(
-    event_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def delete_current_user_interaction(event_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Delete the current user's interaction with this event.
 
@@ -640,12 +574,7 @@ async def delete_current_user_interaction(
 
 
 @router.post("/{event_id}/interaction/invite", response_model=EventInteractionResponse, status_code=201)
-async def invite_user_to_event(
-    event_id: int,
-    invite_data: dict,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def invite_user_to_event(event_id: int, invite_data: dict, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Invite a user to an event by creating an 'invited' interaction.
 
@@ -678,18 +607,12 @@ async def invite_user_to_event(
 
     # Public users cannot be invited to events
     if invited_user.is_public:
-        raise HTTPException(
-            status_code=403,
-            detail="Public users cannot be invited to events. Only private users can receive invitations."
-        )
+        raise HTTPException(status_code=403, detail="Public users cannot be invited to events. Only private users can receive invitations.")
 
     # Check if inviter (current user) is public
     inviter_user = user.get(db, id=current_user_id)
     if inviter_user and inviter_user.is_public:
-        raise HTTPException(
-            status_code=403,
-            detail="Public users cannot invite others to events. Only private users can invite."
-        )
+        raise HTTPException(status_code=403, detail="Public users cannot invite others to events. Only private users can invite.")
 
     # Check if invited user is banned
     check_user_not_banned(invited_user_id, db)
@@ -704,7 +627,7 @@ async def invite_user_to_event(
     check_users_not_blocked(db_event.owner_id, invited_user_id, db)
 
     # Check if inviter has permission to invite
-    is_owner = (db_event.owner_id == current_user_id)
+    is_owner = db_event.owner_id == current_user_id
 
     if not is_owner:
         # Check if inviter is an admin or accepted participant of this event
@@ -720,10 +643,7 @@ async def invite_user_to_event(
                 has_permission = True
 
         if not has_permission:
-            raise HTTPException(
-                status_code=403,
-                detail="User does not have permission to invite others to this event. Must be event owner, admin, or accepted participant."
-            )
+            raise HTTPException(status_code=403, detail="User does not have permission to invite others to this event. Must be event owner, admin, or accepted participant.")
 
     # Check if interaction already exists
     existing_interaction = event_interaction.get_interaction(db, event_id=event_id, user_id=invited_user_id)
@@ -731,13 +651,7 @@ async def invite_user_to_event(
         raise HTTPException(status_code=409, detail="User already has an interaction with this event")
 
     # Create the invitation
-    interaction_data = EventInteractionCreate(
-        event_id=event_id,
-        user_id=invited_user_id,
-        interaction_type="invited",
-        status="pending",
-        note=invitation_message
-    )
+    interaction_data = EventInteractionCreate(event_id=event_id, user_id=invited_user_id, interaction_type="invited", status="pending", note=invitation_message)
 
     db_interaction = event_interaction.create(db, obj_in=interaction_data)
 
@@ -745,10 +659,7 @@ async def invite_user_to_event(
 
 
 @router.get("/cancellations", response_model=List[EventCancellationResponse])
-async def get_event_cancellations(
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def get_event_cancellations(current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Get all event cancellations that the authenticated user hasn't viewed yet.
 
@@ -761,11 +672,7 @@ async def get_event_cancellations(
 
 
 @router.post("/cancellations/{cancellation_id}/view")
-async def mark_cancellation_as_viewed(
-    cancellation_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def mark_cancellation_as_viewed(cancellation_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Mark an event cancellation as viewed by the authenticated user.
 

@@ -108,6 +108,7 @@ def test_realtime_new_invitation_triggers_update():
 
     # Give realtime a moment to propagate
     import time
+
     time.sleep(1)
 
     # Get event after invitation (as owner)
@@ -121,10 +122,7 @@ def test_realtime_new_invitation_triggers_update():
     assert len(after_data["interactions"]) == initial_count + 1
 
     # Find the new invitation
-    new_invitation = next(
-        (i for i in after_data["interactions"] if i["user_id"] == user2["id"]),
-        None
-    )
+    new_invitation = next((i for i in after_data["interactions"] if i["user_id"] == user2["id"]), None)
 
     assert new_invitation is not None
     assert new_invitation["status"] == "pending"
@@ -180,6 +178,7 @@ def test_realtime_accept_invitation_updates_interactions():
     api_request("PATCH", f"/interactions/{interaction['id']}", user_id=user2["id"], json=update_data)
 
     import time
+
     time.sleep(1)
 
     # Get event as owner - should see updated status
@@ -188,20 +187,14 @@ def test_realtime_accept_invitation_updates_interactions():
 
     # Check interactions updated
     assert "interactions" in event_data
-    user2_interaction = next(
-        (i for i in event_data["interactions"] if i["user_id"] == user2["id"]),
-        None
-    )
+    user2_interaction = next((i for i in event_data["interactions"] if i["user_id"] == user2["id"]), None)
     assert user2_interaction is not None
     assert user2_interaction["status"] == "accepted"
 
     # Check attendees includes user2
     assert "attendees" in event_data
     assert event_data["attendees"] is not None
-    user2_attendee = next(
-        (a for a in event_data["attendees"] if a["id"] == user2["id"]),
-        None
-    )
+    user2_attendee = next((a for a in event_data["attendees"] if a["id"] == user2["id"]), None)
     assert user2_attendee is not None
     # Backend returns full_name from contact or username if no contact
     assert "full_name" in user2_attendee or "username" in user2_attendee
@@ -253,6 +246,7 @@ def test_realtime_reject_invitation_updates_interactions():
     api_request("PATCH", f"/interactions/{interaction['id']}", user_id=user2["id"], json=update_data)
 
     import time
+
     time.sleep(1)
 
     # Get event as owner - should see rejected status
@@ -260,10 +254,7 @@ def test_realtime_reject_invitation_updates_interactions():
     event_data = event_response.json()
 
     # Check interactions updated
-    user2_interaction = next(
-        (i for i in event_data["interactions"] if i["user_id"] == user2["id"]),
-        None
-    )
+    user2_interaction = next((i for i in event_data["interactions"] if i["user_id"] == user2["id"]), None)
     assert user2_interaction is not None
     assert user2_interaction["status"] == "rejected"
 
@@ -315,6 +306,7 @@ def test_realtime_leave_event_removes_from_interactions():
     api_request("POST", "/interactions", user_id=user1["id"], json=invitation_data)
 
     import time
+
     time.sleep(0.5)
 
     # User2 leaves event
@@ -379,10 +371,11 @@ def test_realtime_update_note_reflects_in_interactions():
     api_request("POST", "/interactions", user_id=user1["id"], json=invitation_data)
 
     # User2 adds a personal note
-    note_data = {"note": "My personal reminder for this event"}
+    note_data = {"personal_note": "My personal reminder for this event"}
     api_request("PATCH", f"/events/{event['id']}/interaction", user_id=user2["id"], json=note_data)
 
     import time
+
     time.sleep(1)
 
     # Get event as user2 - should see note in their interaction
@@ -392,7 +385,7 @@ def test_realtime_update_note_reflects_in_interactions():
     # Check note is present
     assert "interactions" in event_data
     assert len(event_data["interactions"]) == 1
-    assert event_data["interactions"][0]["note"] == "My personal reminder for this event"
+    assert event_data["interactions"][0]["personal_note"] == "My personal reminder for this event"
 
 
 def test_realtime_mark_read_updates_read_at():
@@ -440,6 +433,7 @@ def test_realtime_mark_read_updates_read_at():
     api_request("POST", f"/interactions/{interaction['id']}/mark-read", user_id=user2["id"])
 
     import time
+
     time.sleep(1)
 
     # Get event as user2 - read_at should be set

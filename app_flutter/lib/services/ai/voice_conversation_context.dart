@@ -25,13 +25,22 @@ class VoiceConversationContext {
   });
 
   /// Crea un nuevo contexto añadiendo un turno de conversación
-  VoiceConversationContext addTurn(String question, String answer, Map<String, dynamic> newParameters) {
+  VoiceConversationContext addTurn(
+    String question,
+    String answer,
+    Map<String, dynamic> newParameters,
+  ) {
     return VoiceConversationContext(
       originalCommand: originalCommand,
       action: action,
       collectedParameters: {...collectedParameters, ...newParameters},
-      history: [...history, ConversationTurn(question: question, answer: answer)],
-      missingFields: missingFields.where((field) => !newParameters.containsKey(field)).toList(),
+      history: [
+        ...history,
+        ConversationTurn(question: question, answer: answer),
+      ],
+      missingFields: missingFields
+          .where((field) => !newParameters.containsKey(field))
+          .toList(),
     );
   }
 
@@ -62,17 +71,17 @@ class ConversationTurn {
   final String question;
   final String answer;
 
-  ConversationTurn({
-    required this.question,
-    required this.answer,
-  });
+  ConversationTurn({required this.question, required this.answer});
 }
 
 /// Define los campos obligatorios para cada acción
 class RequiredFields {
   static const Map<String, List<String>> byAction = {
     'CREATE_EVENT': ['title', 'start_datetime'],
-    'UPDATE_EVENT': ['event_id', 'title'], // Necesita al menos el ID y un campo a actualizar
+    'UPDATE_EVENT': [
+      'event_id',
+      'title',
+    ], // Necesita al menos el ID y un campo a actualizar
     'DELETE_EVENT': ['event_id'],
     'CREATE_CALENDAR': ['name'],
     'INVITE_USER': ['event_id', 'user_id'],
@@ -85,13 +94,20 @@ class RequiredFields {
   }
 
   /// Encuentra los campos que faltan en los parámetros proporcionados
-  static List<String> findMissing(String action, Map<String, dynamic> parameters) {
+  static List<String> findMissing(
+    String action,
+    Map<String, dynamic> parameters,
+  ) {
     final required = forAction(action);
-    return required.where((field) =>
-      !parameters.containsKey(field) ||
-      parameters[field] == null ||
-      (parameters[field] is String && (parameters[field] as String).isEmpty)
-    ).toList();
+    return required
+        .where(
+          (field) =>
+              !parameters.containsKey(field) ||
+              parameters[field] == null ||
+              (parameters[field] is String &&
+                  (parameters[field] as String).isEmpty),
+        )
+        .toList();
   }
 
   /// Genera una pregunta amigable para un campo faltante
@@ -99,8 +115,8 @@ class RequiredFields {
     switch (fieldName) {
       case 'title':
         return action == 'CREATE_EVENT'
-          ? '¿Cuál es el título o nombre del evento?'
-          : '¿Cuál es el nuevo título?';
+            ? '¿Cuál es el título o nombre del evento?'
+            : '¿Cuál es el nuevo título?';
       case 'start_datetime':
         return '¿Cuándo empieza el evento? Por favor indica fecha y hora.';
       case 'end_datetime':
@@ -109,14 +125,14 @@ class RequiredFields {
         return '¿Cuál es el ID del evento? Por favor dímelo.';
       case 'name':
         return action == 'CREATE_CALENDAR'
-          ? '¿Qué nombre quieres para el calendario?'
-          : '¿Qué nombre quieres usar?';
+            ? '¿Qué nombre quieres para el calendario?'
+            : '¿Qué nombre quieres usar?';
       case 'user_id':
         return '¿A qué usuario quieres invitar? Dime su ID o email.';
       case 'description':
         return action == 'CREATE_CALENDAR'
-          ? '¿Quieres añadir una descripción al calendario?'
-          : '¿Quieres añadir una descripción?';
+            ? '¿Quieres añadir una descripción al calendario?'
+            : '¿Quieres añadir una descripción?';
       case 'location':
         return '¿Dónde será el evento?';
       case 'is_public':

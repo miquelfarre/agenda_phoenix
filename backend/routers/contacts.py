@@ -18,25 +18,13 @@ router = APIRouter(prefix="/api/v1/contacts", tags=["contacts"])
 
 
 @router.get("", response_model=List[ContactResponse])
-async def get_contacts(
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_contacts(limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all contacts with pagination and ordering"""
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return contact.get_multi(
-        db,
-        skip=offset,
-        limit=limit,
-        order_by=order_by,
-        order_dir=order_dir
-    )
+    return contact.get_multi(db, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
 
 @router.get("/{contact_id}", response_model=ContactResponse)

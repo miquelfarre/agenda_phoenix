@@ -48,14 +48,7 @@ class CRUDAppBan(CRUDBase[AppBan, AppBanCreate, AppBanResponse]):
         if banned_by is not None:
             filters["banned_by"] = banned_by
 
-        return self.get_multi(
-            db,
-            skip=skip,
-            limit=limit,
-            order_by=order_by,
-            order_dir=order_dir,
-            filters=filters
-        )
+        return self.get_multi(db, skip=skip, limit=limit, order_by=order_by, order_dir=order_dir, filters=filters)
 
     def create_with_validation(
         self,

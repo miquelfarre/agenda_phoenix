@@ -17,10 +17,12 @@ import '../utils/error_message_parser.dart';
 class SubscriptionsScreen extends ConsumerStatefulWidget {
   const SubscriptionsScreen({super.key});
   @override
-  ConsumerState<SubscriptionsScreen> createState() => _SubscriptionsScreenState();
+  ConsumerState<SubscriptionsScreen> createState() =>
+      _SubscriptionsScreenState();
 }
 
-class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with WidgetsBindingObserver {
+class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -45,7 +47,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
       child: PlatformWidgets.platformTextField(
         controller: _searchController,
         placeholder: l10n.searchSubscriptions,
-        prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.search, color: AppStyles.grey600),
+        prefixIcon: PlatformWidgets.platformIcon(
+          CupertinoIcons.search,
+          color: AppStyles.grey600,
+        ),
         suffixIcon: _searchController.text.isNotEmpty
             ? CupertinoButton(
                 key: const Key('subscriptions_search_clear_button'),
@@ -56,14 +61,23 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
                     _searchQuery = '';
                   });
                 },
-                child: PlatformWidgets.platformIcon(CupertinoIcons.clear_circled_solid, color: AppStyles.grey600, size: 18),
+                child: PlatformWidgets.platformIcon(
+                  CupertinoIcons.clear_circled_solid,
+                  color: AppStyles.grey600,
+                  size: 18,
+                ),
               )
             : null,
       ),
     );
   }
 
-  Widget _buildScrollableContent(List<User> users, bool isIOS, AppLocalizations l10n, WidgetRef ref) {
+  Widget _buildScrollableContent(
+    List<User> users,
+    bool isIOS,
+    AppLocalizations l10n,
+    WidgetRef ref,
+  ) {
     return SafeArea(
       child: CustomScrollView(
         physics: const ClampingScrollPhysics(),
@@ -72,27 +86,36 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
           if (users.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: EmptyState(message: l10n.noSubscriptions, icon: isIOS ? CupertinoIcons.person_2 : CupertinoIcons.person_2),
+              child: EmptyState(
+                message: l10n.noSubscriptions,
+                icon: isIOS ? CupertinoIcons.person_2 : CupertinoIcons.person_2,
+              ),
             )
           else
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final user = users[index];
-                  return _buildUserItem(user, isIOS, l10n, ref);
-                },
-                childCount: users.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final user = users[index];
+                return _buildUserItem(user, isIOS, l10n, ref);
+              }, childCount: users.length),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildUserItem(User user, bool isIOS, AppLocalizations l10n, WidgetRef ref) {
+  Widget _buildUserItem(
+    User user,
+    bool isIOS,
+    AppLocalizations l10n,
+    WidgetRef ref,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: SubscriptionCard(user: user, onTap: () => _showUserDetails(user), onDelete: () => _removeUser(user, ref)),
+      child: SubscriptionCard(
+        user: user,
+        onTap: () => _showUserDetails(user),
+        onDelete: () => _removeUser(user, ref),
+      ),
     );
   }
 
@@ -117,7 +140,11 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
   }
 
   void _showErrorMessage(String message) {
-    PlatformDialogHelpers.showSnackBar(context: context, message: message, isError: true);
+    PlatformDialogHelpers.showSnackBar(
+      context: context,
+      message: message,
+      isError: true,
+    );
   }
 
   @override
@@ -140,7 +167,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
               onPressed: () {
                 ref.read(subscriptionRepositoryProvider).refresh();
               },
-              child: PlatformWidgets.platformIcon(CupertinoIcons.refresh, size: 20),
+              child: PlatformWidgets.platformIcon(
+                CupertinoIcons.refresh,
+                size: 20,
+              ),
             ),
           ),
       ],
@@ -150,7 +180,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
             final filteredUsers = users.where((user) {
               if (_searchQuery.isEmpty) return true;
               final query = _searchQuery.toLowerCase();
-              return (user.fullName?.toLowerCase().contains(query) ?? false) || (user.instagramName?.toLowerCase().contains(query) ?? false);
+              return (user.fullName?.toLowerCase().contains(query) ?? false) ||
+                  (user.instagramName?.toLowerCase().contains(query) ?? false);
             }).toList();
 
             return _buildScrollableContent(filteredUsers, isIOS, l10n, ref);
@@ -160,7 +191,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('${l10n.error}: $error', style: const TextStyle(fontSize: 16)),
+                Text(
+                  '${l10n.error}: $error',
+                  style: const TextStyle(fontSize: 16),
+                ),
                 const SizedBox(height: 16),
                 CupertinoButton(
                   onPressed: () {
@@ -177,14 +211,20 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> with 
   }
 
   void _showUserDetails(User user) {
-    Navigator.of(context).push(CupertinoPageRoute(builder: (_) => PublicUserEventsScreen(publicUser: user)));
+    Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (_) => PublicUserEventsScreen(publicUser: user),
+      ),
+    );
   }
 
   Future<void> _removeUser(User user, WidgetRef ref) async {
     final l10n = context.l10n;
     final currentContext = context;
     try {
-      await ref.read(subscriptionRepositoryProvider).deleteSubscription(targetUserId: user.id);
+      await ref
+          .read(subscriptionRepositoryProvider)
+          .deleteSubscription(targetUserId: user.id);
       _showSuccessMessage(l10n.unsubscribedSuccessfully);
     } catch (e) {
       // ignore: use_build_context_synchronously

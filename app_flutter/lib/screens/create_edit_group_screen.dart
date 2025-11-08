@@ -16,7 +16,8 @@ class CreateEditGroupScreen extends BaseFormScreen {
   CreateEditGroupScreenState createState() => CreateEditGroupScreenState();
 }
 
-class CreateEditGroupScreenState extends BaseFormScreenState<CreateEditGroupScreen> {
+class CreateEditGroupScreenState
+    extends BaseFormScreenState<CreateEditGroupScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -39,10 +40,12 @@ class CreateEditGroupScreenState extends BaseFormScreenState<CreateEditGroupScre
   }
 
   @override
-  String get screenTitle => isEditMode ? context.l10n.editGroup : context.l10n.createGroup;
+  String get screenTitle =>
+      isEditMode ? context.l10n.editGroup : context.l10n.createGroup;
 
   @override
-  String get submitButtonText => isEditMode ? context.l10n.saveChanges : context.l10n.createGroup;
+  String get submitButtonText =>
+      isEditMode ? context.l10n.saveChanges : context.l10n.createGroup;
 
   @override
   bool get showSaveInNavBar => false;

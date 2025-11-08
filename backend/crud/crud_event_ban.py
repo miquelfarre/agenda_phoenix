@@ -24,22 +24,9 @@ class CRUDEventBan(CRUDBase[EventBan, EventBanCreate, EventBanResponse]):
 
     def exists_ban(self, db: Session, *, event_id: int, user_id: int) -> bool:
         """Check if a user is banned from an event (optimized)"""
-        return db.query(EventBan.id).filter(
-            EventBan.event_id == event_id,
-            EventBan.user_id == user_id
-        ).first() is not None
+        return db.query(EventBan.id).filter(EventBan.event_id == event_id, EventBan.user_id == user_id).first() is not None
 
-    def get_multi_filtered(
-        self,
-        db: Session,
-        *,
-        event_id: Optional[int] = None,
-        user_id: Optional[int] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "id",
-        order_dir: str = "asc"
-    ) -> List[EventBan]:
+    def get_multi_filtered(self, db: Session, *, event_id: Optional[int] = None, user_id: Optional[int] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List[EventBan]:
         """
         Get multiple event bans with filters and pagination
 
@@ -57,21 +44,9 @@ class CRUDEventBan(CRUDBase[EventBan, EventBanCreate, EventBanResponse]):
         if user_id is not None:
             filters["user_id"] = user_id
 
-        return self.get_multi(
-            db,
-            skip=skip,
-            limit=limit,
-            order_by=order_by,
-            order_dir=order_dir,
-            filters=filters
-        )
+        return self.get_multi(db, skip=skip, limit=limit, order_by=order_by, order_dir=order_dir, filters=filters)
 
-    def create_with_validation(
-        self,
-        db: Session,
-        *,
-        obj_in: EventBanCreate
-    ) -> tuple[Optional[EventBan], Optional[str]]:
+    def create_with_validation(self, db: Session, *, obj_in: EventBanCreate) -> tuple[Optional[EventBan], Optional[str]]:
         """
         Create a new event ban with validation
 

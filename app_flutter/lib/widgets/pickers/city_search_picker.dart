@@ -14,7 +14,11 @@ class CitySearchPickerModal extends StatefulWidget {
   final String? initialCountryCode;
   final CitySelected onSelected;
 
-  const CitySearchPickerModal({super.key, this.initialCountryCode, required this.onSelected});
+  const CitySearchPickerModal({
+    super.key,
+    this.initialCountryCode,
+    required this.onSelected,
+  });
 
   @override
   State<CitySearchPickerModal> createState() => _CitySearchPickerModalState();
@@ -43,7 +47,11 @@ class _CitySearchPickerModalState extends State<CitySearchPickerModal> {
     setState(() => _isLoading = true);
     try {
       final res = await CityService.searchCities(q);
-      final filtered = widget.initialCountryCode != null ? res.where((c) => c.countryCode == widget.initialCountryCode).toList() : res;
+      final filtered = widget.initialCountryCode != null
+          ? res
+                .where((c) => c.countryCode == widget.initialCountryCode)
+                .toList()
+          : res;
       setState(() {
         _results = filtered;
       });
@@ -68,7 +76,11 @@ class _CitySearchPickerModalState extends State<CitySearchPickerModal> {
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
           middle: Text(l10n.searchCity),
-          leading: AdaptiveButton(config: AdaptiveButtonConfig.secondary(), text: l10n.cancel, onPressed: () => Navigator.of(context).pop()),
+          leading: AdaptiveButton(
+            config: AdaptiveButtonConfig.secondary(),
+            text: l10n.cancel,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
         child: SafeArea(
           child: Column(
@@ -79,7 +91,10 @@ class _CitySearchPickerModalState extends State<CitySearchPickerModal> {
                   controller: _searchController,
                   placeholder: l10n.citySearchPlaceholder,
                   onChanged: (v) => _search(v),
-                  prefix: Padding(padding: const EdgeInsets.only(left: 8.0), child: PlatformWidgets.platformIcon(CupertinoIcons.search)),
+                  prefix: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: PlatformWidgets.platformIcon(CupertinoIcons.search),
+                  ),
                 ),
               ),
               Expanded(
@@ -93,9 +108,23 @@ class _CitySearchPickerModalState extends State<CitySearchPickerModal> {
                               itemBuilder: (context, index) {
                                 final city = _results[index];
                                 return PlatformWidgets.platformListTile(
-                                  leading: Text(_flagFor(city.countryCode), style: AppStyles.headlineSmall.copyWith(fontSize: 24)),
+                                  leading: Text(
+                                    _flagFor(city.countryCode),
+                                    style: AppStyles.headlineSmall.copyWith(
+                                      fontSize: 24,
+                                    ),
+                                  ),
                                   title: Text(city.name),
-                                  subtitle: Text(l10n.countryCodeDotTimezone(city.countryCode, city.timezone ?? ''), style: AppStyles.cardSubtitle.copyWith(color: AppStyles.grey600, fontSize: 14)),
+                                  subtitle: Text(
+                                    l10n.countryCodeDotTimezone(
+                                      city.countryCode,
+                                      city.timezone ?? '',
+                                    ),
+                                    style: AppStyles.cardSubtitle.copyWith(
+                                      color: AppStyles.grey600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                                   onTap: () {
                                     widget.onSelected(city);
                                     Navigator.of(context).pop();
@@ -117,23 +146,44 @@ class _CitySearchPickerModalState extends State<CitySearchPickerModal> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
             child: Column(
               children: [
                 Row(
                   children: [
                     Expanded(
-                      child: Text(l10n.searchCity, style: AppStyles.cardTitle.copyWith(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        l10n.searchCity,
+                        style: AppStyles.cardTitle.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     AdaptiveButton(
-                      config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+                      config: const AdaptiveButtonConfig(
+                        variant: ButtonVariant.icon,
+                        size: ButtonSize.medium,
+                        fullWidth: false,
+                        iconPosition: IconPosition.only,
+                      ),
                       icon: CupertinoIcons.clear,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                PlatformWidgets.platformTextField(controller: _searchController, hintText: l10n.citySearchPlaceholder, prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.search, size: 20), onChanged: (v) => _search(v)),
+                PlatformWidgets.platformTextField(
+                  controller: _searchController,
+                  hintText: l10n.citySearchPlaceholder,
+                  prefixIcon: PlatformWidgets.platformIcon(
+                    CupertinoIcons.search,
+                    size: 20,
+                  ),
+                  onChanged: (v) => _search(v),
+                ),
               ],
             ),
           ),
@@ -148,9 +198,23 @@ class _CitySearchPickerModalState extends State<CitySearchPickerModal> {
                           itemBuilder: (context, index) {
                             final city = _results[index];
                             return PlatformWidgets.platformListTile(
-                              leading: Text(_flagFor(city.countryCode), style: AppStyles.headlineSmall.copyWith(fontSize: 24)),
+                              leading: Text(
+                                _flagFor(city.countryCode),
+                                style: AppStyles.headlineSmall.copyWith(
+                                  fontSize: 24,
+                                ),
+                              ),
                               title: Text(city.name),
-                              subtitle: Text(l10n.countryCodeDotTimezone(city.countryCode, city.timezone ?? ''), style: AppStyles.cardSubtitle.copyWith(color: AppStyles.grey600, fontSize: 14)),
+                              subtitle: Text(
+                                l10n.countryCodeDotTimezone(
+                                  city.countryCode,
+                                  city.timezone ?? '',
+                                ),
+                                style: AppStyles.cardSubtitle.copyWith(
+                                  color: AppStyles.grey600,
+                                  fontSize: 14,
+                                ),
+                              ),
                               onTap: () {
                                 widget.onSelected(city);
                                 Navigator.of(context).pop();

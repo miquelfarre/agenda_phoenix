@@ -16,11 +16,12 @@ class OllamaVoiceService implements BaseVoiceService {
   OllamaVoiceService({
     required String ollamaBaseUrl,
     required String ollamaModel,
-  })  : _ollamaBaseUrl = ollamaBaseUrl,
-        _ollamaModel = ollamaModel;
+  }) : _ollamaBaseUrl = ollamaBaseUrl,
+       _ollamaModel = ollamaModel;
 
   /// Sistema prompt - debe coincidir con GeminiVoiceService
-  String get _systemPrompt => '''
+  String get _systemPrompt =>
+      '''
 Eres un asistente de voz para una aplicación de agenda/calendario llamada EventyPop.
 Tu trabajo es interpretar comandos de voz del usuario y convertirlos en acciones estructuradas.
 
@@ -143,34 +144,48 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
 ''';
 
   @override
-  Future<Map<String, dynamic>> interpretWithAI(String transcribedText, {String? customPrompt}) async {
+  Future<Map<String, dynamic>> interpretWithAI(
+    String transcribedText, {
+    String? customPrompt,
+  }) async {
     try {
-      DebugConfig.info('Enviando a Ollama: $transcribedText', tag: 'VoiceService');
-
-      final fullPrompt = customPrompt ?? '$_systemPrompt\n\nComando del usuario: "$transcribedText"';
-
-
-      final response = await http.post(
-        Uri.parse('$_ollamaBaseUrl/api/generate'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'model': _ollamaModel,
-          'prompt': fullPrompt,
-          'stream': false,
-          'format': 'json',
-        }),
-      ).timeout(
-        const Duration(minutes: 5), // Timeout de 5 minutos para modelos pesados
-        onTimeout: () {
-          throw Exception('Timeout: El modelo de Ollama tardó más de 5 minutos en responder. '
-              'Considera usar un modelo más ligero.');
-        },
+      DebugConfig.info(
+        'Enviando a Ollama: $transcribedText',
+        tag: 'VoiceService',
       );
 
+      final fullPrompt =
+          customPrompt ??
+          '$_systemPrompt\n\nComando del usuario: "$transcribedText"';
+
+      final response = await http
+          .post(
+            Uri.parse('$_ollamaBaseUrl/api/generate'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': _ollamaModel,
+              'prompt': fullPrompt,
+              'stream': false,
+              'format': 'json',
+            }),
+          )
+          .timeout(
+            const Duration(
+              minutes: 5,
+            ), // Timeout de 5 minutos para modelos pesados
+            onTimeout: () {
+              throw Exception(
+                'Timeout: El modelo de Ollama tardó más de 5 minutos en responder. '
+                'Considera usar un modelo más ligero.',
+              );
+            },
+          );
 
       if (response.statusCode != 200) {
-        DebugConfig.error('Error Ollama API: ${response.statusCode} - ${response.body}',
-            tag: 'VoiceService');
+        DebugConfig.error(
+          'Error Ollama API: ${response.statusCode} - ${response.body}',
+          tag: 'VoiceService',
+        );
         throw Exception('Error al llamar a Ollama API: ${response.statusCode}');
       }
 
@@ -182,8 +197,10 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         throw Exception('No se recibió respuesta de Ollama');
       }
 
-
-      DebugConfig.info('Respuesta de Ollama: $textResponse', tag: 'VoiceService');
+      DebugConfig.info(
+        'Respuesta de Ollama: $textResponse',
+        tag: 'VoiceService',
+      );
 
       // Limpiar la respuesta (eliminar markdown si lo hay)
       String cleanedResponse = textResponse.trim();
@@ -194,17 +211,23 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         cleanedResponse = cleanedResponse.substring(3);
       }
       if (cleanedResponse.endsWith('```')) {
-        cleanedResponse = cleanedResponse.substring(0, cleanedResponse.length - 3);
+        cleanedResponse = cleanedResponse.substring(
+          0,
+          cleanedResponse.length - 3,
+        );
       }
       cleanedResponse = cleanedResponse.trim();
 
       // Parsear la respuesta JSON del LLM
-      final interpretation = jsonDecode(cleanedResponse) as Map<String, dynamic>;
+      final interpretation =
+          jsonDecode(cleanedResponse) as Map<String, dynamic>;
 
       return interpretation;
-
     } catch (e, _) {
-      DebugConfig.error('Error al interpretar con Ollama: $e', tag: 'VoiceService');
+      DebugConfig.error(
+        'Error al interpretar con Ollama: $e',
+        tag: 'VoiceService',
+      );
       rethrow;
     }
   }
@@ -216,8 +239,10 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       final parameters = interpretation['parameters'] as Map<String, dynamic>;
       final apiClient = ApiClient();
 
-      DebugConfig.info('Ejecutando acción: $action con parámetros: $parameters',
-                      tag: 'VoiceService');
+      DebugConfig.info(
+        'Ejecutando acción: $action con parámetros: $parameters',
+        tag: 'VoiceService',
+      );
 
       switch (action) {
         case 'CREATE_EVENT':
@@ -273,10 +298,9 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
             // Ya existe una interacción - actualizar la nota
             final existingInteraction = existingInteractions.first;
             final interactionId = existingInteraction['id'] as int;
-            final result = await apiClient.patchInteraction(
-              interactionId,
-              {'note': note},
-            );
+            final result = await apiClient.patchInteraction(interactionId, {
+              'note': note,
+            });
             return result;
           } else {
             // No existe - crear nueva interacción tipo 'joined' para el owner con la nota
@@ -286,7 +310,8 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
               'interaction_type': 'joined',
               'status': 'accepted',
               'note': note,
-              'invited_by_user_id': currentUserId, // El owner se añade a sí mismo
+              'invited_by_user_id':
+                  currentUserId, // El owner se añade a sí mismo
             };
             final result = await apiClient.createInteraction(interactionData);
             return result;
@@ -295,14 +320,14 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         case 'UNKNOWN':
           return {
             'success': false,
-            'message': interpretation['clarification_message'] ??
-                      'No entendí el comando. Por favor, intenta de nuevo.'
+            'message':
+                interpretation['clarification_message'] ??
+                'No entendí el comando. Por favor, intenta de nuevo.',
           };
 
         default:
           throw Exception('Acción no reconocida: $action');
       }
-
     } catch (e) {
       DebugConfig.error('Error al ejecutar acción: $e', tag: 'VoiceService');
       rethrow;
@@ -321,14 +346,18 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       if (!_speechToText.isAvailable) {
         final available = await _speechToText.initialize(
           onError: (error) {
-            DebugConfig.error('Error en speech-to-text: ${error.errorMsg}', tag: 'VoiceService');
+            DebugConfig.error(
+              'Error en speech-to-text: ${error.errorMsg}',
+              tag: 'VoiceService',
+            );
           },
-          onStatus: (status) {
-          },
+          onStatus: (status) {},
         );
 
         if (!available) {
-          throw Exception('Speech-to-text no está disponible en este dispositivo');
+          throw Exception(
+            'Speech-to-text no está disponible en este dispositivo',
+          );
         }
       }
 
@@ -373,14 +402,16 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       // Detener la escucha
       await _speechToText.stop();
 
-      DebugConfig.info('Texto transcrito: $transcribedText', tag: 'VoiceService');
+      DebugConfig.info(
+        'Texto transcrito: $transcribedText',
+        tag: 'VoiceService',
+      );
 
       if (transcribedText.isEmpty) {
         throw Exception('No se pudo transcribir el audio');
       }
 
       return transcribedText;
-
     } catch (e) {
       DebugConfig.error('Error en transcripción: $e', tag: 'VoiceService');
       rethrow;
@@ -389,7 +420,10 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
 
   @override
   Future<VoiceCommandResult> processVoiceCommand() async {
-    DebugConfig.info('🚀 ===== INICIANDO processVoiceCommand() =====', tag: 'VoiceService');
+    DebugConfig.info(
+      '🚀 ===== INICIANDO processVoiceCommand() =====',
+      tag: 'VoiceService',
+    );
     try {
       // 1. Transcribir audio (on-device)
       final transcribedText = await transcribeAudioOnDevice();
@@ -404,13 +438,12 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         interpretation: interpretation,
         needsConfirmation: interpretation['user_confirmation_needed'] ?? true,
       );
-
     } catch (e) {
-      DebugConfig.error('Error al procesar comando de voz: $e', tag: 'VoiceService');
-      return VoiceCommandResult(
-        success: false,
-        message: 'Error: $e',
+      DebugConfig.error(
+        'Error al procesar comando de voz: $e',
+        tag: 'VoiceService',
       );
+      return VoiceCommandResult(success: false, message: 'Error: $e');
     }
   }
 }

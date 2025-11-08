@@ -113,11 +113,7 @@ def test_subscribe_to_calendar_via_share_hash():
     user_id = user["id"]
 
     # Subscribe to calendar using share_hash
-    subscribe_response = api_request(
-        "POST",
-        f"/calendars/{share_hash}/subscribe",
-        user_id=user_id
-    )
+    subscribe_response = api_request("POST", f"/calendars/{share_hash}/subscribe", user_id=user_id)
     assert subscribe_response.status_code == 201, f"Failed to subscribe: {subscribe_response.text}"
 
     subscription = subscribe_response.json()
@@ -129,11 +125,7 @@ def test_subscribe_to_calendar_via_share_hash():
     print(f"✅ User {user_id} subscribed to '{calendar_name}' ({share_hash})")
 
     # Try to subscribe again (should fail with 409)
-    duplicate_response = api_request(
-        "POST",
-        f"/calendars/{share_hash}/subscribe",
-        user_id=user_id
-    )
+    duplicate_response = api_request("POST", f"/calendars/{share_hash}/subscribe", user_id=user_id)
     assert duplicate_response.status_code == 409, "Duplicate subscription should return 409"
 
     print(f"✅ Duplicate subscription correctly rejected")
@@ -147,11 +139,7 @@ def test_unsubscribe_from_calendar():
     user_id, share_hash, calendar = test_subscribe_to_calendar_via_share_hash()
 
     # Now unsubscribe
-    unsubscribe_response = api_request(
-        "DELETE",
-        f"/calendars/{share_hash}/subscribe",
-        user_id=user_id
-    )
+    unsubscribe_response = api_request("DELETE", f"/calendars/{share_hash}/subscribe", user_id=user_id)
     assert unsubscribe_response.status_code == 200, f"Failed to unsubscribe: {unsubscribe_response.text}"
 
     result = unsubscribe_response.json()
@@ -161,11 +149,7 @@ def test_unsubscribe_from_calendar():
     print(f"✅ User {user_id} unsubscribed from '{calendar['name']}'")
 
     # Try to unsubscribe again (should fail with 404)
-    duplicate_response = api_request(
-        "DELETE",
-        f"/calendars/{share_hash}/subscribe",
-        user_id=user_id
-    )
+    duplicate_response = api_request("DELETE", f"/calendars/{share_hash}/subscribe", user_id=user_id)
     assert duplicate_response.status_code == 404, "Unsubscribing when not subscribed should return 404"
 
     print(f"✅ Duplicate unsubscribe correctly rejected")
@@ -200,14 +184,14 @@ def test_subscribed_calendar_events_in_user_events():
 
     # Get events after subscription
     import time
+
     time.sleep(0.5)  # Allow realtime to propagate
 
     events_after = api_request("GET", f"/users/{user_id}/events", user_id=user_id).json()
     calendar_events_after = [e for e in events_after if e.get("calendar_id") == calendar_with_hash["id"]]
 
     # Verify calendar events now appear (or at least the count is the same if calendar has no events)
-    assert len(calendar_events_after) >= len(calendar_events_before), \
-        f"Should have same or more calendar events after subscription. Before: {len(calendar_events_before)}, After: {len(calendar_events_after)}"
+    assert len(calendar_events_after) >= len(calendar_events_before), f"Should have same or more calendar events after subscription. Before: {len(calendar_events_before)}, After: {len(calendar_events_after)}"
 
     print(f"✅ Subscribed calendar events appear in user's events ({len(calendar_events_after)} events)")
 
@@ -240,8 +224,7 @@ def test_subscriber_count_trigger():
     # Check subscriber count increased
     updated_calendar = api_request("GET", f"/calendars/{calendar_with_hash['id']}").json()
     expected_count = initial_count + 3
-    assert updated_calendar["subscriber_count"] == expected_count, \
-        f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
+    assert updated_calendar["subscriber_count"] == expected_count, f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
 
     print(f"✅ Subscriber count increased from {initial_count} to {updated_calendar['subscriber_count']}")
 
@@ -251,8 +234,7 @@ def test_subscriber_count_trigger():
     # Check subscriber count decreased
     updated_calendar = api_request("GET", f"/calendars/{calendar_with_hash['id']}").json()
     expected_count = initial_count + 2
-    assert updated_calendar["subscriber_count"] == expected_count, \
-        f"Subscriber count should be {expected_count} after unsubscribe, got {updated_calendar['subscriber_count']}"
+    assert updated_calendar["subscriber_count"] == expected_count, f"Subscriber count should be {expected_count} after unsubscribe, got {updated_calendar['subscriber_count']}"
 
     print(f"✅ Subscriber count decreased to {updated_calendar['subscriber_count']} after unsubscribe")
 
@@ -286,8 +268,7 @@ def test_accessible_calendar_ids():
 
     # Verify subscribed calendars are now accessible
     for calendar_id in subscribed_ids:
-        assert calendar_id in accessible_after, \
-            f"Subscribed calendar {calendar_id} should be in accessible calendars"
+        assert calendar_id in accessible_after, f"Subscribed calendar {calendar_id} should be in accessible calendars"
 
     print(f"✅ Accessible calendars includes subscribed calendars: {len(accessible_after)} total")
 
@@ -442,16 +423,15 @@ def test_get_user_calendars_includes_subscriptions():
 
     # Get calendars after subscription
     import time
+
     time.sleep(0.5)  # Allow time for subscription to process
 
     calendars_after = api_request("GET", "/calendars", user_id=user_id).json()
     calendar_ids_after = [c["id"] for c in calendars_after]
 
     # Verify subscribed calendar is now included
-    assert calendar_with_hash["id"] not in calendar_ids_before, \
-        "Subscribed calendar should not be in list before subscription"
-    assert calendar_with_hash["id"] in calendar_ids_after, \
-        "Subscribed calendar should be in list after subscription"
+    assert calendar_with_hash["id"] not in calendar_ids_before, "Subscribed calendar should not be in list before subscription"
+    assert calendar_with_hash["id"] in calendar_ids_after, "Subscribed calendar should be in list after subscription"
 
     print(f"✅ Subscribed calendars are included ({len(calendars_after)} calendars)")
 
@@ -503,16 +483,15 @@ def test_get_user_calendars_includes_memberships():
 
     # Get user2's calendars after membership
     import time
+
     time.sleep(0.5)  # Allow time for membership to process
 
     calendars_after = api_request("GET", "/calendars", user_id=user2_id).json()
     calendar_ids_after = [c["id"] for c in calendars_after]
 
     # Verify calendar is now included
-    assert calendar_id not in calendar_ids_before, \
-        "Calendar should not be in list before membership"
-    assert calendar_id in calendar_ids_after, \
-        "Calendar should be in list after membership"
+    assert calendar_id not in calendar_ids_before, "Calendar should not be in list before membership"
+    assert calendar_id in calendar_ids_after, "Calendar should be in list after membership"
 
     print(f"✅ Calendars where user is a member are included")
 

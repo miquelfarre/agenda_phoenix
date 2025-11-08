@@ -17,7 +17,8 @@ class SubscriptionRepository {
   final RealtimeSync _rt = RealtimeSync();
 
   Box<UserHive>? _box;
-  final StreamController<List<models.User>> _subscriptionsController = StreamController<List<models.User>>.broadcast();
+  final StreamController<List<models.User>> _subscriptionsController =
+      StreamController<List<models.User>>.broadcast();
   List<models.User> _cachedUsers = [];
   RealtimeChannel? _statsChannel;
 
@@ -64,7 +65,6 @@ class SubscriptionRepository {
 
     try {
       _cachedUsers = _box!.values.map((userHive) => userHive.toUser()).toList();
-
     } catch (e) {
       _cachedUsers = [];
     }
@@ -74,7 +74,9 @@ class SubscriptionRepository {
     try {
       final userId = ConfigService.instance.currentUserId;
       final response = await _apiClient.fetchUserSubscriptions(userId);
-      _cachedUsers = response.map((data) => models.User.fromJson(data)).toList();
+      _cachedUsers = response
+          .map((data) => models.User.fromJson(data))
+          .toList();
 
       await _updateLocalCache(_cachedUsers);
 
@@ -110,7 +112,10 @@ class SubscriptionRepository {
 
   Future<void> createSubscription({required int targetUserId}) async {
     try {
-      await _apiClient.subscribeToUser(ConfigService.instance.currentUserId, targetUserId);
+      await _apiClient.subscribeToUser(
+        ConfigService.instance.currentUserId,
+        targetUserId,
+      );
       await _fetchAndSync();
     } catch (e, _) {
       rethrow;
@@ -133,11 +138,20 @@ class SubscriptionRepository {
   Future<List<models.User>> searchPublicUsers({required String query}) async {
     try {
       final usersData = await _apiClient.fetchUsers(isPublic: true);
-      final results = usersData.map((data) => models.User.fromJson(data)).where((user) =>
-        (user.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-        (user.instagramName?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-        (user.username?.toLowerCase().contains(query.toLowerCase()) ?? false)
-      ).toList();
+      final results = usersData
+          .map((data) => models.User.fromJson(data))
+          .where(
+            (user) =>
+                (user.fullName?.toLowerCase().contains(query.toLowerCase()) ??
+                    false) ||
+                (user.instagramName?.toLowerCase().contains(
+                      query.toLowerCase(),
+                    ) ??
+                    false) ||
+                (user.username?.toLowerCase().contains(query.toLowerCase()) ??
+                    false),
+          )
+          .toList();
       return results;
     } catch (e, _) {
       rethrow;
@@ -149,15 +163,23 @@ class SubscriptionRepository {
     // now handles all interactions (including subscriptions). This avoids conflicts
     // with duplicate Realtime subscriptions to the same table.
 
-    _statsChannel = RealtimeUtils.subscribeTable(client: _supabaseService.client, schema: 'public', table: 'user_subscription_stats', onChange: _handleStatsChange);
-
+    _statsChannel = RealtimeUtils.subscribeTable(
+      client: _supabaseService.client,
+      schema: 'public',
+      table: 'user_subscription_stats',
+      onChange: _handleStatsChange,
+    );
   }
 
   void _handleStatsChange(PostgresChangePayload payload) {
     if (payload.eventType == PostgresChangeEvent.delete) return;
 
     // Filter out historical events from initial payload
-    if (!RealtimeFilter.shouldProcessEvent(payload, 'subscription_stats', _rt)) {
+    if (!RealtimeFilter.shouldProcessEvent(
+      payload,
+      'subscription_stats',
+      _rt,
+    )) {
       return;
     }
 
@@ -169,7 +191,14 @@ class SubscriptionRepository {
     if (userIndex == -1) return;
 
     final user = _cachedUsers[userIndex];
-    _cachedUsers[userIndex] = user.copyWith(newEventsCount: statsRecord['new_events_count'] as int? ?? user.newEventsCount, totalEventsCount: statsRecord['total_events_count'] as int? ?? user.totalEventsCount, subscribersCount: statsRecord['subscribers_count'] as int? ?? user.subscribersCount);
+    _cachedUsers[userIndex] = user.copyWith(
+      newEventsCount:
+          statsRecord['new_events_count'] as int? ?? user.newEventsCount,
+      totalEventsCount:
+          statsRecord['total_events_count'] as int? ?? user.totalEventsCount,
+      subscribersCount:
+          statsRecord['subscribers_count'] as int? ?? user.subscribersCount,
+    );
 
     // Update Hive cache
     final updatedUserHive = UserHive.fromUser(_cachedUsers[userIndex]);

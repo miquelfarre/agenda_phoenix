@@ -18,13 +18,15 @@ class GeminiVoiceService implements BaseVoiceService {
 
   // Configuración de Gemini API (documentación oficial: https://ai.google.dev/api/generate-content)
   // Usar v1beta con modelo gemini-2.0-flash (versión estable más reciente)
-  static const String _geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  static const String _geminiApiUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
   GeminiVoiceService({required String geminiApiKey})
-      : _geminiApiKey = geminiApiKey;
+    : _geminiApiKey = geminiApiKey;
 
   /// Sistema prompt que define todas las acciones disponibles para Gemini
-  String get _systemPrompt => '''
+  String get _systemPrompt =>
+      '''
 Eres un asistente de voz para una aplicación de agenda/calendario llamada EventyPop.
 Tu trabajo es interpretar comandos de voz del usuario y convertirlos en acciones estructuradas.
 
@@ -304,7 +306,8 @@ Respuesta:
 
       // Crear directorio temporal para el audio
       final tempDir = await getTemporaryDirectory();
-      final audioPath = '${tempDir.path}/voice_command_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      final audioPath =
+          '${tempDir.path}/voice_command_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
       DebugConfig.info('Iniciando grabación: $audioPath', tag: 'VoiceService');
 
@@ -325,7 +328,6 @@ Respuesta:
 
       DebugConfig.info('Grabación completada: $audioPath', tag: 'VoiceService');
       return audioPath;
-
     } catch (e) {
       DebugConfig.error('Error al grabar audio: $e', tag: 'VoiceService');
       rethrow;
@@ -363,9 +365,11 @@ Respuesta:
         },
       );
 
-
       if (!available) {
-        DebugConfig.error('❌ Speech-to-text no disponible en este dispositivo', tag: 'VoiceService');
+        DebugConfig.error(
+          '❌ Speech-to-text no disponible en este dispositivo',
+          tag: 'VoiceService',
+        );
         throw Exception('Speech to text no disponible');
       }
 
@@ -375,11 +379,17 @@ Respuesta:
       const maxSeconds = 30;
 
       // Iniciar escucha (duración máxima 30 segundos)
-      DebugConfig.info('🎙️ Iniciando escucha (habla ahora, máx 30s)...', tag: 'VoiceService');
+      DebugConfig.info(
+        '🎙️ Iniciando escucha (habla ahora, máx 30s)...',
+        tag: 'VoiceService',
+      );
       await _speechToText.listen(
         onResult: (result) {
           recognizedText = result.recognizedWords;
-          DebugConfig.info('🗣️ Texto reconocido: "$recognizedText"', tag: 'VoiceService');
+          DebugConfig.info(
+            '🗣️ Texto reconocido: "$recognizedText"',
+            tag: 'VoiceService',
+          );
         },
         localeId: 'es_ES',
         listenFor: const Duration(seconds: 30), // Máximo 30 segundos
@@ -415,38 +425,48 @@ Respuesta:
         DebugConfig.info('⚠️ Límite de 30s alcanzado', tag: 'VoiceService');
       }
 
-      DebugConfig.info('✅ Escucha finalizada. Texto: "$recognizedText"', tag: 'VoiceService');
+      DebugConfig.info(
+        '✅ Escucha finalizada. Texto: "$recognizedText"',
+        tag: 'VoiceService',
+      );
       return recognizedText;
-
     } catch (e) {
-      DebugConfig.error('❌ Error en transcripción on-device: $e', tag: 'VoiceService');
+      DebugConfig.error(
+        '❌ Error en transcripción on-device: $e',
+        tag: 'VoiceService',
+      );
       rethrow;
     }
   }
 
-
   /// Envía el texto a Gemini para que lo interprete
   /// Si [customPrompt] se proporciona, se usa en lugar del system prompt por defecto
   @override
-  Future<Map<String, dynamic>> interpretWithAI(String transcribedText, {String? customPrompt}) async {
+  Future<Map<String, dynamic>> interpretWithAI(
+    String transcribedText, {
+    String? customPrompt,
+  }) async {
     try {
-      DebugConfig.info('Enviando a Gemini: $transcribedText', tag: 'VoiceService');
+      DebugConfig.info(
+        'Enviando a Gemini: $transcribedText',
+        tag: 'VoiceService',
+      );
 
       // Crear el prompt completo
-      final fullPrompt = customPrompt ?? '$_systemPrompt\n\nComando del usuario: "$transcribedText"';
+      final fullPrompt =
+          customPrompt ??
+          '$_systemPrompt\n\nComando del usuario: "$transcribedText"';
 
       final response = await http.post(
         Uri.parse('$_geminiApiUrl?key=$_geminiApiKey'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'contents': [
             {
               'parts': [
-                {'text': fullPrompt}
-              ]
-            }
+                {'text': fullPrompt},
+              ],
+            },
           ],
           'generationConfig': {
             'temperature': 0.7,
@@ -455,30 +475,28 @@ Respuesta:
             'maxOutputTokens': 1024,
           },
           'safetySettings': [
-            {
-              'category': 'HARM_CATEGORY_HARASSMENT',
-              'threshold': 'BLOCK_NONE'
-            },
+            {'category': 'HARM_CATEGORY_HARASSMENT', 'threshold': 'BLOCK_NONE'},
             {
               'category': 'HARM_CATEGORY_HATE_SPEECH',
-              'threshold': 'BLOCK_NONE'
+              'threshold': 'BLOCK_NONE',
             },
             {
               'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-              'threshold': 'BLOCK_NONE'
+              'threshold': 'BLOCK_NONE',
             },
             {
               'category': 'HARM_CATEGORY_DANGEROUS_CONTENT',
-              'threshold': 'BLOCK_NONE'
-            }
-          ]
+              'threshold': 'BLOCK_NONE',
+            },
+          ],
         }),
       );
 
-
       if (response.statusCode != 200) {
-        DebugConfig.error('Error Gemini API: ${response.statusCode} - ${response.body}',
-                         tag: 'VoiceService');
+        DebugConfig.error(
+          'Error Gemini API: ${response.statusCode} - ${response.body}',
+          tag: 'VoiceService',
+        );
         throw Exception('Error al llamar a Gemini API: ${response.statusCode}');
       }
 
@@ -494,25 +512,35 @@ Respuesta:
       final parts = content['parts'] as List;
       final textResponse = parts[0]['text'] as String;
 
-      DebugConfig.info('Respuesta de Gemini: $textResponse', tag: 'VoiceService');
+      DebugConfig.info(
+        'Respuesta de Gemini: $textResponse',
+        tag: 'VoiceService',
+      );
 
       // Limpiar la respuesta (por si viene con markdown)
       String cleanedResponse = textResponse.trim();
       if (cleanedResponse.startsWith('```json')) {
-        cleanedResponse = cleanedResponse.replaceFirst('```json', '').replaceFirst('```', '').trim();
+        cleanedResponse = cleanedResponse
+            .replaceFirst('```json', '')
+            .replaceFirst('```', '')
+            .trim();
       } else if (cleanedResponse.startsWith('```')) {
-        cleanedResponse = cleanedResponse.replaceFirst('```', '').replaceFirst('```', '').trim();
+        cleanedResponse = cleanedResponse
+            .replaceFirst('```', '')
+            .replaceFirst('```', '')
+            .trim();
       }
 
-
       // Parsear la respuesta JSON de Gemini
-      final interpretation = jsonDecode(cleanedResponse) as Map<String, dynamic>;
-
+      final interpretation =
+          jsonDecode(cleanedResponse) as Map<String, dynamic>;
 
       return interpretation;
-
     } catch (e) {
-      DebugConfig.error('Error al interpretar con Gemini: $e', tag: 'VoiceService');
+      DebugConfig.error(
+        'Error al interpretar con Gemini: $e',
+        tag: 'VoiceService',
+      );
       rethrow;
     }
   }
@@ -525,8 +553,10 @@ Respuesta:
       final parameters = interpretation['parameters'] as Map<String, dynamic>;
       final apiClient = ApiClient();
 
-      DebugConfig.info('Ejecutando acción: $action con parámetros: $parameters',
-                      tag: 'VoiceService');
+      DebugConfig.info(
+        'Ejecutando acción: $action con parámetros: $parameters',
+        tag: 'VoiceService',
+      );
 
       switch (action) {
         case 'CREATE_EVENT':
@@ -588,10 +618,9 @@ Respuesta:
             // Ya existe una interacción - actualizar la nota
             final existingInteraction = existingInteractions.first;
             final interactionId = existingInteraction['id'] as int;
-            final result = await apiClient.patchInteraction(
-              interactionId,
-              {'note': note},
-            );
+            final result = await apiClient.patchInteraction(interactionId, {
+              'note': note,
+            });
             return result;
           } else {
             // No existe - crear nueva interacción tipo 'joined' para el owner con la nota
@@ -601,7 +630,8 @@ Respuesta:
               'interaction_type': 'joined',
               'status': 'accepted',
               'note': note,
-              'invited_by_user_id': currentUserId, // El owner se añade a sí mismo
+              'invited_by_user_id':
+                  currentUserId, // El owner se añade a sí mismo
             };
             final result = await apiClient.createInteraction(interactionData);
             return result;
@@ -610,14 +640,14 @@ Respuesta:
         case 'UNKNOWN':
           return {
             'success': false,
-            'message': interpretation['clarification_message'] ??
-                      'No entendí el comando. Por favor, intenta de nuevo.'
+            'message':
+                interpretation['clarification_message'] ??
+                'No entendí el comando. Por favor, intenta de nuevo.',
           };
 
         default:
           throw Exception('Acción no reconocida: $action');
       }
-
     } catch (e) {
       DebugConfig.error('Error al ejecutar acción: $e', tag: 'VoiceService');
       rethrow;
@@ -627,12 +657,21 @@ Respuesta:
   /// Método principal que orquesta todo el flujo
   @override
   Future<VoiceCommandResult> processVoiceCommand() async {
-    DebugConfig.info('🚀 ===== INICIANDO processVoiceCommand() =====', tag: 'VoiceService');
+    DebugConfig.info(
+      '🚀 ===== INICIANDO processVoiceCommand() =====',
+      tag: 'VoiceService',
+    );
     try {
       // 1. Transcribir audio (on-device)
-      DebugConfig.info('🎙️ PASO 1: Iniciando transcripción on-device...', tag: 'VoiceService');
+      DebugConfig.info(
+        '🎙️ PASO 1: Iniciando transcripción on-device...',
+        tag: 'VoiceService',
+      );
       final transcribedText = await transcribeAudioOnDevice();
-      DebugConfig.info('✅ Transcripción completada: "$transcribedText" (${transcribedText.length} chars)', tag: 'VoiceService');
+      DebugConfig.info(
+        '✅ Transcripción completada: "$transcribedText" (${transcribedText.length} chars)',
+        tag: 'VoiceService',
+      );
 
       if (transcribedText.isEmpty) {
         DebugConfig.info('⚠️ Texto vacío, abortando', tag: 'VoiceService');
@@ -643,11 +682,23 @@ Respuesta:
       }
 
       // 2. Interpretar con Gemini
-      DebugConfig.info('🤖 PASO 2: Enviando a Gemini para interpretación...', tag: 'VoiceService');
+      DebugConfig.info(
+        '🤖 PASO 2: Enviando a Gemini para interpretación...',
+        tag: 'VoiceService',
+      );
       final interpretation = await interpretWithAI(transcribedText);
-      DebugConfig.info('✅ Interpretación recibida: ${interpretation['action']}', tag: 'VoiceService');
-      DebugConfig.info('📊 Confidence: ${interpretation['confidence']}', tag: 'VoiceService');
-      DebugConfig.info('📋 Parameters: ${interpretation['parameters']}', tag: 'VoiceService');
+      DebugConfig.info(
+        '✅ Interpretación recibida: ${interpretation['action']}',
+        tag: 'VoiceService',
+      );
+      DebugConfig.info(
+        '📊 Confidence: ${interpretation['confidence']}',
+        tag: 'VoiceService',
+      );
+      DebugConfig.info(
+        '📋 Parameters: ${interpretation['parameters']}',
+        tag: 'VoiceService',
+      );
 
       // 3. SIEMPRE devolver success=true con la interpretación
       // El botón decidirá si falta información y abrirá el diálogo conversacional
@@ -658,9 +709,11 @@ Respuesta:
         transcribedText: transcribedText,
         needsConfirmation: interpretation['user_confirmation_needed'] == true,
       );
-
     } catch (e) {
-      DebugConfig.error('Error en processVoiceCommand: $e', tag: 'VoiceService');
+      DebugConfig.error(
+        'Error en processVoiceCommand: $e',
+        tag: 'VoiceService',
+      );
       return VoiceCommandResult(
         success: false,
         message: 'Error al procesar comando: ${e.toString()}',

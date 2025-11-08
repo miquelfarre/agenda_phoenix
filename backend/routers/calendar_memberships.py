@@ -19,16 +19,7 @@ router = APIRouter(prefix="/api/v1/calendar_memberships", tags=["calendar_member
 
 @router.get("", response_model=List[Union[CalendarMembershipResponse, CalendarMembershipEnrichedResponse]])
 async def get_calendar_memberships(
-    calendar_id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    status: Optional[str] = None,
-    enriched: bool = False,
-    exclude_owned: bool = False,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: Optional[str] = "created_at",
-    order_dir: str = "desc",
-    db: Session = Depends(get_db)
+    calendar_id: Optional[int] = None, user_id: Optional[int] = None, status: Optional[str] = None, enriched: bool = False, exclude_owned: bool = False, limit: int = 50, offset: int = 0, order_by: Optional[str] = "created_at", order_dir: str = "desc", db: Session = Depends(get_db)
 ):
     """Get all calendar memberships, optionally filtered, optionally enriched with calendar info
 
@@ -49,17 +40,7 @@ async def get_calendar_memberships(
 
     # If enriched, return with calendar information
     if enriched:
-        results = calendar_membership.get_enriched(
-            db,
-            calendar_id=calendar_id,
-            user_id=user_id,
-            status=status,
-            exclude_owned=exclude_owned,
-            skip=offset,
-            limit=limit,
-            order_by=order_by or "created_at",
-            order_dir=order_dir
-        )
+        results = calendar_membership.get_enriched(db, calendar_id=calendar_id, user_id=user_id, status=status, exclude_owned=exclude_owned, skip=offset, limit=limit, order_by=order_by or "created_at", order_dir=order_dir)
 
         # Transform to enriched response
         return [
@@ -79,17 +60,7 @@ async def get_calendar_memberships(
         ]
 
     # Return plain memberships
-    return calendar_membership.get_multi_filtered(
-        db,
-        calendar_id=calendar_id,
-        user_id=user_id,
-        status=status,
-        exclude_owned=exclude_owned,
-        skip=offset,
-        limit=limit,
-        order_by=order_by or "created_at",
-        order_dir=order_dir
-    )
+    return calendar_membership.get_multi_filtered(db, calendar_id=calendar_id, user_id=user_id, status=status, exclude_owned=exclude_owned, skip=offset, limit=limit, order_by=order_by or "created_at", order_dir=order_dir)
 
 
 @router.get("/{membership_id}", response_model=CalendarMembershipResponse)
@@ -121,12 +92,7 @@ async def create_calendar_membership(membership_data: CalendarMembershipCreate, 
 
 
 @router.put("/{membership_id}", response_model=CalendarMembershipResponse)
-async def update_calendar_membership(
-    membership_id: int,
-    membership_data: CalendarMembershipBase,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_calendar_membership(membership_id: int, membership_data: CalendarMembershipBase, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update a calendar membership (e.g., change status from pending to accepted, or change role).
 
@@ -142,21 +108,14 @@ async def update_calendar_membership(
     is_self = db_membership.user_id == current_user_id
 
     if not (is_calendar_admin or is_self):
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to update this membership. Only the calendar owner/admin or the member themselves can do this."
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission to update this membership. Only the calendar owner/admin or the member themselves can do this.")
 
     updated_membership = calendar_membership.update(db, db_obj=db_membership, obj_in=membership_data)
     return updated_membership
 
 
 @router.delete("/{membership_id}")
-async def delete_calendar_membership(
-    membership_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def delete_calendar_membership(membership_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Remove a user from a calendar.
 
@@ -172,10 +131,7 @@ async def delete_calendar_membership(
     is_self = db_membership.user_id == current_user_id
 
     if not (is_calendar_admin or is_self):
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission to delete this membership. Only the calendar owner/admin or the member themselves can do this."
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission to delete this membership. Only the calendar owner/admin or the member themselves can do this.")
 
     calendar_membership.delete(db, id=membership_id)
     return {"message": "Calendar membership deleted successfully", "id": membership_id}

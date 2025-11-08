@@ -18,16 +18,18 @@ class RealtimeFilter {
     String eventType,
     RealtimeSync realtimeSync,
   ) {
-
     if (payload.eventType == PostgresChangeEvent.delete) {
       return realtimeSync.shouldProcessDelete();
     }
 
-    final commitTimestamp = DateTime.tryParse(payload.commitTimestamp.toString());
-    final shouldProcess = realtimeSync.shouldProcessInsertOrUpdate(commitTimestamp);
+    final commitTimestamp = DateTime.tryParse(
+      payload.commitTimestamp.toString(),
+    );
+    final shouldProcess = realtimeSync.shouldProcessInsertOrUpdate(
+      commitTimestamp,
+    );
 
-    if (!shouldProcess) {
-    }
+    if (!shouldProcess) {}
 
     return shouldProcess;
   }

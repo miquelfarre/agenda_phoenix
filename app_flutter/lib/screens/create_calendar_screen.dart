@@ -11,7 +11,8 @@ class CreateCalendarScreen extends ConsumerStatefulWidget {
   const CreateCalendarScreen({super.key});
 
   @override
-  ConsumerState<CreateCalendarScreen> createState() => _CreateCalendarScreenState();
+  ConsumerState<CreateCalendarScreen> createState() =>
+      _CreateCalendarScreenState();
 }
 
 class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
@@ -33,18 +34,27 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNameRequired);
+      DialogHelpers.showErrorDialogWithIcon(
+        context,
+        context.l10n.calendarNameRequired,
+      );
       return;
     }
 
     if (name.length > 100) {
-      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNameTooLong);
+      DialogHelpers.showErrorDialogWithIcon(
+        context,
+        context.l10n.calendarNameTooLong,
+      );
       return;
     }
 
     final description = _descriptionController.text.trim();
     if (description.length > 500) {
-      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarDescriptionTooLong);
+      DialogHelpers.showErrorDialogWithIcon(
+        context,
+        context.l10n.calendarDescriptionTooLong,
+      );
       return;
     }
 
@@ -53,7 +63,13 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
     });
 
     try {
-      await ref.read(calendarRepositoryProvider).createCalendar(name: name, description: description.isEmpty ? null : description, isPublic: _isPublic);
+      await ref
+          .read(calendarRepositoryProvider)
+          .createCalendar(
+            name: name,
+            description: description.isEmpty ? null : description,
+            isPublic: _isPublic,
+          );
 
       // Realtime handles refresh automatically via CalendarRepository
 
@@ -80,15 +96,38 @@ class _CreateCalendarScreenState extends ConsumerState<CreateCalendarScreen> {
 
     return AdaptivePageScaffold(
       title: l10n.createCalendar,
-      leading: CupertinoButton(padding: EdgeInsets.zero, onPressed: () => context.pop(), child: Text(l10n.cancel)),
-      actions: [CupertinoButton(padding: EdgeInsets.zero, onPressed: _isLoading ? null : _createCalendar, child: _isLoading ? const CupertinoActivityIndicator() : Text(l10n.create))],
+      leading: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () => context.pop(),
+        child: Text(l10n.cancel),
+      ),
+      actions: [
+        CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: _isLoading ? null : _createCalendar,
+          child: _isLoading
+              ? const CupertinoActivityIndicator()
+              : Text(l10n.create),
+        ),
+      ],
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          CupertinoTextField(controller: _nameController, placeholder: l10n.calendarName, maxLength: 100, enabled: !_isLoading),
+          CupertinoTextField(
+            controller: _nameController,
+            placeholder: l10n.calendarName,
+            maxLength: 100,
+            enabled: !_isLoading,
+          ),
           const SizedBox(height: 16),
 
-          CupertinoTextField(controller: _descriptionController, placeholder: l10n.calendarDescription, maxLines: 3, maxLength: 500, enabled: !_isLoading),
+          CupertinoTextField(
+            controller: _descriptionController,
+            placeholder: l10n.calendarDescription,
+            maxLines: 3,
+            maxLength: 500,
+            enabled: !_isLoading,
+          ),
           const SizedBox(height: 24),
 
           CupertinoListTile(

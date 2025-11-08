@@ -12,14 +12,26 @@ class SelectableCard extends StatelessWidget {
   final VoidCallback onTap;
   final ValueChanged<bool?>? onChanged;
 
-  const SelectableCard({super.key, required this.title, this.subtitle, required this.icon, required this.color, required this.selected, required this.onTap, required this.onChanged});
+  const SelectableCard({
+    super.key,
+    required this.title,
+    this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isIOS = PlatformWidgets.isIOS;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: isIOS ? 16.0 : 8.0, vertical: 4.0),
+      margin: EdgeInsets.symmetric(
+        horizontal: isIOS ? 16.0 : 8.0,
+        vertical: 4.0,
+      ),
       decoration: AppStyles.cardDecoration,
       child: GestureDetector(
         key: key != null ? Key('${key.toString()}_card_tap') : null,
@@ -37,7 +49,10 @@ class SelectableCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppStyles.cardTitle.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: AppStyles.cardTitle.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -45,7 +60,10 @@ class SelectableCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         subtitle!,
-                        style: AppStyles.cardSubtitle.copyWith(fontSize: 12, color: AppStyles.grey600),
+                        style: AppStyles.cardSubtitle.copyWith(
+                          fontSize: 12,
+                          color: AppStyles.grey600,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -61,11 +79,24 @@ class SelectableCard extends StatelessWidget {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    border: Border.all(color: selected ? AppStyles.primary600 : AppStyles.grey600, width: 2),
+                    border: Border.all(
+                      color: selected
+                          ? AppStyles.primary600
+                          : AppStyles.grey600,
+                      width: 2,
+                    ),
                     borderRadius: BorderRadius.circular(4),
-                    color: selected ? AppStyles.primary600 : AppStyles.transparent,
+                    color: selected
+                        ? AppStyles.primary600
+                        : AppStyles.transparent,
                   ),
-                  child: selected ? PlatformWidgets.platformIcon(CupertinoIcons.check_mark, size: 16, color: AppStyles.white) : null,
+                  child: selected
+                      ? PlatformWidgets.platformIcon(
+                          CupertinoIcons.check_mark,
+                          size: 16,
+                          color: AppStyles.white,
+                        )
+                      : null,
                 ),
               ),
             ],

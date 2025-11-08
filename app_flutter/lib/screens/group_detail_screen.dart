@@ -64,11 +64,14 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
       title: _currentGroup?.name ?? context.l10n.groupDetails,
       actions: [
         // Edit button (only for creator/admin)
-        if (_currentGroup != null && _currentGroup!.canManageGroup(currentUserId))
+        if (_currentGroup != null &&
+            _currentGroup!.canManageGroup(currentUserId))
           CupertinoButton(
             key: const Key('group_detail_edit_button'),
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            onPressed: _isProcessing ? null : () => _navigateToEdit(_currentGroup!),
+            onPressed: _isProcessing
+                ? null
+                : () => _navigateToEdit(_currentGroup!),
             child: Icon(
               CupertinoIcons.pencil,
               color: _isProcessing ? AppStyles.grey400 : AppStyles.primary600,
@@ -78,9 +81,9 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
       body: groupsAsync.when(
         data: (groups) {
           final group = groups.cast<Group?>().firstWhere(
-                (g) => g?.id == widget.groupId,
-                orElse: () => null,
-              );
+            (g) => g?.id == widget.groupId,
+            orElse: () => null,
+          );
 
           if (group == null) {
             return EmptyState(
@@ -100,7 +103,8 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
 
           return _buildContent(group);
         },
-        loading: () => Center(child: PlatformWidgets.platformLoadingIndicator()),
+        loading: () =>
+            Center(child: PlatformWidgets.platformLoadingIndicator()),
         error: (error, stack) => EmptyState(
           icon: CupertinoIcons.exclamationmark_triangle,
           message: error.toString(),
@@ -134,13 +138,16 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
                 config: AdaptiveButtonConfig.primary(),
                 text: l10n.addMembers,
                 icon: CupertinoIcons.person_add,
-                onPressed: _isProcessing ? null : () => _navigateToAddMembers(group),
+                onPressed: _isProcessing
+                    ? null
+                    : () => _navigateToAddMembers(group),
               ),
               const SizedBox(height: 16),
             ],
 
             // Leave group button (for non-owner members)
-            if (!group.isOwner(currentUserId) && group.isMember(currentUserId)) ...[
+            if (!group.isOwner(currentUserId) &&
+                group.isMember(currentUserId)) ...[
               AdaptiveButton(
                 key: const Key('group_detail_leave_button'),
                 config: AdaptiveButtonConfig.secondary(),
@@ -184,12 +191,21 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
                   children: [
                     Text(
                       group.name,
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppStyles.black87, decoration: TextDecoration.none),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: AppStyles.black87,
+                        decoration: TextDecoration.none,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       l10n.membersLabel(group.totalMemberCount),
-                      style: TextStyle(fontSize: 14, color: AppStyles.grey600, decoration: TextDecoration.none),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppStyles.grey600,
+                        decoration: TextDecoration.none,
+                      ),
                     ),
                   ],
                 ),
@@ -200,12 +216,21 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
             const SizedBox(height: 16),
             Text(
               l10n.groupDescription,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppStyles.black87, decoration: TextDecoration.none),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppStyles.black87,
+                decoration: TextDecoration.none,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               group.description,
-              style: TextStyle(fontSize: 14, color: AppStyles.grey700, decoration: TextDecoration.none),
+              style: TextStyle(
+                fontSize: 14,
+                color: AppStyles.grey700,
+                decoration: TextDecoration.none,
+              ),
             ),
           ],
         ],
@@ -252,11 +277,19 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
               const SizedBox(width: 8),
               Text(
                 l10n.groupMembers,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.grey700, decoration: TextDecoration.none),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppStyles.grey700,
+                  decoration: TextDecoration.none,
+                ),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppStyles.blue600.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -280,12 +313,18 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   l10n.noMembers,
-                  style: TextStyle(fontSize: 14, color: AppStyles.grey500, decoration: TextDecoration.none),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppStyles.grey500,
+                    decoration: TextDecoration.none,
+                  ),
                 ),
               ),
             )
           else
-            ...allMembers.map((member) => _buildMemberTile(member, group, canManage)),
+            ...allMembers.map(
+              (member) => _buildMemberTile(member, group, canManage),
+            ),
         ],
       ),
     );
@@ -294,7 +333,8 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
   Widget _buildMemberTile(User member, Group group, bool canManage) {
     final isOwner = group.isOwner(member.id);
     final isAdmin = group.admins.any((a) => a.id == member.id);
-    final canModifyThisMember = canManage && !isOwner && member.id != currentUserId;
+    final canModifyThisMember =
+        canManage && !isOwner && member.id != currentUserId;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -302,7 +342,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
       decoration: BoxDecoration(
         color: AppStyles.cardBackgroundColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppStyles.grey300.withValues(alpha: 0.5), width: 0.5),
+        border: Border.all(
+          color: AppStyles.grey300.withValues(alpha: 0.5),
+          width: 0.5,
+        ),
       ),
       child: Row(
         children: [
@@ -350,8 +393,8 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
               onPressed: _isProcessing
                   ? null
                   : () => isAdmin
-                      ? _removeAdmin(member, group)
-                      : _grantAdmin(member, group),
+                        ? _removeAdmin(member, group)
+                        : _grantAdmin(member, group),
               child: Icon(
                 isAdmin ? CupertinoIcons.star_fill : CupertinoIcons.star,
                 color: _isProcessing
@@ -364,7 +407,9 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
             CupertinoButton(
               key: Key('group_member_${member.id}_remove_button'),
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              onPressed: _isProcessing ? null : () => _removeMember(member, group),
+              onPressed: _isProcessing
+                  ? null
+                  : () => _removeMember(member, group),
               child: Icon(
                 CupertinoIcons.minus_circle,
                 color: _isProcessing ? AppStyles.grey400 : AppStyles.red600,
@@ -378,7 +423,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
   }
 
   Future<void> _navigateToEdit(Group group) async {
-    final result = await context.push('/people/groups/${group.id}/edit', extra: group);
+    final result = await context.push(
+      '/people/groups/${group.id}/edit',
+      extra: group,
+    );
     if (result == true && mounted) {
       // Group was deleted, go back
       context.pop();
@@ -419,10 +467,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
 
       try {
         final repo = ref.read(groupRepositoryProvider);
-        await repo.grantAdminPermission(
-          groupId: group.id,
-          userId: member.id,
-        );
+        await repo.grantAdminPermission(groupId: group.id, userId: member.id);
 
         if (mounted) {
           PlatformWidgets.showSnackBar(
@@ -474,10 +519,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
 
       try {
         final repo = ref.read(groupRepositoryProvider);
-        await repo.removeAdminPermission(
-          groupId: group.id,
-          userId: member.id,
-        );
+        await repo.removeAdminPermission(groupId: group.id, userId: member.id);
 
         if (mounted) {
           PlatformWidgets.showSnackBar(

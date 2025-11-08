@@ -45,7 +45,7 @@ def get_user_stats(user_id: int) -> dict:
                 FROM user_subscription_stats
                 WHERE user_id = %s
                 """,
-                (user_id,)
+                (user_id,),
             )
             result = cursor.fetchone()
             return dict(result) if result else None
@@ -88,7 +88,7 @@ class TestRealtimeCDC:
         # 1. Estado inicial
         initial_stats = get_user_stats(user_id)
         assert initial_stats is not None, f"User {user_id} debe tener stats iniciales"
-        initial_count = initial_stats['total_events_count']
+        initial_count = initial_stats["total_events_count"]
 
         # 2. Crear evento via API
         event_data = {
@@ -101,12 +101,11 @@ class TestRealtimeCDC:
 
         response = api_request("POST", "/events", json_data=event_data, user_id=user_id)
         assert response.status_code == 201, f"Event creation failed: {response.text}"
-        event_id = response.json()['id']
+        event_id = response.json()["id"]
 
         # 3. Verificar stats se actualizaron automáticamente
         final_stats = get_user_stats(user_id)
-        assert final_stats['total_events_count'] == initial_count + 1, \
-            f"Expected total_events_count={initial_count + 1}, got {final_stats['total_events_count']}"
+        assert final_stats["total_events_count"] == initial_count + 1, f"Expected total_events_count={initial_count + 1}, got {final_stats['total_events_count']}"
 
         # Cleanup: eliminar evento de test
         api_request("DELETE", f"/events/{event_id}", user_id=user_id)
@@ -134,11 +133,11 @@ class TestRealtimeCDC:
 
         response = api_request("POST", "/events", json_data=event_data, user_id=user_id)
         assert response.status_code == 201
-        event_id = response.json()['id']
+        event_id = response.json()["id"]
 
         # 2. Stats después de crear
         stats_after_create = get_user_stats(user_id)
-        count_after_create = stats_after_create['total_events_count']
+        count_after_create = stats_after_create["total_events_count"]
 
         # 3. Eliminar evento
         response = api_request("DELETE", f"/events/{event_id}", user_id=user_id)
@@ -146,8 +145,7 @@ class TestRealtimeCDC:
 
         # 4. Verificar stats se actualizaron
         stats_after_delete = get_user_stats(user_id)
-        assert stats_after_delete['total_events_count'] == count_after_create - 1, \
-            f"Expected total_events_count={count_after_create - 1}, got {stats_after_delete['total_events_count']}"
+        assert stats_after_delete["total_events_count"] == count_after_create - 1, f"Expected total_events_count={count_after_create - 1}, got {stats_after_delete['total_events_count']}"
 
     def test_subscription_increments_subscribers_count(self):
         """
@@ -173,11 +171,11 @@ class TestRealtimeCDC:
 
         response = api_request("POST", "/events", json_data=event_data, user_id=owner_id)
         assert response.status_code == 201
-        event_id = response.json()['id']
+        event_id = response.json()["id"]
 
         # 2. Stats iniciales del owner
         initial_stats = get_user_stats(owner_id)
-        initial_subscribers = initial_stats['subscribers_count']
+        initial_subscribers = initial_stats["subscribers_count"]
 
         # 3. User 2 se suscribe
         interaction_data = {
@@ -189,12 +187,11 @@ class TestRealtimeCDC:
 
         response = api_request("POST", "/interactions", json_data=interaction_data, user_id=subscriber_id)
         assert response.status_code == 201, f"Subscription failed: {response.text}"
-        interaction_id = response.json()['id']
+        interaction_id = response.json()["id"]
 
         # 4. Verificar subscribers_count incrementó
         final_stats = get_user_stats(owner_id)
-        assert final_stats['subscribers_count'] == initial_subscribers + 1, \
-            f"Expected subscribers_count={initial_subscribers + 1}, got {final_stats['subscribers_count']}"
+        assert final_stats["subscribers_count"] == initial_subscribers + 1, f"Expected subscribers_count={initial_subscribers + 1}, got {final_stats['subscribers_count']}"
 
         # Cleanup
         api_request("DELETE", f"/interactions/{interaction_id}", user_id=subscriber_id)
@@ -225,7 +222,7 @@ class TestRealtimeCDC:
 
         response = api_request("POST", "/events", json_data=event_data, user_id=owner_id)
         assert response.status_code == 201
-        event_id = response.json()['id']
+        event_id = response.json()["id"]
 
         # 2. User 2 se suscribe
         interaction_data = {
@@ -237,11 +234,11 @@ class TestRealtimeCDC:
 
         response = api_request("POST", "/interactions", json_data=interaction_data, user_id=subscriber_id)
         assert response.status_code == 201
-        interaction_id = response.json()['id']
+        interaction_id = response.json()["id"]
 
         # 3. Stats después de suscribirse
         stats_after_sub = get_user_stats(owner_id)
-        subscribers_after_sub = stats_after_sub['subscribers_count']
+        subscribers_after_sub = stats_after_sub["subscribers_count"]
 
         # 4. User 2 se desuscribe
         response = api_request("DELETE", f"/interactions/{interaction_id}", user_id=subscriber_id)
@@ -249,8 +246,7 @@ class TestRealtimeCDC:
 
         # 5. Verificar subscribers_count decrementó
         stats_after_unsub = get_user_stats(owner_id)
-        assert stats_after_unsub['subscribers_count'] == subscribers_after_sub - 1, \
-            f"Expected subscribers_count={subscribers_after_sub - 1}, got {stats_after_unsub['subscribers_count']}"
+        assert stats_after_unsub["subscribers_count"] == subscribers_after_sub - 1, f"Expected subscribers_count={subscribers_after_sub - 1}, got {stats_after_unsub['subscribers_count']}"
 
         # Cleanup
         api_request("DELETE", f"/events/{event_id}", user_id=owner_id)
@@ -271,8 +267,8 @@ class TestRealtimeCDC:
 
         # 1. Estado inicial
         initial_stats = get_user_stats(user_id)
-        initial_new_count = initial_stats['new_events_count']
-        initial_total_count = initial_stats['total_events_count']
+        initial_new_count = initial_stats["new_events_count"]
+        initial_total_count = initial_stats["total_events_count"]
 
         # 2. Crear evento reciente (fecha en futuro, created_at será NOW())
         event_data = {
@@ -285,14 +281,12 @@ class TestRealtimeCDC:
 
         response = api_request("POST", "/events", json_data=event_data, user_id=user_id)
         assert response.status_code == 201
-        event_id = response.json()['id']
+        event_id = response.json()["id"]
 
         # 3. Verificar ambos contadores incrementaron
         final_stats = get_user_stats(user_id)
-        assert final_stats['new_events_count'] == initial_new_count + 1, \
-            f"Expected new_events_count={initial_new_count + 1}, got {final_stats['new_events_count']}"
-        assert final_stats['total_events_count'] == initial_total_count + 1, \
-            f"Expected total_events_count={initial_total_count + 1}, got {final_stats['total_events_count']}"
+        assert final_stats["new_events_count"] == initial_new_count + 1, f"Expected new_events_count={initial_new_count + 1}, got {final_stats['new_events_count']}"
+        assert final_stats["total_events_count"] == initial_total_count + 1, f"Expected total_events_count={initial_total_count + 1}, got {final_stats['total_events_count']}"
 
         # Cleanup
         api_request("DELETE", f"/events/{event_id}", user_id=user_id)
@@ -307,40 +301,42 @@ class TestRealtimeCDC:
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 # Verificar columnas
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT column_name, data_type, is_nullable
                     FROM information_schema.columns
                     WHERE table_name = 'user_subscription_stats'
                     ORDER BY ordinal_position
-                """)
+                """
+                )
                 columns = cursor.fetchall()
 
                 expected_columns = {
-                    'user_id': 'integer',
-                    'new_events_count': 'integer',
-                    'total_events_count': 'integer',
-                    'subscribers_count': 'integer',
-                    'last_event_date': 'timestamp with time zone',
-                    'updated_at': 'timestamp with time zone',
+                    "user_id": "integer",
+                    "new_events_count": "integer",
+                    "total_events_count": "integer",
+                    "subscribers_count": "integer",
+                    "last_event_date": "timestamp with time zone",
+                    "updated_at": "timestamp with time zone",
                 }
 
-                actual_columns = {col['column_name']: col['data_type'] for col in columns}
+                actual_columns = {col["column_name"]: col["data_type"] for col in columns}
 
                 for col_name, expected_type in expected_columns.items():
                     assert col_name in actual_columns, f"Missing column: {col_name}"
-                    assert actual_columns[col_name] == expected_type, \
-                        f"Column {col_name} has type {actual_columns[col_name]}, expected {expected_type}"
+                    assert actual_columns[col_name] == expected_type, f"Column {col_name} has type {actual_columns[col_name]}, expected {expected_type}"
 
                 # Verificar REPLICA IDENTITY para Realtime
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT relreplident
                     FROM pg_class
                     WHERE relname = 'user_subscription_stats'
-                """)
+                """
+                )
                 result = cursor.fetchone()
                 assert result is not None, "Table user_subscription_stats not found"
-                assert result['relreplident'] == 'f', \
-                    "Table must have REPLICA IDENTITY FULL for Realtime (expected 'f', got '{result['relreplident']}')"
+                assert result["relreplident"] == "f", "Table must have REPLICA IDENTITY FULL for Realtime (expected 'f', got '{result['relreplident']}')"
 
     def test_triggers_exist_on_events_and_interactions(self):
         """
@@ -354,27 +350,28 @@ class TestRealtimeCDC:
         """
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT tgname, tgrelid::regclass::text as table_name
                     FROM pg_trigger
                     WHERE tgname LIKE '%stats%'
                     ORDER BY tgname
-                """)
+                """
+                )
                 triggers = cursor.fetchall()
 
                 expected_triggers = {
-                    'event_insert_stats_trigger': 'events',
-                    'event_delete_stats_trigger': 'events',
-                    'subscription_insert_stats_trigger': 'event_interactions',
-                    'subscription_delete_stats_trigger': 'event_interactions',
+                    "event_insert_stats_trigger": "events",
+                    "event_delete_stats_trigger": "events",
+                    "subscription_insert_stats_trigger": "event_interactions",
+                    "subscription_delete_stats_trigger": "event_interactions",
                 }
 
-                actual_triggers = {t['tgname']: t['table_name'] for t in triggers}
+                actual_triggers = {t["tgname"]: t["table_name"] for t in triggers}
 
                 for trigger_name, expected_table in expected_triggers.items():
                     assert trigger_name in actual_triggers, f"Missing trigger: {trigger_name}"
-                    assert actual_triggers[trigger_name] == expected_table, \
-                        f"Trigger {trigger_name} is on table {actual_triggers[trigger_name]}, expected {expected_table}"
+                    assert actual_triggers[trigger_name] == expected_table, f"Trigger {trigger_name} is on table {actual_triggers[trigger_name]}, expected {expected_table}"
 
 
 if __name__ == "__main__":

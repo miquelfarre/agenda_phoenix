@@ -19,29 +19,13 @@ router = APIRouter(prefix="/api/v1/app_bans", tags=["app_bans"])
 
 
 @router.get("", response_model=List[AppBanResponse])
-async def get_app_bans(
-    user_id: Optional[int] = None,
-    banned_by: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_app_bans(user_id: Optional[int] = None, banned_by: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all app bans, optionally filtered by user_id or banned_by (admin), with pagination and ordering"""
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return app_ban.get_multi_by_user(
-        db,
-        user_id=user_id,
-        banned_by=banned_by,
-        skip=offset,
-        limit=limit,
-        order_by=order_by,
-        order_dir=order_dir
-    )
+    return app_ban.get_multi_by_user(db, user_id=user_id, banned_by=banned_by, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
 
 @router.get("/{ban_id}", response_model=AppBanResponse)

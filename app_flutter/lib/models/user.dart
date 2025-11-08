@@ -7,34 +7,37 @@ class User {
   final int id;
 
   // Backend fields - Authentication
-  final int? contactId;           // FK to Contact table
-  final String? username;         // Display name for private users (phone auth)
-  final String? instagramName;    // Instagram username for public users
-  final String authProvider;      // 'phone' | 'instagram' (default: 'phone')
-  final String authId;            // Phone number or Instagram user ID (default: '')
+  final int? contactId; // FK to Contact table
+  final String? username; // Display name for private users (phone auth)
+  final String? instagramName; // Instagram username for public users
+  final String authProvider; // 'phone' | 'instagram' (default: 'phone')
+  final String authId; // Phone number or Instagram user ID (default: '')
   final bool isPublic;
   final bool isAdmin;
   final String? profilePicture;
   final DateTime? lastLogin;
-  final DateTime? createdAt;      // When user registered (nullable for backward compatibility)
-  final DateTime? updatedAt;      // Last profile update (nullable for backward compatibility)
+  final DateTime?
+  createdAt; // When user registered (nullable for backward compatibility)
+  final DateTime?
+  updatedAt; // Last profile update (nullable for backward compatibility)
 
   // Backend enriched fields (only when enriched=true)
-  final String? contactName;      // From Contact table
-  final String? contactPhone;     // From Contact table
+  final String? contactName; // From Contact table
+  final String? contactPhone; // From Contact table
 
   // Computed/helper fields
-  final String? phoneNumber;      // Helper: derived from authId if phone auth, or contactPhone
-  final String? fullName;         // Helper: same as contactName
+  final String?
+  phoneNumber; // Helper: derived from authId if phone auth, or contactPhone
+  final String? fullName; // Helper: same as contactName
 
   // Client-side fields (not synced to backend)
-  final bool isActive;            // Client-side state
-  final bool isBanned;            // Client-side (TODO: sync with backend AppBan)
-  final DateTime? lastSeen;       // Client-side presence
-  final bool isOnline;            // Client-side presence
-  final String defaultTimezone;   // Client preference
+  final bool isActive; // Client-side state
+  final bool isBanned; // Client-side (TODO: sync with backend AppBan)
+  final DateTime? lastSeen; // Client-side presence
+  final bool isOnline; // Client-side presence
+  final String defaultTimezone; // Client preference
   final String defaultCountryCode; // Client preference
-  final String defaultCity;       // Client preference
+  final String defaultCity; // Client preference
 
   // Subscription statistics (only present in /users/{id}/subscriptions endpoint)
   final int? newEventsCount;
@@ -47,14 +50,14 @@ class User {
     this.contactId,
     this.username,
     this.instagramName,
-    this.authProvider = 'phone',    // Default to phone auth
-    this.authId = '',                // Default to empty string
+    this.authProvider = 'phone', // Default to phone auth
+    this.authId = '', // Default to empty string
     required this.isPublic,
     this.isAdmin = false,
     this.profilePicture,
     this.lastLogin,
-    this.createdAt,                  // Nullable for backward compatibility
-    this.updatedAt,                  // Nullable for backward compatibility
+    this.createdAt, // Nullable for backward compatibility
+    this.updatedAt, // Nullable for backward compatibility
     // Enriched fields
     this.contactName,
     this.contactPhone,
@@ -80,8 +83,12 @@ class User {
     final String? backendUsername = json['username'] as String?;
 
     // Map backend "username" field to correct Flutter field based on isPublic
-    final String? username = !isPublic ? backendUsername : null;  // Private users
-    final String? instagramName = isPublic ? backendUsername : null;  // Public users
+    final String? username = !isPublic
+        ? backendUsername
+        : null; // Private users
+    final String? instagramName = isPublic
+        ? backendUsername
+        : null; // Public users
 
     // Contact fields (enriched response)
     final String? contactName = json['contact_name'] as String?;
@@ -105,19 +112,27 @@ class User {
       isPublic: isPublic,
       isAdmin: json['is_admin'] as bool? ?? false,
       profilePicture: json['profile_picture'] as String?,
-      lastLogin: json['last_login'] != null ? DateTimeUtils.parseAndNormalize(json['last_login']) : null,
-      createdAt: json['created_at'] != null ? DateTimeUtils.parseAndNormalize(json['created_at']) : null,
-      updatedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : null,
+      lastLogin: json['last_login'] != null
+          ? DateTimeUtils.parseAndNormalize(json['last_login'])
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
+          : null,
       // Enriched fields
       contactName: contactName,
       contactPhone: contactPhone,
       // Helper fields
       phoneNumber: phoneNumber,
-      fullName: contactName,  // fullName is just contactName
+      fullName: contactName, // fullName is just contactName
       // Client-side fields (preserve if present, use defaults otherwise)
       isActive: json['is_active'] as bool? ?? true,
       isBanned: json['is_banned'] as bool? ?? false,
-      lastSeen: json['last_seen'] != null ? DateTimeUtils.parseAndNormalize(json['last_seen']) : null,
+      lastSeen: json['last_seen'] != null
+          ? DateTimeUtils.parseAndNormalize(json['last_seen'])
+          : null,
       isOnline: json['is_online'] as bool? ?? false,
       defaultTimezone: json['default_timezone'] as String? ?? 'Europe/Madrid',
       defaultCountryCode: json['default_country_code'] as String? ?? 'ES',
@@ -137,7 +152,7 @@ class User {
       'id': id,
       // Backend fields
       'contact_id': contactId,
-      'username': backendUsername,  // Unified field in backend
+      'username': backendUsername, // Unified field in backend
       'auth_provider': authProvider,
       'auth_id': authId,
       'is_public': isPublic,

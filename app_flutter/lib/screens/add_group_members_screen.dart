@@ -20,7 +20,8 @@ class AddGroupMembersScreen extends ConsumerStatefulWidget {
   const AddGroupMembersScreen({super.key, required this.group});
 
   @override
-  ConsumerState<AddGroupMembersScreen> createState() => _AddGroupMembersScreenState();
+  ConsumerState<AddGroupMembersScreen> createState() =>
+      _AddGroupMembersScreenState();
 }
 
 class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
@@ -57,24 +58,21 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
 
       if (mounted) {
         setState(() {
+          _contacts = contacts.where((user) {
+            // Filter out:
+            // 1. Users already in the group
+            // 2. Public users (cannot be added to groups)
+            final isAlreadyMember =
+                widget.group.members.any((m) => m.id == user.id) ||
+                widget.group.admins.any((a) => a.id == user.id) ||
+                widget.group.ownerId == user.id;
+            final isPublic = user.isPublic;
 
-          _contacts = contacts
-              .where((user) {
-                // Filter out:
-                // 1. Users already in the group
-                // 2. Public users (cannot be added to groups)
-                final isAlreadyMember = widget.group.members.any((m) => m.id == user.id) ||
-                    widget.group.admins.any((a) => a.id == user.id) ||
-                    widget.group.ownerId == user.id;
-                final isPublic = user.isPublic;
+            final isFiltered = isAlreadyMember || isPublic;
+            if (isFiltered) {}
 
-                final isFiltered = isAlreadyMember || isPublic;
-                if (isFiltered) {
-                }
-
-                return !isAlreadyMember && !isPublic;
-              })
-              .toList();
+            return !isAlreadyMember && !isPublic;
+          }).toList();
 
           _isLoadingContacts = false;
         });
@@ -137,104 +135,116 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
       body: SafeArea(
         child: Column(
           children: [
-          // Selected count banner
-          if (_selectedUserIds.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppStyles.blue600.withValues(alpha: 0.1),
-                border: Border(
-                  bottom: BorderSide(
-                    color: AppStyles.blue600.withValues(alpha: 0.2),
-                    width: 0.5,
+            // Selected count banner
+            if (_selectedUserIds.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: AppStyles.blue600.withValues(alpha: 0.1),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppStyles.blue600.withValues(alpha: 0.2),
+                      width: 0.5,
+                    ),
                   ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    CupertinoIcons.checkmark_circle_fill,
-                    color: AppStyles.blue600,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.selectedCount(_selectedUserIds.length),
-                    style: TextStyle(
-                      fontSize: 14,
+                child: Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.checkmark_circle_fill,
                       color: AppStyles.blue600,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.none,
+                      size: 20,
                     ),
-                  ),
-                  const Spacer(),
-                  CupertinoButton(
-                    key: const Key('add_members_clear_selection_button'),
-                    padding: EdgeInsets.zero,
-                    onPressed: () => setState(() => _selectedUserIds.clear()),
-                    child: Text(
-                      l10n.clearSelection,
-                      style: TextStyle(color: AppStyles.blue600, fontSize: 14),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.selectedCount(_selectedUserIds.length),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppStyles.blue600,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.none,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-          // Error message
-          if (_errorMessage != null)
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppStyles.errorColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppStyles.errorColor.withValues(alpha: 0.2), width: 1),
-              ),
-              child: Row(
-                children: [
-                  Icon(CupertinoIcons.exclamationmark_triangle, color: AppStyles.errorColor, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(fontSize: 14, color: AppStyles.errorColor, decoration: TextDecoration.none),
+                    const Spacer(),
+                    CupertinoButton(
+                      key: const Key('add_members_clear_selection_button'),
+                      padding: EdgeInsets.zero,
+                      onPressed: () => setState(() => _selectedUserIds.clear()),
+                      child: Text(
+                        l10n.clearSelection,
+                        style: TextStyle(
+                          color: AppStyles.blue600,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-          // Contacts list
-          Expanded(
-            child: _buildContactsList(l10n),
-          ),
+            // Error message
+            if (_errorMessage != null)
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppStyles.errorColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppStyles.errorColor.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.exclamationmark_triangle,
+                      color: AppStyles.errorColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppStyles.errorColor,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-          // Add button (sticky at bottom)
-          if (_selectedUserIds.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: CupertinoColors.systemBackground.resolveFrom(context),
-                border: Border(
-                  top: BorderSide(
-                    color: AppStyles.grey300,
-                    width: 0.5,
+            // Contacts list
+            Expanded(child: _buildContactsList(l10n)),
+
+            // Add button (sticky at bottom)
+            if (_selectedUserIds.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemBackground.resolveFrom(context),
+                  border: Border(
+                    top: BorderSide(color: AppStyles.grey300, width: 0.5),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: AdaptiveButton(
+                    key: const Key('add_members_confirm_button'),
+                    config: AdaptiveButtonConfig.primary(),
+                    text: '${l10n.addMembers} (${_selectedUserIds.length})',
+                    icon: CupertinoIcons.person_add,
+                    onPressed: _isAdding ? null : _addSelectedMembers,
+                    isLoading: _isAdding,
                   ),
                 ),
               ),
-              child: SafeArea(
-                top: false,
-                child: AdaptiveButton(
-                  key: const Key('add_members_confirm_button'),
-                  config: AdaptiveButtonConfig.primary(),
-                  text: '${l10n.addMembers} (${_selectedUserIds.length})',
-                  icon: CupertinoIcons.person_add,
-                  onPressed: _isAdding ? null : _addSelectedMembers,
-                  isLoading: _isAdding,
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -290,15 +300,24 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
         _buildSearchField(l10n),
         if (filteredContacts.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: Text(l10n.contacts, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700)),
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
+            child: Text(
+              l10n.contacts,
+              style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700),
+            ),
           ),
         ],
         ...filteredContacts.map((contact) {
           final isSelected = _selectedUserIds.contains(contact.id);
 
           return Container(
-            margin: EdgeInsets.symmetric(horizontal: isIOS ? 16.0 : 8.0, vertical: 4.0),
+            margin: EdgeInsets.symmetric(
+              horizontal: isIOS ? 16.0 : 8.0,
+              vertical: 4.0,
+            ),
             decoration: AppStyles.cardDecoration,
             child: GestureDetector(
               key: Key('add_member_contact_${contact.id}_tap'),
@@ -319,15 +338,24 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    UserAvatar(user: contact, radius: 32.5, showOnlineIndicator: false),
+                    UserAvatar(
+                      user: contact,
+                      radius: 32.5,
+                      showOnlineIndicator: false,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            contact.displayName.isNotEmpty ? contact.displayName : l10n.unknownUser,
-                            style: AppStyles.cardTitle.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+                            contact.displayName.isNotEmpty
+                                ? contact.displayName
+                                : l10n.unknownUser,
+                            style: AppStyles.cardTitle.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -335,7 +363,9 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
                             const SizedBox(height: 4),
                             Text(
                               contact.displaySubtitle ?? '',
-                              style: AppStyles.cardSubtitle.copyWith(color: AppStyles.grey600),
+                              style: AppStyles.cardSubtitle.copyWith(
+                                color: AppStyles.grey600,
+                              ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -362,11 +392,15 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
                         height: 24,
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: isSelected ? AppStyles.primary600 : AppStyles.grey600,
+                            color: isSelected
+                                ? AppStyles.primary600
+                                : AppStyles.grey600,
                             width: 2,
                           ),
                           borderRadius: BorderRadius.circular(4),
-                          color: isSelected ? AppStyles.primary600 : AppStyles.transparent,
+                          color: isSelected
+                              ? AppStyles.primary600
+                              : AppStyles.transparent,
                         ),
                         child: isSelected
                             ? Icon(

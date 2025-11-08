@@ -30,10 +30,26 @@ class _NavigationShellState extends State<NavigationShell> {
     final l10n = context.l10n;
 
     _navigationItems = [
-      AdaptiveNavigationItem(icon: CupertinoIcons.calendar, label: l10n.events, screen: const EventsScreen()),
-      AdaptiveNavigationItem(icon: CupertinoIcons.square_stack, label: l10n.subscriptions, screen: SubscriptionsScreen()),
-      AdaptiveNavigationItem(icon: CupertinoIcons.rectangle_stack_person_crop, label: l10n.calendars, screen: const CalendarsScreen()),
-      AdaptiveNavigationItem(icon: CupertinoIcons.person_2_fill, label: l10n.peopleAndGroups, screen: const PeopleGroupsScreen()),
+      AdaptiveNavigationItem(
+        icon: CupertinoIcons.calendar,
+        label: l10n.events,
+        screen: const EventsScreen(),
+      ),
+      AdaptiveNavigationItem(
+        icon: CupertinoIcons.square_stack,
+        label: l10n.subscriptions,
+        screen: SubscriptionsScreen(),
+      ),
+      AdaptiveNavigationItem(
+        icon: CupertinoIcons.rectangle_stack_person_crop,
+        label: l10n.calendars,
+        screen: const CalendarsScreen(),
+      ),
+      AdaptiveNavigationItem(
+        icon: CupertinoIcons.person_2_fill,
+        label: l10n.peopleAndGroups,
+        screen: const PeopleGroupsScreen(),
+      ),
     ];
 
     _updateSelectedIndex();
@@ -79,7 +95,9 @@ class _NavigationShellState extends State<NavigationShell> {
   @override
   Widget build(BuildContext context) {
     if (_navigationItems == null) {
-      return AdaptivePageScaffold(body: Center(child: PlatformWidgets.platformLoadingIndicator()));
+      return AdaptivePageScaffold(
+        body: Center(child: PlatformWidgets.platformLoadingIndicator()),
+      );
     }
 
     if (widget.child != null) {
@@ -92,7 +110,12 @@ class _NavigationShellState extends State<NavigationShell> {
         actions: [
           AdaptiveButton(
             key: const Key('navigation_shell_settings_button'),
-            config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+            config: const AdaptiveButtonConfig(
+              variant: ButtonVariant.icon,
+              size: ButtonSize.medium,
+              fullWidth: false,
+              iconPosition: IconPosition.only,
+            ),
             icon: CupertinoIcons.ellipsis_vertical,
             onPressed: () => _showSettingsMenu(context),
           ),
@@ -109,7 +132,12 @@ class _NavigationShellState extends State<NavigationShell> {
       actions: [
         AdaptiveButton(
           key: const Key('navigation_shell_fallback_settings_button'),
-          config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+          config: const AdaptiveButtonConfig(
+            variant: ButtonVariant.icon,
+            size: ButtonSize.medium,
+            fullWidth: false,
+            iconPosition: IconPosition.only,
+          ),
           icon: CupertinoIcons.ellipsis_vertical,
           onPressed: () => _showSettingsMenu(context),
         ),
@@ -121,9 +149,17 @@ class _NavigationShellState extends State<NavigationShell> {
   Future<void> _showSettingsMenu(BuildContext context) async {
     final l10n = context.l10n;
 
-    final sheetActions = [PlatformAction(text: l10n.settings, value: 'settings'), PlatformAction(text: l10n.calendars, value: 'calendars'), PlatformAction(text: l10n.birthdays, value: 'birthdays')];
+    final sheetActions = [
+      PlatformAction(text: l10n.settings, value: 'settings'),
+      PlatformAction(text: l10n.calendars, value: 'calendars'),
+      PlatformAction(text: l10n.birthdays, value: 'birthdays'),
+    ];
 
-    final result = await PlatformDialogHelpers.showPlatformActionSheet<String>(context, title: '', actions: sheetActions);
+    final result = await PlatformDialogHelpers.showPlatformActionSheet<String>(
+      context,
+      title: '',
+      actions: sheetActions,
+    );
 
     if (!mounted) return;
 

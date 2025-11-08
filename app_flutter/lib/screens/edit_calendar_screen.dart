@@ -44,11 +44,16 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
   Future<void> _loadCalendar() async {
     try {
       final calendarRepository = ref.read(calendarRepositoryProvider);
-      final calendar = calendarRepository.getCalendarById(int.parse(widget.calendarId));
+      final calendar = calendarRepository.getCalendarById(
+        int.parse(widget.calendarId),
+      );
 
       if (calendar == null) {
         if (!mounted) return;
-        DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNotFound);
+        DialogHelpers.showErrorDialogWithIcon(
+          context,
+          context.l10n.calendarNotFound,
+        );
         context.pop();
         return;
       }
@@ -61,7 +66,10 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
 
       if (!canEdit) {
         if (!mounted) return;
-        DialogHelpers.showErrorDialogWithIcon(context, context.l10n.noPermission);
+        DialogHelpers.showErrorDialogWithIcon(
+          context,
+          context.l10n.noPermission,
+        );
         context.pop();
         return;
       }
@@ -76,7 +84,10 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.failedToLoadCalendar);
+      DialogHelpers.showErrorDialogWithIcon(
+        context,
+        context.l10n.failedToLoadCalendar,
+      );
       context.pop();
     }
   }
@@ -85,18 +96,27 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNameRequired);
+      DialogHelpers.showErrorDialogWithIcon(
+        context,
+        context.l10n.calendarNameRequired,
+      );
       return;
     }
 
     if (name.length > 100) {
-      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarNameTooLong);
+      DialogHelpers.showErrorDialogWithIcon(
+        context,
+        context.l10n.calendarNameTooLong,
+      );
       return;
     }
 
     final description = _descriptionController.text.trim();
     if (description.length > 500) {
-      DialogHelpers.showErrorDialogWithIcon(context, context.l10n.calendarDescriptionTooLong);
+      DialogHelpers.showErrorDialogWithIcon(
+        context,
+        context.l10n.calendarDescriptionTooLong,
+      );
       return;
     }
 
@@ -110,7 +130,9 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         'description': description.isEmpty ? null : description,
         'is_discoverable': _isDiscoverable,
       };
-      await ref.read(calendarRepositoryProvider).updateCalendar(int.parse(widget.calendarId), updateData);
+      await ref
+          .read(calendarRepositoryProvider)
+          .updateCalendar(int.parse(widget.calendarId), updateData);
 
       // Realtime handles refresh automatically via CalendarRepository
 
@@ -139,10 +161,12 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
     });
 
     try {
-      await ref.read(calendarRepositoryProvider).deleteCalendar(
-        int.parse(widget.calendarId),
-        deleteAssociatedEvents: _deleteAssociatedEvents,
-      );
+      await ref
+          .read(calendarRepositoryProvider)
+          .deleteCalendar(
+            int.parse(widget.calendarId),
+            deleteAssociatedEvents: _deleteAssociatedEvents,
+          );
 
       // Realtime handles refresh automatically via CalendarRepository
 
@@ -211,8 +235,10 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: _isLoading ? null : _updateCalendar,
-          child: _isLoading ? const CupertinoActivityIndicator() : Text(l10n.save),
-        )
+          child: _isLoading
+              ? const CupertinoActivityIndicator()
+              : Text(l10n.save),
+        ),
       ],
       body: _buildContent(),
     );
@@ -250,7 +276,11 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         children: [
           Text(
             l10n.calendarInformation,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.grey700),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppStyles.grey700,
+            ),
           ),
           const SizedBox(height: 16),
           CupertinoTextField(
@@ -280,8 +310,13 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
           const SizedBox(height: 16),
           CupertinoListTile(
             title: Text(l10n.publicCalendar),
-            subtitle: Text(_calendar!.isPublic ? l10n.visibleToOthers : l10n.private),
-            trailing: CupertinoSwitch(value: _calendar!.isPublic, onChanged: null),
+            subtitle: Text(
+              _calendar!.isPublic ? l10n.visibleToOthers : l10n.private,
+            ),
+            trailing: CupertinoSwitch(
+              value: _calendar!.isPublic,
+              onChanged: null,
+            ),
             padding: EdgeInsets.zero,
           ),
         ],
@@ -301,7 +336,11 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         children: [
           Text(
             l10n.visibility,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.grey700),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppStyles.grey700,
+            ),
           ),
           const SizedBox(height: 16),
           CupertinoListTile(
@@ -334,7 +373,10 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(CupertinoColors.systemRed, 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppStyles.colorWithOpacity(CupertinoColors.systemRed, 0.2), width: 1),
+        border: Border.all(
+          color: AppStyles.colorWithOpacity(CupertinoColors.systemRed, 0.2),
+          width: 1,
+        ),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -342,11 +384,19 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
         children: [
           Row(
             children: [
-              const Icon(CupertinoIcons.delete, color: CupertinoColors.systemRed, size: 20),
+              const Icon(
+                CupertinoIcons.delete,
+                color: CupertinoColors.systemRed,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 l10n.deleteCalendar,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.black87),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppStyles.black87,
+                ),
               ),
             ],
           ),
@@ -359,7 +409,9 @@ class _EditCalendarScreenState extends ConsumerState<EditCalendarScreen> {
           CupertinoListTile(
             title: Text(l10n.deleteAssociatedEvents),
             subtitle: Text(
-              _deleteAssociatedEvents ? l10n.eventsWillBeDeleted : l10n.eventsWillBeKept,
+              _deleteAssociatedEvents
+                  ? l10n.eventsWillBeDeleted
+                  : l10n.eventsWillBeKept,
             ),
             trailing: CupertinoSwitch(
               value: _deleteAssociatedEvents,

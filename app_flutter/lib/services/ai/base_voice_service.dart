@@ -31,7 +31,10 @@ abstract class BaseVoiceService {
   ///   "needs_confirmation": true
   /// }
   /// ```
-  Future<Map<String, dynamic>> interpretWithAI(String transcribedText, {String? customPrompt});
+  Future<Map<String, dynamic>> interpretWithAI(
+    String transcribedText, {
+    String? customPrompt,
+  });
 
   /// Ejecuta la acción interpretada por la IA usando ApiClient
   Future<dynamic> executeAction(Map<String, dynamic> interpretation);

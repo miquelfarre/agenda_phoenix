@@ -16,37 +16,17 @@ class CRUDGroup(CRUDBase[Group, GroupCreate, GroupBase]):
 
     def get_with_relations(self, db: Session, *, id: int) -> Optional[Group]:
         """Get a group with all its relations loaded (owner, members, admins)"""
-        return (
-            db.query(Group)
-            .options(joinedload(Group.owner))
-            .filter(Group.id == id)
-            .first()
-        )
+        return db.query(Group).options(joinedload(Group.owner)).filter(Group.id == id).first()
 
     def get_multi_with_relations(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[Group]:
         """Get multiple groups with all their relations loaded"""
-        return (
-            db.query(Group)
-            .options(joinedload(Group.owner))
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+        return db.query(Group).options(joinedload(Group.owner)).offset(skip).limit(limit).all()
 
     def get_by_owner(self, db: Session, *, owner_id: int) -> List[Group]:
         """Get all groups owned by a specific user"""
         return self.get_multi(db, filters={"owner_id": owner_id})
 
-    def get_multi_filtered(
-        self,
-        db: Session,
-        *,
-        owner_id: Optional[int] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "id",
-        order_dir: str = "asc"
-    ) -> List[Group]:
+    def get_multi_filtered(self, db: Session, *, owner_id: Optional[int] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List[Group]:
         """
         Get multiple groups with filters and pagination
 
@@ -61,21 +41,9 @@ class CRUDGroup(CRUDBase[Group, GroupCreate, GroupBase]):
         if owner_id is not None:
             filters["owner_id"] = owner_id
 
-        return self.get_multi(
-            db,
-            skip=skip,
-            limit=limit,
-            order_by=order_by,
-            order_dir=order_dir,
-            filters=filters
-        )
+        return self.get_multi(db, skip=skip, limit=limit, order_by=order_by, order_dir=order_dir, filters=filters)
 
-    def create_with_validation(
-        self,
-        db: Session,
-        *,
-        obj_in: GroupCreate
-    ) -> tuple[Optional[Group], Optional[str]]:
+    def create_with_validation(self, db: Session, *, obj_in: GroupCreate) -> tuple[Optional[Group], Optional[str]]:
         """
         Create a new group with validation.
         Automatically creates a group_membership for the owner as admin.
@@ -96,11 +64,7 @@ class CRUDGroup(CRUDBase[Group, GroupCreate, GroupBase]):
         db_group = self.create(db, obj_in=obj_in)
 
         # Automatically create group_membership for the owner as admin
-        membership_data = GroupMembershipCreate(
-            group_id=db_group.id,
-            user_id=obj_in.owner_id,
-            role="admin"
-        )
+        membership_data = GroupMembershipCreate(group_id=db_group.id, user_id=obj_in.owner_id, role="admin")
         group_membership.create(db, obj_in=membership_data)
 
         return db_group, None

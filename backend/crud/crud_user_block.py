@@ -24,22 +24,9 @@ class CRUDUserBlock(CRUDBase[UserBlock, UserBlockCreate, UserBlockResponse]):
 
     def exists_block(self, db: Session, *, blocker_user_id: int, blocked_user_id: int) -> bool:
         """Check if a block exists between two users (optimized)"""
-        return db.query(UserBlock.id).filter(
-            UserBlock.blocker_user_id == blocker_user_id,
-            UserBlock.blocked_user_id == blocked_user_id
-        ).first() is not None
+        return db.query(UserBlock.id).filter(UserBlock.blocker_user_id == blocker_user_id, UserBlock.blocked_user_id == blocked_user_id).first() is not None
 
-    def get_multi_filtered(
-        self,
-        db: Session,
-        *,
-        blocker_user_id: Optional[int] = None,
-        blocked_user_id: Optional[int] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "id",
-        order_dir: str = "asc"
-    ) -> List[UserBlock]:
+    def get_multi_filtered(self, db: Session, *, blocker_user_id: Optional[int] = None, blocked_user_id: Optional[int] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List[UserBlock]:
         """
         Get multiple blocks with filters and pagination
 
@@ -57,21 +44,9 @@ class CRUDUserBlock(CRUDBase[UserBlock, UserBlockCreate, UserBlockResponse]):
         if blocked_user_id is not None:
             filters["blocked_user_id"] = blocked_user_id
 
-        return self.get_multi(
-            db,
-            skip=skip,
-            limit=limit,
-            order_by=order_by,
-            order_dir=order_dir,
-            filters=filters
-        )
+        return self.get_multi(db, skip=skip, limit=limit, order_by=order_by, order_dir=order_dir, filters=filters)
 
-    def create_with_validation(
-        self,
-        db: Session,
-        *,
-        obj_in: UserBlockCreate
-    ) -> tuple[Optional[UserBlock], Optional[str]]:
+    def create_with_validation(self, db: Session, *, obj_in: UserBlockCreate) -> tuple[Optional[UserBlock], Optional[str]]:
         """
         Create a new block with validation
 
@@ -118,15 +93,11 @@ class CRUDUserBlock(CRUDBase[UserBlock, UserBlockCreate, UserBlockResponse]):
         blocked_ids = set()
 
         # Users blocked by this user
-        blocks_by_me = db.query(UserBlock.blocked_user_id).filter(
-            UserBlock.blocker_user_id == user_id
-        ).all()
+        blocks_by_me = db.query(UserBlock.blocked_user_id).filter(UserBlock.blocker_user_id == user_id).all()
         blocked_ids.update([bid for (bid,) in blocks_by_me])
 
         # Users who blocked this user
-        blocks_on_me = db.query(UserBlock.blocker_user_id).filter(
-            UserBlock.blocked_user_id == user_id
-        ).all()
+        blocks_on_me = db.query(UserBlock.blocker_user_id).filter(UserBlock.blocked_user_id == user_id).all()
         blocked_ids.update([bid for (bid,) in blocks_on_me])
 
         return blocked_ids

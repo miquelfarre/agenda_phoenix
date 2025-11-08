@@ -18,8 +18,8 @@ class EventPermissions {
     if (isOwner) return true;
 
     // Check if user is admin of this event (joined with admin role)
-    final isAdmin = event.interactionType == 'joined' &&
-                    event.interactionRole == 'admin';
+    final isAdmin =
+        event.interactionType == 'joined' && event.interactionRole == 'admin';
 
     return isAdmin;
   }

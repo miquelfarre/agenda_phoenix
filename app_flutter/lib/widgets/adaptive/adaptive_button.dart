@@ -10,7 +10,16 @@ class AdaptiveButton extends StatelessWidget {
   final void Function(bool loading)? onLoadingChanged;
   final bool enabled;
 
-  const AdaptiveButton({super.key, required this.config, this.onPressed, this.text, this.icon, this.isLoading = false, this.onLoadingChanged, this.enabled = true});
+  const AdaptiveButton({
+    super.key,
+    required this.config,
+    this.onPressed,
+    this.text,
+    this.icon,
+    this.isLoading = false,
+    this.onLoadingChanged,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +52,11 @@ class AdaptiveButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: config.backgroundColor ?? theme.primaryColor,
           foregroundColor: config.textColor ?? Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(config.borderRadius ?? theme.defaultBorderRadius.topLeft.x)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              config.borderRadius ?? theme.defaultBorderRadius.topLeft.x,
+            ),
+          ),
           elevation: theme.isIOS ? 0 : 2,
         ),
         child: _buildButtonContent(),
@@ -60,7 +73,11 @@ class AdaptiveButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: config.textColor ?? theme.primaryColor,
           side: BorderSide(color: theme.primaryColor),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(config.borderRadius ?? theme.defaultBorderRadius.topLeft.x)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              config.borderRadius ?? theme.defaultBorderRadius.topLeft.x,
+            ),
+          ),
         ),
         child: _buildButtonContent(),
       ),
@@ -70,7 +87,9 @@ class AdaptiveButton extends StatelessWidget {
   Widget _buildTextButton(PlatformTheme theme) {
     return TextButton(
       onPressed: enabled ? onPressed : null,
-      style: TextButton.styleFrom(foregroundColor: config.textColor ?? theme.primaryColor),
+      style: TextButton.styleFrom(
+        foregroundColor: config.textColor ?? theme.primaryColor,
+      ),
       child: _buildButtonContent(),
     );
   }
@@ -78,7 +97,10 @@ class AdaptiveButton extends StatelessWidget {
   Widget _buildIconButton(PlatformTheme theme) {
     return IconButton(
       onPressed: enabled ? onPressed : null,
-      icon: Icon(icon ?? Icons.star, color: config.textColor ?? theme.primaryColor),
+      icon: Icon(
+        icon ?? Icons.star,
+        color: config.textColor ?? theme.primaryColor,
+      ),
       iconSize: _getIconSize(),
     );
   }
@@ -98,10 +120,22 @@ class AdaptiveButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: (config.backgroundColor ?? theme.primaryColor).withValues(alpha: 0.6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(config.borderRadius ?? theme.defaultBorderRadius.topLeft.x)),
+          backgroundColor: (config.backgroundColor ?? theme.primaryColor)
+              .withValues(alpha: 0.6),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              config.borderRadius ?? theme.defaultBorderRadius.topLeft.x,
+            ),
+          ),
         ),
-        child: const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white))),
+        child: const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
       ),
     );
   }
@@ -122,9 +156,15 @@ class AdaptiveButton extends StatelessWidget {
 
     switch (config.iconPosition) {
       case IconPosition.leading:
-        return Row(mainAxisSize: MainAxisSize.min, children: [iconWidget, const SizedBox(width: 8), textWidget]);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [iconWidget, const SizedBox(width: 8), textWidget],
+        );
       case IconPosition.trailing:
-        return Row(mainAxisSize: MainAxisSize.min, children: [textWidget, const SizedBox(width: 8), iconWidget]);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [textWidget, const SizedBox(width: 8), iconWidget],
+        );
       case IconPosition.only:
         return iconWidget;
     }
@@ -162,17 +202,50 @@ class AdaptiveButtonConfig {
   final IconPosition iconPosition;
   final double? borderRadius;
 
-  const AdaptiveButtonConfig({required this.variant, required this.size, this.backgroundColor, this.textColor, required this.fullWidth, required this.iconPosition, this.borderRadius});
+  const AdaptiveButtonConfig({
+    required this.variant,
+    required this.size,
+    this.backgroundColor,
+    this.textColor,
+    required this.fullWidth,
+    required this.iconPosition,
+    this.borderRadius,
+  });
 
-  factory AdaptiveButtonConfig.primary() => const AdaptiveButtonConfig(variant: ButtonVariant.primary, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.leading);
+  factory AdaptiveButtonConfig.primary() => const AdaptiveButtonConfig(
+    variant: ButtonVariant.primary,
+    size: ButtonSize.medium,
+    fullWidth: false,
+    iconPosition: IconPosition.leading,
+  );
 
-  factory AdaptiveButtonConfig.secondary() => const AdaptiveButtonConfig(variant: ButtonVariant.secondary, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.leading);
+  factory AdaptiveButtonConfig.secondary() => const AdaptiveButtonConfig(
+    variant: ButtonVariant.secondary,
+    size: ButtonSize.medium,
+    fullWidth: false,
+    iconPosition: IconPosition.leading,
+  );
 
-  factory AdaptiveButtonConfig.text() => const AdaptiveButtonConfig(variant: ButtonVariant.text, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.leading);
+  factory AdaptiveButtonConfig.text() => const AdaptiveButtonConfig(
+    variant: ButtonVariant.text,
+    size: ButtonSize.medium,
+    fullWidth: false,
+    iconPosition: IconPosition.leading,
+  );
 
-  factory AdaptiveButtonConfig.icon() => const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only);
+  factory AdaptiveButtonConfig.icon() => const AdaptiveButtonConfig(
+    variant: ButtonVariant.icon,
+    size: ButtonSize.medium,
+    fullWidth: false,
+    iconPosition: IconPosition.only,
+  );
 
-  factory AdaptiveButtonConfig.fab() => const AdaptiveButtonConfig(variant: ButtonVariant.fab, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only);
+  factory AdaptiveButtonConfig.fab() => const AdaptiveButtonConfig(
+    variant: ButtonVariant.fab,
+    size: ButtonSize.medium,
+    fullWidth: false,
+    iconPosition: IconPosition.only,
+  );
 }
 
 enum ButtonVariant { primary, secondary, text, icon, fab }

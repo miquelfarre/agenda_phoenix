@@ -25,7 +25,6 @@ class CalendarOperations {
     bool shouldNavigate = false,
     bool showSuccessMessage = true,
   }) async {
-
     try {
       final isOwner = CalendarPermissions.isOwner(calendar);
 
@@ -67,7 +66,6 @@ class CalendarOperations {
 
       return true;
     } catch (e, _) {
-
       if (context.mounted) {
         final errorMessage = ErrorMessageParser.parse(e, context);
         PlatformDialogHelpers.showSnackBar(
@@ -102,8 +100,8 @@ class CalendarOperations {
         title: Text(isOwner ? l10n.deleteCalendar : l10n.leaveCalendar),
         content: Text(
           isOwner
-            ? l10n.confirmDeleteCalendarWithEvents
-            : l10n.confirmLeaveCalendar,
+              ? l10n.confirmDeleteCalendarWithEvents
+              : l10n.confirmLeaveCalendar,
         ),
         actions: [
           CupertinoDialogAction(

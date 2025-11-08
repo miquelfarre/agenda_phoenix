@@ -20,8 +20,10 @@ class EventRepository {
   Box<EventHive>? _box;
   RealtimeChannel? _realtimeChannel;
   RealtimeChannel? _interactionsChannel;
-  final StreamController<List<Event>> _eventsStreamController = StreamController<List<Event>>.broadcast();
-  final StreamController<List<EventInteraction>> _interactionsStreamController = StreamController<List<EventInteraction>>.broadcast();
+  final StreamController<List<Event>> _eventsStreamController =
+      StreamController<List<Event>>.broadcast();
+  final StreamController<List<EventInteraction>> _interactionsStreamController =
+      StreamController<List<EventInteraction>>.broadcast();
 
   List<Event> _cachedEvents = [];
   DateTime? _initialSyncCompletedAt;
@@ -82,10 +84,15 @@ class EventRepository {
       await _updateLocalCache(_cachedEvents);
 
       if (_cachedEvents.isNotEmpty) {
-        final updatedAtTimestamps = _cachedEvents.map((e) => e.updatedAt).whereType<DateTime>().toList();
+        final updatedAtTimestamps = _cachedEvents
+            .map((e) => e.updatedAt)
+            .whereType<DateTime>()
+            .toList();
 
         if (updatedAtTimestamps.isNotEmpty) {
-          final latestUpdate = updatedAtTimestamps.reduce((a, b) => a.isAfter(b) ? a : b);
+          final latestUpdate = updatedAtTimestamps.reduce(
+            (a, b) => a.isAfter(b) ? a : b,
+          );
           _initialSyncCompletedAt = latestUpdate.toUtc();
           _rt.setServerSyncTs(_initialSyncCompletedAt!);
         }
@@ -127,20 +134,32 @@ class EventRepository {
 
   // --- Event Interaction Methods ---
 
-  Future<EventInteraction> updateParticipationStatus(int eventId, String status, {String? decisionMessage, bool? isAttending}) async {
+  Future<EventInteraction> updateParticipationStatus(
+    int eventId,
+    String status, {
+    String? decisionMessage,
+    bool? isAttending,
+  }) async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
       final interactions = _extractInteractionsFromEvents();
 
-
-      final interaction = interactions.firstWhere((i) => i.eventId == eventId && i.userId == currentUserId, orElse: () => throw exceptions.NotFoundException(message: 'Interaction not found'));
-
+      final interaction = interactions.firstWhere(
+        (i) => i.eventId == eventId && i.userId == currentUserId,
+        orElse: () => throw exceptions.NotFoundException(
+          message: 'Interaction not found',
+        ),
+      );
 
       final updateData = <String, dynamic>{'status': status};
-      if (decisionMessage != null) updateData['rejection_message'] = decisionMessage;
+      if (decisionMessage != null)
+        updateData['rejection_message'] = decisionMessage;
       if (isAttending != null) updateData['is_attending'] = isAttending;
 
-      final updatedInteraction = await _apiClient.patchInteraction(interaction.id!, updateData);
+      final updatedInteraction = await _apiClient.patchInteraction(
+        interaction.id!,
+        updateData,
+      );
 
       await _fetchAndSync();
       _emitInteractions();
@@ -154,7 +173,12 @@ class EventRepository {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
       final interactions = _extractInteractionsFromEvents();
-      final interaction = interactions.firstWhere((i) => i.eventId == eventId && i.userId == currentUserId, orElse: () => throw exceptions.NotFoundException(message: 'Interaction not found'));
+      final interaction = interactions.firstWhere(
+        (i) => i.eventId == eventId && i.userId == currentUserId,
+        orElse: () => throw exceptions.NotFoundException(
+          message: 'Interaction not found',
+        ),
+      );
       await _apiClient.markInteractionRead(interaction.id!);
       await _fetchAndSync();
       _emitInteractions();
@@ -167,8 +191,15 @@ class EventRepository {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
       final interactions = _extractInteractionsFromEvents();
-      final interaction = interactions.firstWhere((i) => i.eventId == eventId && i.userId == currentUserId, orElse: () => throw exceptions.NotFoundException(message: 'Interaction not found'));
-      await _apiClient.patchInteraction(interaction.id!, {'personal_note': note});
+      final interaction = interactions.firstWhere(
+        (i) => i.eventId == eventId && i.userId == currentUserId,
+        orElse: () => throw exceptions.NotFoundException(
+          message: 'Interaction not found',
+        ),
+      );
+      await _apiClient.patchInteraction(interaction.id!, {
+        'personal_note': note,
+      });
       await _fetchAndSync();
       _emitInteractions();
     } catch (e, _) {
@@ -178,7 +209,12 @@ class EventRepository {
 
   Future<void> sendInvitation(int eventId, int invitedUserId) async {
     try {
-      await _apiClient.createInteraction({'event_id': eventId, 'user_id': invitedUserId, 'interaction_type': 'invited', 'status': 'pending'});
+      await _apiClient.createInteraction({
+        'event_id': eventId,
+        'user_id': invitedUserId,
+        'interaction_type': 'invited',
+        'status': 'pending',
+      });
       await _fetchAndSync();
       _emitInteractions();
     } catch (e, _) {
@@ -195,7 +231,9 @@ class EventRepository {
     for (final event in _cachedEvents) {
       if (event.id != null && event.interactionData != null) {
         try {
-          final interactionJson = Map<String, dynamic>.from(event.interactionData!);
+          final interactionJson = Map<String, dynamic>.from(
+            event.interactionData!,
+          );
           interactionJson['event_id'] = event.id;
           interactionJson['user_id'] = currentUserId;
 
@@ -222,8 +260,9 @@ class EventRepository {
     if (_box == null) return;
 
     try {
-      _cachedEvents = _box!.values.map((eventHive) => eventHive.toEvent()).toList();
-
+      _cachedEvents = _box!.values
+          .map((eventHive) => eventHive.toEvent())
+          .toList();
     } catch (e) {
       _cachedEvents = [];
     }
@@ -244,8 +283,12 @@ class EventRepository {
   }
 
   Future<void> _startRealtimeSubscription() async {
-    _realtimeChannel = RealtimeUtils.subscribeTable(client: _supabaseService.client, schema: 'public', table: 'events', onChange: _handleRealtimeEvent);
-
+    _realtimeChannel = RealtimeUtils.subscribeTable(
+      client: _supabaseService.client,
+      schema: 'public',
+      table: 'events',
+      onChange: _handleRealtimeEvent,
+    );
   }
 
   Future<void> _startInteractionsSubscription() async {
@@ -254,10 +297,13 @@ class EventRepository {
       client: _supabaseService.client,
       schema: 'public',
       table: 'event_interactions',
-      filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'user_id', value: userId.toString()),
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'user_id',
+        value: userId.toString(),
+      ),
       onChange: _handleInteractionChange,
     );
-
   }
 
   bool _shouldProcessEvent(PostgresChangePayload payload, String eventType) {
@@ -265,14 +311,14 @@ class EventRepository {
   }
 
   void _handleInteractionChange(PostgresChangePayload payload) {
-
     if (!_shouldProcessEvent(payload, 'interaction')) {
       return; // Ignore historical event
     }
 
-
     try {
-      final eventId = payload.newRecord['event_id'] as int? ?? payload.oldRecord['event_id'] as int?;
+      final eventId =
+          payload.newRecord['event_id'] as int? ??
+          payload.oldRecord['event_id'] as int?;
       final userId = ConfigService.instance.currentUserId;
 
       if (eventId != null) {
@@ -294,16 +340,21 @@ class EventRepository {
         if (index != -1) {
           final currentEvent = _cachedEvents[index];
           if (payload.newRecord['user_id'] == userId) {
-
-            final updatedInteractionData = Map<String, dynamic>.from(currentEvent.interactionData ?? {});
+            final updatedInteractionData = Map<String, dynamic>.from(
+              currentEvent.interactionData ?? {},
+            );
             updatedInteractionData['status'] = payload.newRecord['status'];
-            updatedInteractionData['interaction_type'] = payload.newRecord['interaction_type'];
-            updatedInteractionData['is_attending'] = payload.newRecord['is_attending'];
+            updatedInteractionData['interaction_type'] =
+                payload.newRecord['interaction_type'];
+            updatedInteractionData['is_attending'] =
+                payload.newRecord['is_attending'];
             updatedInteractionData['role'] = payload.newRecord['role'];
             updatedInteractionData['note'] = payload.newRecord['note'];
             updatedInteractionData['read_at'] = payload.newRecord['read_at'];
 
-            _cachedEvents[index] = currentEvent.copyWith(interactionData: updatedInteractionData);
+            _cachedEvents[index] = currentEvent.copyWith(
+              interactionData: updatedInteractionData,
+            );
 
             _emitCurrentEvents();
             _emitInteractions();
@@ -426,7 +477,10 @@ class EventRepository {
 
   /// Update personal note for an event
   Future<void> updatePersonalNote(int eventId, String? note) async {
-    await _apiClient.patch('/api/v1/events/$eventId/interaction', body: {'note': note});
+    await _apiClient.patch(
+      '/api/v1/events/$eventId/interaction',
+      body: {'note': note},
+    );
     // After updating, refresh the local cache
     await _fetchAndSync();
   }

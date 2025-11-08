@@ -15,7 +15,11 @@ class EventSeriesScreen extends ConsumerStatefulWidget {
   final List<Event> events;
   final String seriesName;
 
-  const EventSeriesScreen({super.key, required this.events, required this.seriesName});
+  const EventSeriesScreen({
+    super.key,
+    required this.events,
+    required this.seriesName,
+  });
 
   @override
   ConsumerState<EventSeriesScreen> createState() => _EventSeriesScreenState();
@@ -35,7 +39,8 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
     final l10n = context.l10n;
 
     // Sort events by date
-    final sortedEvents = List<Event>.from(_events)..sort((a, b) => a.date.compareTo(b.date));
+    final sortedEvents = List<Event>.from(_events)
+      ..sort((a, b) => a.date.compareTo(b.date));
 
     return AdaptivePageScaffold(
       title: l10n.eventSeries,
@@ -50,10 +55,17 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
                 children: [
                   Text(
                     widget.seriesName,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppStyles.grey700),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppStyles.grey700,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Text('${sortedEvents.length} ${sortedEvents.length == 1 ? l10n.event : l10n.events}', style: TextStyle(fontSize: 14, color: AppStyles.grey600)),
+                  Text(
+                    '${sortedEvents.length} ${sortedEvents.length == 1 ? l10n.event : l10n.events}',
+                    style: TextStyle(fontSize: 14, color: AppStyles.grey600),
+                  ),
                 ],
               ),
             ),
@@ -61,18 +73,25 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
             Expanded(
               child: sortedEvents.isEmpty
                   ? Center(
-                      child: EmptyState(message: l10n.noEventsInSeries, icon: CupertinoIcons.calendar),
+                      child: EmptyState(
+                        message: l10n.noEventsInSeries,
+                        icon: CupertinoIcons.calendar,
+                      ),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(16.0),
                       itemCount: sortedEvents.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final event = sortedEvents[index];
                         return EventListItem(
                           event: event,
                           onTap: (event) => Navigator.of(context).push(
-                            CupertinoPageRoute(builder: (context) => EventDetailScreen(event: event)),
+                            CupertinoPageRoute(
+                              builder: (context) =>
+                                  EventDetailScreen(event: event),
+                            ),
                           ),
                           onDelete: _deleteEvent,
                           showDate: true,
@@ -89,7 +108,6 @@ class _EventSeriesScreenState extends ConsumerState<EventSeriesScreen> {
   }
 
   Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
-
     final success = await EventOperations.deleteOrLeaveEvent(
       event: event,
       repository: ref.read(eventRepositoryProvider),

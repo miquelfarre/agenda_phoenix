@@ -27,12 +27,7 @@ router = APIRouter(prefix="/api/v1/calendars", tags=["calendars"])
 
 
 @router.get("", response_model=List[CalendarResponse])
-async def get_calendars(
-    current_user_id: int = Depends(get_current_user_id),
-    limit: int = 50,
-    offset: int = 0,
-    db: Session = Depends(get_db)
-):
+async def get_calendars(current_user_id: int = Depends(get_current_user_id), limit: int = 50, offset: int = 0, db: Session = Depends(get_db)):
     """
     Get all calendars accessible to the authenticated user.
 
@@ -47,22 +42,11 @@ async def get_calendars(
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return calendar.get_all_user_calendars(
-        db,
-        user_id=current_user_id,
-        skip=offset,
-        limit=limit
-    )
+    return calendar.get_all_user_calendars(db, user_id=current_user_id, skip=offset, limit=limit)
 
 
 @router.get("/public", response_model=List[CalendarResponse])
-async def get_public_calendars(
-    category: Optional[str] = None,
-    search: Optional[str] = None,
-    limit: int = 50,
-    offset: int = 0,
-    db: Session = Depends(get_db)
-):
+async def get_public_calendars(category: Optional[str] = None, search: Optional[str] = None, limit: int = 50, offset: int = 0, db: Session = Depends(get_db)):
     """
     Get discoverable public calendars.
 
@@ -76,13 +60,7 @@ async def get_public_calendars(
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return calendar_subscription.get_public_calendars(
-        db,
-        category=category,
-        search=search,
-        skip=offset,
-        limit=limit
-    )
+    return calendar_subscription.get_public_calendars(db, category=category, search=search, skip=offset, limit=limit)
 
 
 @router.get("/share/{share_hash}", response_model=CalendarResponse)
@@ -111,16 +89,12 @@ async def get_calendar(calendar_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=CalendarResponse, status_code=201)
-async def create_calendar(
-    calendar_data: CalendarBase,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def create_calendar(calendar_data: CalendarBase, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Create a new calendar"""
     # Create CalendarCreate with owner_id from authenticated user
     # Use model_dump to get all fields and add owner_id
     data_dict = calendar_data.model_dump()
-    data_dict['owner_id'] = current_user_id
+    data_dict["owner_id"] = current_user_id
     create_data = CalendarCreate(**data_dict)
 
     # Create with validation (checks owner exists)
@@ -133,12 +107,7 @@ async def create_calendar(
 
 
 @router.put("/{calendar_id}", response_model=CalendarResponse)
-async def update_calendar(
-    calendar_id: int,
-    calendar_data: CalendarBase,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_calendar(calendar_id: int, calendar_data: CalendarBase, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update an existing calendar.
 
@@ -157,12 +126,7 @@ async def update_calendar(
 
 
 @router.delete("/{calendar_id}")
-async def delete_calendar(
-    calendar_id: int,
-    delete_events: bool = False,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def delete_calendar(calendar_id: int, delete_events: bool = False, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Delete a calendar.
 
@@ -230,11 +194,7 @@ async def add_calendar_member(calendar_id: int, membership_data: CalendarMembers
 
 
 @router.post("/{share_hash}/subscribe", response_model=CalendarSubscriptionResponse, status_code=201)
-async def subscribe_to_calendar(
-    share_hash: str,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def subscribe_to_calendar(share_hash: str, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Subscribe to a public calendar using its share hash.
 
@@ -254,11 +214,7 @@ async def subscribe_to_calendar(
         raise HTTPException(status_code=400, detail="Cannot subscribe to private calendars")
 
     # Create subscription data
-    subscription_data = CalendarSubscriptionCreate(
-        calendar_id=db_calendar.id,
-        user_id=current_user_id,
-        status="active"
-    )
+    subscription_data = CalendarSubscriptionCreate(calendar_id=db_calendar.id, user_id=current_user_id, status="active")
 
     # Create with validation (checks calendar is public, user exists, no duplicate)
     db_subscription, error = calendar_subscription.create_with_validation(db, obj_in=subscription_data)
@@ -276,11 +232,7 @@ async def subscribe_to_calendar(
 
 
 @router.delete("/{share_hash}/subscribe")
-async def unsubscribe_from_calendar(
-    share_hash: str,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def unsubscribe_from_calendar(share_hash: str, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Unsubscribe from a public calendar using its share hash.
 
@@ -296,11 +248,7 @@ async def unsubscribe_from_calendar(
         raise HTTPException(status_code=404, detail="Calendar not found")
 
     # Get existing subscription
-    db_subscription = calendar_subscription.get_subscription(
-        db,
-        calendar_id=db_calendar.id,
-        user_id=current_user_id
-    )
+    db_subscription = calendar_subscription.get_subscription(db, calendar_id=db_calendar.id, user_id=current_user_id)
 
     if not db_subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")

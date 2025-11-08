@@ -41,16 +41,7 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         """
         return self.get_multi(db, skip=skip, limit=limit, filters={"owner_id": owner_id})
 
-    def get_multi_filtered(
-        self,
-        db: Session,
-        *,
-        owner_id: Optional[int] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "id",
-        order_dir: str = "asc"
-    ) -> List[Calendar]:
+    def get_multi_filtered(self, db: Session, *, owner_id: Optional[int] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List[Calendar]:
         """
         Get calendars with filters and pagination.
 
@@ -68,14 +59,7 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         if owner_id is not None:
             filters["owner_id"] = owner_id
 
-        return self.get_multi(
-            db,
-            skip=skip,
-            limit=limit,
-            order_by=order_by,
-            order_dir=order_dir,
-            filters=filters
-        )
+        return self.get_multi(db, skip=skip, limit=limit, order_by=order_by, order_dir=order_dir, filters=filters)
 
     def get_user_calendars(self, db: Session, user_id: int, *, include_owned: bool = True, include_member: bool = True, skip: int = 0, limit: int = 100) -> List[Calendar]:
         """
@@ -104,12 +88,7 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
             query = query.filter(or_(*conditions))
         return query.offset(skip).limit(limit).all()
 
-    def create_with_validation(
-        self,
-        db: Session,
-        *,
-        obj_in: CalendarCreate
-    ) -> tuple[Optional[Calendar], Optional[str]]:
+    def create_with_validation(self, db: Session, *, obj_in: CalendarCreate) -> tuple[Optional[Calendar], Optional[str]]:
         """
         Create calendar with validation.
         Automatically creates a calendar_membership for the owner as admin.
@@ -131,16 +110,16 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         # Generate share_hash for public calendars
         if obj_in.is_public:
             obj_data = obj_in.model_dump()
-            if not obj_data.get('share_hash'):
+            if not obj_data.get("share_hash"):
                 # Generate unique share_hash (8-char base62)
                 alphabet = string.ascii_letters + string.digits
                 max_attempts = 10
                 for _ in range(max_attempts):
-                    share_hash = ''.join(secrets.choice(alphabet) for _ in range(8))
+                    share_hash = "".join(secrets.choice(alphabet) for _ in range(8))
                     # Check uniqueness
                     existing = db.query(Calendar.id).filter(Calendar.share_hash == share_hash).first()
                     if not existing:
-                        obj_data['share_hash'] = share_hash
+                        obj_data["share_hash"] = share_hash
                         break
                 # Recreate obj_in with updated share_hash
                 obj_in = type(obj_in)(**obj_data)
@@ -149,23 +128,12 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         db_calendar = self.create(db, obj_in=obj_in)
 
         # Automatically create calendar_membership for the owner as admin
-        membership_data = CalendarMembershipCreate(
-            calendar_id=db_calendar.id,
-            user_id=obj_in.owner_id,
-            role="admin"
-        )
+        membership_data = CalendarMembershipCreate(calendar_id=db_calendar.id, user_id=obj_in.owner_id, role="admin")
         calendar_membership.create(db, obj_in=membership_data)
 
         return db_calendar, None
 
-    def get_members(
-        self,
-        db: Session,
-        *,
-        calendar_id: int,
-        skip: int = 0,
-        limit: int = 100
-    ) -> Optional[List[CalendarMembership]]:
+    def get_members(self, db: Session, *, calendar_id: int, skip: int = 0, limit: int = 100) -> Optional[List[CalendarMembership]]:
         """
         Get all members of a calendar.
 
@@ -183,18 +151,9 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         if not calendar_exists:
             return None
 
-        return db.query(CalendarMembership).filter(
-            CalendarMembership.calendar_id == calendar_id
-        ).offset(skip).limit(limit).all()
+        return db.query(CalendarMembership).filter(CalendarMembership.calendar_id == calendar_id).offset(skip).limit(limit).all()
 
-    def get_all_user_calendars(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        skip: int = 0,
-        limit: int = 100
-    ) -> List[Calendar]:
+    def get_all_user_calendars(self, db: Session, *, user_id: int, skip: int = 0, limit: int = 100) -> List[Calendar]:
         """
         Get all calendars accessible to a user:
         - Owned calendars
@@ -217,26 +176,10 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         owned_query = db.query(Calendar).filter(Calendar.owner_id == user_id)
 
         # 2. Calendars where user is a member (excluding public user calendars)
-        membership_query = db.query(Calendar).join(
-            CalendarMembership, Calendar.id == CalendarMembership.calendar_id
-        ).join(
-            User, Calendar.owner_id == User.id
-        ).filter(
-            CalendarMembership.user_id == user_id,
-            CalendarMembership.status == "accepted",
-            User.is_public == False
-        )
+        membership_query = db.query(Calendar).join(CalendarMembership, Calendar.id == CalendarMembership.calendar_id).join(User, Calendar.owner_id == User.id).filter(CalendarMembership.user_id == user_id, CalendarMembership.status == "accepted", User.is_public == False)
 
         # 3. Public calendars user is subscribed to (excluding public user calendars)
-        subscription_query = db.query(Calendar).join(
-            CalendarSubscription, Calendar.id == CalendarSubscription.calendar_id
-        ).join(
-            User, Calendar.owner_id == User.id
-        ).filter(
-            CalendarSubscription.user_id == user_id,
-            CalendarSubscription.status == "active",
-            User.is_public == False
-        )
+        subscription_query = db.query(Calendar).join(CalendarSubscription, Calendar.id == CalendarSubscription.calendar_id).join(User, Calendar.owner_id == User.id).filter(CalendarSubscription.user_id == user_id, CalendarSubscription.status == "active", User.is_public == False)
 
         # Combine with UNION to avoid duplicates
         combined_query = owned_query.union(membership_query, subscription_query)
@@ -308,24 +251,9 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
         Returns:
             True if exists, False otherwise
         """
-        return db.query(CalendarMembership.id).filter(
-            CalendarMembership.calendar_id == calendar_id,
-            CalendarMembership.user_id == user_id
-        ).first() is not None
+        return db.query(CalendarMembership.id).filter(CalendarMembership.calendar_id == calendar_id, CalendarMembership.user_id == user_id).first() is not None
 
-    def get_multi_filtered(
-        self,
-        db: Session,
-        *,
-        calendar_id: Optional[int] = None,
-        user_id: Optional[int] = None,
-        status: Optional[str] = None,
-        exclude_owned: bool = False,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "created_at",
-        order_dir: str = "desc"
-    ) -> List[CalendarMembership]:
+    def get_multi_filtered(self, db: Session, *, calendar_id: Optional[int] = None, user_id: Optional[int] = None, status: Optional[str] = None, exclude_owned: bool = False, skip: int = 0, limit: int = 50, order_by: str = "created_at", order_dir: str = "desc") -> List[CalendarMembership]:
         """
         Get memberships with multiple filters and pagination.
 
@@ -345,9 +273,7 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
         # Build base query
         if exclude_owned and user_id:
             # Need JOIN to filter out owned calendars
-            query = db.query(CalendarMembership).join(
-                Calendar, CalendarMembership.calendar_id == Calendar.id
-            )
+            query = db.query(CalendarMembership).join(Calendar, CalendarMembership.calendar_id == Calendar.id)
         else:
             query = db.query(CalendarMembership)
 
@@ -371,19 +297,7 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
         # Apply pagination
         return query.offset(skip).limit(limit).all()
 
-    def get_enriched(
-        self,
-        db: Session,
-        *,
-        calendar_id: Optional[int] = None,
-        user_id: Optional[int] = None,
-        status: Optional[str] = None,
-        exclude_owned: bool = False,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "created_at",
-        order_dir: str = "desc"
-    ) -> List[tuple[CalendarMembership, Calendar]]:
+    def get_enriched(self, db: Session, *, calendar_id: Optional[int] = None, user_id: Optional[int] = None, status: Optional[str] = None, exclude_owned: bool = False, skip: int = 0, limit: int = 50, order_by: str = "created_at", order_dir: str = "desc") -> List[tuple[CalendarMembership, Calendar]]:
         """
         Get memberships with calendar info (enriched) using JOIN.
 
@@ -401,9 +315,7 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
             List of (CalendarMembership, Calendar) tuples
         """
         # Build JOIN query
-        query = db.query(CalendarMembership, Calendar).join(
-            Calendar, CalendarMembership.calendar_id == Calendar.id
-        )
+        query = db.query(CalendarMembership, Calendar).join(Calendar, CalendarMembership.calendar_id == Calendar.id)
 
         # Apply filters
         if calendar_id:
@@ -425,12 +337,7 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
         # Apply pagination
         return query.offset(skip).limit(limit).all()
 
-    def create_with_validation(
-        self,
-        db: Session,
-        *,
-        obj_in: CalendarMembershipCreate
-    ) -> tuple[Optional[CalendarMembership], Optional[str]]:
+    def create_with_validation(self, db: Session, *, obj_in: CalendarMembershipCreate) -> tuple[Optional[CalendarMembership], Optional[str]]:
         """
         Create membership with validation (optimized).
 
@@ -483,14 +390,7 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
         """
         return db.query(CalendarMembership, Calendar).join(Calendar, CalendarMembership.calendar_id == Calendar.id).filter(CalendarMembership.user_id == user_id).offset(skip).limit(limit).all()
 
-    def get_calendar_ids_by_user(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        status: Optional[str] = None,
-        roles: Optional[List[str]] = None
-    ) -> List[int]:
+    def get_calendar_ids_by_user(self, db: Session, *, user_id: int, status: Optional[str] = None, roles: Optional[List[str]] = None) -> List[int]:
         """
         Get list of calendar IDs for a user, filtered by status and roles.
 
@@ -507,14 +407,7 @@ class CRUDCalendarMembership(CRUDBase[CalendarMembership, CalendarMembershipCrea
         """
         from models import User
 
-        query = db.query(CalendarMembership.calendar_id).join(
-            Calendar, CalendarMembership.calendar_id == Calendar.id
-        ).join(
-            User, Calendar.owner_id == User.id
-        ).filter(
-            CalendarMembership.user_id == user_id,
-            User.is_public == False  # Exclude calendars from public users
-        )
+        query = db.query(CalendarMembership.calendar_id).join(Calendar, CalendarMembership.calendar_id == Calendar.id).join(User, Calendar.owner_id == User.id).filter(CalendarMembership.user_id == user_id, User.is_public == False)  # Exclude calendars from public users
 
         if status:
             query = query.filter(CalendarMembership.status == status)

@@ -18,7 +18,8 @@ class VoiceWorkflowScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<VoiceWorkflowScreen> createState() => _VoiceWorkflowScreenState();
+  ConsumerState<VoiceWorkflowScreen> createState() =>
+      _VoiceWorkflowScreenState();
 }
 
 class _VoiceWorkflowScreenState extends ConsumerState<VoiceWorkflowScreen>
@@ -49,7 +50,8 @@ class _VoiceWorkflowScreenState extends ConsumerState<VoiceWorkflowScreen>
 
   void _updateCurrentQuestion() {
     setState(() {
-      if (_context.currentAction != null && _context.currentAction!.missingFields.isNotEmpty) {
+      if (_context.currentAction != null &&
+          _context.currentAction!.missingFields.isNotEmpty) {
         // Hay una acción en curso con campos faltantes
         final nextField = _context.currentAction!.missingFields.first;
         _currentQuestion = RequiredFields.generateQuestion(
@@ -70,7 +72,6 @@ class _VoiceWorkflowScreenState extends ConsumerState<VoiceWorkflowScreen>
   Future<void> _handleVoiceResponse() async {
     if (_currentQuestion == null) return;
 
-
     setState(() => _isListening = true);
 
     try {
@@ -85,14 +86,14 @@ class _VoiceWorkflowScreenState extends ConsumerState<VoiceWorkflowScreen>
       }
 
       // Determinar si estamos recolectando campos o eligiendo acción
-      if (_context.currentAction != null && _context.currentAction!.missingFields.isNotEmpty) {
+      if (_context.currentAction != null &&
+          _context.currentAction!.missingFields.isNotEmpty) {
         // Recolectando campos para la acción actual
         await _handleFieldCollection(userResponse);
       } else if (_context.suggestedActions.isNotEmpty) {
         // Usuario está eligiendo una acción sugerida
         await _handleActionSelection(userResponse);
       }
-
     } catch (e) {
       setState(() => _isListening = false);
       _showError('Error al procesar tu respuesta: ${e.toString()}');
@@ -105,9 +106,9 @@ class _VoiceWorkflowScreenState extends ConsumerState<VoiceWorkflowScreen>
 
     final nextField = _context.currentAction!.missingFields.first;
 
-
     // Enviar a Gemini para interpretar la respuesta
-    final contextualPrompt = '''
+    final contextualPrompt =
+        '''
 Contexto: El usuario está creando/actualizando algo con la acción "${_context.currentAction!.action}".
 
 Parámetros ya recolectados: ${_context.currentAction!.parameters}
@@ -133,7 +134,6 @@ IMPORTANTE: Devuelve SOLO el JSON del campo "$nextField", sin texto adicional.
         customPrompt: contextualPrompt,
       );
 
-
       // Actualizar la acción actual con el nuevo parámetro
       final updatedAction = _context.currentAction!.updateParameters(newParams);
 
@@ -147,7 +147,6 @@ IMPORTANTE: Devuelve SOLO el JSON del campo "$nextField", sin texto adicional.
         });
         _updateCurrentQuestion();
       }
-
     } catch (e) {
       _showError('No pude entender tu respuesta. Intenta de nuevo.');
     }
@@ -155,7 +154,6 @@ IMPORTANTE: Devuelve SOLO el JSON del campo "$nextField", sin texto adicional.
 
   /// Maneja la selección de una acción sugerida
   Future<void> _handleActionSelection(String userResponse) async {
-
     // Analizar si el usuario dijo "no", "nada", "listo", etc. para finalizar
     final lowerResponse = userResponse.toLowerCase().trim();
     if (lowerResponse == 'no' ||
@@ -168,7 +166,8 @@ IMPORTANTE: Devuelve SOLO el JSON del campo "$nextField", sin texto adicional.
     }
 
     // Enviar a Gemini para determinar qué acción eligió
-    final prompt = '''
+    final prompt =
+        '''
 El usuario acaba de completar: ${_context.completedActions.map((a) => a.action).join(', ')}
 
 Contexto global: ${_context.globalContext}
@@ -197,7 +196,6 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
         customPrompt: prompt,
       );
 
-
       final selectedAction = interpretation['action'] as String;
 
       if (selectedAction == 'NONE') {
@@ -225,12 +223,10 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
         missingFields: missingFields,
       );
 
-
       setState(() {
         _context = _context.startAction(newAction).updateSuggestions([]);
       });
       _updateCurrentQuestion();
-
     } catch (e) {
       _showError('No entendí qué quieres hacer. ¿Puedes repetir?');
     }
@@ -238,7 +234,6 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
 
   /// Ejecuta la acción actual
   Future<void> _executeCurrentAction(WorkflowAction action) async {
-
     try {
       // Aquí ejecutarías la acción real a través del API
       // Por ahora, simulamos el resultado
@@ -246,7 +241,6 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
         'action': action.action,
         'parameters': action.parameters,
       });
-
 
       // Marcar acción como completada
       final updatedContext = _context.completeCurrentAction(result);
@@ -268,7 +262,6 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
         await Future.delayed(const Duration(seconds: 1));
         _finishWorkflow();
       }
-
     } catch (e) {
       _showError('Error al ejecutar la acción: ${e.toString()}');
     }
@@ -324,7 +317,11 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.green.shade700,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Completado:',
@@ -337,13 +334,15 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
                         ],
                       ),
                       const SizedBox(height: 8),
-                      ..._context.completedActions.map((completed) => Padding(
-                        padding: const EdgeInsets.only(bottom: 4.0),
-                        child: Text(
-                          '✓ ${_actionToUserFriendly(completed.action)}',
-                          style: const TextStyle(fontSize: 12),
+                      ..._context.completedActions.map(
+                        (completed) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4.0),
+                          child: Text(
+                            '✓ ${_actionToUserFriendly(completed.action)}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
-                      )),
+                      ),
                     ],
                   ),
                 ),
@@ -382,7 +381,8 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
                       color: _isListening ? Colors.red : Colors.blue,
                       boxShadow: [
                         BoxShadow(
-                          color: (_isListening ? Colors.red : Colors.blue).withValues(alpha: 0.3),
+                          color: (_isListening ? Colors.red : Colors.blue)
+                              .withValues(alpha: 0.3),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -402,11 +402,7 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
                               );
                             },
                           )
-                        : const Icon(
-                            Icons.mic,
-                            size: 60,
-                            color: Colors.white,
-                          ),
+                        : const Icon(Icons.mic, size: 60, color: Colors.white),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -414,10 +410,7 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
                   _isListening
                       ? 'Escuchando... habla ahora'
                       : 'Toca el micrófono para responder',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
               ] else ...[
                 const Icon(
@@ -428,10 +421,7 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
                 const SizedBox(height: 24),
                 const Text(
                   '¡Todo listo!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                 ),
               ],
 
@@ -440,7 +430,11 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
               // Botón para terminar
               TextButton(
                 onPressed: _finishWorkflow,
-                child: Text(_context.suggestedActions.isNotEmpty ? 'No, terminar aquí' : 'Cerrar'),
+                child: Text(
+                  _context.suggestedActions.isNotEmpty
+                      ? 'No, terminar aquí'
+                      : 'Cerrar',
+                ),
               ),
             ],
           ),

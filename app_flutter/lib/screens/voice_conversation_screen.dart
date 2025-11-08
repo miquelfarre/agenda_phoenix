@@ -19,10 +19,12 @@ class VoiceConversationScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<VoiceConversationScreen> createState() => _VoiceConversationScreenState();
+  ConsumerState<VoiceConversationScreen> createState() =>
+      _VoiceConversationScreenState();
 }
 
-class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScreen>
+class _VoiceConversationScreenState
+    extends ConsumerState<VoiceConversationScreen>
     with SingleTickerProviderStateMixin {
   bool _isListening = false;
   String? _currentQuestion;
@@ -59,7 +61,6 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
   Future<void> _handleVoiceResponse() async {
     if (_currentQuestion == null) return;
 
-
     setState(() {
       _isListening = true;
       _shouldStopRecording = false;
@@ -93,8 +94,9 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
       }
 
       // Enviar el contexto completo + nueva respuesta a Gemini para que lo interprete
-      final updatedInterpretation = await _interpretResponseWithContext(userResponse);
-
+      final updatedInterpretation = await _interpretResponseWithContext(
+        userResponse,
+      );
 
       // Crear nuevo contexto con los datos actualizados
       final newContext = widget.context.addTurn(
@@ -102,7 +104,6 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
         userResponse,
         updatedInterpretation,
       );
-
 
       // Si todavía faltan campos, actualizar la pregunta
       if (!newContext.isComplete) {
@@ -130,11 +131,14 @@ class _VoiceConversationScreenState extends ConsumerState<VoiceConversationScree
   }
 
   /// Envía el contexto completo + nueva respuesta a Gemini para que actualice los parámetros
-  Future<Map<String, dynamic>> _interpretResponseWithContext(String userResponse) async {
+  Future<Map<String, dynamic>> _interpretResponseWithContext(
+    String userResponse,
+  ) async {
     // Obtener el nombre del campo que estamos recolectando
     final currentField = widget.context.missingFields.first;
 
-    final contextualPrompt = '''
+    final contextualPrompt =
+        '''
 ${widget.context.conversationSummary}
 
 Sistema preguntó: "$_currentQuestion"
@@ -224,22 +228,30 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ...widget.context.history.map((turn) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '❓ ${turn.question}',
-                              style: const TextStyle(fontSize: 11, color: Colors.blue),
-                            ),
-                            Text(
-                              '💬 ${turn.answer}',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                            ),
-                          ],
+                      ...widget.context.history.map(
+                        (turn) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '❓ ${turn.question}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              Text(
+                                '💬 ${turn.answer}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      )),
+                      ),
                     ],
                   ),
                 ),
@@ -276,7 +288,8 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
                       color: _isListening ? Colors.red : Colors.blue,
                       boxShadow: [
                         BoxShadow(
-                          color: (_isListening ? Colors.red : Colors.blue).withValues(alpha: 0.3),
+                          color: (_isListening ? Colors.red : Colors.blue)
+                              .withValues(alpha: 0.3),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -296,11 +309,7 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
                               );
                             },
                           )
-                        : const Icon(
-                            Icons.mic,
-                            size: 60,
-                            color: Colors.white,
-                          ),
+                        : const Icon(Icons.mic, size: 60, color: Colors.white),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -308,7 +317,10 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
                 // Indicador de tiempo y botón de detener
                 if (_isListening) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.red.shade50,
                       borderRadius: BorderRadius.circular(25),
@@ -341,17 +353,20 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ] else ...[
                   Text(
                     'Toca el micrófono para responder',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   ),
                 ],
               ] else ...[
@@ -363,10 +378,7 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
                 const SizedBox(height: 24),
                 const Text(
                   '¡Información completa!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                 ),
               ],
 

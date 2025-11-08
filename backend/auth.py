@@ -143,7 +143,7 @@ async def get_current_user(
 
     Raises:
         HTTPException 401: If token is missing, invalid, or expired
-   """
+    """
     # Check for test mode header (only in non-production environments)
     environment = os.getenv("ENVIRONMENT", "development").lower()
     if environment != "production" and x_test_user_id:
@@ -249,9 +249,7 @@ async def get_current_user_id_optional(
         )
 
 
-async def get_current_user_id(
-    current_user: dict = Depends(get_current_user)
-) -> int:
+async def get_current_user_id(current_user: dict = Depends(get_current_user)) -> int:
     """
     Extract integer user ID from JWT payload and validate against database.
 

@@ -132,6 +132,7 @@ class EventCreate(EventBase):
 
 class EventUpdate(BaseModel):
     """Schema for updating events - all fields are optional"""
+
     name: Optional[str] = None
     description: Optional[str] = None
     start_date: Optional[datetime] = None
@@ -304,7 +305,7 @@ class CalendarResponse(CalendarBase):
     share_hash: Optional[str] = None
     subscriber_count: int = 0
     start_date: Optional[datetime] = None  # For temporal calendars
-    end_date: Optional[datetime] = None    # For temporal calendars
+    end_date: Optional[datetime] = None  # For temporal calendars
     created_at: datetime
     updated_at: datetime
 
@@ -444,6 +445,7 @@ class GroupMembershipCreate(GroupMembershipBase):
 
 class GroupMembershipUpdate(BaseModel):
     """Schema for updating group membership (currently only role)"""
+
     role: Optional[str] = None  # "admin" or "member"
 
 

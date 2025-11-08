@@ -89,7 +89,7 @@ FLUTTER_MODELS = {
             "category": (str, type(None)),
             "subscriber_count": (int, type(None)),
             "start_date": (str, type(None)),  # For temporal calendars
-            "end_date": (str, type(None)),    # For temporal calendars
+            "end_date": (str, type(None)),  # For temporal calendars
         },
     },
     "Group": {
@@ -136,11 +136,7 @@ def validate_field_type(value: Any, expected_types: tuple) -> bool:
     return isinstance(value, expected_types)
 
 
-def validate_model_fields(
-    data: Dict[str, Any],
-    model_name: str,
-    path: str = "root"
-) -> List[str]:
+def validate_model_fields(data: Dict[str, Any], model_name: str, path: str = "root") -> List[str]:
     """
     Validate that data contains all required fields and correct types for a Flutter model.
 
@@ -156,33 +152,20 @@ def validate_model_fields(
     # Check required fields
     for field_name, expected_type in model_spec["required_fields"].items():
         if field_name not in data:
-            errors.append(
-                f"{path}.{field_name}: MISSING required field for {model_name}"
-            )
+            errors.append(f"{path}.{field_name}: MISSING required field for {model_name}")
         elif not isinstance(data[field_name], expected_type):
-            errors.append(
-                f"{path}.{field_name}: WRONG TYPE - expected {expected_type.__name__}, "
-                f"got {type(data[field_name]).__name__} (value: {data[field_name]})"
-            )
+            errors.append(f"{path}.{field_name}: WRONG TYPE - expected {expected_type.__name__}, " f"got {type(data[field_name]).__name__} (value: {data[field_name]})")
 
     # Check optional field types (if present)
     for field_name, expected_types in model_spec["optional_fields"].items():
         if field_name in data:
             if not validate_field_type(data[field_name], expected_types):
-                errors.append(
-                    f"{path}.{field_name}: WRONG TYPE - expected one of "
-                    f"{[t.__name__ for t in expected_types]}, "
-                    f"got {type(data[field_name]).__name__} (value: {data[field_name]})"
-                )
+                errors.append(f"{path}.{field_name}: WRONG TYPE - expected one of " f"{[t.__name__ for t in expected_types]}, " f"got {type(data[field_name]).__name__} (value: {data[field_name]})")
 
     return errors
 
 
-def validate_list_of_models(
-    data_list: List[Dict[str, Any]],
-    model_name: str,
-    path: str = "root"
-) -> List[str]:
+def validate_list_of_models(data_list: List[Dict[str, Any]], model_name: str, path: str = "root") -> List[str]:
     """Validate a list of model instances."""
     errors = []
     for idx, item in enumerate(data_list):
@@ -385,17 +368,11 @@ class TestFlutterCompatibility:
 
         # Validate nested User objects in groups
         if "members" in group and group["members"]:
-            errors.extend(validate_list_of_models(
-                group["members"], "User", "GET /api/v1/groups/1 -> members"
-            ))
+            errors.extend(validate_list_of_models(group["members"], "User", "GET /api/v1/groups/1 -> members"))
         if "admins" in group and group["admins"]:
-            errors.extend(validate_list_of_models(
-                group["admins"], "User", "GET /api/v1/groups/1 -> admins"
-            ))
+            errors.extend(validate_list_of_models(group["admins"], "User", "GET /api/v1/groups/1 -> admins"))
         if "owner" in group and group["owner"]:
-            errors.extend(validate_model_fields(
-                group["owner"], "User", "GET /api/v1/groups/1 -> owner"
-            ))
+            errors.extend(validate_model_fields(group["owner"], "User", "GET /api/v1/groups/1 -> owner"))
 
         if errors:
             pytest.fail(f"Group model validation errors:\n" + "\n".join(errors))
@@ -408,9 +385,7 @@ class TestFlutterCompatibility:
         response = client.get("/api/v1/interactions")
         assert response.status_code == 200
         interactions = response.json()
-        errors.extend(validate_list_of_models(
-            interactions, "EventInteraction", "GET /api/v1/interactions"
-        ))
+        errors.extend(validate_list_of_models(interactions, "EventInteraction", "GET /api/v1/interactions"))
 
         if errors:
             pytest.fail(f"EventInteraction model validation errors:\n" + "\n".join(errors))
@@ -428,10 +403,7 @@ class TestFlutterCompatibility:
             # If event has interaction data, validate it's a dict (Flutter expects Map)
             if "interaction" in event and event["interaction"] is not None:
                 if not isinstance(event["interaction"], dict):
-                    errors.append(
-                        f"GET /api/v1/events[{idx}].interaction: expected dict, "
-                        f"got {type(event['interaction']).__name__}"
-                    )
+                    errors.append(f"GET /api/v1/events[{idx}].interaction: expected dict, " f"got {type(event['interaction']).__name__}")
 
         if errors:
             pytest.fail(f"Nested model validation errors:\n" + "\n".join(errors))
@@ -447,10 +419,7 @@ class TestFlutterCompatibility:
 
         for idx, calendar in enumerate(calendars):
             if "id" in calendar and isinstance(calendar["id"], str):
-                errors.append(
-                    f"CRITICAL: GET /api/v1/calendars[{idx}].id is String, "
-                    f"Flutter expects int. This is a KNOWN issue from MODEL_INCONSISTENCIES_REPORT.md"
-                )
+                errors.append(f"CRITICAL: GET /api/v1/calendars[{idx}].id is String, " f"Flutter expects int. This is a KNOWN issue from MODEL_INCONSISTENCIES_REPORT.md")
 
         # Check calendar_id in events should be int
         response = client.get("/api/v1/events")
@@ -460,14 +429,7 @@ class TestFlutterCompatibility:
         for idx, event in enumerate(events):
             if "calendar_id" in event and event["calendar_id"] is not None:
                 if isinstance(event["calendar_id"], str):
-                    errors.append(
-                        f"CRITICAL: GET /api/v1/events[{idx}].calendar_id is String, "
-                        f"Flutter expects int"
-                    )
+                    errors.append(f"CRITICAL: GET /api/v1/events[{idx}].calendar_id is String, " f"Flutter expects int")
 
         if errors:
-            pytest.fail(
-                f"Critical type mismatch errors:\n" + "\n".join(errors) +
-                f"\n\nThese errors indicate type incompatibilities that will cause "
-                f"Flutter runtime errors. Please review MODEL_INCONSISTENCIES_REPORT.md"
-            )
+            pytest.fail(f"Critical type mismatch errors:\n" + "\n".join(errors) + f"\n\nThese errors indicate type incompatibilities that will cause " f"Flutter runtime errors. Please review MODEL_INCONSISTENCIES_REPORT.md")

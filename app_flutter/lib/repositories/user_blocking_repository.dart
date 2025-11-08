@@ -15,7 +15,8 @@ class UserBlockingRepository {
   final RealtimeSync _rt = RealtimeSync();
 
   Box<List<int>>? _box;
-  final StreamController<List<User>> _blockedUsersController = StreamController<List<User>>.broadcast();
+  final StreamController<List<User>> _blockedUsersController =
+      StreamController<List<User>>.broadcast();
   List<User> _cachedBlockedUsers = [];
   RealtimeChannel? _realtimeChannel;
 
@@ -61,8 +62,13 @@ class UserBlockingRepository {
     if (_box == null) return;
 
     try {
-      final blockedUserIds = _box!.get('blocked_user_ids', defaultValue: <int>[]) ?? <int>[];
-      _cachedBlockedUsers = blockedUserIds.map((id) => User(id: id, isPublic: false, fullName: 'Blocked User $id')).toList();
+      final blockedUserIds =
+          _box!.get('blocked_user_ids', defaultValue: <int>[]) ?? <int>[];
+      _cachedBlockedUsers = blockedUserIds
+          .map(
+            (id) => User(id: id, isPublic: false, fullName: 'Blocked User $id'),
+          )
+          .toList();
     } catch (e) {
       _cachedBlockedUsers = [];
     }
@@ -71,9 +77,19 @@ class UserBlockingRepository {
   Future<void> _fetchAndSync() async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
-      final blocks = await _apiClient.fetchUserBlocks(blockerUserId: currentUserId);
+      final blocks = await _apiClient.fetchUserBlocks(
+        blockerUserId: currentUserId,
+      );
 
-      _cachedBlockedUsers = blocks.map((block) => User(id: block['blocked_user_id'] as int, isPublic: false, fullName: 'Blocked User ${block['blocked_user_id']}')).toList();
+      _cachedBlockedUsers = blocks
+          .map(
+            (block) => User(
+              id: block['blocked_user_id'] as int,
+              isPublic: false,
+              fullName: 'Blocked User ${block['blocked_user_id']}',
+            ),
+          )
+          .toList();
 
       // Update Hive cache with blocked user IDs
       await _updateLocalCache();
@@ -92,7 +108,9 @@ class UserBlockingRepository {
     if (_box == null) return;
 
     try {
-      final blockedUserIds = _cachedBlockedUsers.map((user) => user.id).toList();
+      final blockedUserIds = _cachedBlockedUsers
+          .map((user) => user.id)
+          .toList();
       await _box!.put('blocked_user_ids', blockedUserIds);
       // ignore: empty_catches
     } catch (e) {
@@ -103,7 +121,10 @@ class UserBlockingRepository {
   Future<void> blockUser(int userId) async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
-      await _apiClient.createUserBlock({'blocker_user_id': currentUserId, 'blocked_user_id': userId});
+      await _apiClient.createUserBlock({
+        'blocker_user_id': currentUserId,
+        'blocked_user_id': userId,
+      });
       await _fetchAndSync();
     } catch (e, _) {
       rethrow;
@@ -113,7 +134,10 @@ class UserBlockingRepository {
   Future<void> unblockUser(int userId) async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
-      final blocks = await _apiClient.fetchUserBlocks(blockerUserId: currentUserId, blockedUserId: userId);
+      final blocks = await _apiClient.fetchUserBlocks(
+        blockerUserId: currentUserId,
+        blockedUserId: userId,
+      );
 
       if (blocks.isNotEmpty) {
         final blockId = blocks.first['id'] as int;
@@ -137,7 +161,11 @@ class UserBlockingRepository {
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'user_blocks',
-          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'blocker_user_id', value: userId.toString()),
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'blocker_user_id',
+            value: userId.toString(),
+          ),
           callback: _handleBlockChange,
         )
         .subscribe();

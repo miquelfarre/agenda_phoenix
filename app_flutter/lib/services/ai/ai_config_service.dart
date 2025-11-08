@@ -2,10 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/debug_config.dart';
 
 /// Provider de AI disponibles
-enum AIProvider {
-  gemini,
-  ollama,
-}
+enum AIProvider { gemini, ollama }
 
 /// Servicio para gestionar la configuración de AI APIs (Gemini, Ollama, etc.)
 class AIConfigService {
@@ -39,14 +36,20 @@ class AIConfigService {
     // Primero verificar si el usuario configuró una manualmente
     final userKey = _prefs.getString(_geminiApiKeyKey);
     if (userKey != null && userKey.isNotEmpty) {
-      DebugConfig.info('🔑 API key cargada desde SharedPreferences (${userKey.length} chars)', tag: 'AIConfig');
+      DebugConfig.info(
+        '🔑 API key cargada desde SharedPreferences (${userKey.length} chars)',
+        tag: 'AIConfig',
+      );
       return userKey;
     }
 
     // Fallback: usar la del entorno si está disponible
     const envKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
     if (envKey.isNotEmpty) {
-      DebugConfig.info('🔑 API key cargada desde .env (${envKey.length} chars)', tag: 'AIConfig');
+      DebugConfig.info(
+        '🔑 API key cargada desde .env (${envKey.length} chars)',
+        tag: 'AIConfig',
+      );
       return envKey;
     }
 
@@ -105,8 +108,10 @@ class AIConfigService {
       }
       return success;
     } catch (e) {
-      DebugConfig.error('Error al cambiar estado de comandos de voz: $e',
-                       tag: 'AIConfig');
+      DebugConfig.error(
+        'Error al cambiar estado de comandos de voz: $e',
+        tag: 'AIConfig',
+      );
       return false;
     }
   }
@@ -117,8 +122,8 @@ class AIConfigService {
     final trimmed = apiKey.trim();
     // Gemini keys son strings alfanuméricos, generalmente de 39 caracteres
     return trimmed.isNotEmpty &&
-           trimmed.length >= 30 &&
-           RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(trimmed);
+        trimmed.length >= 30 &&
+        RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(trimmed);
   }
 
   /// Obtener el provider de AI configurado
@@ -130,16 +135,25 @@ class AIConfigService {
     final userProvider = _prefs.getString(_aiProviderKey);
     if (userProvider != null && userProvider.isNotEmpty) {
       if (userProvider.toLowerCase() == 'ollama') {
-        DebugConfig.info('🔧 AI Provider desde SharedPreferences: Ollama', tag: 'AIConfig');
+        DebugConfig.info(
+          '🔧 AI Provider desde SharedPreferences: Ollama',
+          tag: 'AIConfig',
+        );
         return AIProvider.ollama;
       } else if (userProvider.toLowerCase() == 'gemini') {
-        DebugConfig.info('🔧 AI Provider desde SharedPreferences: Gemini', tag: 'AIConfig');
+        DebugConfig.info(
+          '🔧 AI Provider desde SharedPreferences: Gemini',
+          tag: 'AIConfig',
+        );
         return AIProvider.gemini;
       }
     }
 
     // Fallback: usar el del entorno si está disponible
-    const envProvider = String.fromEnvironment('AI_PROVIDER', defaultValue: 'gemini');
+    const envProvider = String.fromEnvironment(
+      'AI_PROVIDER',
+      defaultValue: 'gemini',
+    );
     if (envProvider.toLowerCase() == 'ollama') {
       DebugConfig.info('🔧 AI Provider desde .env: Ollama', tag: 'AIConfig');
       return AIProvider.ollama;
@@ -156,7 +170,10 @@ class AIConfigService {
       final providerName = provider == AIProvider.ollama ? 'ollama' : 'gemini';
       final success = await _prefs.setString(_aiProviderKey, providerName);
       if (success) {
-        DebugConfig.info('AI provider cambiado a: $providerName', tag: 'AIConfig');
+        DebugConfig.info(
+          'AI provider cambiado a: $providerName',
+          tag: 'AIConfig',
+        );
       }
       return success;
     } catch (e) {
@@ -167,12 +184,18 @@ class AIConfigService {
 
   /// Obtener configuración de Ollama desde .env
   String get ollamaBaseUrl {
-    const url = String.fromEnvironment('OLLAMA_BASE_URL', defaultValue: 'http://localhost:11434');
+    const url = String.fromEnvironment(
+      'OLLAMA_BASE_URL',
+      defaultValue: 'http://localhost:11434',
+    );
     return url;
   }
 
   String get ollamaModel {
-    const model = String.fromEnvironment('OLLAMA_MODEL', defaultValue: 'gpt-oss');
+    const model = String.fromEnvironment(
+      'OLLAMA_MODEL',
+      defaultValue: 'gpt-oss',
+    );
     return model;
   }
 }

@@ -217,9 +217,9 @@ class CalendarSubscription(Base):
     # Unique constraint: un usuario solo puede tener una suscripción por calendar
     __table_args__ = (
         UniqueConstraint("calendar_id", "user_id", name="uq_calendar_user_subscription"),
-        Index('idx_calendar_subscriptions_calendar', 'calendar_id'),
-        Index('idx_calendar_subscriptions_user', 'user_id'),
-        Index('idx_calendar_subscriptions_status', 'status'),
+        Index("idx_calendar_subscriptions_calendar", "calendar_id"),
+        Index("idx_calendar_subscriptions_user", "user_id"),
+        Index("idx_calendar_subscriptions_status", "status"),
     )
 
     # Relationships

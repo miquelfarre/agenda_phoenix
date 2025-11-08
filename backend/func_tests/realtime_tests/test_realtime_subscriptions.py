@@ -76,7 +76,7 @@ def get_user_stats(user_id: int) -> Dict:
                 FROM user_subscription_stats
                 WHERE user_id = %s
                 """,
-                (user_id,)
+                (user_id,),
             )
             result = cursor.fetchone()
             return dict(result) if result else None
@@ -105,13 +105,8 @@ class TestSubscriptionRealtimeFlow:
         print(f"\n📊 Initial subscriptions: {initial_count}")
 
         # 2. Suscribirse a user 2
-        subscribe_response = api_request(
-            "POST",
-            f"/users/{target_user_id}/subscribe",
-            user_id=subscriber_id
-        )
-        assert subscribe_response.status_code == 201, \
-            f"Subscribe failed: {subscribe_response.text}"
+        subscribe_response = api_request("POST", f"/users/{target_user_id}/subscribe", user_id=subscriber_id)
+        assert subscribe_response.status_code == 201, f"Subscribe failed: {subscribe_response.text}"
 
         print(f"✅ User {subscriber_id} subscribed to user {target_user_id}")
 
@@ -126,12 +121,9 @@ class TestSubscriptionRealtimeFlow:
         print(f"📊 Final subscriptions: {final_count}")
 
         # ASSERTIONS
-        assert target_user_id in final_subscription_ids, \
-            f"User {target_user_id} NOT FOUND in subscriptions after subscribing! " \
-            f"Expected in {final_subscription_ids}"
+        assert target_user_id in final_subscription_ids, f"User {target_user_id} NOT FOUND in subscriptions after subscribing! " f"Expected in {final_subscription_ids}"
 
-        assert final_count == initial_count + 1, \
-            f"Expected {initial_count + 1} subscriptions, got {final_count}"
+        assert final_count == initial_count + 1, f"Expected {initial_count + 1} subscriptions, got {final_count}"
 
         print(f"✅ User {target_user_id} appears in subscriptions list")
 
@@ -152,11 +144,7 @@ class TestSubscriptionRealtimeFlow:
         target_user_id = 7  # fcbarcelona (public user)
 
         # 1. Suscribirse primero
-        subscribe_response = api_request(
-            "POST",
-            f"/users/{target_user_id}/subscribe",
-            user_id=subscriber_id
-        )
+        subscribe_response = api_request("POST", f"/users/{target_user_id}/subscribe", user_id=subscriber_id)
         assert subscribe_response.status_code == 201
 
         print(f"\n✅ User {subscriber_id} subscribed to user {target_user_id}")
@@ -166,19 +154,13 @@ class TestSubscriptionRealtimeFlow:
         subscriptions_before = get_user_subscriptions(subscriber_id)
         subscription_ids_before = {s["id"] for s in subscriptions_before}
 
-        assert target_user_id in subscription_ids_before, \
-            f"User {target_user_id} should exist before unsubscribe"
+        assert target_user_id in subscription_ids_before, f"User {target_user_id} should exist before unsubscribe"
 
         print(f"✅ User {target_user_id} confirmed in subscriptions")
 
         # 3. Desuscribirse
-        unsubscribe_response = api_request(
-            "DELETE",
-            f"/users/{target_user_id}/subscribe",
-            user_id=subscriber_id
-        )
-        assert unsubscribe_response.status_code == 200, \
-            f"Unsubscribe failed: {unsubscribe_response.text}"
+        unsubscribe_response = api_request("DELETE", f"/users/{target_user_id}/subscribe", user_id=subscriber_id)
+        assert unsubscribe_response.status_code == 200, f"Unsubscribe failed: {unsubscribe_response.text}"
 
         print(f"✅ DELETE request returned 200")
 
@@ -192,12 +174,9 @@ class TestSubscriptionRealtimeFlow:
         print(f"📊 Subscriptions before: {len(subscriptions_before)}, after: {len(subscriptions_after)}")
 
         # CRITICAL ASSERTION
-        assert target_user_id not in subscription_ids_after, \
-            f"❌ FATAL: User {target_user_id} STILL in subscriptions after unsubscribe! " \
-            f"Found in: {subscription_ids_after}"
+        assert target_user_id not in subscription_ids_after, f"❌ FATAL: User {target_user_id} STILL in subscriptions after unsubscribe! " f"Found in: {subscription_ids_after}"
 
-        assert len(subscriptions_after) == len(subscriptions_before) - 1, \
-            f"Expected {len(subscriptions_before) - 1} subscriptions, got {len(subscriptions_after)}"
+        assert len(subscriptions_after) == len(subscriptions_before) - 1, f"Expected {len(subscriptions_before) - 1} subscriptions, got {len(subscriptions_after)}"
 
         print(f"✅ User {target_user_id} successfully removed from subscriptions")
 
@@ -221,11 +200,7 @@ class TestSubscriptionRealtimeFlow:
         print(f"\n📊 User {target_user_id} initial subscribers: {initial_subscribers}")
 
         # 2. Suscribirse
-        subscribe_response = api_request(
-            "POST",
-            f"/users/{target_user_id}/subscribe",
-            user_id=subscriber_id
-        )
+        subscribe_response = api_request("POST", f"/users/{target_user_id}/subscribe", user_id=subscriber_id)
         assert subscribe_response.status_code == 201
 
         print(f"✅ User {subscriber_id} subscribed to user {target_user_id}")
@@ -240,8 +215,7 @@ class TestSubscriptionRealtimeFlow:
         print(f"📊 User {target_user_id} final subscribers: {final_subscribers}")
 
         # ASSERTION
-        assert final_subscribers == initial_subscribers + 1, \
-            f"Expected subscribers_count={initial_subscribers + 1}, got {final_subscribers}"
+        assert final_subscribers == initial_subscribers + 1, f"Expected subscribers_count={initial_subscribers + 1}, got {final_subscribers}"
 
         print(f"✅ subscribers_count incremented correctly")
 
@@ -261,11 +235,7 @@ class TestSubscriptionRealtimeFlow:
         target_user_id = 7  # fcbarcelona (public user)
 
         # 1. Suscribirse
-        subscribe_response = api_request(
-            "POST",
-            f"/users/{target_user_id}/subscribe",
-            user_id=subscriber_id
-        )
+        subscribe_response = api_request("POST", f"/users/{target_user_id}/subscribe", user_id=subscriber_id)
         assert subscribe_response.status_code == 201
         wait_for_realtime_propagation()
 
@@ -278,11 +248,7 @@ class TestSubscriptionRealtimeFlow:
         print(f"📊 Subscribers after subscribe: {subscribers_after_subscribe}")
 
         # 3. Desuscribirse
-        unsubscribe_response = api_request(
-            "DELETE",
-            f"/users/{target_user_id}/subscribe",
-            user_id=subscriber_id
-        )
+        unsubscribe_response = api_request("DELETE", f"/users/{target_user_id}/subscribe", user_id=subscriber_id)
         assert unsubscribe_response.status_code == 200
         wait_for_realtime_propagation()
 
@@ -295,8 +261,7 @@ class TestSubscriptionRealtimeFlow:
         print(f"📊 Subscribers after unsubscribe: {subscribers_after_unsubscribe}")
 
         # ASSERTION
-        assert subscribers_after_unsubscribe == subscribers_after_subscribe - 1, \
-            f"Expected subscribers_count={subscribers_after_subscribe - 1}, got {subscribers_after_unsubscribe}"
+        assert subscribers_after_unsubscribe == subscribers_after_subscribe - 1, f"Expected subscribers_count={subscribers_after_subscribe - 1}, got {subscribers_after_unsubscribe}"
 
         print(f"✅ subscribers_count decremented correctly")
 

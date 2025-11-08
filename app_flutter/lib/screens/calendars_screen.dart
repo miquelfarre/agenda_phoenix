@@ -93,7 +93,10 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       await repository.subscribeByShareHash(calendar.shareHash!);
 
       if (mounted) {
-        PlatformDialogHelpers.showSnackBar(context: context, message: context.l10n.subscribedTo(calendar.name));
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: context.l10n.subscribedTo(calendar.name),
+        );
         _searchController.clear();
         setState(() {
           _searchingByHash = false;
@@ -105,7 +108,11 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     } catch (e) {
       if (mounted) {
         final errorMessage = ErrorMessageParser.parse(e, context);
-        PlatformDialogHelpers.showSnackBar(context: context, message: errorMessage, isError: true);
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: errorMessage,
+          isError: true,
+        );
       }
     }
   }
@@ -188,7 +195,10 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
             const SizedBox(height: 8),
             Text(
               l10n.enterCodePrecededByHash,
-              style: const TextStyle(fontSize: 12, color: CupertinoColors.systemGrey),
+              style: const TextStyle(
+                fontSize: 12,
+                color: CupertinoColors.systemGrey,
+              ),
             ),
           ],
         ],
@@ -298,7 +308,11 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Icon(CupertinoIcons.person_2, size: 16, color: CupertinoColors.systemGrey),
+              const Icon(
+                CupertinoIcons.person_2,
+                size: 16,
+                color: CupertinoColors.systemGrey,
+              ),
               const SizedBox(width: 4),
               Text(
                 '${calendar.subscriberCount} ${calendar.subscriberCount == 1 ? l10n.subscriber : l10n.subscriber}s',
@@ -331,7 +345,9 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
         // Filtrar calendarios por nombre si hay búsqueda
         final filteredCalendars = searchQuery.isEmpty
             ? calendars
-            : calendars.where((cal) => cal.name.toLowerCase().contains(searchQuery)).toList();
+            : calendars
+                  .where((cal) => cal.name.toLowerCase().contains(searchQuery))
+                  .toList();
 
         if (calendars.isEmpty) {
           return [
@@ -362,20 +378,17 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
 
         return [
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final calendarIndex = index ~/ 2;
-                if (index.isOdd) {
-                  return Container(
-                    height: 0.5,
-                    margin: const EdgeInsets.only(left: 72),
-                    color: CupertinoColors.separator,
-                  );
-                }
-                return _buildCalendarItem(filteredCalendars[calendarIndex]);
-              },
-              childCount: filteredCalendars.length * 2 - 1,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final calendarIndex = index ~/ 2;
+              if (index.isOdd) {
+                return Container(
+                  height: 0.5,
+                  margin: const EdgeInsets.only(left: 72),
+                  color: CupertinoColors.separator,
+                );
+              }
+              return _buildCalendarItem(filteredCalendars[calendarIndex]);
+            }, childCount: filteredCalendars.length * 2 - 1),
           ),
         ];
       },
@@ -438,7 +451,9 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
               overflow: TextOverflow.ellipsis,
             ),
           Text(
-            isOwner ? l10n.owner : (calendar.shareHash != null ? l10n.subscriber : l10n.member),
+            isOwner
+                ? l10n.owner
+                : (calendar.shareHash != null ? l10n.subscriber : l10n.member),
             style: const TextStyle(
               fontSize: 12,
               color: CupertinoColors.systemGrey,

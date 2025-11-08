@@ -19,7 +19,8 @@ class UserRepository {
 
   Box<UserHive>? _box;
   RealtimeChannel? _userChannel;
-  final StreamController<models.User?> _currentUserController = StreamController<models.User?>.broadcast();
+  final StreamController<models.User?> _currentUserController =
+      StreamController<models.User?>.broadcast();
   models.User? _cachedCurrentUser;
 
   final Completer<void> _initCompleter = Completer<void>();
@@ -127,7 +128,10 @@ class UserRepository {
     try {
       final configService = ConfigService.instance;
       if (configService.isTestMode) {
-        final response = await _apiClient.fetchUser(configService.currentUserId, enriched: true);
+        final response = await _apiClient.fetchUser(
+          configService.currentUserId,
+          enriched: true,
+        );
         _cachedCurrentUser = models.User.fromJson(response);
         await _updateLocalCache(_cachedCurrentUser!);
         _rt.setServerSyncTs(DateTime.now().toUtc());
@@ -142,7 +146,10 @@ class UserRepository {
         return null;
       }
 
-      final response = await _apiClient.fetchUser(configService.currentUserId, enriched: true);
+      final response = await _apiClient.fetchUser(
+        configService.currentUserId,
+        enriched: true,
+      );
       _cachedCurrentUser = models.User.fromJson(response);
       await _updateLocalCache(_cachedCurrentUser!);
       _rt.setServerSyncTs(DateTime.now().toUtc());
@@ -170,7 +177,8 @@ class UserRepository {
     }
   }
 
-  Future<models.User?> getCurrentUser({bool forceRefresh = false}) => _loadCurrentUser(forceRefresh: forceRefresh);
+  Future<models.User?> getCurrentUser({bool forceRefresh = false}) =>
+      _loadCurrentUser(forceRefresh: forceRefresh);
 
   Future<models.User?> getUserById(int userId) async {
     try {
@@ -195,7 +203,10 @@ class UserRepository {
   }
 
   Future<List<models.User>> searchPublicUsers(String query) async {
-    final usersData = await _apiClient.fetchUsers(isPublic: true, search: query);
+    final usersData = await _apiClient.fetchUsers(
+      isPublic: true,
+      search: query,
+    );
     return usersData.map((data) => models.User.fromJson(data)).toList();
   }
 
@@ -211,8 +222,14 @@ class UserRepository {
   }
 
   /// Fetch detailed information for a specific contact
-  Future<models.User> fetchContact(int contactId, {required int currentUserId}) async {
-    final contactData = await _apiClient.fetchContact(contactId, currentUserId: currentUserId);
+  Future<models.User> fetchContact(
+    int contactId, {
+    required int currentUserId,
+  }) async {
+    final contactData = await _apiClient.fetchContact(
+      contactId,
+      currentUserId: currentUserId,
+    );
     return models.User.fromJson(contactData);
   }
 
@@ -223,16 +240,16 @@ class UserRepository {
   }
 
   /// Update user online status and last seen timestamp
-  Future<void> updateOnlineStatus({required int userId, required bool isOnline, required DateTime lastSeen}) async {
+  Future<void> updateOnlineStatus({
+    required int userId,
+    required bool isOnline,
+    required DateTime lastSeen,
+  }) async {
     try {
-      await _apiClient.updateUser(
-        userId,
-        {
-          'is_online': isOnline,
-          'last_seen': lastSeen.toIso8601String(),
-        },
-        currentUserId: userId,
-      );
+      await _apiClient.updateUser(userId, {
+        'is_online': isOnline,
+        'last_seen': lastSeen.toIso8601String(),
+      }, currentUserId: userId);
       // The realtime subscription will handle updating the cached user
     } catch (e) {
       // Ignore errors - this is a best-effort update

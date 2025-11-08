@@ -89,22 +89,36 @@ class EventInteraction {
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       inviterId: json['invited_by_user_id'],
       inviter: json['inviter'] != null ? User.fromJson(json['inviter']) : null,
-      invitedAt: json['created_at'] != null ? DateTimeUtils.parseAndNormalize(json['created_at']) : null,
+      invitedAt: json['created_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['created_at'])
+          : null,
       participationStatus: json['status'],
-      participationDecidedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : null,
+      participationDecidedAt: json['updated_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
+          : null,
       cancellationNote: json['cancellation_note'],
       postponeUntil: null,
       isAttending: json['is_attending'] == true,
       isEventAdmin: isAdmin,
       viewed: isViewed,
-      firstViewedAt: readAt != null ? DateTimeUtils.parseAndNormalize(readAt) : null,
-      lastViewedAt: readAt != null ? DateTimeUtils.parseAndNormalize(readAt) : null,
+      firstViewedAt: readAt != null
+          ? DateTimeUtils.parseAndNormalize(readAt)
+          : null,
+      lastViewedAt: readAt != null
+          ? DateTimeUtils.parseAndNormalize(readAt)
+          : null,
       personalNote: json['personal_note'],
-      noteUpdatedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : null,
+      noteUpdatedAt: json['updated_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
+          : null,
       hidden: false,
       hiddenAt: null,
-      createdAt: json['created_at'] != null ? DateTimeUtils.parseAndNormalize(json['created_at']) : DateTime.now(),
-      updatedAt: json['updated_at'] != null ? DateTimeUtils.parseAndNormalize(json['updated_at']) : DateTime.now(),
+      createdAt: json['created_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTimeUtils.parseAndNormalize(json['updated_at'])
+          : DateTime.now(),
     );
   }
 
@@ -168,7 +182,8 @@ class EventInteraction {
       inviter: inviter ?? this.inviter,
       invitedAt: invitedAt ?? this.invitedAt,
       participationStatus: participationStatus ?? this.participationStatus,
-      participationDecidedAt: participationDecidedAt ?? this.participationDecidedAt,
+      participationDecidedAt:
+          participationDecidedAt ?? this.participationDecidedAt,
       cancellationNote: cancellationNote ?? this.cancellationNote,
       postponeUntil: postponeUntil ?? this.postponeUntil,
       isAttending: isAttending ?? this.isAttending,

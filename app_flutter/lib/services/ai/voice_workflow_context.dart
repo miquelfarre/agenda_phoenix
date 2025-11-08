@@ -163,39 +163,32 @@ class WorkflowSuggestions {
     }
   }
 
-  static List<SuggestedAction> _afterCreateCalendar(Map<String, dynamic> result) {
+  static List<SuggestedAction> _afterCreateCalendar(
+    Map<String, dynamic> result,
+  ) {
     final calendarId = result['id'];
 
     return [
       SuggestedAction(
         action: 'UPDATE_CALENDAR',
-        question: '¿Quieres que el calendario sea público para que otros puedan suscribirse?',
-        defaultParameters: {
-          'calendar_id': calendarId,
-          'is_public': true,
-        },
+        question:
+            '¿Quieres que el calendario sea público para que otros puedan suscribirse?',
+        defaultParameters: {'calendar_id': calendarId, 'is_public': true},
       ),
       SuggestedAction(
         action: 'CREATE_EVENT',
         question: '¿Quieres crear un evento en este calendario?',
-        defaultParameters: {
-          'calendar_id': calendarId,
-        },
+        defaultParameters: {'calendar_id': calendarId},
       ),
       SuggestedAction(
         action: 'INVITE_TO_CALENDAR',
         question: '¿Quieres compartir el calendario con alguien?',
-        defaultParameters: {
-          'calendar_id': calendarId,
-        },
+        defaultParameters: {'calendar_id': calendarId},
       ),
       SuggestedAction(
         action: 'ADD_CALENDAR_ADMIN',
         question: '¿Quieres hacer a alguien administrador del calendario?',
-        defaultParameters: {
-          'calendar_id': calendarId,
-          'role': 'admin',
-        },
+        defaultParameters: {'calendar_id': calendarId, 'role': 'admin'},
       ),
     ];
   }
@@ -207,16 +200,12 @@ class WorkflowSuggestions {
       SuggestedAction(
         action: 'INVITE_USER',
         question: '¿Quieres invitar a alguien a este evento?',
-        defaultParameters: {
-          'event_id': eventId,
-        },
+        defaultParameters: {'event_id': eventId},
       ),
       SuggestedAction(
         action: 'UPDATE_EVENT',
         question: '¿Quieres añadir más detalles al evento?',
-        defaultParameters: {
-          'event_id': eventId,
-        },
+        defaultParameters: {'event_id': eventId},
       ),
     ];
   }
@@ -300,21 +289,28 @@ class RequiredFields {
     return byAction[action] ?? [];
   }
 
-  static List<String> findMissing(String action, Map<String, dynamic> parameters) {
+  static List<String> findMissing(
+    String action,
+    Map<String, dynamic> parameters,
+  ) {
     final required = forAction(action);
-    return required.where((field) =>
-      !parameters.containsKey(field) ||
-      parameters[field] == null ||
-      (parameters[field] is String && (parameters[field] as String).isEmpty)
-    ).toList();
+    return required
+        .where(
+          (field) =>
+              !parameters.containsKey(field) ||
+              parameters[field] == null ||
+              (parameters[field] is String &&
+                  (parameters[field] as String).isEmpty),
+        )
+        .toList();
   }
 
   static String generateQuestion(String action, String fieldName) {
     switch (fieldName) {
       case 'title':
         return action == 'CREATE_EVENT'
-          ? '¿Cuál es el título o nombre del evento?'
-          : '¿Cuál es el nuevo título?';
+            ? '¿Cuál es el título o nombre del evento?'
+            : '¿Cuál es el nuevo título?';
       case 'start_datetime':
         return '¿Cuándo empieza el evento? Por favor indica fecha y hora.';
       case 'end_datetime':
@@ -323,16 +319,16 @@ class RequiredFields {
         return '¿Cuál es el ID del evento?';
       case 'name':
         return action == 'CREATE_CALENDAR'
-          ? '¿Qué nombre quieres para el calendario?'
-          : '¿Qué nombre quieres usar?';
+            ? '¿Qué nombre quieres para el calendario?'
+            : '¿Qué nombre quieres usar?';
       case 'user_id':
         return '¿A qué usuario quieres invitar? Dime su ID o email.';
       case 'user_email':
         return '¿Cuál es el email del usuario?';
       case 'description':
         return action == 'CREATE_CALENDAR'
-          ? '¿Quieres añadir una descripción al calendario?'
-          : '¿Quieres añadir una descripción?';
+            ? '¿Quieres añadir una descripción al calendario?'
+            : '¿Quieres añadir una descripción?';
       case 'location':
         return '¿Dónde será el evento?';
       case 'is_public':

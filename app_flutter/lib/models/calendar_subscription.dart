@@ -6,7 +6,7 @@ class CalendarSubscription {
   final int id;
   final int calendarId;
   final int userId;
-  final String status;  // 'active', 'paused'
+  final String status; // 'active', 'paused'
   final DateTime subscribedAt;
   final DateTime updatedAt;
 
@@ -55,19 +55,20 @@ class CalendarSubscription {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'calendar_id': calendarId,
-        'user_id': userId,
-        'status': status,
-        'subscribed_at': subscribedAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
-        if (calendarName != null) 'calendar_name': calendarName,
-        if (calendarDescription != null) 'calendar_description': calendarDescription,
-        if (calendarCategory != null) 'calendar_category': calendarCategory,
-        if (calendarOwnerId != null) 'calendar_owner_id': calendarOwnerId,
-        if (calendarOwnerName != null) 'calendar_owner_name': calendarOwnerName,
-        if (subscriberCount != null) 'calendar_subscriber_count': subscriberCount,
-      };
+    'id': id,
+    'calendar_id': calendarId,
+    'user_id': userId,
+    'status': status,
+    'subscribed_at': subscribedAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+    if (calendarName != null) 'calendar_name': calendarName,
+    if (calendarDescription != null)
+      'calendar_description': calendarDescription,
+    if (calendarCategory != null) 'calendar_category': calendarCategory,
+    if (calendarOwnerId != null) 'calendar_owner_id': calendarOwnerId,
+    if (calendarOwnerName != null) 'calendar_owner_name': calendarOwnerName,
+    if (subscriberCount != null) 'calendar_subscriber_count': subscriberCount,
+  };
 
   CalendarSubscription copyWith({
     int? id,

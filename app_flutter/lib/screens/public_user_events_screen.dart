@@ -14,10 +14,12 @@ class PublicUserEventsScreen extends ConsumerStatefulWidget {
   const PublicUserEventsScreen({super.key, required this.publicUser});
 
   @override
-  ConsumerState<PublicUserEventsScreen> createState() => _PublicUserEventsScreenState();
+  ConsumerState<PublicUserEventsScreen> createState() =>
+      _PublicUserEventsScreenState();
 }
 
-class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen> {
+class _PublicUserEventsScreenState
+    extends ConsumerState<PublicUserEventsScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isProcessingSubscription = false;
 
@@ -46,7 +48,6 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
   }
 
   Future<void> _loadData() async {
-
     if (_isLoading && !_isProcessingSubscription) {
       return;
     }
@@ -58,7 +59,9 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
 
     try {
       final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
-      final events = await subscriptionRepo.fetchUserEvents(widget.publicUser.id);
+      final events = await subscriptionRepo.fetchUserEvents(
+        widget.publicUser.id,
+      );
 
       // Check if user is subscribed by looking at the subscriptions stream
       final subscriptionsAsync = ref.read(subscriptionsStreamProvider);
@@ -67,7 +70,9 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
         loading: () => <User>[],
         error: (error, stack) => <User>[],
       );
-      final isSubscribed = subscriptions.any((sub) => sub.id == widget.publicUser.id);
+      final isSubscribed = subscriptions.any(
+        (sub) => sub.id == widget.publicUser.id,
+      );
 
       if (mounted) {
         setState(() {
@@ -103,7 +108,10 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
       await subscriptionRepo.subscribeToUser(widget.publicUser.id);
 
       if (mounted) {
-        PlatformDialogHelpers.showSnackBar(context: context, message: AppLocalizations.of(context)!.subscribedSuccessfully);
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: AppLocalizations.of(context)!.subscribedSuccessfully,
+        );
       }
 
       // Realtime handles refresh automatically via SubscriptionRepository
@@ -111,7 +119,11 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
       await _loadData();
     } catch (e) {
       if (mounted) {
-        PlatformDialogHelpers.showSnackBar(context: context, message: 'Error: ${e.toString()}', isError: true);
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: 'Error: ${e.toString()}',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _isProcessingSubscription = false);
@@ -130,7 +142,10 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
       await subscriptionRepo.unsubscribeFromUser(widget.publicUser.id);
 
       if (mounted) {
-        PlatformDialogHelpers.showSnackBar(context: context, message: AppLocalizations.of(context)!.unsubscribedSuccessfully);
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: AppLocalizations.of(context)!.unsubscribedSuccessfully,
+        );
       }
 
       // Realtime handles refresh automatically via SubscriptionRepository
@@ -138,7 +153,11 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
       await _loadData();
     } catch (e) {
       if (mounted) {
-        PlatformDialogHelpers.showSnackBar(context: context, message: 'Error: ${e.toString()}', isError: true);
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: 'Error: ${e.toString()}',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _isProcessingSubscription = false);
@@ -150,7 +169,11 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
     Iterable<Event> result = events;
 
     if (query.isNotEmpty) {
-      result = result.where((event) => event.title.toLowerCase().contains(query) || (event.description?.toLowerCase().contains(query) ?? false));
+      result = result.where(
+        (event) =>
+            event.title.toLowerCase().contains(query) ||
+            (event.description?.toLowerCase().contains(query) ?? false),
+      );
     }
 
     return result.toList();
@@ -160,7 +183,10 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text('${AppLocalizations.of(context)!.events} - ${widget.publicUser.fullName ?? widget.publicUser.instagramName ?? 'User'}', style: const TextStyle(fontSize: 16)),
+        middle: Text(
+          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.fullName ?? widget.publicUser.instagramName ?? 'User'}',
+          style: const TextStyle(fontSize: 16),
+        ),
         trailing: CupertinoButton(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           onPressed: _isProcessingSubscription
@@ -172,7 +198,11 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
               : () {
                   _subscribeToUser();
                 },
-          child: Text(_isSubscribed ? AppLocalizations.of(context)!.unfollow : AppLocalizations.of(context)!.follow),
+          child: Text(
+            _isSubscribed
+                ? AppLocalizations.of(context)!.unfollow
+                : AppLocalizations.of(context)!.follow,
+          ),
         ),
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
       ),
@@ -190,9 +220,18 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(AppLocalizations.of(context)!.errorLoadingEvents, style: const TextStyle(color: CupertinoColors.destructiveRed, fontSize: 16)),
+            Text(
+              AppLocalizations.of(context)!.errorLoadingEvents,
+              style: const TextStyle(
+                color: CupertinoColors.destructiveRed,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 16),
-            CupertinoButton(onPressed: _refreshEvents, child: Text(AppLocalizations.of(context)!.retry)),
+            CupertinoButton(
+              onPressed: _refreshEvents,
+              child: Text(AppLocalizations.of(context)!.retry),
+            ),
           ],
         ),
       );
@@ -200,7 +239,9 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
 
     List<Event> baseEvents = _events;
 
-    baseEvents = baseEvents.where((e) => e.id == null || !_hiddenEventIds.contains(e.id)).toList();
+    baseEvents = baseEvents
+        .where((e) => e.id == null || !_hiddenEventIds.contains(e.id))
+        .toList();
 
     final eventsToShow = _applySearchAndStatusFilters(baseEvents);
 
@@ -210,7 +251,11 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: CupertinoSearchTextField(controller: _searchController, placeholder: AppLocalizations.of(context)!.searchEvents, backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context)),
+            child: CupertinoSearchTextField(
+              controller: _searchController,
+              placeholder: AppLocalizations.of(context)!.searchEvents,
+              backgroundColor: CupertinoColors.systemGrey6.resolveFrom(context),
+            ),
           ),
         ),
 
@@ -221,9 +266,21 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(CupertinoIcons.calendar, size: 64, color: CupertinoColors.systemGrey),
+                  const Icon(
+                    CupertinoIcons.calendar,
+                    size: 64,
+                    color: CupertinoColors.systemGrey,
+                  ),
                   const SizedBox(height: 16),
-                  Text(_searchController.text.isNotEmpty ? AppLocalizations.of(context)!.noEventsFound : AppLocalizations.of(context)!.noEvents, style: const TextStyle(color: CupertinoColors.systemGrey, fontSize: 16)),
+                  Text(
+                    _searchController.text.isNotEmpty
+                        ? AppLocalizations.of(context)!.noEventsFound
+                        : AppLocalizations.of(context)!.noEvents,
+                    style: const TextStyle(
+                      color: CupertinoColors.systemGrey,
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -234,11 +291,18 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
               final event = eventsToShow[index];
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: EventListItem(
                   event: event,
                   onTap: (event) {
-                    Navigator.of(context).push(CupertinoPageRoute<void>(builder: (_) => EventDetailScreen(event: event)));
+                    Navigator.of(context).push(
+                      CupertinoPageRoute<void>(
+                        builder: (_) => EventDetailScreen(event: event),
+                      ),
+                    );
                   },
                   onDelete: _deleteEvent,
                 ),
@@ -265,7 +329,6 @@ class _PublicUserEventsScreenState extends ConsumerState<PublicUserEventsScreen>
           _events.removeWhere((e) => e.id == event.id);
         });
       }
-
     } catch (e, _) {
       rethrow;
     }
