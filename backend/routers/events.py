@@ -76,7 +76,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
     if owner.contact_id:
         owner_contact = contact_crud.get(db, id=owner.contact_id)
 
-    # Determine owner name: use contact name if available, otherwise username (for Instagram users)
+    # Determine owner name: use contact name if available, otherwise instagram_name (for Instagram users)
     owner_name = owner_contact.name if owner_contact else owner.instagram_name
 
     import logging
@@ -179,7 +179,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                 if not interaction_user:
                     continue
 
-                # Get user display name from contact or username
+                # Get user display name from contact or instagram_name
                 user_name = contact.name if contact else interaction_user.instagram_name or f"User {interaction_user.id}"
                 user_phone = contact.phone if contact else None
 
@@ -300,7 +300,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
             user_obj = user.get(db, id=interaction.user_id)
             print(f"🔍 DEBUG BACKEND: Processing interaction for user_id={interaction.user_id}, user_obj found={user_obj is not None}")
             if user_obj:
-                # Get user name from contact or username
+                # Get user name from contact or instagram_name
                 user_contact = None
                 user_name = user_obj.instagram_name or f"User {user_obj.id}"
                 print(f"🔍 DEBUG BACKEND: user_obj.instagram_name={user_obj.instagram_name}, user_obj.contact_id={user_obj.contact_id}")
@@ -356,10 +356,10 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
         instagram_name = user.instagram_name
         contact_name = contact.name if contact else None
 
-        if username and contact_name:
-            display_name = f"{username} ({contact_name})"
-        elif username:
-            display_name = username
+        if instagram_name and contact_name:
+            display_name = f"{instagram_name} ({contact_name})"
+        elif instagram_name:
+            display_name = instagram_name
         elif contact_name:
             display_name = contact_name
         else:
@@ -371,7 +371,7 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
                 "event_id": interaction.event_id,
                 "user_id": interaction.user_id,
                 "user_name": display_name,
-                "user_instagram_name": username,
+                "user_instagram_name": instagram_name,
                 "user_contact_name": contact_name,
                 "interaction_type": interaction.interaction_type,
                 "status": interaction.status,

@@ -67,7 +67,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
     def get_display_name(self, db: Session, user_id: int) -> str:
         """
-        Get user's display name (username or contact name or fallback).
+        Get user's display name (instagram_name or contact name or fallback).
 
         Args:
             db: Database session
@@ -82,7 +82,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         user, contact = result
 
-        # Priority: username > contact_name > fallback
+        # Priority: instagram_name > contact_name > fallback
         if user.instagram_name:
             return user.instagram_name
         if contact and contact.name:
@@ -110,9 +110,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         Args:
             db: Database session
-            public: Filter by public status (True=has username, False=no username, None=all)
+            public: Filter by public status (True=has instagram_name, False=no instagram_name, None=all)
             enriched: Return enriched data with contact information
-            search: Case-insensitive search in username and contact name
+            search: Case-insensitive search in instagram_name and contact name
             skip: Number of records to skip
             limit: Maximum number of records
             order_by: Column name to order by
@@ -225,7 +225,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         Returns:
             Dictionary with statistics or None if user doesn't exist or isn't public:
             - user_id: User ID
-            - username: Username
+            - instagram_name: Instagram name
             - total_subscribers: Number of subscribers
             - total_events: Total number of events created
             - events_stats: List of event statistics (event_id, event_name, event_start_date, total_joined)

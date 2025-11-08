@@ -39,7 +39,7 @@ class ContactResponse(ContactBase):
 
 class UserBase(BaseModel):
     name: Optional[str] = None  # Display name for both types
-    instagram_name: Optional[str] = None  # Instagram username for public users
+    instagram_name: Optional[str] = None  # Instagram name for public users
     phone: Optional[str] = None  # Phone number for private users
     auth_provider: str
     auth_id: str

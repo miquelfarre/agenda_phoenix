@@ -7,6 +7,7 @@ class User {
   final int id;
 
   final int? contactId;
+  final String? name;
   final String? instagramName;
   final String authProvider;
   final String authId;
@@ -37,6 +38,7 @@ class User {
   const User({
     required this.id,
     this.contactId,
+    this.name,
     this.instagramName,
     this.authProvider = 'phone',
     this.authId = '',
@@ -73,6 +75,7 @@ class User {
     return User(
       id: json['id'] as int,
       contactId: json['contact_id'] as int?,
+      name: json['name'] as String?,
       instagramName: json['instagram_name'] as String?,
       authProvider: authProvider,
       authId: authId,
@@ -110,6 +113,7 @@ class User {
     return {
       'id': id,
       'contact_id': contactId,
+      if (name != null) 'name': name,
       if (instagramName != null) 'instagram_name': instagramName,
       if (phone != null) 'phone': phone,
       'auth_provider': authProvider,
@@ -136,6 +140,9 @@ class User {
   }
 
   String get displayName {
+    // Priority: name (from User table) > instagramName/contactName > fallback
+    if (name?.isNotEmpty == true) return name!;
+
     if (isPublic) {
       if (instagramName?.isNotEmpty == true) return instagramName!;
       return 'Usuario #$id';
@@ -180,6 +187,7 @@ class User {
   User copyWith({
     int? id,
     int? contactId,
+    String? name,
     String? instagramName,
     String? authProvider,
     String? authId,
@@ -206,6 +214,7 @@ class User {
     return User(
       id: id ?? this.id,
       contactId: contactId ?? this.contactId,
+      name: name ?? this.name,
       instagramName: instagramName ?? this.instagramName,
       authProvider: authProvider ?? this.authProvider,
       authId: authId ?? this.authId,

@@ -22,6 +22,7 @@ FLUTTER_MODELS = {
         },
         "optional_fields": {
             "contact_id": (int, type(None)),
+            "name": (str, type(None)),  # Display name for both public and private users
             "instagram_name": (str, type(None)),  # For private users or public users
             "auth_provider": (str, type(None)),
             "auth_id": (str, type(None)),
@@ -187,6 +188,7 @@ def sample_data(test_db):
     user1 = User(
         id=1,
         contact_id=1,
+        name="Alice Smith",  # Display name for private user
         instagram_name="Alice",
         auth_provider="phone",
         auth_id="+1234567890",
@@ -198,6 +200,7 @@ def sample_data(test_db):
     user2 = User(
         id=2,
         contact_id=2,
+        name="Bob Johnson",  # Display name for public user
         instagram_name="bob_insta",
         auth_provider="instagram",
         auth_id="12345",

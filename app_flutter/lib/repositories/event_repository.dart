@@ -153,7 +153,7 @@ class EventRepository {
 
       final updateData = <String, dynamic>{'status': status};
       if (decisionMessage != null)
-        updateData['rejection_message'] = decisionMessage;
+        updateData['cancellation_note'] = decisionMessage;
       if (isAttending != null) updateData['is_attending'] = isAttending;
 
       final updatedInteraction = await _apiClient.patchInteraction(
