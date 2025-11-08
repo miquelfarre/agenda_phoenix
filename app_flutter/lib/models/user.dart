@@ -6,65 +6,49 @@ import 'user_hive.dart';
 class User {
   final int id;
 
-  // Backend fields - Authentication
-  final int? contactId; // FK to Contact table
-  final String? username; // Display name for private users (phone auth)
-  final String? instagramName; // Instagram username for public users
-  final String authProvider; // 'phone' | 'instagram' (default: 'phone')
-  final String authId; // Phone number or Instagram user ID (default: '')
+  final int? contactId;
+  final String? instagramName;
+  final String authProvider;
+  final String authId;
   final bool isPublic;
   final bool isAdmin;
   final String? profilePicture;
   final DateTime? lastLogin;
-  final DateTime?
-  createdAt; // When user registered (nullable for backward compatibility)
-  final DateTime?
-  updatedAt; // Last profile update (nullable for backward compatibility)
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
-  // Backend enriched fields (only when enriched=true)
-  final String? contactName; // From Contact table
-  final String? contactPhone; // From Contact table
+  final String? contactName;
+  final String? contactPhone;
 
-  // Computed/helper fields
-  final String?
-  phoneNumber; // Helper: derived from authId if phone auth, or contactPhone
-  final String? fullName; // Helper: same as contactName
+  final String? phone;
 
-  // Client-side fields (not synced to backend)
-  final bool isActive; // Client-side state
-  final bool isBanned; // Client-side (TODO: sync with backend AppBan)
-  final DateTime? lastSeen; // Client-side presence
-  final bool isOnline; // Client-side presence
-  final String defaultTimezone; // Client preference
-  final String defaultCountryCode; // Client preference
-  final String defaultCity; // Client preference
+  final bool isActive;
+  final bool isBanned;
+  final DateTime? lastSeen;
+  final bool isOnline;
+  final String defaultTimezone;
+  final String defaultCountryCode;
+  final String defaultCity;
 
-  // Subscription statistics (only present in /users/{id}/subscriptions endpoint)
   final int? newEventsCount;
   final int? totalEventsCount;
   final int? subscribersCount;
 
   const User({
     required this.id,
-    // Backend fields
     this.contactId,
-    this.username,
     this.instagramName,
-    this.authProvider = 'phone', // Default to phone auth
-    this.authId = '', // Default to empty string
+    this.authProvider = 'phone',
+    this.authId = '',
     required this.isPublic,
     this.isAdmin = false,
     this.profilePicture,
     this.lastLogin,
-    this.createdAt, // Nullable for backward compatibility
-    this.updatedAt, // Nullable for backward compatibility
-    // Enriched fields
+    this.createdAt,
+    this.updatedAt,
     this.contactName,
     this.contactPhone,
-    // Helper fields
-    this.phoneNumber,
-    this.fullName,
-    // Client-side fields
+    this.phone,
     this.isActive = true,
     this.isBanned = false,
     this.lastSeen,
@@ -72,7 +56,6 @@ class User {
     this.defaultTimezone = 'Europe/Madrid',
     this.defaultCountryCode = 'ES',
     this.defaultCity = 'Madrid',
-    // Stats
     this.newEventsCount,
     this.totalEventsCount,
     this.subscribersCount,
@@ -80,33 +63,17 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     final bool isPublic = json['is_public'] as bool? ?? false;
-    final String? backendUsername = json['username'] as String?;
-
-    // Map backend "username" field to correct Flutter field based on isPublic
-    final String? username = !isPublic
-        ? backendUsername
-        : null; // Private users
-    final String? instagramName = isPublic
-        ? backendUsername
-        : null; // Public users
-
-    // Contact fields (enriched response)
-    final String? contactName = json['contact_name'] as String?;
-    final String? contactPhone = json['contact_phone'] as String?;
-
-    // Auth fields
     final String authProvider = json['auth_provider'] as String? ?? 'phone';
     final String authId = json['auth_id'] as String? ?? '';
 
-    // Compute phoneNumber helper
-    final String? phoneNumber = authProvider == 'phone' ? authId : contactPhone;
+    final String? backendPhone = json['phone'] as String?;
+    final String? phone =
+        backendPhone ?? (authProvider == 'phone' ? authId : json['contact_phone'] as String?);
 
     return User(
       id: json['id'] as int,
-      // Backend fields
       contactId: json['contact_id'] as int?,
-      username: username,
-      instagramName: instagramName,
+      instagramName: json['instagram_name'] as String?,
       authProvider: authProvider,
       authId: authId,
       isPublic: isPublic,
@@ -121,13 +88,9 @@ class User {
       updatedAt: json['updated_at'] != null
           ? DateTimeUtils.parseAndNormalize(json['updated_at'])
           : null,
-      // Enriched fields
-      contactName: contactName,
-      contactPhone: contactPhone,
-      // Helper fields
-      phoneNumber: phoneNumber,
-      fullName: contactName, // fullName is just contactName
-      // Client-side fields (preserve if present, use defaults otherwise)
+      contactName: json['contact_name'] as String?,
+      contactPhone: json['contact_phone'] as String?,
+      phone: phone,
       isActive: json['is_active'] as bool? ?? true,
       isBanned: json['is_banned'] as bool? ?? false,
       lastSeen: json['last_seen'] != null
@@ -137,7 +100,6 @@ class User {
       defaultTimezone: json['default_timezone'] as String? ?? 'Europe/Madrid',
       defaultCountryCode: json['default_country_code'] as String? ?? 'ES',
       defaultCity: json['default_city'] as String? ?? 'Madrid',
-      // Stats
       newEventsCount: json['new_events_count'] as int?,
       totalEventsCount: json['total_events_count'] as int?,
       subscribersCount: json['subscribers_count'] as int?,
@@ -145,14 +107,11 @@ class User {
   }
 
   Map<String, dynamic> toJson() {
-    // Map Flutter fields back to backend format
-    final String? backendUsername = isPublic ? instagramName : username;
-
     return {
       'id': id,
-      // Backend fields
       'contact_id': contactId,
-      'username': backendUsername, // Unified field in backend
+      if (instagramName != null) 'instagram_name': instagramName,
+      if (phone != null) 'phone': phone,
       'auth_provider': authProvider,
       'auth_id': authId,
       'is_public': isPublic,
@@ -161,10 +120,8 @@ class User {
       'last_login': lastLogin?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
-      // Enriched fields (if present)
       if (contactName != null) 'contact_name': contactName,
       if (contactPhone != null) 'contact_phone': contactPhone,
-      // Client-side fields (for local storage only)
       'is_active': isActive,
       'is_banned': isBanned,
       if (lastSeen != null) 'last_seen': lastSeen!.toIso8601String(),
@@ -172,7 +129,6 @@ class User {
       'default_timezone': defaultTimezone,
       'default_country_code': defaultCountryCode,
       'default_city': defaultCity,
-      // Stats
       if (newEventsCount != null) 'new_events_count': newEventsCount,
       if (totalEventsCount != null) 'total_events_count': totalEventsCount,
       if (subscribersCount != null) 'subscribers_count': subscribersCount,
@@ -180,27 +136,22 @@ class User {
   }
 
   String get displayName {
-    // Public users (Instagram)
     if (isPublic) {
       if (instagramName?.isNotEmpty == true) return instagramName!;
       return 'Usuario #$id';
     }
 
-    // Private users (Phone)
-    if (username?.isNotEmpty == true) return username!;
-    if (fullName?.isNotEmpty == true) return fullName!;
+    if (contactName?.isNotEmpty == true) return contactName!;
     return 'Usuario #$id';
   }
 
   String? get displaySubtitle {
-    // Public users show @instagram
     if (isPublic && instagramName?.isNotEmpty == true) {
       return '@$instagramName';
     }
 
-    // Private users show phone number
-    if (!isPublic && phoneNumber?.isNotEmpty == true) {
-      return phoneNumber;
+    if (!isPublic && phone?.isNotEmpty == true) {
+      return phone;
     }
 
     return null;
@@ -210,21 +161,25 @@ class User {
     return UserHive(
       id: id,
       instagramName: instagramName,
-      fullName: fullName,
+      name: contactName,
       isPublic: isPublic,
-      phoneNumber: phoneNumber,
+      phone: phone,
       profilePicture: profilePicture,
       isBanned: isBanned,
       lastSeen: lastSeen,
       isOnline: isOnline,
       registeredAt: createdAt,
+      authProvider: authProvider,
+      authId: authId,
+      contactId: contactId,
+      isAdmin: isAdmin,
+      username: contactName,
     );
   }
 
   User copyWith({
     int? id,
     int? contactId,
-    String? username,
     String? instagramName,
     String? authProvider,
     String? authId,
@@ -236,8 +191,7 @@ class User {
     DateTime? updatedAt,
     String? contactName,
     String? contactPhone,
-    String? phoneNumber,
-    String? fullName,
+    String? phone,
     bool? isActive,
     bool? isBanned,
     DateTime? lastSeen,
@@ -252,7 +206,6 @@ class User {
     return User(
       id: id ?? this.id,
       contactId: contactId ?? this.contactId,
-      username: username ?? this.username,
       instagramName: instagramName ?? this.instagramName,
       authProvider: authProvider ?? this.authProvider,
       authId: authId ?? this.authId,
@@ -264,8 +217,7 @@ class User {
       updatedAt: updatedAt ?? this.updatedAt,
       contactName: contactName ?? this.contactName,
       contactPhone: contactPhone ?? this.contactPhone,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
       isActive: isActive ?? this.isActive,
       isBanned: isBanned ?? this.isBanned,
       lastSeen: lastSeen ?? this.lastSeen,

@@ -66,7 +66,7 @@ class _SubscriptionDetailScreenState
     final l10n = context.l10n;
     final title = widget.subscription.subscribed?.displayName.isNotEmpty == true
         ? widget.subscription.subscribed!.displayName
-        : (widget.subscription.subscribed?.fullName ??
+        : (widget.subscription.subscribed?.contactName ??
               widget.subscription.subscribed?.instagramName ??
               l10n.unknownUser);
 

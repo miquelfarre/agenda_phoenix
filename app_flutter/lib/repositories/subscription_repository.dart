@@ -142,13 +142,13 @@ class SubscriptionRepository {
           .map((data) => models.User.fromJson(data))
           .where(
             (user) =>
-                (user.fullName?.toLowerCase().contains(query.toLowerCase()) ??
+                (user.contactName?.toLowerCase().contains(query.toLowerCase()) ??
                     false) ||
                 (user.instagramName?.toLowerCase().contains(
                       query.toLowerCase(),
                     ) ??
                     false) ||
-                (user.username?.toLowerCase().contains(query.toLowerCase()) ??
+                (user.contactName?.toLowerCase().contains(query.toLowerCase()) ??
                     false),
           )
           .toList();

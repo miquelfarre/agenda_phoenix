@@ -288,7 +288,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             ],
 
             if ((_detailedEvent ?? currentEvent).owner?.isPublic == true &&
-                (_detailedEvent ?? currentEvent).owner?.fullName != null) ...[
+                (_detailedEvent ?? currentEvent).owner?.contactName != null) ...[
               const SizedBox(height: 32),
               Consumer(
                 builder: (context, ref, child) {
@@ -315,7 +315,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (event.owner?.isPublic == true &&
-              event.owner?.fullName != null) ...[
+              event.owner?.contactName != null) ...[
             _buildOrganizerRow(),
             const SizedBox(height: 8),
           ],
@@ -380,7 +380,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               ),
               const SizedBox(height: 4),
               Text(
-                owner.fullName!,
+                owner.contactName!,
                 style: TextStyle(fontSize: 16, color: AppStyles.black87),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -677,8 +677,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             spacing: 12,
             runSpacing: 12,
             children: otherAttendees.map((user) {
-              final initials = (user.fullName ?? '').trim().isNotEmpty
-                  ? user.fullName!
+              final initials = (user.contactName ?? '').trim().isNotEmpty
+                  ? user.contactName!
                         .trim()
                         .split(RegExp(r"\s+"))
                         .first[0]
@@ -710,7 +710,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                   SizedBox(
                     width: 60,
                     child: Text(
-                      user.fullName?.split(' ').first ?? 'User',
+                      user.contactName?.split(' ').first ?? 'User',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppStyles.grey600,
@@ -850,7 +850,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.upcomingEventsOf(event.owner?.fullName ?? ''),
+              l10n.upcomingEventsOf(event.owner?.contactName ?? ''),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

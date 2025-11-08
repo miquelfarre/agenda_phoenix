@@ -66,7 +66,7 @@ class UserBlockingRepository {
           _box!.get('blocked_user_ids', defaultValue: <int>[]) ?? <int>[];
       _cachedBlockedUsers = blockedUserIds
           .map(
-            (id) => User(id: id, isPublic: false, fullName: 'Blocked User $id'),
+            (id) => User(id: id, isPublic: false, contactName: 'Blocked User $id'),
           )
           .toList();
     } catch (e) {
@@ -86,7 +86,7 @@ class UserBlockingRepository {
             (block) => User(
               id: block['blocked_user_id'] as int,
               isPublic: false,
-              fullName: 'Blocked User ${block['blocked_user_id']}',
+              contactName: 'Blocked User ${block['blocked_user_id']}',
             ),
           )
           .toList();

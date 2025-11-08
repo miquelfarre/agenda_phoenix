@@ -180,7 +180,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             final filteredUsers = users.where((user) {
               if (_searchQuery.isEmpty) return true;
               final query = _searchQuery.toLowerCase();
-              return (user.fullName?.toLowerCase().contains(query) ?? false) ||
+              return (user.contactName?.toLowerCase().contains(query) ?? false) ||
                   (user.instagramName?.toLowerCase().contains(query) ?? false);
             }).toList();
 

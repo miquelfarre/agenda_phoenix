@@ -184,7 +184,7 @@ class _PublicUserEventsScreenState
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(
-          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.fullName ?? widget.publicUser.instagramName ?? 'User'}',
+          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.contactName ?? widget.publicUser.instagramName ?? 'User'}',
           style: const TextStyle(fontSize: 16),
         ),
         trailing: CupertinoButton(

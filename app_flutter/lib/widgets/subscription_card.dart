@@ -95,8 +95,8 @@ class SubscriptionCard extends ConsumerWidget {
 
     // Default avatar with initials
     String initials = '?';
-    if (user.fullName?.isNotEmpty == true) {
-      final nameParts = user.fullName!.trim().split(' ');
+    if (user.contactName?.isNotEmpty == true) {
+      final nameParts = user.contactName!.trim().split(' ');
       if (nameParts.length >= 2) {
         initials =
             nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();

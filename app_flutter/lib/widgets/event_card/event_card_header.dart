@@ -35,7 +35,7 @@ class EventCardHeader extends ConsumerWidget {
     final hasOwner =
         config.showOwner &&
         event.owner?.isPublic == true &&
-        event.owner?.fullName != null;
+        event.owner?.contactName != null;
 
     if (hasOwner) {
       widgets.add(_buildOwnerInfo(ref));
@@ -100,7 +100,7 @@ class EventCardHeader extends ConsumerWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              event.owner!.fullName!,
+              event.owner!.contactName!,
               style: AppStyles.cardSubtitle.copyWith(
                 color: AppStyles.blue600,
                 fontSize: 13,
@@ -156,7 +156,7 @@ class EventCardHeader extends ConsumerWidget {
             imageUrl: url,
             fit: BoxFit.cover,
             errorWidget: (context, failedUrl, error) {
-              final name = owner.fullName;
+              final name = owner.contactName;
               if (name != null && name.isNotEmpty) {
                 return _buildSmallInitials(name);
               }
@@ -167,7 +167,7 @@ class EventCardHeader extends ConsumerWidget {
       );
     }
 
-    final name = owner.fullName;
+    final name = owner.contactName;
     if (name != null && name.isNotEmpty) {
       return _buildSmallInitials(name);
     }
@@ -228,7 +228,7 @@ class EventCardAttendeesRow extends ConsumerWidget {
       if (a is User) {
         attendeeData.add({
           'id': a.id,
-          'full_name': a.fullName,
+          'full_name': a.contactName,
           'profile_picture': a.profilePicture,
         });
       } else if (a is Map<String, dynamic>) {

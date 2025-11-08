@@ -54,7 +54,7 @@ class SubscriptionHive extends HiveObject {
       userId: subscription.userId,
       subscribedToId: subscription.subscribedToId,
       subscribedUserName: subscription.subscribed?.instagramName,
-      subscribedUserFullName: subscription.subscribed?.fullName,
+      subscribedUserFullName: subscription.subscribed?.contactName,
       subscribedUserIsPublic: subscription.subscribed?.isPublic,
     );
   }
@@ -97,7 +97,7 @@ class SubscriptionHive extends HiveObject {
           ? User(
               id: subscribedToId,
               instagramName: subscribedUserName!,
-              fullName: subscribedUserFullName ?? '',
+              contactName: subscribedUserFullName ?? '',
               isPublic: subscribedUserIsPublic ?? false,
             )
           : null,

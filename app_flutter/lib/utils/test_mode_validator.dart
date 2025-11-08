@@ -64,7 +64,7 @@ class TestModeValidator {
       'id': userId,
       'uid': 'test-user-$userId',
       'email': 'test-user-$userId@eventypop.test',
-      'fullName': 'Test User $userId',
+      'contactName': 'Test User $userId',
       'displayName': 'Test User $userId',
       'emailVerified': true,
       'isAnonymous': false,

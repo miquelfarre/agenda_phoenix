@@ -11,11 +11,11 @@ class UserHive extends HiveObject {
   @HiveField(1)
   String? instagramName;
   @HiveField(2)
-  String? fullName;
+  String? name; // Renamed from fullName to match backend
   @HiveField(3)
   bool isPublic;
   @HiveField(4)
-  String? phoneNumber;
+  String? phone; // Renamed from phoneNumber to match backend
   @HiveField(5)
   String? profilePicture;
   @HiveField(6)
@@ -48,9 +48,9 @@ class UserHive extends HiveObject {
   UserHive({
     required this.id,
     this.instagramName,
-    this.fullName,
+    this.name,
     required this.isPublic,
-    this.phoneNumber,
+    this.phone,
     this.profilePicture,
     this.isBanned = false,
     this.lastSeen,
@@ -70,9 +70,9 @@ class UserHive extends HiveObject {
   factory UserHive.fromJson(Map<String, dynamic> json) => UserHive(
     id: json['id'],
     instagramName: json['instagram_name'],
-    fullName: json['full_name'],
+    name: json['name'],
     isPublic: json['is_public'] ?? false,
-    phoneNumber: json['phone_number'],
+    phone: json['phone'],
     profilePicture: json['profile_picture'],
     isBanned: json['is_banned'] ?? false,
     lastSeen: json['last_seen'] != null
@@ -93,15 +93,15 @@ class UserHive extends HiveObject {
     authId: json['auth_id'] ?? '',
     contactId: json['contact_id'],
     isAdmin: json['is_admin'] ?? false,
-    username: json['username'],
+    username: json['name'] ?? json['username'],
   );
 
   factory UserHive.fromUser(User user) => UserHive(
     id: user.id,
     instagramName: user.instagramName,
-    fullName: user.fullName,
+    name: user.contactName,
     isPublic: user.isPublic,
-    phoneNumber: user.phoneNumber,
+    phone: user.phone,
     profilePicture: user.profilePicture,
     isBanned: user.isBanned,
     lastSeen: user.lastSeen,
@@ -114,15 +114,15 @@ class UserHive extends HiveObject {
     authId: user.authId,
     contactId: user.contactId,
     isAdmin: user.isAdmin,
-    username: user.username,
+    username: user.contactName,
   );
 
   Map<String, dynamic> toUserJson() => {
     'id': id,
     'instagram_name': instagramName,
-    'full_name': fullName,
+    'name': name ?? username,
     'is_public': isPublic,
-    'phone_number': phoneNumber,
+    'phone': phone,
     'profile_picture': profilePicture,
     'is_banned': isBanned,
     'last_seen': lastSeen?.toIso8601String(),
@@ -132,15 +132,14 @@ class UserHive extends HiveObject {
     'auth_id': authId,
     'contact_id': contactId,
     'is_admin': isAdmin,
-    'username': username,
   };
 
   User toUser() {
     return User(
       id: id,
-      phoneNumber: phoneNumber,
+      phone: phone,
       instagramName: instagramName,
-      fullName: fullName,
+      contactName: name,
       isPublic: isPublic,
       isActive: true,
       profilePicture: profilePicture,
@@ -158,7 +157,6 @@ class UserHive extends HiveObject {
       authId: authId,
       contactId: contactId,
       isAdmin: isAdmin,
-      username: username,
     );
   }
 }
