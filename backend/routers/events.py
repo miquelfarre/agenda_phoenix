@@ -432,16 +432,16 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
         contact_name = contact.name if contact else None
 
         # Build display name
-        if username and contact_name:
-            display_name = f"{username} ({contact_name})"
-        elif username:
-            display_name = username
+        if instagram_name and contact_name:
+            display_name = f"{instagram_name} ({contact_name})"
+        elif instagram_name:
+            display_name = instagram_name
         elif contact_name:
             display_name = contact_name
         else:
             display_name = f"Usuario #{user_obj.id}"
 
-        available.append({"id": user_obj.id, "instagram_name": username, "contact_name": contact_name, "display_name": display_name})
+        available.append({"id": user_obj.id, "instagram_name": instagram_name, "contact_name": contact_name, "display_name": display_name})
 
     return available
 

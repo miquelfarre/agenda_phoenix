@@ -64,10 +64,8 @@
   "expected": {
     "status_code": 200,
     "body": {
-      "name": null,
-      "instagram_name": "fcbarcelona",
-      "phone": null,
       "user_id": "{{ID}}",
+      "instagram_name": "fcbarcelona",
       "total_subscribers": 2,
       "total_events": 2,
       "events_stats": [

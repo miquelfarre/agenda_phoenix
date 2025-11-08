@@ -65,10 +65,10 @@ async def get_current_user(
         # Build display name
         contact_name = db_contact.name if db_contact else None
         instagram_name = db_user.instagram_name
-        if username and contact_name:
-            display_name = f"{username} ({contact_name})"
-        elif username:
-            display_name = username
+        if instagram_name and contact_name:
+            display_name = f"{instagram_name} ({contact_name})"
+        elif instagram_name:
+            display_name = instagram_name
         elif contact_name:
             display_name = contact_name
         else:
@@ -110,10 +110,10 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
         # Build display name
         contact_name = db_contact.name if db_contact else None
         instagram_name = db_user.instagram_name
-        if username and contact_name:
-            display_name = f"{username} ({contact_name})"
-        elif username:
-            display_name = username
+        if instagram_name and contact_name:
+            display_name = f"{instagram_name} ({contact_name})"
+        elif instagram_name:
+            display_name = instagram_name
         elif contact_name:
             display_name = contact_name
         else:
@@ -393,7 +393,7 @@ async def get_user_events(user_id: int, include_past: bool = False, from_date: O
         ).filter(models.User.id.in_(owner_ids)).all()
 
         for user_obj, contact_obj in owners_query:
-            # Determine owner name: use contact name if available, otherwise username (for Instagram users)
+            # Determine owner name: use contact name if available, otherwise instagram_name (for Instagram users)
             owner_name = contact_obj.name if contact_obj else user_obj.instagram_name
             logger.info(f"[GET /users/{user_id}/events] OWNER INFO: user_id={user_obj.id}, "
                        f"is_public={user_obj.is_public}, has_contact={contact_obj is not None}, "

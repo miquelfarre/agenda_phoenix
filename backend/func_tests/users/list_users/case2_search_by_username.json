@@ -31,30 +31,34 @@
     "status_code": 200,
     "body": [
       {
-        "instagram_name": "john_doe",
+        "name": null,
+        "phone": null,
+        "id": "{{ID}}",
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
-        "is_public": false,
-        "is_admin": false,
-        "profile_picture": null,
-        "id": "{{ID}}",
-        "contact_id": "{{ID}}",
         "last_login": null,
+        "is_public": false,
+        "contact_id": "{{ID}}",
+        "is_admin": false,
         "created_at": "{{TIMESTAMP}}",
-        "updated_at": "{{TIMESTAMP}}"
+        "updated_at": "{{TIMESTAMP}}",
+        "profile_picture": null,
+        "instagram_name": "john_doe"
       },
       {
-        "instagram_name": "johnny_walker",
+        "name": null,
+        "phone": null,
+        "id": "{{ID}}",
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
-        "is_public": false,
-        "is_admin": false,
-        "profile_picture": null,
-        "id": "{{ID}}",
-        "contact_id": "{{ID}}",
         "last_login": null,
+        "is_public": false,
+        "contact_id": "{{ID}}",
+        "is_admin": false,
         "created_at": "{{TIMESTAMP}}",
-        "updated_at": "{{TIMESTAMP}}"
+        "updated_at": "{{TIMESTAMP}}",
+        "profile_picture": null,
+        "instagram_name": "johnny_walker"
       }
     ]
   }

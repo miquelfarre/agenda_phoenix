@@ -83,8 +83,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         user, contact = result
 
         # Priority: username > contact_name > fallback
-        if user.username:
-            return user.username
+        if user.instagram_name:
+            return user.instagram_name
         if contact and contact.name:
             return contact.name
 
@@ -139,22 +139,22 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         # Apply search filter if provided
         if search:
             search_term = f"%{search}%"
-            # Join with Contact to search in both username and contact name
+            # Join with Contact to search in both instagram_name and contact name
             query = query.outerjoin(Contact, User.contact_id == Contact.id)
             query = query.filter(
                 or_(
-                    User.username.ilike(search_term),
+                    User.instagram_name.ilike(search_term),
                     Contact.name.ilike(search_term)
                 )
             )
 
         if public is not None:
             if public:
-                # Public users have a username
-                query = query.filter(User.username.isnot(None))
+                # Public users have an instagram_name
+                query = query.filter(User.instagram_name.isnot(None))
             else:
-                # Private users don't have a username
-                query = query.filter(User.username.is_(None))
+                # Private users don't have an instagram_name
+                query = query.filter(User.instagram_name.is_(None))
 
         # Apply ordering and pagination
         order_col = getattr(User, order_by) if order_by and hasattr(User, order_by) else User.id
@@ -177,16 +177,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
                 search_term = f"%{search}%"
                 results = results.filter(
                     or_(
-                        User.username.ilike(search_term),
+                        User.instagram_name.ilike(search_term),
                         Contact.name.ilike(search_term)
                     )
                 )
 
             if public is not None:
                 if public:
-                    results = results.filter(User.username.isnot(None))
+                    results = results.filter(User.instagram_name.isnot(None))
                 else:
-                    results = results.filter(User.username.is_(None))
+                    results = results.filter(User.instagram_name.is_(None))
 
             # Apply ordering and pagination consistently on enriched path
             order_col = getattr(User, order_by) if order_by and hasattr(User, order_by) else User.id
@@ -203,11 +203,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
                 contact_phone = contact.phone if contact else None
 
                 # Build display name
-                username = user.username
-                if username and contact_name:
-                    display_name = f"{username} ({contact_name})"
-                elif username:
-                    display_name = username
+                instagram_name = user.instagram_name
+                if instagram_name and contact_name:
+                    display_name = f"{instagram_name} ({contact_name})"
+                elif instagram_name:
+                    display_name = instagram_name
                 elif contact_name:
                     display_name = contact_name
                 else:
@@ -215,7 +215,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
                 enriched_users.append({
                     "id": user.id,
-                    "username": user.username,
+                    "instagram_name": user.instagram_name,
                     "auth_provider": user.auth_provider,
                     "auth_id": user.auth_id,
                     "is_public": user.is_public,
@@ -286,7 +286,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         return {
             "user_id": user_id,
-            "username": db_user.username,
+            "instagram_name": db_user.instagram_name,
             "total_subscribers": total_subscribers,
             "total_events": total_events,
             "events_stats": events_stats

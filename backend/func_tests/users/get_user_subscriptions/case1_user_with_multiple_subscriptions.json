@@ -86,7 +86,9 @@
     "status_code": 200,
     "body": [
       {
+        "name": null,
         "instagram_name": "fcbarcelona",
+        "phone": null,
         "auth_provider": "instagram",
         "auth_id": "{{ID}}",
         "is_public": true,
@@ -102,7 +104,9 @@
         "subscribers_count": 1
       },
       {
+        "name": null,
         "instagram_name": "realmadrid",
+        "phone": null,
         "auth_provider": "instagram",
         "auth_id": "{{ID}}",
         "is_public": true,

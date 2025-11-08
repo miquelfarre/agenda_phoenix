@@ -51,7 +51,9 @@
       "id": "{{ID}}",
       "owner_id": "{{ID}}",
       "owner": {
+        "name": null,
         "instagram_name": null,
+        "phone": null,
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
         "is_public": false,
@@ -66,7 +68,9 @@
       "members": [],
       "admins": [
         {
+          "name": null,
           "instagram_name": null,
+          "phone": null,
           "auth_provider": "phone",
           "auth_id": "{{ID}}",
           "is_public": false,
