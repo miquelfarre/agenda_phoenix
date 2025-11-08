@@ -1673,7 +1673,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="rejected",
                 invited_by_user_id=ada.id,
-                rejection_message="Lo siento, tengo otro compromiso ese día",
+                cancellation_note="Lo siento, tengo otro compromiso ese día",
             ),
         ])
 
@@ -1938,7 +1938,7 @@ def insert_sample_data():
                 interaction_type="invited",
                 status="rejected",
                 invited_by_user_id=miquel.id,
-                rejection_message="Tengo la conferencia tech ese fin de semana",
+                cancellation_note="Tengo la conferencia tech ese fin de semana",
             ),
         ])
 
