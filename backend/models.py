@@ -75,13 +75,15 @@ class User(Base):
     subscription_stats = relationship("UserSubscriptionStats", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<User(id={self.id}, auth_provider='{self.auth_provider}', username='{self.username}')>"
+        return f"<User(id={self.id}, auth_provider='{self.auth_provider}', instagram_name='{self.instagram_name}')>"
 
     def to_dict(self):
         return {
             "id": self.id,
             "contact_id": self.contact_id,
-            "username": self.username,
+            "name": self.name,
+            "instagram_name": self.instagram_name,
+            "phone": self.phone,
             "auth_provider": self.auth_provider,
             "auth_id": self.auth_id,
             "is_public": self.is_public,

@@ -65,7 +65,7 @@ def test_user_events_includes_public_owner_in_attendees():
     # Create public user (restaurant/gym/etc.)
     public_user_data = {
         "contact_id": contact["id"],
-        "username": f"restaurant_{datetime.now().timestamp()}",
+        "instagram_name": f"restaurant_{datetime.now().timestamp()}",
         "auth_provider": "instagram",
         "auth_id": f"ig_restaurant_{datetime.now().timestamp()}",
         "is_public": True,
@@ -76,9 +76,9 @@ def test_user_events_includes_public_owner_in_attendees():
 
     # Create private user (subscriber)
     private_user_data = {
-        "full_name": "Test Subscriber",
-        "username": None,
-        "phone_number": f"+2000{int(datetime.now().timestamp())}",
+        "name": "Test Subscriber",
+        "instagram_name": None,
+        "phone": f"+2000{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+2000{int(datetime.now().timestamp())}",
         "is_public": False,
@@ -189,7 +189,7 @@ def test_user_events_preserves_owner_info_across_updates():
 
     public_user_data = {
         "contact_id": contact["id"],
-        "username": f"gym_{datetime.now().timestamp()}",
+        "instagram_name": f"gym_{datetime.now().timestamp()}",
         "auth_provider": "instagram",
         "auth_id": f"ig_gym_{datetime.now().timestamp()}",
         "is_public": True,
@@ -197,8 +197,8 @@ def test_user_events_preserves_owner_info_across_updates():
     public_user = api_request("POST", "/users", json=public_user_data).json()
 
     private_user_data = {
-        "full_name": "Test Member",
-        "phone_number": f"+4000{int(datetime.now().timestamp())}",
+        "name": "Test Member",
+        "phone": f"+4000{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+4000{int(datetime.now().timestamp())}",
     }
