@@ -678,7 +678,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       repository: ref.read(eventRepositoryProvider),
       context: context,
       shouldNavigate: shouldNavigate,
-      showSuccessMessage: false, // Already handled by EventListItem
+      showSuccessMessage: true,
     );
     // EventRepository handles updates via Realtime, but we manually remove
     // for non-owners as RLS policies can prevent the DELETE event from broadcasting.

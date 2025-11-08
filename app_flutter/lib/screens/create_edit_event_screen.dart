@@ -195,10 +195,12 @@ class CreateEditEventScreenState
   @override
   void onFormSubmitSuccess() {
     final l10n = context.l10n;
+    final eventName = _titleController.text.trim();
     PlatformDialogHelpers.showSnackBar(
+      context: context,
       message: widget.eventToEdit != null
-          ? l10n.eventUpdated
-          : l10n.eventCreated,
+          ? '${l10n.eventUpdated.replaceAll(' exitosamente', '')}: "$eventName"'
+          : '${l10n.eventCreated.replaceAll(' exitosamente', '')}: "$eventName"',
     );
 
     if (mounted) {

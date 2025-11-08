@@ -110,9 +110,12 @@ class _SubscriptionDetailScreenState
       await subscriptionRepo.subscribeToUser(widget.publicUser.id);
 
       if (mounted) {
+        final userName = widget.publicUser.contactName ??
+                        widget.publicUser.instagramName ??
+                        'Usuario';
         PlatformDialogHelpers.showSnackBar(
           context: context,
-          message: AppLocalizations.of(context)!.subscribedSuccessfully,
+          message: AppLocalizations.of(context)!.subscribedTo(userName),
         );
       }
 
@@ -144,9 +147,12 @@ class _SubscriptionDetailScreenState
       await subscriptionRepo.unsubscribeFromUser(widget.publicUser.id);
 
       if (mounted) {
+        final userName = widget.publicUser.contactName ??
+                        widget.publicUser.instagramName ??
+                        'Usuario';
         PlatformDialogHelpers.showSnackBar(
           context: context,
-          message: AppLocalizations.of(context)!.unsubscribedSuccessfully,
+          message: AppLocalizations.of(context)!.unsubscribedFrom(userName),
         );
       }
 

@@ -40,7 +40,7 @@ class EventOperations {
           final l10n = context.l10n;
           PlatformDialogHelpers.showSnackBar(
             context: context,
-            message: l10n.success,
+            message: '${l10n.eventDeleted.replaceAll(' exitosamente', '')}: "${event.title}"',
           );
         }
       } else {
@@ -51,7 +51,7 @@ class EventOperations {
           final l10n = context.l10n;
           PlatformDialogHelpers.showSnackBar(
             context: context,
-            message: l10n.success,
+            message: '${l10n.eventRemoved.replaceAll(' exitosamente', '')}: "${event.title}"',
           );
         }
       }

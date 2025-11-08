@@ -33,10 +33,9 @@ class CalendarOperations {
         await repository.deleteCalendar(calendar.id);
 
         if (showSuccessMessage && context.mounted) {
-          final l10n = context.l10n;
           PlatformDialogHelpers.showSnackBar(
             context: context,
-            message: l10n.success,
+            message: 'Calendario eliminado: "${calendar.name}"',
           );
         }
       } else {
@@ -54,7 +53,7 @@ class CalendarOperations {
           final l10n = context.l10n;
           PlatformDialogHelpers.showSnackBar(
             context: context,
-            message: l10n.calendarLeft,
+            message: '${l10n.calendarLeft.replaceAll('Has abandonado el calendario', 'Calendario abandonado')}: "${calendar.name}"',
           );
         }
       }

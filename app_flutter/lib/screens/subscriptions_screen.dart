@@ -225,7 +225,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       await ref
           .read(subscriptionRepositoryProvider)
           .deleteSubscription(targetUserId: user.id);
-      _showSuccessMessage(l10n.unsubscribedSuccessfully);
+      final userName = user.contactName ?? user.instagramName ?? 'Usuario';
+      _showSuccessMessage(l10n.unsubscribedFrom(userName));
     } catch (e) {
       // ignore: use_build_context_synchronously
       final errorMessage = ErrorMessageParser.parse(e, currentContext);

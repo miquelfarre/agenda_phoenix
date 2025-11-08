@@ -158,6 +158,15 @@ class _CreateEditCalendarScreenState
       // Realtime handles refresh automatically via CalendarRepository
 
       if (!mounted) return;
+
+      // Show success message
+      PlatformDialogHelpers.showSnackBar(
+        context: context,
+        message: _isEditMode
+            ? 'Calendario actualizado: "$name"'
+            : 'Calendario creado: "$name"',
+      );
+
       context.pop();
     } catch (e) {
       if (!mounted) return;

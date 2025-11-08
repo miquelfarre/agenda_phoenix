@@ -229,7 +229,7 @@ class _EventSeriesDetailScreenState extends ConsumerState<EventSeriesDetailScree
       repository: ref.read(eventRepositoryProvider),
       context: context,
       shouldNavigate: shouldNavigate,
-      showSuccessMessage: false,
+      showSuccessMessage: true,
     );
 
     // Update local list if operation was successful

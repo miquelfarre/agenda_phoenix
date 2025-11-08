@@ -344,6 +344,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
         final l10n = context.l10n;
         if (successCount > 0) {
           PlatformWidgets.showSnackBar(
+            context: context,
             message: '$successCount ${l10n.invitationsSent}',
             isError: false,
           );
@@ -351,6 +352,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
 
         if (errorCount > 0) {
           PlatformWidgets.showSnackBar(
+            context: context,
             message: '$errorCount ${l10n.invitationsFailed}',
             isError: true,
           );
@@ -367,6 +369,7 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
         });
 
         PlatformWidgets.showSnackBar(
+          context: context,
           message: 'Error sending invitations: $e',
           isError: true,
         );

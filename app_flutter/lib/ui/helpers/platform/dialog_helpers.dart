@@ -277,11 +277,11 @@ class PlatformDialogHelpers {
     entry = OverlayEntry(
       builder: (ctx) {
         return Positioned(
-          top: MediaQuery.of(ctx).padding.top + 8,
+          bottom: MediaQuery.of(ctx).padding.bottom + 16,
           left: 16,
           right: 16,
           child: SafeArea(
-            minimum: const EdgeInsets.only(top: 0),
+            minimum: const EdgeInsets.only(bottom: 0),
             child: GestureDetector(
               onTap: () {
                 try {
@@ -294,7 +294,7 @@ class PlatformDialogHelpers {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: isError ? AppStyles.red600 : AppStyles.grey700,
+                  color: isError ? AppStyles.red600 : AppStyles.primaryColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -359,15 +359,15 @@ class PlatformDialogHelpers {
     final entry = OverlayEntry(
       builder: (ctx) {
         return Positioned(
-          top: MediaQuery.of(ctx).padding.top + 8,
+          bottom: MediaQuery.of(ctx).padding.bottom + 16,
           left: 16,
           right: 16,
           child: SafeArea(
-            minimum: const EdgeInsets.only(top: 0),
+            minimum: const EdgeInsets.only(bottom: 0),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isError ? AppStyles.red600 : AppStyles.grey700,
+                color: isError ? AppStyles.red600 : AppStyles.primaryColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: DefaultTextStyle(

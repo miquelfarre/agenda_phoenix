@@ -87,9 +87,18 @@ class EventCardActions extends ConsumerWidget {
                       newStatus,
                       isAttending: false,
                     );
+                if (!context.mounted) return;
+                if (newStatus == 'accepted') {
+                  PlatformWidgets.showSnackBar(
+                    context: context,
+                    message: 'Invitación aceptada: "${event.title}"',
+                    isError: false,
+                  );
+                }
               } catch (e) {
                 if (!context.mounted) return;
                 PlatformWidgets.showSnackBar(
+                  context: context,
                   message: context.l10n.errorAcceptingInvitation,
                   isError: true,
                 );
@@ -116,9 +125,18 @@ class EventCardActions extends ConsumerWidget {
                     newStatus,
                     isAttending: false,
                   );
+              if (!context.mounted) return;
+              if (newStatus == 'rejected') {
+                PlatformWidgets.showSnackBar(
+                  context: context,
+                  message: 'Invitación rechazada: "${event.title}"',
+                  isError: false,
+                );
+              }
             } catch (e) {
               if (!context.mounted) return;
               PlatformWidgets.showSnackBar(
+                context: context,
                 message: context.l10n.errorRejectingInvitation,
                 isError: true,
               );
