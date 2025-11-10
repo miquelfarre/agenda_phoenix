@@ -3,7 +3,6 @@ import 'package:eventypop/core/storage/hive_migration.dart';
 import 'package:eventypop/models/persistence/calendar_hive.dart';
 import 'package:eventypop/models/persistence/event_hive.dart';
 import 'package:eventypop/models/persistence/group_hive.dart';
-import 'package:eventypop/models/persistence/user_event_note_hive.dart';
 import 'package:eventypop/models/persistence/user_hive.dart';
 import 'package:eventypop/services/api_client.dart';
 import 'package:eventypop/services/config_service.dart';
@@ -35,9 +34,7 @@ void main() async {
     Hive.registerAdapter(GroupHiveAdapter());
     Hive.registerAdapter(UserHiveAdapter());
     Hive.registerAdapter(CalendarHiveAdapter());
-    Hive.registerAdapter(UserEventNoteHiveAdapter());
 
-    await Hive.openBox<UserEventNoteHive>('user_event_note');
     await Hive.openBox<UserHive>('users');
 
     await HiveMigration.initialize();

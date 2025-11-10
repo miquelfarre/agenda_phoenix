@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from auth import get_current_user_id, get_current_user_id_optional
 from crud import event, event_cancellation, event_interaction, user
-from dependencies import check_event_permission, check_user_not_banned, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
+from dependencies import check_event_permission, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
 from models import EventInteraction, UserBlock
 from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventInteractionUpdate, EventResponse, EventUpdate
 
@@ -56,9 +56,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
 
     # Validate access if current_user_id provided
     if current_user_id is not None:
-        # Check if user is banned
-        check_user_not_banned(current_user_id, db)
-
         # Check access using CRUD method
         has_access = event.check_user_access(db, event_id=event_id, user_id=current_user_id)
         if not has_access:
@@ -530,8 +527,6 @@ async def update_current_user_interaction(event_id: int, interaction: EventInter
         raise HTTPException(status_code=404, detail="Event not found")
 
     # Check if user is banned
-    check_user_not_banned(current_user_id, db)
-
     # Get or create interaction
     db_interaction = event_interaction.get_interaction(db, event_id=event_id, user_id=current_user_id)
 
@@ -615,11 +610,6 @@ async def invite_user_to_event(event_id: int, invite_data: dict, current_user_id
         raise HTTPException(status_code=403, detail="Public users cannot invite others to events. Only private users can invite.")
 
     # Check if invited user is banned
-    check_user_not_banned(invited_user_id, db)
-
-    # Check if inviter is banned
-    check_user_not_banned(current_user_id, db)
-
     # Check if there's a block between inviter and invitee
     check_users_not_blocked(current_user_id, invited_user_id, db)
 

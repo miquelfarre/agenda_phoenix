@@ -162,6 +162,7 @@ class CalendarRepository implements ICalendarRepository {
 
   // --- Mutations ---
 
+  @override
   Future<Calendar> createCalendar({
     required String name,
     String? description,
@@ -182,6 +183,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<Calendar> updateCalendar(
     int calendarId,
     Map<String, dynamic> data,
@@ -195,6 +197,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<void> deleteCalendar(
     int calendarId, {
     bool deleteAssociatedEvents = false,
@@ -217,6 +220,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<void> subscribeToCalendar(int calendarId) async {
     try {
       await _apiClient.addCalendarMembership(
@@ -229,6 +233,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<void> unsubscribeFromCalendar(int calendarId) async {
     try {
       final memberships = await _apiClient.fetchCalendarMemberships(calendarId);
@@ -243,6 +248,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<List<Calendar>> fetchPublicCalendars({String? search}) async {
     try {
       final queryParams = <String, String>{'is_public': 'true'};
@@ -263,6 +269,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<Calendar?> searchByShareHash(String shareHash) async {
     try {
       final result = await _apiClient.searchCalendarByHash(shareHash);
@@ -278,6 +285,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<void> subscribeByShareHash(String shareHash) async {
     try {
       await _apiClient.subscribeByShareHash(shareHash);
@@ -287,6 +295,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<void> unsubscribeByShareHash(String shareHash) async {
     try {
       await _apiClient.unsubscribeByShareHash(shareHash);
@@ -296,6 +305,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Future<List<Map<String, dynamic>>> fetchCalendarMemberships(
     int calendarId,
   ) async {
@@ -334,8 +344,9 @@ class CalendarRepository implements ICalendarRepository {
               payload,
               'calendar_membership',
               _rt,
-            ))
+            )) {
               return;
+            }
             _fetchAndSync();
           },
         )
@@ -349,8 +360,9 @@ class CalendarRepository implements ICalendarRepository {
           schema: 'public',
           table: 'calendars',
           callback: (payload) {
-            if (!RealtimeFilter.shouldProcessEvent(payload, 'calendar', _rt))
+            if (!RealtimeFilter.shouldProcessEvent(payload, 'calendar', _rt)) {
               return;
+            }
             _fetchAndSync();
           },
         )
@@ -397,6 +409,7 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  @override
   Calendar? getCalendarById(int calendarId) {
     return _cachedCalendars.firstWhereOrNull((c) => c.id == calendarId);
   }

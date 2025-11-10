@@ -124,6 +124,7 @@ class GroupRepository implements IGroupRepository {
 
   // --- Mutations ---
 
+  @override
   Future<Group> createGroup({required String name, String? description}) async {
     try {
       final ownerId = ConfigService.instance.currentUserId;
@@ -139,6 +140,7 @@ class GroupRepository implements IGroupRepository {
     }
   }
 
+  @override
   Future<Group> updateGroup({
     required int groupId,
     String? name,
@@ -160,6 +162,7 @@ class GroupRepository implements IGroupRepository {
     }
   }
 
+  @override
   Future<void> deleteGroup({required int groupId}) async {
     try {
       final userId = ConfigService.instance.currentUserId;
@@ -178,6 +181,7 @@ class GroupRepository implements IGroupRepository {
     }
   }
 
+  @override
   Future<void> addMemberToGroup({
     required int groupId,
     required int memberUserId,
@@ -200,6 +204,7 @@ class GroupRepository implements IGroupRepository {
     }
   }
 
+  @override
   Future<void> removeMemberFromGroup({
     required int groupId,
     required int memberUserId,
@@ -230,6 +235,7 @@ class GroupRepository implements IGroupRepository {
     }
   }
 
+  @override
   Future<void> leaveGroup(int groupId) async {
     try {
       final userId = ConfigService.instance.currentUserId;
@@ -258,6 +264,7 @@ class GroupRepository implements IGroupRepository {
     }
   }
 
+  @override
   Future<void> grantAdminPermission({
     required int groupId,
     required int userId,
@@ -280,6 +287,7 @@ class GroupRepository implements IGroupRepository {
     }
   }
 
+  @override
   Future<void> removeAdminPermission({
     required int groupId,
     required int userId,
@@ -433,80 +441,42 @@ class GroupRepository implements IGroupRepository {
     int adminUserId,
     String operationType,
   ) {
-    print('\n${'=' * 80}');
-    print('[GROUP MEMBER OPERATION] Validating permissions');
-    print('  groupId: $groupId');
-    print('  memberUserId: $memberUserId');
-    print('  adminUserId: $adminUserId');
-    print('  operationType: $operationType');
-
     final group = _getGroupFromCache(groupId);
-    print('  ✓ Group found:');
-    print('    - group name: ${group.name}');
-    print('    - owner_id: ${group.ownerId}');
 
     final isCreator = group.isCreator(adminUserId);
     final isAdmin = group.isAdmin(adminUserId);
     final isSelf = adminUserId == memberUserId;
 
-    print(
-      '  → isCreator: $isCreator (ownerId=${group.ownerId} == adminUserId=$adminUserId)',
-    );
-    print('  → isAdmin: $isAdmin');
-    print(
-      '  → isSelf: $isSelf (adminUserId=$adminUserId == memberUserId=$memberUserId)',
-    );
-
     if (operationType == 'add') {
-      print('  → Permission check for ADD: isAdmin=$isAdmin');
       if (!group.isAdmin(adminUserId)) {
-        print('  ❌ PERMISSION DENIED: User is not an admin');
-        print('=' * 80 + '\n');
         throw const exceptions.PermissionDeniedException(
           message: 'No permission to add members to group',
         );
       }
       if (group.members.any((m) => m.id == memberUserId)) {
-        print('  ❌ CONFLICT: User is already a member');
-        print('=' * 80 + '\n');
         throw const exceptions.ConflictException(
           message: 'User is already a member of this group',
         );
       }
-      print('  ✅ PERMISSION GRANTED for ADD');
     } else if (operationType == 'remove') {
-      print(
-        '  → Permission check for REMOVE: isCreator=$isCreator OR isAdmin=$isAdmin OR isSelf=$isSelf',
-      );
-
       // BUG FIX: Allow creator, admin, or self to remove members
       if (!isCreator && !isAdmin && !isSelf) {
-        print('  ❌ PERMISSION DENIED!');
-        print('     - User $adminUserId cannot remove member $memberUserId');
-        print('     - Group owner is ${group.ownerId}');
-        print('=' * 80 + '\n');
         throw const exceptions.PermissionDeniedException(
           message: 'No permission to remove member from group',
         );
       }
 
       if (memberUserId == group.ownerId) {
-        print('  ❌ CONFLICT: Cannot remove group owner');
-        print('=' * 80 + '\n');
         throw const exceptions.ConflictException(
           message: 'Cannot remove group owner',
         );
       }
 
       if (!group.members.any((m) => m.id == memberUserId)) {
-        print('  ❌ NOT FOUND: User is not a member of this group');
-        print('=' * 80 + '\n');
         throw const exceptions.NotFoundException(
           message: 'User is not a member of this group',
         );
       }
-      print('  ✅ PERMISSION GRANTED for REMOVE');
     }
-    print('=' * 80 + '\n');
   }
 }

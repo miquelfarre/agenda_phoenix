@@ -47,6 +47,7 @@ class EventRepository implements IEventRepository {
     yield* _eventsStreamController.stream;
   }
 
+  @override
   Stream<List<EventInteraction>> get interactionsStream async* {
     final interactions = _extractInteractionsFromEvents();
     if (interactions.isNotEmpty) {
@@ -114,23 +115,27 @@ class EventRepository implements IEventRepository {
 
   // --- Mutations ---
 
+  @override
   Future<Event> createEvent(Map<String, dynamic> data) async {
     final newEvent = await _apiClient.createEvent(data);
     await _fetchAndSync();
     return Event.fromJson(newEvent);
   }
 
+  @override
   Future<Event> updateEvent(int eventId, Map<String, dynamic> data) async {
     final updatedEvent = await _apiClient.updateEvent(eventId, data);
     await _fetchAndSync();
     return Event.fromJson(updatedEvent);
   }
 
+  @override
   Future<void> deleteEvent(int eventId) async {
     await _apiClient.deleteEvent(eventId);
     await _fetchAndSync();
   }
 
+  @override
   Future<void> leaveEvent(int eventId) async {
     try {
       await _apiClient.delete('/events/$eventId/interaction');
@@ -142,6 +147,7 @@ class EventRepository implements IEventRepository {
 
   // --- Event Interaction Methods ---
 
+  @override
   Future<EventInteraction> updateParticipationStatus(
     int eventId,
     String status, {
@@ -160,8 +166,9 @@ class EventRepository implements IEventRepository {
       );
 
       final updateData = <String, dynamic>{'status': status};
-      if (decisionMessage != null)
+      if (decisionMessage != null) {
         updateData['cancellation_note'] = decisionMessage;
+      }
       if (isAttending != null) updateData['is_attending'] = isAttending;
 
       final updatedInteraction = await _apiClient.patchInteraction(
@@ -177,6 +184,7 @@ class EventRepository implements IEventRepository {
     }
   }
 
+  @override
   Future<void> markAsViewed(int eventId) async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
@@ -195,6 +203,7 @@ class EventRepository implements IEventRepository {
     }
   }
 
+  @override
   Future<void> setPersonalNote(int eventId, String note) async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
@@ -215,6 +224,7 @@ class EventRepository implements IEventRepository {
     }
   }
 
+  @override
   Future<void> sendInvitation(int eventId, int invitedUserId) async {
     try {
       await _apiClient.createInteraction({
@@ -276,6 +286,7 @@ class EventRepository implements IEventRepository {
     }
   }
 
+  @override
   List<Event> getLocalEvents() {
     return List<Event>.from(_cachedEvents)..sort((a, b) {
       final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -284,6 +295,7 @@ class EventRepository implements IEventRepository {
     });
   }
 
+  @override
   Event? getEventById(int id) {
     if (_box == null) return null;
     final eventHive = _box!.get(id);
@@ -512,12 +524,14 @@ class EventRepository implements IEventRepository {
   }
 
   /// Fetch detailed event information by ID
+  @override
   Future<Event> fetchEventDetails(int eventId) async {
     final data = await _apiClient.fetchEvent(eventId);
     return Event.fromJson(data);
   }
 
   /// Fetch events for a specific user (used for event series / user's events list)
+  @override
   Future<List<Event>> fetchUserEvents(int userId) async {
     final response = await _apiClient.get('/users/$userId/events');
     final List<dynamic> eventsData = response['data'] ?? response;
@@ -525,6 +539,7 @@ class EventRepository implements IEventRepository {
   }
 
   /// Update personal note for an event
+  @override
   Future<void> updatePersonalNote(int eventId, String? note) async {
     await _apiClient.patch(
       '/api/v1/events/$eventId/interaction',

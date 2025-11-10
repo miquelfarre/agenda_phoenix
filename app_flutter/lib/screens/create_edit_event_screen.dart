@@ -52,8 +52,8 @@ class CreateEditEventScreenState
       getFieldValue<DateTime>('startDate') ??
       _normalizeToFiveMinutes(DateTime.now());
   bool get _isRecurringEvent => getFieldValue<bool>('isRecurring') ?? false;
-  List<RecurrencePattern> get _patterns =>
-      getFieldValue<List<RecurrencePattern>>('patterns') ?? [];
+  List<Map<String, dynamic>> get _patterns =>
+      getFieldValue<List<Map<String, dynamic>>>('patterns') ?? [];
   bool get _isBirthday => getFieldValue<bool>('isBirthday') ?? false;
   int? get _selectedCalendarId => getFieldValue<int?>('calendarId');
 
@@ -103,7 +103,7 @@ class CreateEditEventScreenState
     } else {
       setFieldValue('startDate', _normalizeToFiveMinutes(DateTime.now()));
       setFieldValue('isRecurring', widget.isRecurring);
-      setFieldValue('patterns', <RecurrencePattern>[]);
+      setFieldValue('patterns', <Map<String, dynamic>>[]);
       setFieldValue('isBirthday', false);
       setFieldValue('calendarId', null);
     }
@@ -168,7 +168,7 @@ class CreateEditEventScreenState
       };
 
       if (_isRecurringEvent) {
-        eventData['patterns'] = _patterns.map((p) => p.toJson()).toList();
+        eventData['patterns'] = _patterns;
       }
 
       if (widget.eventToEdit != null) {
@@ -220,7 +220,7 @@ class CreateEditEventScreenState
               setState(() {
                 if (_isRecurringEvent) {
                   setFieldValue('isRecurring', false);
-                  setFieldValue('patterns', <RecurrencePattern>[]);
+                  setFieldValue('patterns', <Map<String, dynamic>>[]);
                 }
                 if (_isBirthday) {
                   setFieldValue('isBirthday', false);
@@ -265,7 +265,7 @@ class CreateEditEventScreenState
                     setFieldValue('calendarId', null);
                   }
                 } else {
-                  setFieldValue('patterns', <RecurrencePattern>[]);
+                  setFieldValue('patterns', <Map<String, dynamic>>[]);
                 }
               });
             },
@@ -299,7 +299,7 @@ class CreateEditEventScreenState
                 if (willBeBirthday) {
                   if (_isRecurringEvent) {
                     setFieldValue('isRecurring', false);
-                    setFieldValue('patterns', <RecurrencePattern>[]);
+                    setFieldValue('patterns', <Map<String, dynamic>>[]);
                   }
 
                   final dateOnly = DateTime(
@@ -695,7 +695,7 @@ class CreateEditEventScreenState
                   ),
                   CupertinoButton(
                     key: Key(
-                      'remove_pattern_${pattern.dayOfWeek}_${pattern.time}',
+                      'remove_pattern_${pattern['dayOfWeek']}_${pattern['time']}',
                     ),
                     padding: EdgeInsets.zero,
                     onPressed: () {
@@ -730,7 +730,7 @@ class CreateEditEventScreenState
   }
 
   void _removePattern(int index) {
-    final currentPatterns = List<RecurrencePattern>.from(_patterns);
+    final currentPatterns = List<Map<String, dynamic>>.from(_patterns);
     currentPatterns.removeAt(index);
     setFieldValue('patterns', currentPatterns);
   }
@@ -785,14 +785,14 @@ class CreateEditEventScreenState
                             final timeString =
                                 "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00";
 
-                            final newPattern = RecurrencePattern(
-                              eventId: widget.eventToEdit?.id ?? -1,
-                              dayOfWeek: selectedDay,
-                              time: timeString,
-                            );
+                            final newPattern = {
+                              'eventId': widget.eventToEdit?.id ?? -1,
+                              'dayOfWeek': selectedDay,
+                              'time': timeString,
+                            };
 
                             final currentPatterns =
-                                List<RecurrencePattern>.from(_patterns);
+                                List<Map<String, dynamic>>.from(_patterns);
                             currentPatterns.add(newPattern);
                             setFieldValue('patterns', currentPatterns);
 
@@ -865,7 +865,7 @@ class CreateEditEventScreenState
     );
   }
 
-  String _formatPatternDisplay(RecurrencePattern pattern) {
+  String _formatPatternDisplay(Map<String, dynamic> pattern) {
     final l10n = context.l10n;
     final dayNames = [
       l10n.monday,
@@ -877,10 +877,14 @@ class CreateEditEventScreenState
       l10n.sunday,
     ];
 
-    final dayName = pattern.isValidDayOfWeek
-        ? dayNames[pattern.dayOfWeek]
+    final dayOfWeek = pattern['dayOfWeek'] as int? ?? 0;
+    final time = pattern['time'] as String? ?? '00:00:00';
+    final isValidDayOfWeek = dayOfWeek >= 0 && dayOfWeek < 7;
+
+    final dayName = isValidDayOfWeek
+        ? dayNames[dayOfWeek]
         : l10n.unknownError;
-    return '$dayName @ ${pattern.time}';
+    return '$dayName @ $time';
   }
 
   Widget _buildCalendarSection() {

@@ -152,6 +152,7 @@ class SubscriptionRepository implements ISubscriptionRepository {
     _emitCurrentSubscriptions();
   }
 
+  @override
   Future<void> createSubscription({required int targetUserId}) async {
     try {
       await _apiClient.subscribeToUser(
@@ -164,6 +165,7 @@ class SubscriptionRepository implements ISubscriptionRepository {
     }
   }
 
+  @override
   Future<void> deleteSubscription({required int targetUserId}) async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
@@ -177,6 +179,7 @@ class SubscriptionRepository implements ISubscriptionRepository {
     }
   }
 
+  @override
   Future<List<models.User>> searchPublicUsers({required String query}) async {
     try {
       final usersData = await _apiClient.fetchUsers(isPublic: true);
@@ -260,12 +263,14 @@ class SubscriptionRepository implements ISubscriptionRepository {
   }
 
   /// Fetch events from a specific user
+  @override
   Future<List<Event>> fetchUserEvents(int userId) async {
     final eventsData = await _apiClient.fetchUserEvents(userId);
     return eventsData.map((data) => Event.fromJson(data)).toList();
   }
 
   /// Subscribe to a user
+  @override
   Future<void> subscribeToUser(int userId) async {
     await _apiClient.post('/users/$userId/subscribe');
     // Refresh subscriptions after subscribing
@@ -273,6 +278,7 @@ class SubscriptionRepository implements ISubscriptionRepository {
   }
 
   /// Unsubscribe from a user
+  @override
   Future<void> unsubscribeFromUser(int userId) async {
     await _apiClient.delete('/users/$userId/subscribe');
     // Refresh subscriptions after unsubscribing

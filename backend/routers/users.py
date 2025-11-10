@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from auth import get_current_user_id, get_current_user_id_optional
 from crud import calendar_membership, contact, event, event_interaction, recurring_config, user, user_block
 from crud.crud_calendar_subscription import calendar_subscription
-from dependencies import check_user_not_banned, get_db
+from dependencies import get_db
 import models
 from models import EventInteraction
 from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserPublicStats, UserResponse, UserSubscriptionResponse
@@ -266,9 +266,6 @@ async def get_user_events(
     db_user = user.get(db, id=user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    # Check if user is banned
-    check_user_not_banned(user_id, db)
 
     # Apply predefined filters
     now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)

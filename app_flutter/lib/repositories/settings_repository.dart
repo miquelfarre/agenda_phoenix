@@ -18,12 +18,14 @@ class SettingsRepository
   @override
   String get serviceName => 'SettingsRepository';
 
+  @override
   Future<void> initialize() async {}
 
   static const String _defaultCountryCodeKey = 'default_country_code';
   static const String _defaultTimezoneKey = 'default_timezone';
   static const String _defaultCityKey = 'default_city';
 
+  @override
   Future<AppSettings> loadSettings() async {
     return await withErrorHandling('loadSettings', () async {
       final localSettings = await _loadLocalSettings();
@@ -34,6 +36,7 @@ class SettingsRepository
     });
   }
 
+  @override
   Future<void> saveSettings(AppSettings settings) async {
     await withErrorHandling('saveSettings', () async {
       await _saveLocalSettings(settings);
@@ -42,6 +45,7 @@ class SettingsRepository
     });
   }
 
+  @override
   Future<AppSettings> createSettingsFromCity(String cityName) async {
     try {
       final cityInfo = await CityService.getCityInfo(cityName);
@@ -62,6 +66,7 @@ class SettingsRepository
     return AppSettings.withDefaults();
   }
 
+  @override
   Future<AppSettings> validateAndFixSettings(AppSettings settings) async {
     try {
       if (settings.defaultCity.isEmpty ||
@@ -146,6 +151,7 @@ class SettingsRepository
     }();
   }
 
+  @override
   Future<void> saveTimezoneToBackend({
     required String countryCode,
     required String timezone,
@@ -167,6 +173,7 @@ class SettingsRepository
     }
   }
 
+  @override
   Future<void> clearLocalData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -184,5 +191,6 @@ class SettingsRepository
     }
   }
 
+  @override
   void dispose() {}
 }

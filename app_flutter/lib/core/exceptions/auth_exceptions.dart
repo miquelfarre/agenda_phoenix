@@ -1,5 +1,3 @@
-library;
-
 class AuthenticationException implements Exception {
   final String message;
   final String? code;

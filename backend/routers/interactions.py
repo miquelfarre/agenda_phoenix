@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from auth import get_current_user_id
 from crud import event, event_interaction, user
-from dependencies import check_user_not_banned, check_user_not_public, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade, is_event_owner_or_admin
+from dependencies import check_user_not_public, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade, is_event_owner_or_admin
 from models import EventInteraction
 from schemas import EventInteractionBase, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventInteractionWithEventResponse
 
@@ -60,12 +60,8 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
     if interaction.interaction_type == "invited" and db_user.is_public:
         raise HTTPException(status_code=403, detail="Public users cannot be invited to events. Only private users can receive invitations.")
 
-    # Check if user is banned
-    check_user_not_banned(interaction.user_id, db)
-
     # Check if the user inviting is banned (if applicable)
     if interaction.invited_by_user_id:
-        check_user_not_banned(interaction.invited_by_user_id, db)
         # Check if there's a block between inviter and invitee
         check_users_not_blocked(interaction.invited_by_user_id, interaction.user_id, db)
 

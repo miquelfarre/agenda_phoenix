@@ -1,13 +1,13 @@
-/// UserContact model - Represents a contact from the user's device
-///
-/// Each user has their own contact list (from their phone).
-/// When a contact registers in the app, the relation is created with registered_user_id.
-///
-/// Example:
-/// - Sonia has Juan (+34666) in her phone → UserContact(owner_id=sonia.id, phone_number="+34666", contact_name="Juan")
-/// - Juan registers → UserContact.registered_user_id is updated to juan.id
-/// - Miquel also has Juan → UserContact(owner_id=miquel.id, phone_number="+34666", contact_name="Juanito")
-/// - Both point to the same registered_user_id
+// UserContact model - Represents a contact from the user's device
+//
+// Each user has their own contact list (from their phone).
+// When a contact registers in the app, the relation is created with registered_user_id.
+//
+// Example:
+// - Sonia has Juan (+34666) in her phone → UserContact(owner_id=sonia.id, phone_number="+34666", contact_name="Juan")
+// - Juan registers → UserContact.registered_user_id is updated to juan.id
+// - Miquel also has Juan → UserContact(owner_id=miquel.id, phone_number="+34666", contact_name="Juanito")
+// - Both point to the same registered_user_id
 
 class UserContact {
   final int id;

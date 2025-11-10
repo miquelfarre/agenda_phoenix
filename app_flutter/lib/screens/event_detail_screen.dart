@@ -1053,7 +1053,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         _buildInfoRow(
           l10n.recurrencePatterns,
           _formatRecurrencePatterns(
-            event.recurrencePatterns.whereType<RecurrencePattern>().toList(),
+            event.recurrencePatterns.whereType<Map<String, dynamic>>().toList(),
             locale,
           ),
         ),
@@ -1062,7 +1062,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   String _formatRecurrencePatterns(
-    List<RecurrencePattern> patterns,
+    List<Map<String, dynamic>> patterns,
     String locale,
   ) {
     final l10n = context.l10n;
@@ -1082,8 +1082,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     String? commonTime;
 
     for (final pattern in patterns) {
-      final dayIndex = pattern.dayOfWeek;
-      final time = pattern.time;
+      final dayIndex = pattern['dayOfWeek'] as int? ?? 0;
+      final time = pattern['time'] as String? ?? '00:00:00';
 
       if (dayIndex >= 0 && dayIndex < dayNames.length) {
         final name = dayNames[dayIndex];

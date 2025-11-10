@@ -127,6 +127,7 @@ class UserBlockingRepository implements IUserBlockingRepository {
     }
   }
 
+  @override
   Future<void> blockUser(int userId) async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
@@ -140,6 +141,7 @@ class UserBlockingRepository implements IUserBlockingRepository {
     }
   }
 
+  @override
   Future<void> unblockUser(int userId) async {
     try {
       final currentUserId = ConfigService.instance.currentUserId;
