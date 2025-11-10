@@ -95,10 +95,10 @@ class GroupHive extends HiveObject {
   static GroupHive fromGroup(Group group) {
     final memberIds = group.members.map((member) => member.id).toList();
     final memberNames = group.members
-        .map((member) => member.instagramName)
+        .map((member) => member.instagramUsername)
         .toList();
     final memberContactNames = group.members
-        .map((member) => member.contactName)
+        .map((member) => member.displayName)
         .toList();
     final memberIsPublic = group.members.map((member) => false).toList();
 
@@ -246,10 +246,10 @@ class GroupHive extends HiveObject {
       members.add(
         User(
           id: memberIds[i],
-          instagramName: i < memberNames.length ? (memberNames[i] ?? '') : '',
-          contactName: i < memberContactNames.length
-              ? (memberContactNames[i] ?? '')
-              : '',
+          displayName: i < memberContactNames.length
+              ? (memberContactNames[i] ?? 'Usuario ${memberIds[i]}')
+              : 'Usuario ${memberIds[i]}',
+          instagramUsername: i < memberNames.length ? memberNames[i] : null,
           isPublic: i < memberIsPublic.length
               ? (memberIsPublic[i] ?? false)
               : false,
@@ -265,12 +265,12 @@ class GroupHive extends HiveObject {
           admins.add(
             User(
               id: adminId,
-              instagramName: adminIndex < memberNames.length
-                  ? (memberNames[adminIndex] ?? '')
-                  : '',
-              contactName: adminIndex < memberContactNames.length
-                  ? (memberContactNames[adminIndex] ?? '')
-                  : '',
+              displayName: adminIndex < memberContactNames.length
+                  ? (memberContactNames[adminIndex] ?? 'Usuario $adminId')
+                  : 'Usuario $adminId',
+              instagramUsername: adminIndex < memberNames.length
+                  ? memberNames[adminIndex]
+                  : null,
               isPublic: adminIndex < memberIsPublic.length
                   ? (memberIsPublic[adminIndex] ?? false)
                   : false,
@@ -280,8 +280,7 @@ class GroupHive extends HiveObject {
           admins.add(
             User(
               id: adminId,
-              instagramName: '',
-              contactName: '',
+              displayName: 'Usuario $adminId',
               isPublic: false,
             ),
           );

@@ -110,7 +110,7 @@ class EventCard extends ConsumerWidget {
 
   Widget _buildBirthdayAvatar(BuildContext context) {
     final owner = event.owner;
-    final profilePicture = owner?.profilePicture;
+    final profilePicture = owner?.profilePictureUrl;
 
     return Container(
       width: 65,

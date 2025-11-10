@@ -8,7 +8,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models import Contact, Event, EventInteraction, RecurringEventConfig, User
+from models import Event, EventInteraction, RecurringEventConfig, User
 from schemas import EventInteractionCreate, EventInteractionUpdate
 
 
@@ -87,7 +87,7 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
         """
         return db.query(EventInteraction.id).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == user_id).first() is not None
 
-    def get_enriched_by_event(self, db: Session, event_id: int) -> List[tuple[EventInteraction, User, Optional[Contact]]]:
+    def get_enriched_by_event(self, db: Session, event_id: int) -> List[tuple[EventInteraction, User]]:
         """
         Get event interactions with user information (enriched).
 
@@ -98,9 +98,9 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
             event_id: Event ID
 
         Returns:
-            List of (EventInteraction, User, Contact) tuples
+            List of (EventInteraction, User) tuples
         """
-        return db.query(EventInteraction, User, Contact).outerjoin(User, EventInteraction.user_id == User.id).outerjoin(Contact, User.contact_id == Contact.id).filter(EventInteraction.event_id == event_id).all()
+        return db.query(EventInteraction, User).outerjoin(User, EventInteraction.user_id == User.id).filter(EventInteraction.event_id == event_id).all()
 
     def get_enriched_by_user(self, db: Session, user_id: int, *, interaction_type: Optional[str] = None, status: Optional[str] = None) -> List[tuple[EventInteraction, Event]]:
         """

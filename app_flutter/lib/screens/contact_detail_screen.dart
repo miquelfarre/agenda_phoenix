@@ -234,10 +234,10 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    if (widget.contact.instagramName?.isNotEmpty == true) ...[
+                    if (widget.contact.instagramUsername?.isNotEmpty == true) ...[
                       const SizedBox(height: 4),
                       Text(
-                        '@${widget.contact.instagramName}',
+                        '@${widget.contact.instagramUsername}',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppStyles.grey600,

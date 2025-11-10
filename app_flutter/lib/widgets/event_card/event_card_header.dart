@@ -35,7 +35,7 @@ class EventCardHeader extends ConsumerWidget {
     final hasOwner =
         config.showOwner &&
         event.owner?.isPublic == true &&
-        event.owner?.contactName != null;
+        event.ownerName != null;
 
     if (hasOwner) {
       widgets.add(_buildOwnerInfo(ref));
@@ -58,7 +58,7 @@ class EventCardHeader extends ConsumerWidget {
         orElse: () => null,
       );
       final inviterName = inviter != null
-          ? (inviter['full_name'] ?? inviter['name'])
+          ? (inviter['display_name'] ?? inviter['full_name'] ?? inviter['name'])
           : null;
       if (inviterName != null) {
         inviterText = ' • $inviterName';
@@ -100,7 +100,7 @@ class EventCardHeader extends ConsumerWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              event.owner!.contactName!,
+              event.ownerName ?? 'Usuario',
               style: AppStyles.cardSubtitle.copyWith(
                 color: AppStyles.blue600,
                 fontSize: 13,
@@ -140,7 +140,7 @@ class EventCardHeader extends ConsumerWidget {
       );
     }
 
-    String? url = owner.profilePicture;
+    String? url = owner.profilePictureUrl;
     if (url != null && url.isNotEmpty) {
       if (url.contains('placehold.co') && !url.contains('.png')) {
         final uri = Uri.parse(url);
@@ -156,8 +156,8 @@ class EventCardHeader extends ConsumerWidget {
             imageUrl: url,
             fit: BoxFit.cover,
             errorWidget: (context, failedUrl, error) {
-              final name = owner.contactName;
-              if (name != null && name.isNotEmpty) {
+              final name = owner.displayName;
+              if (name.isNotEmpty) {
                 return _buildSmallInitials(name);
               }
               return const SizedBox.shrink();
@@ -167,8 +167,8 @@ class EventCardHeader extends ConsumerWidget {
       );
     }
 
-    final name = owner.contactName;
-    if (name != null && name.isNotEmpty) {
+    final name = owner.displayName;
+    if (name.isNotEmpty) {
       return _buildSmallInitials(name);
     }
 
@@ -228,8 +228,8 @@ class EventCardAttendeesRow extends ConsumerWidget {
       if (a is User) {
         attendeeData.add({
           'id': a.id,
-          'full_name': a.contactName,
-          'profile_picture': a.profilePicture,
+          'display_name': a.displayName,
+          'profile_picture_url': a.profilePictureUrl,
         });
       } else if (a is Map<String, dynamic>) {
         attendeeData.add(a);
@@ -263,7 +263,7 @@ class EventCardAttendeesRow extends ConsumerWidget {
               runSpacing: 4,
               children: otherAttendees.take(6).map((a) {
                 final name =
-                    (a['full_name'] as String?) ?? (a['name'] as String?) ?? '';
+                    (a['display_name'] as String?) ?? (a['full_name'] as String?) ?? (a['name'] as String?) ?? '';
                 final initials = name.trim().isNotEmpty
                     ? name.trim().split(RegExp(r"\s+")).first[0].toUpperCase()
                     : '?';

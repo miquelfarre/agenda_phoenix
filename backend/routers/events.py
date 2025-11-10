@@ -67,19 +67,14 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
         raise HTTPException(status_code=404, detail="Event owner not found")
 
     # Get owner contact for full name
-    from crud import contact as contact_crud
-
-    owner_contact = None
-    if owner.contact_id:
-        owner_contact = contact_crud.get(db, id=owner.contact_id)
-
-    # Determine owner name: use contact name if available, otherwise instagram_name (for Instagram users)
-    owner_name = owner_contact.name if owner_contact else owner.instagram_name
+    # Use new fields with fallback to legacy
+    owner_name = owner.display_name or owner.name or f"Usuario #{owner.id}"
+    owner_profile_picture_url = owner.profile_picture_url or owner.profile_picture
 
     import logging
 
     logger = logging.getLogger(__name__)
-    logger.info(f"[GET /events/{event_id}] OWNER INFO: user_id={owner.id}, is_public={owner.is_public}, " f"has_contact={owner_contact is not None}, owner_name={owner_name}, instagram_name={owner.instagram_name}")
+    logger.info(f"[GET /events/{event_id}] OWNER INFO: user_id={owner.id}, is_public={owner.is_public}, owner_name={owner_name}")
 
     # Build response dict from event
     response_data = {
@@ -94,7 +89,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
         "created_at": db_event.created_at,
         "updated_at": db_event.updated_at,
         "owner_name": owner_name,
-        "owner_profile_picture": owner.profile_picture,
+        "owner_profile_picture": owner_profile_picture_url,
         "is_owner_public": owner.is_public,
     }
 
@@ -172,25 +167,25 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
             interactions_data = []
             interactions_enriched = event_interaction.get_enriched_by_event(db, event_id=event_id)
 
-            for interaction, interaction_user, contact in interactions_enriched:
+            for interaction, interaction_user in interactions_enriched:
                 if not interaction_user:
                     continue
 
-                # Get user display name from contact or instagram_name
-                user_name = contact.name if contact else interaction_user.instagram_name or f"User {interaction_user.id}"
-                user_phone = contact.phone if contact else None
+                # Use new fields with fallback to legacy
+                user_display_name = interaction_user.display_name or interaction_user.name or f"Usuario #{interaction_user.id}"
+                user_instagram_username = interaction_user.instagram_username or interaction_user.instagram_name
+                user_profile_picture_url = interaction_user.profile_picture_url or interaction_user.profile_picture
+                user_phone = interaction_user.phone
 
                 # Get inviter if exists
                 inviter = None
-                inviter_contact = None
-                inviter_name = None
+                inviter_display_name = None
+                inviter_instagram_username = None
                 if interaction.invited_by_user_id:
                     inviter = user.get(db, id=interaction.invited_by_user_id)
-                    if inviter and inviter.contact_id:
-                        from crud import contact as contact_crud
-
-                        inviter_contact = contact_crud.get(db, id=inviter.contact_id)
-                    inviter_name = inviter_contact.name if inviter_contact else (inviter.instagram_name if inviter else None)
+                    if inviter:
+                        inviter_display_name = inviter.display_name or inviter.name or f"Usuario #{inviter.id}"
+                        inviter_instagram_username = inviter.instagram_username or inviter.instagram_name
 
                 interactions_data.append(
                     {
@@ -207,16 +202,27 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "updated_at": interaction.updated_at.isoformat(),
                         "user": {
                             "id": interaction_user.id,
-                            "contact_name": user_name,
-                            "instagram_name": interaction_user.instagram_name,
+                            # New fields
+                            "display_name": user_display_name,
+                            "instagram_username": user_instagram_username,
+                            "profile_picture_url": user_profile_picture_url,
+                            # Legacy fields for backward compatibility
+                            "name": user_display_name,
+                            "contact_name": user_display_name,
+                            "instagram_name": user_instagram_username,
                             "phone_number": user_phone,
-                            "profile_picture": interaction_user.profile_picture,
+                            "profile_picture": user_profile_picture_url,
                         },
                         "inviter": (
                             {
                                 "id": inviter.id,
-                                "contact_name": inviter_name,
-                                "instagram_name": inviter.instagram_name,
+                                # New fields
+                                "display_name": inviter_display_name,
+                                "instagram_username": inviter_instagram_username,
+                                # Legacy fields
+                                "name": inviter_display_name,
+                                "contact_name": inviter_display_name,
+                                "instagram_name": inviter_instagram_username,
                             }
                             if inviter
                             else None
@@ -244,15 +250,13 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
 
             if user_interaction:
                 inviter = None
-                inviter_contact = None
-                inviter_name = None
+                inviter_display_name = None
+                inviter_instagram_username = None
                 if user_interaction.invited_by_user_id:
                     inviter = user.get(db, id=user_interaction.invited_by_user_id)
-                    if inviter and inviter.contact_id:
-                        from crud import contact as contact_crud
-
-                        inviter_contact = contact_crud.get(db, id=inviter.contact_id)
-                    inviter_name = inviter_contact.name if inviter_contact else (inviter.instagram_name if inviter else None)
+                    if inviter:
+                        inviter_display_name = inviter.display_name or inviter.name or f"Usuario #{inviter.id}"
+                        inviter_instagram_username = inviter.instagram_username or inviter.instagram_name
 
                 response_data["interactions"] = [
                     {
@@ -269,8 +273,13 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "inviter": (
                             {
                                 "id": inviter.id,
-                                "contact_name": inviter_name,
-                                "instagram_name": inviter.instagram_name,
+                                # New fields
+                                "display_name": inviter_display_name,
+                                "instagram_username": inviter_instagram_username,
+                                # Legacy fields
+                                "name": inviter_display_name,
+                                "contact_name": inviter_display_name,
+                                "instagram_name": inviter_instagram_username,
                             }
                             if inviter
                             else None
@@ -292,31 +301,26 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
         )
 
         attendees = []
-        print(f"🔍 DEBUG BACKEND: Building attendees list from {len(accepted_interactions)} accepted interactions")
         for interaction in accepted_interactions:
             user_obj = user.get(db, id=interaction.user_id)
-            print(f"🔍 DEBUG BACKEND: Processing interaction for user_id={interaction.user_id}, user_obj found={user_obj is not None}")
             if user_obj:
-                # Get user name from contact or instagram_name
-                user_contact = None
-                user_name = user_obj.instagram_name or f"User {user_obj.id}"
-                print(f"🔍 DEBUG BACKEND: user_obj.instagram_name={user_obj.instagram_name}, user_obj.contact_id={user_obj.contact_id}")
-                if user_obj.contact_id:
-                    from crud import contact as contact_crud
+                # Use new fields with fallback to legacy
+                display_name = user_obj.display_name or user_obj.name or f"Usuario #{user_obj.id}"
+                instagram_username = user_obj.instagram_username or user_obj.instagram_name
+                profile_picture_url = user_obj.profile_picture_url or user_obj.profile_picture
 
-                    user_contact = contact_crud.get(db, id=user_obj.contact_id)
-                    print(f"🔍 DEBUG BACKEND: contact found={user_contact is not None}")
-                    if user_contact:
-                        print(f"🔍 DEBUG BACKEND: contact.name={user_contact.name}")
-                    user_name = user_contact.name if user_contact else user_name
-
-                print(f"🔍 DEBUG BACKEND: Final user_name={user_name}, profile_picture={user_obj.profile_picture}")
                 attendees.append(
                     {
                         "id": user_obj.id,
-                        "contact_name": user_name,
-                        "instagram_name": user_obj.instagram_name,
-                        "profile_picture": user_obj.profile_picture,
+                        # New fields
+                        "display_name": display_name,
+                        "instagram_username": instagram_username,
+                        "profile_picture_url": profile_picture_url,
+                        "phone": user_obj.phone,
+                        # Legacy fields for backward compatibility
+                        "name": display_name,
+                        "instagram_name": instagram_username,
+                        "profile_picture": profile_picture_url,
                     }
                 )
 
@@ -345,22 +349,13 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
 
     # Build enriched responses
     enriched = []
-    for interaction, user, contact in results:
+    for interaction, user in results:
         if not user:
             continue
 
-        # Build display name
-        instagram_name = user.instagram_name
-        contact_name = contact.name if contact else None
-
-        if instagram_name and contact_name:
-            display_name = f"{instagram_name} ({contact_name})"
-        elif instagram_name:
-            display_name = instagram_name
-        elif contact_name:
-            display_name = contact_name
-        else:
-            display_name = f"Usuario #{user.id}"
+        # Use new fields with fallback to legacy
+        display_name = user.display_name or user.name or f"Usuario #{user.id}"
+        instagram_username = user.instagram_username or user.instagram_name
 
         enriched.append(
             {
@@ -368,8 +363,8 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
                 "event_id": interaction.event_id,
                 "user_id": interaction.user_id,
                 "user_name": display_name,
-                "user_instagram_name": instagram_name,
-                "user_contact_name": contact_name,
+                "user_instagram_name": instagram_username,
+                "user_contact_name": display_name,
                 "interaction_type": interaction.interaction_type,
                 "status": interaction.status,
                 "role": interaction.role,
@@ -399,7 +394,7 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
 
     # Build available invitees list
     available = []
-    for user_obj, contact in results:
+    for user_obj in results:
         instagram_name = user_obj.instagram_name
         contact_name = contact.name if contact else None
 

@@ -26,7 +26,6 @@ import base64
 from supabase import create_client, Client
 
 from database import Base, SessionLocal, engine
-from models import Calendar, CalendarMembership, Contact, Event, EventBan, EventCancellation, EventCancellationView, EventInteraction, RecurringEventConfig, User, UserBlock, UserContact
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -97,19 +97,14 @@ class UserBase(BaseModel):
     is_public: bool = False
     is_admin: bool = False
 
-    # Legacy fields (DEPRECATED)
-    name: Optional[str] = None
-    instagram_name: Optional[str] = None
-    profile_picture: Optional[str] = None
 
 
 class UserCreate(UserBase):
-    contact_id: Optional[int] = None  # Legacy field
+    pass
 
 
 class UserResponse(UserBase):
     id: int
-    contact_id: Optional[int]  # Legacy field
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
@@ -121,9 +116,6 @@ class UserEnrichedResponse(UserBase):
     """User response with enriched contact information"""
 
     id: int
-    contact_id: Optional[int]
-    contact_name: Optional[str]  # From Contact table
-    contact_phone: Optional[str]  # From Contact table
     display_name: str  # Computed display name
     last_login: Optional[datetime]
     created_at: datetime
@@ -136,7 +128,6 @@ class UserSubscriptionResponse(UserBase):
     """User response with subscription statistics"""
 
     id: int
-    contact_id: Optional[int]
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
@@ -161,7 +152,7 @@ class UserPublicStats(BaseModel):
     """Statistics for a public user"""
 
     user_id: int
-    instagram_name: Optional[str]
+    instagram_username: Optional[str]
     total_subscribers: int  # Total number of subscribers
     total_events: int  # Total number of events created
     events_stats: List[EventStats]  # Stats for each event
@@ -296,9 +287,8 @@ class EventInteractionEnrichedResponse(EventInteractionBase):
     id: int
     event_id: int
     user_id: int
-    user_name: str  # Display name (name or contact name)
-    user_instagram_name: Optional[str]
-    user_contact_name: Optional[str]
+    user_name: str  # Display name
+    user_instagram_username: Optional[str]
     invited_by_user_id: Optional[int]
     invited_via_group_id: Optional[int]
     read_at: Optional[datetime]
@@ -311,8 +301,7 @@ class AvailableInviteeResponse(BaseModel):
     """User available to be invited to an event"""
 
     id: int
-    instagram_name: Optional[str]
-    contact_name: Optional[str]
+    instagram_username: Optional[str]
     display_name: str  # Computed display name
 
 

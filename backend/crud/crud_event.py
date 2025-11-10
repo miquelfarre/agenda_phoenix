@@ -271,9 +271,9 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         - Public users
 
         Returns:
-            List of tuples (User, Contact)
+            List of tuples (User)
         """
-        from models import Contact, EventInteraction, User, UserBlock
+        from models import EventInteraction, User, UserBlock
 
         db_event = self.get(db, id=event_id)
         if not db_event:
@@ -286,7 +286,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         blocked_user_ids_subquery = db.query(UserBlock.blocked_user_id).filter(UserBlock.blocker_user_id == db_event.owner_id).union(db.query(UserBlock.blocker_user_id).filter(UserBlock.blocked_user_id == db_event.owner_id)).scalar_subquery()
 
         # Get all users NOT in the invited list, NOT the owner, NOT blocked, NOT public
-        results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id).filter(User.id != db_event.owner_id, User.is_public == False, ~User.id.in_(invited_user_ids_subquery), ~User.id.in_(blocked_user_ids_subquery)).all()
+        results = db.query(User).filter(User.id != db_event.owner_id, User.is_public == False, ~User.id.in_(invited_user_ids_subquery), ~User.id.in_(blocked_user_ids_subquery)).all()
 
         return results
 

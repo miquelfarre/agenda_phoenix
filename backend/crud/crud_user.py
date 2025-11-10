@@ -7,7 +7,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models import Contact, User
+from models import User
 from schemas import UserBase, UserCreate
 
 
@@ -28,7 +28,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         """
         return db.query(User).filter(User.auth_provider == auth_provider, User.auth_id == auth_id).first()
 
-    def get_with_contact(self, db: Session, user_id: int) -> Optional[tuple[User, Optional[Contact]]]:
+    def get_with_contact(self, db: Session, user_id: int) -> Optional[tuple[User]]:
         """
         Get user with their contact information in a single query.
 
@@ -37,13 +37,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             user_id: User ID
 
         Returns:
-            Tuple of (User, Contact) or None if user not found
+            Tuple of (User) or None if user not found
         """
-        result = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id).filter(User.id == user_id).first()
+        result = db.query(User).filter(User.id == user_id).first()
 
         return result
 
-    def get_multi_with_contacts(self, db: Session, *, skip: int = 0, limit: int = 100, user_ids: Optional[List[int]] = None) -> List[tuple[User, Optional[Contact]]]:
+    def get_multi_with_contacts(self, db: Session, *, skip: int = 0, limit: int = 100, user_ids: Optional[List[int]] = None) -> List[tuple[User]]:
         """
         Get multiple users with their contact information (batch query).
 
@@ -56,9 +56,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             user_ids: Optional list of specific user IDs to fetch
 
         Returns:
-            List of (User, Contact) tuples
+            List of (User) tuples
         """
-        query = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id)
+        query = db.query(User)
 
         if user_ids:
             query = query.filter(User.id.in_(user_ids))

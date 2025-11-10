@@ -95,16 +95,14 @@ class SubscriptionCard extends ConsumerWidget {
 
     // Default avatar with initials
     String initials = '?';
-    if (user.contactName?.isNotEmpty == true) {
-      final nameParts = user.contactName!.trim().split(' ');
+    if (user.displayName.isNotEmpty) {
+      final nameParts = user.displayName.trim().split(' ');
       if (nameParts.length >= 2) {
         initials =
             nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
       } else {
         initials = nameParts[0][0].toUpperCase();
       }
-    } else if (user.instagramName?.isNotEmpty == true) {
-      initials = user.instagramName![0].toUpperCase();
     } else if (user.id > 0) {
       initials = user.id.toString()[0];
     }

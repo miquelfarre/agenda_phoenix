@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from models import Calendar, CalendarMembership, Contact, Event, EventInteraction, Group, GroupMembership, User, UserBlock
+from models import Calendar, CalendarMembership, Event, EventInteraction, Group, GroupMembership, User, UserBlock
 
 
 def get_db():

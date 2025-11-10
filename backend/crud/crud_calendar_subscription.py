@@ -6,7 +6,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from crud.base import CRUDBase
-from models import CalendarSubscription, Calendar, Contact
+from models import CalendarSubscription, Calendar
 from schemas import CalendarSubscriptionBase, CalendarSubscriptionCreate
 
 
@@ -134,7 +134,7 @@ class CRUDCalendarSubscription(CRUDBase[CalendarSubscription, CalendarSubscripti
         from models import User  # Import here to avoid circular dependency
 
         # Build JOIN query to get calendar and owner info
-        query = db.query(CalendarSubscription, Calendar, Contact.name.label("owner_name")).join(Calendar, CalendarSubscription.calendar_id == Calendar.id).join(User, Calendar.owner_id == User.id).outerjoin(Contact, User.contact_id == Contact.id)
+        query = db.query(CalendarSubscription, Calendar.name.label("owner_name")).join(Calendar, CalendarSubscription.calendar_id == Calendar.id).join(User, Calendar.owner_id == User.id)
 
         # Apply filters
         if calendar_id:

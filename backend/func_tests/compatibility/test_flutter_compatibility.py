@@ -10,7 +10,7 @@ This test validates that:
 import pytest
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-from models import User, Event, Calendar, Group, Contact, EventInteraction
+from models import User, Event, Calendar, Group, EventInteraction
 
 
 # Flutter model field definitions extracted from lib/models/*.dart

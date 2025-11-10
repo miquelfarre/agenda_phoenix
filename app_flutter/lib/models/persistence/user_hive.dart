@@ -98,11 +98,11 @@ class UserHive extends HiveObject {
 
   factory UserHive.fromUser(User user) => UserHive(
     id: user.id,
-    instagramName: user.instagramName,
-    name: user.contactName,
+    instagramName: user.instagramUsername,
+    name: user.displayName,
     isPublic: user.isPublic,
     phone: user.phone,
-    profilePicture: user.profilePicture,
+    profilePicture: user.profilePictureUrl,
     isBanned: user.isBanned,
     lastSeen: user.lastSeen,
     isOnline: user.isOnline,
@@ -112,9 +112,8 @@ class UserHive extends HiveObject {
     subscribersCount: user.subscribersCount,
     authProvider: user.authProvider,
     authId: user.authId,
-    contactId: user.contactId,
     isAdmin: user.isAdmin,
-    username: user.contactName,
+    username: user.displayName,
   );
 
   Map<String, dynamic> toUserJson() => {
@@ -137,12 +136,12 @@ class UserHive extends HiveObject {
   User toUser() {
     return User(
       id: id,
+      displayName: name ?? username ?? 'Usuario #$id',
       phone: phone,
-      instagramName: instagramName,
-      contactName: name,
+      instagramUsername: instagramName,
+      profilePictureUrl: profilePicture,
       isPublic: isPublic,
       isActive: true,
-      profilePicture: profilePicture,
       isBanned: isBanned,
       lastSeen: lastSeen,
       isOnline: isOnline,
@@ -155,7 +154,6 @@ class UserHive extends HiveObject {
       subscribersCount: subscribersCount,
       authProvider: authProvider,
       authId: authId,
-      contactId: contactId,
       isAdmin: isAdmin,
     );
   }

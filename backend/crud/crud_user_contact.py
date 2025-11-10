@@ -8,7 +8,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models import UserContact, User
+from models import UserContact
 from schemas import UserContactBase, UserContactCreate
 
 

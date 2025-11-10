@@ -67,41 +67,6 @@ class UserContact(Base):
         }
 
 
-# Legacy Contact model - kept for backward compatibility during migration
-# TODO: Remove after migration is complete
-class Contact(Base):
-    """
-    DEPRECATED: Legacy Contact model. Use UserContact instead.
-    This model is kept temporarily for backward compatibility.
-    """
-
-    __tablename__ = "contacts"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    owner_id = Column(Integer, ForeignKey("users.id", use_alter=True, name="fk_contact_owner"), nullable=True, index=True)
-    name = Column(String(255), nullable=False)
-    phone = Column(String(50), unique=True, nullable=False, index=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
-    # Relationships
-    owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_contacts")
-    user = relationship("User", foreign_keys="User.contact_id", back_populates="contact", uselist=False)
-
-    def __repr__(self):
-        return f"<Contact(id={self.id}, name='{self.name}', phone='{self.phone}')>"
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "owner_id": self.owner_id,
-            "name": self.name,
-            "phone": self.phone,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
-
-
 class User(Base):
     """
     User model - Usuarios que han completado el registro en la app.
@@ -129,26 +94,14 @@ class User(Base):
     is_public = Column(Boolean, nullable=False, default=False, index=True)  # True for instagram users, False for phone users
     is_admin = Column(Boolean, nullable=False, default=False, index=True)  # True for super admins
 
-    # Legacy fields - kept for backward compatibility
-    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=True, unique=True, index=True)  # DEPRECATED
-    name = Column(String(200), nullable=True)  # DEPRECATED - use display_name instead
-    instagram_name = Column(String(100), nullable=True, index=True)  # DEPRECATED - use instagram_username instead
-    profile_picture = Column(String(500), nullable=True)  # DEPRECATED - use profile_picture_url instead
-
     # Metadata
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    # New Relationships
+    # Relationships
     my_contacts = relationship("UserContact", foreign_keys="UserContact.owner_id", back_populates="owner", cascade="all, delete-orphan")
     contact_entries = relationship("UserContact", foreign_keys="UserContact.registered_user_id", back_populates="registered_user")
-
-    # Legacy Relationships - kept for backward compatibility
-    contact = relationship("Contact", foreign_keys=[contact_id], back_populates="user")
-    owned_contacts = relationship("Contact", foreign_keys="Contact.owner_id", back_populates="owner", cascade="all, delete-orphan")
-
-    # Other Relationships
     calendars = relationship("Calendar", back_populates="user", cascade="all, delete-orphan")
     calendar_memberships = relationship("CalendarMembership", foreign_keys="CalendarMembership.user_id", back_populates="user", cascade="all, delete-orphan")
     owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
@@ -172,11 +125,6 @@ class User(Base):
             "auth_id": self.auth_id,
             "is_public": self.is_public,
             "is_admin": self.is_admin,
-            # Legacy fields
-            "contact_id": self.contact_id,
-            "name": self.name,
-            "instagram_name": self.instagram_name,
-            "profile_picture": self.profile_picture,
             # Metadata
             "last_login": self.last_login.isoformat() if self.last_login else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,

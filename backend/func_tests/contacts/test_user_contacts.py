@@ -8,7 +8,6 @@ Tests the new contact system:
 """
 
 import pytest
-from models import User, UserContact
 
 
 class TestContactSync:

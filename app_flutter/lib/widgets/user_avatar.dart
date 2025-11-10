@@ -50,7 +50,7 @@ class UserAvatar extends ConsumerWidget {
   }
 
   Widget _buildAvatar(BuildContext context) {
-    final profilePicture = user.profilePicture;
+    final profilePicture = user.profilePictureUrl;
 
     if (profilePicture == null || profilePicture.isEmpty) {
       return _buildInitialsAvatar(context);

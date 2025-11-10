@@ -187,15 +187,15 @@ class SubscriptionRepository implements ISubscriptionRepository {
           .map((data) => models.User.fromJson(data))
           .where(
             (user) =>
-                (user.contactName?.toLowerCase().contains(
+                (user.displayName?.toLowerCase().contains(
                       query.toLowerCase(),
                     ) ??
                     false) ||
-                (user.instagramName?.toLowerCase().contains(
+                (user.instagramUsername?.toLowerCase().contains(
                       query.toLowerCase(),
                     ) ??
                     false) ||
-                (user.contactName?.toLowerCase().contains(
+                (user.displayName?.toLowerCase().contains(
                       query.toLowerCase(),
                     ) ??
                     false),

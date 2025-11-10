@@ -4,23 +4,23 @@ import '../../services/config_service.dart';
 
 class OwnerStub {
   final int id;
-  final String? contactName;
+  final String displayName;
   final bool isPublic;
-  final String? profilePicture;
+  final String? profilePictureUrl;
 
   OwnerStub({
     required this.id,
-    this.contactName,
+    required this.displayName,
     this.isPublic = false,
-    this.profilePicture,
+    this.profilePictureUrl,
   });
 
   User toUser() {
     return User(
       id: id,
-      contactName: contactName ?? 'Unknown',
+      displayName: displayName,
       isPublic: isPublic,
-      profilePicture: profilePicture,
+      profilePictureUrl: profilePictureUrl,
     );
   }
 }
@@ -83,9 +83,9 @@ class Event {
 
   OwnerStub? get owner => OwnerStub(
     id: ownerId,
-    contactName: ownerName,
+    displayName: ownerName ?? 'Usuario',
     isPublic: isOwnerPublic ?? false,
-    profilePicture: ownerProfilePicture,
+    profilePictureUrl: ownerProfilePicture,
   );
 
   List<dynamic> get attendees => attendeesList ?? [];

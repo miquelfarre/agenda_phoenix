@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from auth import get_current_user_id, get_current_user_id_optional
-from crud import calendar_membership, contact, event, event_interaction, recurring_config, user, user_block
+from crud import calendar_membership, event, event_interaction, recurring_config, user, user_block
 from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import get_db
 import models
@@ -416,9 +416,20 @@ async def get_user_events(
 
             # Use new fields with fallback to legacy
             display_name = user_obj.display_name or user_obj.name or f"Usuario #{user_obj.id}"
-            profile_picture = user_obj.profile_picture_url or user_obj.profile_picture
+            instagram_username = user_obj.instagram_username or user_obj.instagram_name
+            profile_picture_url = user_obj.profile_picture_url or user_obj.profile_picture
 
-            attendees_map[event_id].append({"id": user_obj.id, "contact_name": display_name, "instagram_name": user_obj.instagram_username or user_obj.instagram_name, "profile_picture": profile_picture})  # Use display_name instead of contact.name
+            attendees_map[event_id].append({
+                "id": user_obj.id,
+                # New fields
+                "display_name": display_name,
+                "instagram_username": instagram_username,
+                "profile_picture_url": profile_picture_url,
+                # Legacy fields for backward compatibility
+                "name": display_name,
+                "instagram_name": instagram_username,
+                "profile_picture": profile_picture_url,
+            })
 
     # ============================================================
     # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)

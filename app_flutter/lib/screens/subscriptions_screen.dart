@@ -133,9 +133,9 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             child: SearchableList<User>(
               items: users,
               filterFunction: (user, query) {
-                return (user.contactName?.toLowerCase().contains(query) ??
+                return (user.displayName?.toLowerCase().contains(query) ??
                         false) ||
-                    (user.instagramName?.toLowerCase().contains(query) ??
+                    (user.instagramUsername?.toLowerCase().contains(query) ??
                         false);
               },
               listBuilder: (context, filteredUsers) {
@@ -183,7 +183,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
       await ref
           .read(subscriptionRepositoryProvider)
           .deleteSubscription(targetUserId: user.id);
-      final userName = user.contactName ?? user.instagramName ?? 'Usuario';
+      final userName = user.displayName ?? user.instagramUsername ?? 'Usuario';
       _showSuccessMessage(l10n.unsubscribedFrom(userName));
     } catch (e) {
       // ignore: use_build_context_synchronously

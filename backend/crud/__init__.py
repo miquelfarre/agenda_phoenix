@@ -16,7 +16,6 @@ Usage example:
 """
 
 from crud.crud_calendar import calendar, calendar_membership
-from crud.crud_contact import contact
 from crud.crud_event import event
 from crud.crud_event_ban import event_ban
 from crud.crud_event_cancellation import event_cancellation
@@ -33,7 +32,6 @@ __all__ = [
     "event",
     "calendar",
     "calendar_membership",
-    "contact",
     "user_contact",
     "event_interaction",
     "user_block",

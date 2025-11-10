@@ -75,7 +75,7 @@ class UserBlockingRepository implements IUserBlockingRepository {
       _cachedBlockedUsers = blockedUserIds
           .map(
             (id) =>
-                User(id: id, isPublic: false, contactName: 'Blocked User $id'),
+                User(id: id, isPublic: false, displayName: 'Blocked User $id'),
           )
           .toList();
     } catch (e) {
@@ -95,7 +95,7 @@ class UserBlockingRepository implements IUserBlockingRepository {
             (block) => User(
               id: block['blocked_user_id'] as int,
               isPublic: false,
-              contactName: 'Blocked User ${block['blocked_user_id']}',
+              displayName: 'Blocked User ${block['blocked_user_id']}',
             ),
           )
           .toList();

@@ -7,27 +7,38 @@ Flutter event detail screen functionality.
 
 import pytest
 from datetime import datetime, timedelta
-from crud import user as user_crud, event as event_crud, event_interaction as interaction_crud, contact as contact_crud
-from schemas import UserCreate, EventCreate, EventInteractionCreate, ContactCreate
+from crud import user as user_crud, event as event_crud, event_interaction as interaction_crud
+from schemas import UserCreate, EventCreate, EventInteractionCreate
 
 
 @pytest.fixture
 def test_users(test_db):
-    """Create test users with contacts"""
-    # Create contacts first
-    contact1_data = ContactCreate(name="Owner User", phone="+1234567890", owner_id=None)
-    contact2_data = ContactCreate(name="Invitee One", phone="+1234567891", owner_id=None)
-    contact3_data = ContactCreate(name="Invitee Two", phone="+1234567892", owner_id=None)
-
-    contact1 = contact_crud.create(test_db, obj_in=contact1_data)
-    contact2 = contact_crud.create(test_db, obj_in=contact2_data)
-    contact3 = contact_crud.create(test_db, obj_in=contact3_data)
-    test_db.commit()
-
-    # Create users with contact references
-    user1_data = UserCreate(display_name="Owner User", instagram_name="owner", auth_provider="test", auth_id="test_owner_123", is_public=False, contact_id=contact1.id)
-    user2_data = UserCreate(display_name="Invitee One", instagram_name="invitee1", auth_provider="test", auth_id="test_invitee1_456", is_public=False, contact_id=contact2.id)
-    user3_data = UserCreate(display_name="Invitee Two", instagram_name="invitee2", auth_provider="test", auth_id="test_invitee2_789", is_public=False, contact_id=contact3.id)
+    """Create test users with new fields (no legacy Contact)"""
+    # Create users directly with new fields (display_name, phone, instagram_username)
+    user1_data = UserCreate(
+        display_name="Owner User",
+        phone="+1234567890",
+        instagram_username="owner",
+        auth_provider="test",
+        auth_id="test_owner_123",
+        is_public=False
+    )
+    user2_data = UserCreate(
+        display_name="Invitee One",
+        phone="+1234567891",
+        instagram_username="invitee1",
+        auth_provider="test",
+        auth_id="test_invitee1_456",
+        is_public=False
+    )
+    user3_data = UserCreate(
+        display_name="Invitee Two",
+        phone="+1234567892",
+        instagram_username="invitee2",
+        auth_provider="test",
+        auth_id="test_invitee2_789",
+        is_public=False
+    )
 
     user1 = user_crud.create(test_db, obj_in=user1_data)
     user2 = user_crud.create(test_db, obj_in=user2_data)
@@ -87,13 +98,19 @@ def test_get_event_as_owner_includes_all_interactions(client, test_event_with_in
     # Check user object is complete
     assert "user" in interaction_data
     assert interaction_data["user"]["id"] == invitee1.id
+    assert interaction_data["user"]["display_name"] == "Invitee One"
+    assert interaction_data["user"]["instagram_username"] == "invitee1"
+    assert interaction_data["user"]["phone_number"] == "+1234567891"
+    # Legacy fields should also be present for backward compatibility
     assert interaction_data["user"]["contact_name"] == "Invitee One"
     assert interaction_data["user"]["instagram_name"] == "invitee1"
-    assert interaction_data["user"]["phone_number"] == "+1234567891"
 
     # Check inviter object is complete
     assert "inviter" in interaction_data
     assert interaction_data["inviter"]["id"] == owner.id
+    assert interaction_data["inviter"]["display_name"] == "Owner User"
+    assert interaction_data["inviter"]["instagram_username"] == "owner"
+    # Legacy fields
     assert interaction_data["inviter"]["contact_name"] == "Owner User"
     assert interaction_data["inviter"]["instagram_name"] == "owner"
 
@@ -131,6 +148,9 @@ def test_get_event_as_invitee_includes_only_own_interaction(client, test_event_w
     # Inviter should be present and complete
     assert "inviter" in interaction_data
     assert interaction_data["inviter"]["id"] == owner.id
+    assert interaction_data["inviter"]["display_name"] == "Owner User"
+    assert interaction_data["inviter"]["instagram_username"] == "owner"
+    # Legacy fields
     assert interaction_data["inviter"]["contact_name"] == "Owner User"
     assert interaction_data["inviter"]["instagram_name"] == "owner"
 
@@ -171,7 +191,13 @@ def test_get_event_attendees_populated(client, test_db, test_users):
 
     attendee = data["attendees"][0]
     assert attendee["id"] == invitee1.id
-    assert attendee["contact_name"] == "Invitee One"
+    # New fields
+    assert attendee["display_name"] == "Invitee One"
+    assert attendee["instagram_username"] == "invitee1"
+    assert "profile_picture_url" in attendee
+    assert attendee["phone"] == "+1234567891"
+    # Legacy fields (for backward compatibility)
+    assert attendee["name"] == "Invitee One"
     assert attendee["instagram_name"] == "invitee1"
     assert "profile_picture" in attendee
 
@@ -209,6 +235,9 @@ def test_get_event_inviter_object_complete(client, test_db, test_users):
     assert "inviter" in interaction
     assert interaction["inviter"] is not None
     assert interaction["inviter"]["id"] == owner.id
+    assert interaction["inviter"]["display_name"] == "Owner User"
+    assert interaction["inviter"]["instagram_username"] == "owner"
+    # Legacy fields
     assert interaction["inviter"]["contact_name"] == "Owner User"
     assert interaction["inviter"]["instagram_name"] == "owner"
 

@@ -158,9 +158,6 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     if db_interaction.user_id != current_user_id:
         raise HTTPException(status_code=403, detail="You don't have permission to update this interaction. Only the user themselves can accept/reject invitations.")
 
-    # Check if user is banned
-    check_user_not_banned(db_interaction.user_id, db)
-
     # Get the event to check if it's a recurring event
     db_event = event.get(db, id=db_interaction.event_id)
 

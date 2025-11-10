@@ -6,51 +6,50 @@ import '../persistence/user_hive.dart';
 class User {
   final int id;
 
-  final int? contactId;
-  final String? name;
-  final String? instagramName;
+  // NEW FIELDS - Backend sends these
+  final String displayName;
+  final String? instagramUsername;
+  final String? profilePictureUrl;
+  final String? phone;
+
+  // Core fields
   final String authProvider;
   final String authId;
   final bool isPublic;
   final bool isAdmin;
-  final String? profilePicture;
   final DateTime? lastLogin;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  final String? contactName;
-  final String? contactPhone;
-
-  final String? phone;
-
+  // Status fields
   final bool isActive;
   final bool isBanned;
   final DateTime? lastSeen;
   final bool isOnline;
+
+  // Location fields
   final String defaultTimezone;
   final String defaultCountryCode;
   final String defaultCity;
 
+  // Stats fields
   final int? newEventsCount;
   final int? totalEventsCount;
   final int? subscribersCount;
 
   const User({
     required this.id,
-    this.contactId,
-    this.name,
-    this.instagramName,
+    required this.displayName,
+    this.instagramUsername,
+    this.profilePictureUrl,
+    this.phone,
     this.authProvider = 'phone',
     this.authId = '',
     required this.isPublic,
     this.isAdmin = false,
-    this.profilePicture,
     this.lastLogin,
     this.createdAt,
     this.updatedAt,
-    this.contactName,
-    this.contactPhone,
-    this.phone,
     this.isActive = true,
     this.isBanned = false,
     this.lastSeen,
@@ -68,21 +67,19 @@ class User {
     final String authProvider = json['auth_provider'] as String? ?? 'phone';
     final String authId = json['auth_id'] as String? ?? '';
 
-    final String? backendPhone = json['phone'] as String?;
-    final String? phone =
-        backendPhone ??
-        (authProvider == 'phone' ? authId : json['contact_phone'] as String?);
+    // Get displayName from backend (required field)
+    final String displayName = json['display_name'] as String? ?? 'Usuario #${json['id']}';
 
     return User(
       id: json['id'] as int,
-      contactId: json['contact_id'] as int?,
-      name: json['name'] as String?,
-      instagramName: json['instagram_name'] as String?,
+      displayName: displayName,
+      instagramUsername: json['instagram_username'] as String?,
+      profilePictureUrl: json['profile_picture_url'] as String?,
+      phone: json['phone'] as String?,
       authProvider: authProvider,
       authId: authId,
       isPublic: isPublic,
       isAdmin: json['is_admin'] as bool? ?? false,
-      profilePicture: json['profile_picture'] as String?,
       lastLogin: json['last_login'] != null
           ? DateTimeUtils.parseAndNormalize(json['last_login'])
           : null,
@@ -92,9 +89,6 @@ class User {
       updatedAt: json['updated_at'] != null
           ? DateTimeUtils.parseAndNormalize(json['updated_at'])
           : null,
-      contactName: json['contact_name'] as String?,
-      contactPhone: json['contact_phone'] as String?,
-      phone: phone,
       isActive: json['is_active'] as bool? ?? true,
       isBanned: json['is_banned'] as bool? ?? false,
       lastSeen: json['last_seen'] != null
@@ -113,20 +107,17 @@ class User {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'contact_id': contactId,
-      if (name != null) 'name': name,
-      if (instagramName != null) 'instagram_name': instagramName,
+      'display_name': displayName,
+      if (instagramUsername != null) 'instagram_username': instagramUsername,
+      if (profilePictureUrl != null) 'profile_picture_url': profilePictureUrl,
       if (phone != null) 'phone': phone,
       'auth_provider': authProvider,
       'auth_id': authId,
       'is_public': isPublic,
       'is_admin': isAdmin,
-      'profile_picture': profilePicture,
       'last_login': lastLogin?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
-      if (contactName != null) 'contact_name': contactName,
-      if (contactPhone != null) 'contact_phone': contactPhone,
       'is_active': isActive,
       'is_banned': isBanned,
       if (lastSeen != null) 'last_seen': lastSeen!.toIso8601String(),
@@ -140,22 +131,9 @@ class User {
     };
   }
 
-  String get displayName {
-    // Priority: name (from User table) > instagramName/contactName > fallback
-    if (name?.isNotEmpty == true) return name!;
-
-    if (isPublic) {
-      if (instagramName?.isNotEmpty == true) return instagramName!;
-      return 'Usuario #$id';
-    }
-
-    if (contactName?.isNotEmpty == true) return contactName!;
-    return 'Usuario #$id';
-  }
-
   String? get displaySubtitle {
-    if (isPublic && instagramName?.isNotEmpty == true) {
-      return '@$instagramName';
+    if (isPublic && instagramUsername?.isNotEmpty == true) {
+      return '@$instagramUsername';
     }
 
     if (!isPublic && phone?.isNotEmpty == true) {
@@ -168,39 +146,36 @@ class User {
   UserHive toUserHive() {
     return UserHive(
       id: id,
-      instagramName: instagramName,
-      name: contactName,
+      instagramName: instagramUsername,
+      name: displayName,
       isPublic: isPublic,
       phone: phone,
-      profilePicture: profilePicture,
+      profilePicture: profilePictureUrl,
       isBanned: isBanned,
       lastSeen: lastSeen,
       isOnline: isOnline,
       registeredAt: createdAt,
       authProvider: authProvider,
       authId: authId,
-      contactId: contactId,
+      contactId: null,
       isAdmin: isAdmin,
-      username: contactName,
+      username: displayName,
     );
   }
 
   User copyWith({
     int? id,
-    int? contactId,
-    String? name,
-    String? instagramName,
+    String? displayName,
+    String? instagramUsername,
+    String? profilePictureUrl,
+    String? phone,
     String? authProvider,
     String? authId,
     bool? isPublic,
     bool? isAdmin,
-    String? profilePicture,
     DateTime? lastLogin,
     DateTime? createdAt,
     DateTime? updatedAt,
-    String? contactName,
-    String? contactPhone,
-    String? phone,
     bool? isActive,
     bool? isBanned,
     DateTime? lastSeen,
@@ -214,20 +189,17 @@ class User {
   }) {
     return User(
       id: id ?? this.id,
-      contactId: contactId ?? this.contactId,
-      name: name ?? this.name,
-      instagramName: instagramName ?? this.instagramName,
+      displayName: displayName ?? this.displayName,
+      instagramUsername: instagramUsername ?? this.instagramUsername,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      phone: phone ?? this.phone,
       authProvider: authProvider ?? this.authProvider,
       authId: authId ?? this.authId,
       isPublic: isPublic ?? this.isPublic,
       isAdmin: isAdmin ?? this.isAdmin,
-      profilePicture: profilePicture ?? this.profilePicture,
       lastLogin: lastLogin ?? this.lastLogin,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      contactName: contactName ?? this.contactName,
-      contactPhone: contactPhone ?? this.contactPhone,
-      phone: phone ?? this.phone,
       isActive: isActive ?? this.isActive,
       isBanned: isBanned ?? this.isBanned,
       lastSeen: lastSeen ?? this.lastSeen,
@@ -239,5 +211,22 @@ class User {
       totalEventsCount: totalEventsCount ?? this.totalEventsCount,
       subscribersCount: subscribersCount ?? this.subscribersCount,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is User &&
+        other.id == id &&
+        other.displayName == displayName &&
+        other.isPublic == isPublic;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, displayName, isPublic);
+
+  @override
+  String toString() {
+    return 'User(id: $id, displayName: $displayName, isPublic: $isPublic)';
   }
 }

@@ -100,8 +100,8 @@ class _SubscriptionDetailScreenState
 
       if (mounted) {
         final userName =
-            widget.publicUser.contactName ??
-            widget.publicUser.instagramName ??
+            widget.publicUser.displayName ??
+            widget.publicUser.instagramUsername ??
             'Usuario';
         PlatformDialogHelpers.showSnackBar(
           context: context,
@@ -138,8 +138,8 @@ class _SubscriptionDetailScreenState
 
       if (mounted) {
         final userName =
-            widget.publicUser.contactName ??
-            widget.publicUser.instagramName ??
+            widget.publicUser.displayName ??
+            widget.publicUser.instagramUsername ??
             'Usuario';
         PlatformDialogHelpers.showSnackBar(
           context: context,
@@ -168,7 +168,7 @@ class _SubscriptionDetailScreenState
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(
-          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.contactName ?? widget.publicUser.instagramName ?? 'User'}',
+          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.displayName ?? widget.publicUser.instagramUsername ?? 'User'}',
           style: const TextStyle(fontSize: 16),
         ),
         trailing: CupertinoButton(
