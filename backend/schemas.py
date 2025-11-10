@@ -33,55 +33,6 @@ class ContactResponse(ContactBase):
 
 
 # ============================================================================
-# USER CONTACT SCHEMAS (NEW)
-# ============================================================================
-
-
-class UserContactBase(BaseModel):
-    """Base schema for UserContact"""
-
-    contact_name: str
-    phone_number: str
-
-
-class UserContactCreate(UserContactBase):
-    """Schema for creating a new user contact"""
-
-    pass
-
-
-class UserContactSync(BaseModel):
-    """Schema for syncing contacts from device"""
-
-    contacts: List[UserContactBase]
-
-
-class UserContactResponse(UserContactBase):
-    """Schema for user contact response"""
-
-    id: int
-    owner_id: int
-    registered_user_id: Optional[int]
-    is_registered: bool = False
-    last_synced_at: datetime
-    created_at: datetime
-    updated_at: datetime
-
-    # Enriched data if contact is registered
-    registered_user: Optional[Dict] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class UserContactSyncResponse(BaseModel):
-    """Response after syncing contacts"""
-
-    synced_count: int
-    registered_count: int
-    registered_contacts: List[Dict]
-
-
-# ============================================================================
 # USER SCHEMAS
 # ============================================================================
 
@@ -634,6 +585,12 @@ class UserContactBase(BaseModel):
 
     contact_name: str
     phone_number: str
+
+
+class UserContactCreate(UserContactBase):
+    """Schema for creating a new user contact"""
+
+    pass
 
 
 class UserContactSync(BaseModel):

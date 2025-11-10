@@ -483,6 +483,19 @@ async def get_user_events(
         if not is_birthday and ev.name:
             is_birthday = "cumpleaños" in ev.name.lower() or "birthday" in ev.name.lower()
 
+        # Get interaction data, or create synthetic interaction for calendar/subscribed_calendar events
+        interaction_data = user_interactions.get(ev.id)
+        if interaction_data is None:
+            # Check if this event comes from a calendar or subscribed calendar
+            source_type = event_sources.get(ev.id)
+            if source_type in ['calendar', 'subscribed_calendar']:
+                # Create synthetic interaction to indicate the source
+                interaction_data = {
+                    "interaction_type": source_type,
+                    "status": "accepted",
+                    "role": "member" if source_type == "calendar" else None,
+                }
+
         event_dict = {
             "id": ev.id,
             "name": ev.name,
@@ -494,7 +507,7 @@ async def get_user_events(
             "parent_recurring_event_id": ev.parent_recurring_event_id,
             "created_at": ev.created_at.isoformat(),
             "updated_at": ev.updated_at.isoformat(),
-            "interaction": user_interactions.get(ev.id),
+            "interaction": interaction_data,
             # Owner info
             "owner_name": owner.get("name"),
             "owner_profile_picture": owner.get("profile_picture"),

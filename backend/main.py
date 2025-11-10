@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from init_db import init_database
 
 # Import all routers
-from routers import calendar_memberships, calendars, event_bans, events, group_memberships, groups, interactions, recurring_configs, user_blocks, users
+from routers import calendar_memberships, calendars, event_bans, events, group_memberships, groups, interactions, recurring_configs, user_blocks, user_contacts, users
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -73,6 +73,7 @@ app.include_router(group_memberships.router)
 app.include_router(recurring_configs.router)
 app.include_router(event_bans.router)
 app.include_router(user_blocks.router)
+app.include_router(user_contacts.router)
 
 
 # Root endpoint

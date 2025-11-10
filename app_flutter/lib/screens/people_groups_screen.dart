@@ -1,19 +1,23 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/domain/group.dart';
+import '../models/domain/group.dart' as domain;
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../services/config_service.dart';
+import '../services/contacts_sync_service.dart';
+import '../services/test_contacts_helper.dart';
 import '../models/domain/user.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/contact_card.dart';
 import '../widgets/adaptive_scaffold.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/widgets/adaptive/adaptive_button.dart';
 import '../core/state/app_state.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PeopleGroupsScreen extends ConsumerStatefulWidget {
   const PeopleGroupsScreen({super.key});
@@ -60,7 +64,13 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
   }
 
   Future<void> _checkContactsPermission() async {
-    await Permission.contacts.status;
+    final ContactsSyncService contactsService = ContactsSyncService();
+    final hasPermission = await contactsService.checkPermission();
+
+    if (!hasPermission) {
+      // Try to request permission
+      await contactsService.requestPermission();
+    }
   }
 
   Future<void> _loadContacts() async {
@@ -72,17 +82,60 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
     });
 
     try {
-      final userRepo = ref.read(userRepositoryProvider);
-      // Fetch private users (public=false) - these are the "contacts"
-      final contacts = await userRepo.searchUsers('', limit: 100);
+      // Import ContactsSyncService at the top of the file
+      final ContactsSyncService contactsService = ContactsSyncService();
+
+      // Check permission first
+      var hasPermission = await contactsService.checkPermission();
+      print('📱 Initial permission check: $hasPermission');
+
+      // If no permission, try to request it
+      if (!hasPermission) {
+        print('📱 Requesting contacts permission...');
+        hasPermission = await contactsService.requestPermission();
+        print('📱 Permission request result: $hasPermission');
+      }
+
+      if (!hasPermission) {
+        print('📱 Permission denied, showing error');
+        if (mounted) {
+          setState(() {
+            _contactsError = 'Contacts permission not granted';
+            _isLoadingContacts = false;
+          });
+        }
+        return;
+      }
+
+      // Sync phone contacts with backend
+      print('📱 Syncing phone contacts...');
+      final syncResult = await contactsService.syncPhoneContacts();
+      print('📱 Sync result: $syncResult');
+
+      // Get registered contacts from backend
+      print('📱 Getting registered contacts...');
+      final contactsData = await contactsService.getRegisteredContacts();
+      print('📱 Registered contacts count: ${contactsData.length}');
+
+      // Convert to User objects
+      final contacts = <User>[];
+      for (final contactData in contactsData) {
+        if (contactData['registered_user'] != null) {
+          contacts.add(User.fromJson(contactData['registered_user'] as Map<String, dynamic>));
+        }
+      }
+
+      print('📱 Final contacts count: ${contacts.length}');
 
       if (mounted) {
         setState(() {
-          _contacts = contacts.where((user) => !user.isPublic && user.id != userId).toList();
+          _contacts = contacts.where((user) => user.id != userId).toList();
           _isLoadingContacts = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      print('📱 Error loading contacts: $e');
+      print('📱 Stack trace: $stack');
       if (mounted) {
         setState(() {
           _contactsError = e.toString();
@@ -153,9 +206,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
               text: l10n.allowAccess,
               icon: CupertinoIcons.person_2,
               onPressed: () async {
-                final hasPermission = await Permission.contacts
-                    .request()
-                    .isGranted;
+                final hasPermission = await FlutterContacts.requestPermission();
                 if (hasPermission) {
                   await _loadContacts();
                 } else {
@@ -240,6 +291,19 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
                 fontSize: 18,
               ),
             ),
+            // Only show in debug mode
+            if (kDebugMode) ...[
+              const SizedBox(height: 24),
+              AdaptiveButton(
+                config: AdaptiveButtonConfig.secondary(),
+                text: 'Add Test Contacts',
+                icon: CupertinoIcons.person_add,
+                onPressed: () async {
+                  await TestContactsHelper.addTestContacts();
+                  await _loadContacts();
+                },
+              ),
+            ],
           ],
         ),
       );
@@ -347,7 +411,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
     );
   }
 
-  Widget _buildGroupCard(Group group, AppLocalizations l10n) {
+  Widget _buildGroupCard(domain.Group group, AppLocalizations l10n) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Container(

@@ -1776,7 +1776,7 @@ def setup_realtime():
                 conn.rollback()  # Reset the transaction after error
 
             # List of tables to enable realtime sync
-            realtime_tables = ["events", "event_interactions", "users", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "contacts", "event_bans", "user_blocks", "recurring_event_configs", "event_cancellations"]
+            realtime_tables = ["events", "event_interactions", "users", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "user_contacts", "event_bans", "user_blocks", "recurring_event_configs", "event_cancellations"]
 
             for table in realtime_tables:
                 # Set REPLICA IDENTITY FULL (required for Supabase Realtime)

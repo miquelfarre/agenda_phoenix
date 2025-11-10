@@ -78,9 +78,90 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     });
   }
 
+  // Helper functions to classify events clearly
+  static bool _isMyEvent(EventWithInteraction item) {
+    // Events I own or can edit
+    return EventPermissions.canEdit(event: item.event);
+  }
+
+  static bool _isAcceptedInvitation(EventWithInteraction item) {
+    // I was invited and accepted
+    return item.interactionType == 'invited' &&
+           item.invitationStatus == 'accepted';
+  }
+
+  static bool _isAcceptedJoin(EventWithInteraction item) {
+    // I joined publicly and it was accepted
+    return item.interactionType == 'joined' &&
+           item.invitationStatus == 'accepted';
+  }
+
+  static bool _isAcceptedRequest(EventWithInteraction item) {
+    // I requested to join and it was accepted
+    return item.interactionType == 'requested' &&
+           item.invitationStatus == 'accepted';
+  }
+
+  static bool _isRejectedButAttending(EventWithInteraction item) {
+    // Special case: rejected invitation but still attending
+    return item.invitationStatus == 'rejected' && item.isAttending;
+  }
+
+  static bool _isPendingInvitation(EventWithInteraction item, int userId) {
+    // I received an invitation that's pending or rejected (but not attending)
+    return item.event.ownerId != userId &&
+           item.interactionType == 'invited' &&
+           item.invitationStatus != 'accepted' &&
+           !_isRejectedButAttending(item);
+  }
+
+  static bool _isPendingRequest(EventWithInteraction item, int userId) {
+    // I requested to join and it's pending or rejected
+    return item.event.ownerId != userId &&
+           item.interactionType == 'requested' &&
+           item.invitationStatus != 'accepted';
+  }
+
+  static bool _isSubscription(EventWithInteraction item, int userId) {
+    // I'm subscribed to someone's public calendar
+    // OR this event comes from a subscribed calendar
+    return item.event.ownerId != userId &&
+           (item.interactionType == 'subscribed' ||
+            item.interactionType == 'subscribed_calendar');
+  }
+
+  static bool _isCalendarMember(EventWithInteraction item) {
+    // I'm a member of a calendar that contains this event
+    return item.interactionType == 'calendar' &&
+           item.invitationStatus == 'accepted';
+  }
+
+  static bool _belongsToMyEvents(EventWithInteraction item) {
+    // All events that should appear in "My Events" filter
+    return _isMyEvent(item) ||
+           _isAcceptedInvitation(item) ||
+           _isAcceptedJoin(item) ||
+           _isAcceptedRequest(item) ||
+           _isRejectedButAttending(item) ||
+           _isCalendarMember(item);
+  }
+
+  static bool _belongsToInvitations(EventWithInteraction item, int userId) {
+    // All events that should appear in "Invitations" filter
+    return _isPendingInvitation(item, userId) ||
+           _isPendingRequest(item, userId);
+  }
+
+  static bool _belongsToSubscriptions(EventWithInteraction item, int userId) {
+    // All events that should appear in "Subscriptions" filter
+    return _isSubscription(item, userId);
+  }
+
   // Build EventsData from event list (pure function)
   static EventsData _buildEventsData(List<Event> events) {
     final userId = ConfigService.instance.currentUserId;
+
+    print('🔍 [DEBUG] Total events received from backend: ${events.length}');
 
     final eventItems = <EventWithInteraction>[];
     for (final event in events) {
@@ -107,26 +188,36 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       );
     }
 
-    final myEvents = eventItems
-        .where(
-          (e) =>
-              EventPermissions.canEdit(event: e.event) ||
-              (e.invitationStatus == 'rejected' && e.isAttending),
-        )
-        .length;
-    final invitations = eventItems
-        .where(
-          (e) =>
-              e.event.ownerId != userId &&
-              e.interactionType == 'invited' &&
-              !(e.invitationStatus == 'rejected' && e.isAttending),
-        )
-        .length;
-    final subscribed = eventItems
-        .where(
-          (e) => e.event.ownerId != userId && e.interactionType == 'subscribed',
-        )
-        .length;
+    // Count events for each filter using helper functions
+    final myEvents = eventItems.where(_belongsToMyEvents).length;
+    final invitations = eventItems.where((e) => _belongsToInvitations(e, userId)).length;
+    final subscribed = eventItems.where((e) => _belongsToSubscriptions(e, userId)).length;
+
+    print('🔍 [DEBUG] Event counts:');
+    print('  - My Events: $myEvents');
+    print('  - Invitations: $invitations');
+    print('  - Subscriptions: $subscribed');
+    print('  - All: ${eventItems.length}');
+    print('  - Sum (My+Inv+Subs): ${myEvents + invitations + subscribed}');
+    print('  - Difference (All - Sum): ${eventItems.length - (myEvents + invitations + subscribed)}');
+
+    // Debug: find events that don't belong to any category
+    final uncategorized = eventItems.where((e) =>
+      !_belongsToMyEvents(e) &&
+      !_belongsToInvitations(e, userId) &&
+      !_belongsToSubscriptions(e, userId)
+    ).toList();
+
+    if (uncategorized.isNotEmpty) {
+      print('⚠️  [DEBUG] Found ${uncategorized.length} uncategorized events:');
+      for (var item in uncategorized.take(5)) {
+        print('    - Event: ${item.event.name}');
+        print('      owner_id: ${item.event.ownerId} (current: $userId)');
+        print('      interaction_type: ${item.interactionType}');
+        print('      status: ${item.invitationStatus}');
+        print('      is_attending: ${item.isAttending}');
+      }
+    }
 
     return EventsData(
       events: eventItems,
@@ -423,33 +514,20 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     switch (filter) {
       case 'my':
-        // My Events: events I own + events where I'm admin + events with rejected invitation but attending
-        return items
-            .where(
-              (item) =>
-                  EventPermissions.canEdit(event: item.event) ||
-                  (item.invitationStatus == 'rejected' && item.isAttending),
-            )
-            .toList();
+        // My Events: All events I own or am participating in
+        return items.where(_belongsToMyEvents).toList();
+
       case 'subscribed':
-        return items
-            .where(
-              (item) =>
-                  item.event.ownerId != userId &&
-                  item.interactionType == 'subscribed',
-            )
-            .toList();
+        // Subscriptions: Events from public calendars I follow
+        return items.where((item) => _belongsToSubscriptions(item, userId)).toList();
+
       case 'invitations':
-        return items
-            .where(
-              (item) =>
-                  item.event.ownerId != userId &&
-                  item.interactionType == 'invited' &&
-                  !(item.invitationStatus == 'rejected' && item.isAttending),
-            )
-            .toList();
+        // Invitations: Pending invitations and requests
+        return items.where((item) => _belongsToInvitations(item, userId)).toList();
+
       case 'all':
       default:
+        // All events without filtering
         return items;
     }
   }

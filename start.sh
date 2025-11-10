@@ -299,8 +299,9 @@ start_flutter() {
     check_env_file
     check_and_generate_hive
 
-    # Clean Hive data before starting
-    clean_hive_data "$device_udid"
+    # Clean Hive data before starting (DISABLED to preserve permissions)
+    # Uncomment the line below if you need to reset Hive database
+    # clean_hive_data "$device_udid"
 
     # Deep clean all Flutter build artifacts
     info "Deep cleaning Flutter build artifacts..."

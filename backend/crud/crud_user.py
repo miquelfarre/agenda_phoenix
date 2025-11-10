@@ -28,6 +28,19 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         """
         return db.query(User).filter(User.auth_provider == auth_provider, User.auth_id == auth_id).first()
 
+    def get_by_phone(self, db: Session, *, phone: str) -> Optional[User]:
+        """
+        Get user by phone number.
+
+        Args:
+            db: Database session
+            phone: Phone number (should be in international format)
+
+        Returns:
+            User instance or None
+        """
+        return db.query(User).filter(User.phone == phone).first()
+
     def get_with_contact(self, db: Session, user_id: int) -> Optional[tuple[User]]:
         """
         Get user with their contact information in a single query.

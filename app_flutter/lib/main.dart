@@ -9,6 +9,7 @@ import 'package:eventypop/services/config_service.dart';
 import 'package:eventypop/services/timezone_service.dart';
 import 'package:eventypop/services/supabase_service.dart';
 import 'package:eventypop/services/app_config.dart';
+import 'package:eventypop/services/permissions_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,6 +49,16 @@ void main() async {
     // When running in test mode (debug), apply a generated JWT as Supabase auth
     // so Realtime (RLS) connections use a user token instead of the anon key.
     await SupabaseService.instance.applyTestAuthIfNeeded();
+
+    // Request all critical permissions at startup
+    if (kDebugMode) {
+      print('🔐 Requesting critical permissions...');
+    }
+    final allPermissionsGranted =
+        await PermissionsService.instance.requestAllCriticalPermissions();
+    if (kDebugMode) {
+      print('🔐 Permissions result: $allPermissionsGranted');
+    }
 
     const env = String.fromEnvironment(
       'FLUTTER_ENV',
