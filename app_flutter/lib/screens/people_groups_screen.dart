@@ -73,11 +73,12 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
 
     try {
       final userRepo = ref.read(userRepositoryProvider);
-      final contacts = await userRepo.fetchContacts(userId);
+      // Fetch private users (public=false) - these are the "contacts"
+      final contacts = await userRepo.searchUsers('', limit: 100);
 
       if (mounted) {
         setState(() {
-          _contacts = contacts;
+          _contacts = contacts.where((user) => !user.isPublic && user.id != userId).toList();
           _isLoadingContacts = false;
         });
       }

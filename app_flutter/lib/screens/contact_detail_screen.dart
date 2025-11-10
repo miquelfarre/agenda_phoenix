@@ -78,12 +78,9 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     });
 
     try {
-      final currentUserId = ConfigService.instance.currentUserId;
       final userRepo = ref.read(userRepositoryProvider);
-      await userRepo.fetchContact(
-        widget.contact.id,
-        currentUserId: currentUserId,
-      );
+      // Fetch user details using getUserById
+      await userRepo.getUserById(widget.contact.id);
 
       if (mounted) {
         setState(() {

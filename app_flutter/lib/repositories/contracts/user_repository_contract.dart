@@ -21,8 +21,6 @@ abstract class IUserRepository implements IRealtimeRepository<models.User?> {
   Future<List<models.User>> getUsersByIds(List<int> userIds);
   Future<List<models.User>> searchPublicUsers(String query);
   Future<List<models.User>> searchUsers(String query, {int limit = 20});
-  Future<List<models.User>> fetchContacts(int userId);
-  Future<models.User> fetchContact(int contactId, {required int currentUserId});
   Future<List<models.User>> fetchAvailableInvitees(int eventId);
   Future<void> updateOnlineStatus({
     required int userId,

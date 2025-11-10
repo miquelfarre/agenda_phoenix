@@ -26,6 +26,10 @@ import base64
 from supabase import create_client, Client
 
 from database import Base, SessionLocal, engine
+from models import (
+    User, Event, Calendar, EventInteraction, CalendarMembership,
+    RecurringEventConfig, EventBan, UserBlock
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -1703,13 +1707,14 @@ def create_database_views():
                 SELECT DISTINCT
                     ei.user_id AS subscriber_id,
                     u.id AS subscribed_to_id,
-                    u.contact_id,
-                    u.instagram_name,
+                    u.display_name,
+                    u.phone,
+                    u.instagram_username,
+                    u.profile_picture_url,
                     u.auth_provider,
                     u.auth_id,
                     u.is_public,
                     u.is_admin,
-                    u.profile_picture AS profile_picture,
                     u.last_login AS last_seen,
                     u.created_at,
                     u.updated_at,

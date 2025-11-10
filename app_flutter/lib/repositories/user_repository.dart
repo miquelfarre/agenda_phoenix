@@ -263,26 +263,6 @@ class UserRepository implements IUserRepository {
     return usersData.map((data) => models.User.fromJson(data)).toList();
   }
 
-  /// Fetch contacts for a specific user
-  @override
-  Future<List<models.User>> fetchContacts(int userId) async {
-    final contactsData = await _apiClient.fetchContacts(currentUserId: userId);
-    return contactsData.map((data) => models.User.fromJson(data)).toList();
-  }
-
-  /// Fetch detailed information for a specific contact
-  @override
-  Future<models.User> fetchContact(
-    int contactId, {
-    required int currentUserId,
-  }) async {
-    final contactData = await _apiClient.fetchContact(
-      contactId,
-      currentUserId: currentUserId,
-    );
-    return models.User.fromJson(contactData);
-  }
-
   /// Fetch available users that can be invited to an event
   @override
   Future<List<models.User>> fetchAvailableInvitees(int eventId) async {

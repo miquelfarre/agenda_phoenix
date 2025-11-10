@@ -48,24 +48,24 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
 
     try {
       final userRepo = ref.read(userRepositoryProvider);
-      final contacts = await userRepo.fetchContacts(currentUserId);
+      // Fetch all users then filter for private ones
+      final allUsers = await userRepo.searchUsers('', limit: 100);
 
       if (mounted) {
         setState(() {
-          _contacts = contacts.where((user) {
+          _contacts = allUsers.where((user) {
             // Filter out:
-            // 1. Users already in the group
-            // 2. Public users (cannot be added to groups)
+            // 1. Current user
+            // 2. Users already in the group
+            // 3. Public users (cannot be added to groups)
+            final isCurrentUser = user.id == currentUserId;
             final isAlreadyMember =
                 widget.group.members.any((m) => m.id == user.id) ||
                 widget.group.admins.any((a) => a.id == user.id) ||
                 widget.group.ownerId == user.id;
             final isPublic = user.isPublic;
 
-            final isFiltered = isAlreadyMember || isPublic;
-            if (isFiltered) {}
-
-            return !isAlreadyMember && !isPublic;
+            return !isCurrentUser && !isAlreadyMember && !isPublic;
           }).toList();
 
           _isLoadingContacts = false;
