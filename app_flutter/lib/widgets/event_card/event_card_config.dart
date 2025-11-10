@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../../models/event.dart';
+import '../../models/domain/event.dart';
 
 class EventCardConfig {
   final bool showChevron;

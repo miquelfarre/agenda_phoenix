@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
@@ -24,10 +24,12 @@ class EventSeriesDetailScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EventSeriesDetailScreen> createState() => _EventSeriesDetailScreenState();
+  ConsumerState<EventSeriesDetailScreen> createState() =>
+      _EventSeriesDetailScreenState();
 }
 
-class _EventSeriesDetailScreenState extends ConsumerState<EventSeriesDetailScreen> {
+class _EventSeriesDetailScreenState
+    extends ConsumerState<EventSeriesDetailScreen> {
   late List<Event> _events;
 
   @override

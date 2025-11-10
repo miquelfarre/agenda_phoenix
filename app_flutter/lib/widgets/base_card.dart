@@ -46,10 +46,7 @@ class BaseCard extends StatelessWidget {
       );
     }
 
-    return Container(
-      margin: cardMargin,
-      child: cardContent,
-    );
+    return Container(margin: cardMargin, child: cardContent);
   }
 }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../../models/event.dart';
+import '../../models/domain/event.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../../l10n/app_localizations.dart';
@@ -22,7 +22,9 @@ class EventCardBadges extends StatelessWidget {
     }
 
     // Calendar badge
-    if (config.showCalendarBadge && event.calendarId != null && event.calendarName != null) {
+    if (config.showCalendarBadge &&
+        event.calendarId != null &&
+        event.calendarName != null) {
       badges.add(_buildCalendarBadge());
     }
 

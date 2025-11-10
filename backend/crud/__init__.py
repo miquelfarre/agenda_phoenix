@@ -27,6 +27,7 @@ from crud.crud_interaction import event_interaction
 from crud.crud_recurring_config import recurring_config
 from crud.crud_user import user
 from crud.crud_user_block import user_block
+from crud.crud_user_contact import user_contact
 
 __all__ = [
     "user",
@@ -34,6 +35,7 @@ __all__ = [
     "calendar",
     "calendar_membership",
     "contact",
+    "user_contact",  # NEW
     "event_interaction",
     "app_ban",
     "user_block",

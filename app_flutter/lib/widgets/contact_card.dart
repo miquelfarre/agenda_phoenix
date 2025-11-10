@@ -1,7 +1,7 @@
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
-import '../models/user.dart';
+import '../models/domain/user.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'user_avatar.dart';

@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
-import '../models/event.dart';
-import '../models/calendar.dart';
+import '../models/domain/event.dart';
+import '../models/domain/calendar.dart';
 import '../core/state/app_state.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/searchable_list.dart';
@@ -34,7 +34,6 @@ class CalendarDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
-
   Calendar? get _calendar {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
     return calendarsAsync.maybeWhen(
@@ -245,9 +244,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
           )
         else
           ...groupedEvents.map((group) {
-            return SliverToBoxAdapter(
-              child: _buildDateGroup(context, group),
-            );
+            return SliverToBoxAdapter(child: _buildDateGroup(context, group));
           }),
       ],
     );

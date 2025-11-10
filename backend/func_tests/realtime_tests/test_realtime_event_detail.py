@@ -51,6 +51,7 @@ def test_realtime_new_invitation_triggers_update():
     # Create users
     user1_data = {
         "contact_name": "Event Owner",
+        "display_name": "Event Owner",
         "username": f"owner_{datetime.now().timestamp()}",
         "phone_number": f"+1{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -58,6 +59,7 @@ def test_realtime_new_invitation_triggers_update():
     }
     user2_data = {
         "contact_name": "New Invitee",
+        "display_name": "New Invitee",
         "username": f"invitee_{datetime.now().timestamp()}",
         "phone_number": f"+2{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -139,6 +141,7 @@ def test_realtime_accept_invitation_updates_interactions():
     # Create users
     user1_data = {
         "contact_name": "Owner Accept Test",
+        "display_name": "Owner Accept Test",
         "username": f"owner_accept_{datetime.now().timestamp()}",
         "phone_number": f"+3{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -146,6 +149,7 @@ def test_realtime_accept_invitation_updates_interactions():
     }
     user2_data = {
         "contact_name": "Invitee Accept Test",
+        "display_name": "Invitee Accept Test",
         "username": f"invitee_accept_{datetime.now().timestamp()}",
         "phone_number": f"+4{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -207,6 +211,7 @@ def test_realtime_reject_invitation_updates_interactions():
     # Create users
     user1_data = {
         "contact_name": "Owner Reject Test",
+        "display_name": "Owner Reject Test",
         "username": f"owner_reject_{datetime.now().timestamp()}",
         "phone_number": f"+5{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -214,6 +219,7 @@ def test_realtime_reject_invitation_updates_interactions():
     }
     user2_data = {
         "contact_name": "Invitee Reject Test",
+        "display_name": "Invitee Reject Test",
         "username": f"invitee_reject_{datetime.now().timestamp()}",
         "phone_number": f"+6{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -271,6 +277,7 @@ def test_realtime_leave_event_removes_from_interactions():
     # Create users
     user1_data = {
         "contact_name": "Owner Leave Test",
+        "display_name": "Owner Leave Test",
         "username": f"owner_leave_{datetime.now().timestamp()}",
         "phone_number": f"+7{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -278,6 +285,7 @@ def test_realtime_leave_event_removes_from_interactions():
     }
     user2_data = {
         "contact_name": "Invitee Leave Test",
+        "display_name": "Invitee Leave Test",
         "username": f"invitee_leave_{datetime.now().timestamp()}",
         "phone_number": f"+8{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -336,6 +344,7 @@ def test_realtime_update_note_reflects_in_interactions():
     # Create users
     user1_data = {
         "contact_name": "Owner Note Test",
+        "display_name": "Owner Note Test",
         "username": f"owner_note_{datetime.now().timestamp()}",
         "phone_number": f"+9{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -343,6 +352,7 @@ def test_realtime_update_note_reflects_in_interactions():
     }
     user2_data = {
         "contact_name": "Invitee Note Test",
+        "display_name": "Invitee Note Test",
         "username": f"invitee_note_{datetime.now().timestamp()}",
         "phone_number": f"+10{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -395,6 +405,7 @@ def test_realtime_mark_read_updates_read_at():
     # Create users
     user1_data = {
         "contact_name": "Owner Read Test",
+        "display_name": "Owner Read Test",
         "username": f"owner_read_{datetime.now().timestamp()}",
         "phone_number": f"+11{int(datetime.now().timestamp())}",
         "auth_provider": "test",
@@ -402,6 +413,7 @@ def test_realtime_mark_read_updates_read_at():
     }
     user2_data = {
         "contact_name": "Invitee Read Test",
+        "display_name": "Invitee Read Test",
         "username": f"invitee_read_{datetime.now().timestamp()}",
         "phone_number": f"+12{int(datetime.now().timestamp())}",
         "auth_provider": "test",

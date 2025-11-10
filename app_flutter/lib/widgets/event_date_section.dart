@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import '../ui/styles/app_styles.dart';
 import '../utils/event_date_utils.dart';
 

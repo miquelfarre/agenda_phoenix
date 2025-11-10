@@ -2,16 +2,17 @@ import 'dart:async';
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:collection/collection.dart';
-import '../models/calendar.dart';
-import '../models/calendar_hive.dart';
+import '../models/domain/calendar.dart';
+import '../models/persistence/calendar_hive.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
 import '../utils/app_exceptions.dart' as exceptions;
 import '../utils/realtime_filter.dart';
+import 'contracts/calendar_repository_contract.dart';
 
-class CalendarRepository {
+class CalendarRepository implements ICalendarRepository {
   static const String _boxName = 'calendars';
   final _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
@@ -25,15 +26,35 @@ class CalendarRepository {
   RealtimeChannel? _calendarsChannel;
 
   final Completer<void> _initCompleter = Completer<void>();
+
+  @override
   Future<void> get initialized => _initCompleter.future;
 
+  @override
+  Stream<List<Calendar>> get dataStream => calendarsStream;
+
+  @override
   Stream<List<Calendar>> get calendarsStream async* {
+    // Wait for initialization to complete
+    try {
+      await initialized;
+    } catch (e) {
+      // If initialization failed, still emit empty list to avoid infinite loading
+    }
+
+    // Emit cached calendars immediately
     if (_cachedCalendars.isNotEmpty) {
       yield List.from(_cachedCalendars);
+    } else {
+      // Emit empty list to avoid infinite loading state
+      yield [];
     }
+
+    // Then emit future updates
     yield* _calendarsController.stream;
   }
 
+  @override
   Future<void> initialize() async {
     if (_initCompleter.isCompleted) return;
 
@@ -286,7 +307,12 @@ class CalendarRepository {
     }
   }
 
-  // --- Realtime ---
+  // --- Local cache and realtime ---
+
+  @override
+  Future<void> startRealtimeSubscription() async {
+    await _startRealtimeSubscription();
+  }
 
   Future<void> _startRealtimeSubscription() async {
     final userId = ConfigService.instance.currentUserId;
@@ -331,6 +357,40 @@ class CalendarRepository {
         .subscribe();
   }
 
+  @override
+  Future<void> stopRealtimeSubscription() async {
+    await _membershipChannel?.unsubscribe();
+    await _calendarsChannel?.unsubscribe();
+    _membershipChannel = null;
+    _calendarsChannel = null;
+  }
+
+  @override
+  bool get isRealtimeConnected =>
+      _membershipChannel != null || _calendarsChannel != null;
+
+  @override
+  Future<void> loadFromCache() async {
+    _loadCalendarsFromHive();
+  }
+
+  @override
+  Future<void> saveToCache() async {
+    await _updateLocalCache(_cachedCalendars);
+  }
+
+  @override
+  Future<void> clearCache() async {
+    _cachedCalendars = [];
+    await _box?.clear();
+    _emitCurrentCalendars();
+  }
+
+  @override
+  List<Calendar> getLocalData() {
+    return _cachedCalendars;
+  }
+
   void _emitCurrentCalendars() {
     if (!_calendarsController.isClosed) {
       _calendarsController.add(List.from(_cachedCalendars));
@@ -341,6 +401,7 @@ class CalendarRepository {
     return _cachedCalendars.firstWhereOrNull((c) => c.id == calendarId);
   }
 
+  @override
   void dispose() {
     _membershipChannel?.unsubscribe();
     _calendarsChannel?.unsubscribe();

@@ -2,13 +2,14 @@ import 'dart:async';
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../core/realtime_sync.dart';
-import '../models/user.dart';
+import '../models/domain/user.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../utils/realtime_filter.dart';
+import 'contracts/user_blocking_repository_contract.dart';
 
-class UserBlockingRepository {
+class UserBlockingRepository implements IUserBlockingRepository {
   static const String _boxName = 'blocked_users';
   final SupabaseService _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
@@ -21,8 +22,14 @@ class UserBlockingRepository {
   RealtimeChannel? _realtimeChannel;
 
   final Completer<void> _initCompleter = Completer<void>();
+
+  @override
   Future<void> get initialized => _initCompleter.future;
 
+  @override
+  Stream<List<User>> get dataStream => blockedUsersStream;
+
+  @override
   Stream<List<User>> get blockedUsersStream async* {
     if (_cachedBlockedUsers.isNotEmpty) {
       yield List.from(_cachedBlockedUsers);
@@ -30,6 +37,7 @@ class UserBlockingRepository {
     yield* _blockedUsersController.stream;
   }
 
+  @override
   Future<void> initialize() async {
     if (_initCompleter.isCompleted) return;
 
@@ -66,7 +74,8 @@ class UserBlockingRepository {
           _box!.get('blocked_user_ids', defaultValue: <int>[]) ?? <int>[];
       _cachedBlockedUsers = blockedUserIds
           .map(
-            (id) => User(id: id, isPublic: false, contactName: 'Blocked User $id'),
+            (id) =>
+                User(id: id, isPublic: false, contactName: 'Blocked User $id'),
           )
           .toList();
     } catch (e) {
@@ -153,6 +162,39 @@ class UserBlockingRepository {
     return _cachedBlockedUsers.any((user) => user.id == userId);
   }
 
+  // --- Local cache and realtime ---
+
+  @override
+  Future<void> startRealtimeSubscription() async {
+    await _startRealtimeSubscription();
+  }
+
+  @override
+  Future<void> stopRealtimeSubscription() async {
+    await _realtimeChannel?.unsubscribe();
+    _realtimeChannel = null;
+  }
+
+  @override
+  bool get isRealtimeConnected => _realtimeChannel != null;
+
+  @override
+  Future<void> loadFromCache() async {
+    _loadBlockedUsersFromHive();
+  }
+
+  @override
+  Future<void> saveToCache() async {
+    await _updateLocalCache();
+  }
+
+  @override
+  Future<void> clearCache() async {
+    _cachedBlockedUsers = [];
+    await _box?.clear();
+    _emitBlockedUsers();
+  }
+
   Future<void> _startRealtimeSubscription() async {
     final userId = ConfigService.instance.currentUserId;
     _realtimeChannel = _supabaseService.client
@@ -186,6 +228,7 @@ class UserBlockingRepository {
     }
   }
 
+  @override
   void dispose() {
     _realtimeChannel?.unsubscribe();
     _blockedUsersController.close();

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../models/month_option.dart';
-import '../models/day_option.dart';
-import '../models/time_option.dart';
-import '../models/datetime_selection.dart';
+import '../models/ui/month_option.dart';
+import '../models/ui/day_option.dart';
+import '../models/ui/time_option.dart';
+import '../models/ui/datetime_selection.dart';
 import '../services/date_range_calculator.dart';
 
 class CustomDateTimeWidget extends StatefulWidget {

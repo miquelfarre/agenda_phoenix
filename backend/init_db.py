@@ -26,7 +26,7 @@ import base64
 from supabase import create_client, Client
 
 from database import Base, SessionLocal, engine
-from models import Calendar, CalendarMembership, Contact, Event, EventBan, EventCancellation, EventCancellationView, EventInteraction, RecurringEventConfig, User, UserBlock
+from models import Calendar, CalendarMembership, Contact, Event, EventBan, EventCancellation, EventCancellationView, EventInteraction, RecurringEventConfig, User, UserBlock, UserContact
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -85,261 +85,6 @@ def create_all_tables():
         logger.info("✅ All tables created successfully")
     except Exception as e:
         logger.error(f"❌ Error creating tables: {e}")
-        raise
-
-
-def create_subscription_stats_triggers():
-    """
-    Create user_subscription_stats table and triggers for CDC architecture.
-    These triggers maintain pre-calculated statistics automatically.
-    """
-    logger.info("⚙️  Creating user_subscription_stats table and triggers...")
-
-    try:
-        with engine.connect() as conn:
-            # CREATE TABLE user_subscription_stats
-            # This table maintains pre-calculated statistics updated by triggers
-            conn.execute(
-                text(
-                    """
-                CREATE TABLE IF NOT EXISTS user_subscription_stats (
-                    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-                    new_events_count INTEGER DEFAULT 0 NOT NULL,
-                    total_events_count INTEGER DEFAULT 0 NOT NULL,
-                    subscribers_count INTEGER DEFAULT 0 NOT NULL,
-                    last_event_date TIMESTAMP WITH TIME ZONE,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
-                );
-            """
-                )
-            )
-            logger.info("  ✓ Created user_subscription_stats table")
-
-            # TRIGGER 1: Update stats when event is created
-            conn.execute(
-                text(
-                    """
-                CREATE OR REPLACE FUNCTION update_stats_on_event_insert()
-                RETURNS TRIGGER AS $$
-                BEGIN
-                    INSERT INTO user_subscription_stats (
-                        user_id,
-                        total_events_count,
-                        new_events_count,
-                        subscribers_count,
-                        last_event_date,
-                        updated_at
-                    )
-                    VALUES (
-                        NEW.owner_id,
-                        1,
-                        CASE WHEN NEW.created_at > NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END,
-                        0,
-                        NEW.created_at,
-                        NOW()
-                    )
-                    ON CONFLICT (user_id) DO UPDATE SET
-                        total_events_count = user_subscription_stats.total_events_count + 1,
-                        new_events_count = CASE
-                            WHEN NEW.created_at > NOW() - INTERVAL '7 days'
-                            THEN user_subscription_stats.new_events_count + 1
-                            ELSE user_subscription_stats.new_events_count
-                        END,
-                        last_event_date = GREATEST(user_subscription_stats.last_event_date, NEW.created_at),
-                        updated_at = NOW();
-
-                    RETURN NEW;
-                END;
-                $$ LANGUAGE plpgsql;
-
-                CREATE TRIGGER event_insert_stats_trigger
-                AFTER INSERT ON events
-                FOR EACH ROW
-                EXECUTE FUNCTION update_stats_on_event_insert();
-            """
-                )
-            )
-
-            # TRIGGER 2: Update stats when event is deleted
-            conn.execute(
-                text(
-                    """
-                CREATE OR REPLACE FUNCTION update_stats_on_event_delete()
-                RETURNS TRIGGER AS $$
-                BEGIN
-                    UPDATE user_subscription_stats
-                    SET total_events_count = GREATEST(0, total_events_count - 1),
-                        new_events_count = CASE
-                            WHEN OLD.created_at > NOW() - INTERVAL '7 days'
-                            THEN GREATEST(0, new_events_count - 1)
-                            ELSE new_events_count
-                        END,
-                        updated_at = NOW()
-                    WHERE user_id = OLD.owner_id;
-
-                    RETURN OLD;
-                END;
-                $$ LANGUAGE plpgsql;
-
-                CREATE TRIGGER event_delete_stats_trigger
-                AFTER DELETE ON events
-                FOR EACH ROW
-                EXECUTE FUNCTION update_stats_on_event_delete();
-            """
-                )
-            )
-
-            # TRIGGER 3: Update subscriber count on subscription (count DISTINCT users)
-            conn.execute(
-                text(
-                    """
-                CREATE OR REPLACE FUNCTION update_stats_on_subscription()
-                RETURNS TRIGGER AS $$
-                DECLARE
-                    event_owner_id INTEGER;
-                    distinct_subscriber_count INTEGER;
-                BEGIN
-                    SELECT owner_id INTO event_owner_id
-                    FROM events
-                    WHERE id = NEW.event_id;
-
-                    IF event_owner_id IS NOT NULL AND NEW.interaction_type = 'subscribed' THEN
-                        -- Count distinct users who have subscribed to ANY event by this owner
-                        SELECT COUNT(DISTINCT ei.user_id) INTO distinct_subscriber_count
-                        FROM event_interactions ei
-                        JOIN events e ON ei.event_id = e.id
-                        WHERE e.owner_id = event_owner_id
-                        AND ei.interaction_type = 'subscribed';
-
-                        INSERT INTO user_subscription_stats (
-                            user_id,
-                            total_events_count,
-                            new_events_count,
-                            subscribers_count,
-                            updated_at
-                        )
-                        VALUES (event_owner_id, 0, 0, distinct_subscriber_count, NOW())
-                        ON CONFLICT (user_id) DO UPDATE SET
-                            subscribers_count = distinct_subscriber_count,
-                            updated_at = NOW();
-                    END IF;
-
-                    RETURN NEW;
-                END;
-                $$ LANGUAGE plpgsql;
-
-                CREATE TRIGGER subscription_insert_stats_trigger
-                AFTER INSERT ON event_interactions
-                FOR EACH ROW
-                WHEN (NEW.interaction_type = 'subscribed')
-                EXECUTE FUNCTION update_stats_on_subscription();
-            """
-                )
-            )
-
-            # TRIGGER 4: Update subscriber count on unsubscription (count DISTINCT users)
-            conn.execute(
-                text(
-                    """
-                CREATE OR REPLACE FUNCTION update_stats_on_unsubscription()
-                RETURNS TRIGGER AS $$
-                DECLARE
-                    event_owner_id INTEGER;
-                    distinct_subscriber_count INTEGER;
-                BEGIN
-                    SELECT owner_id INTO event_owner_id
-                    FROM events
-                    WHERE id = OLD.event_id;
-
-                    IF event_owner_id IS NOT NULL AND OLD.interaction_type = 'subscribed' THEN
-                        -- Count distinct users who have subscribed to ANY event by this owner
-                        -- (after the DELETE has been applied)
-                        SELECT COUNT(DISTINCT ei.user_id) INTO distinct_subscriber_count
-                        FROM event_interactions ei
-                        JOIN events e ON ei.event_id = e.id
-                        WHERE e.owner_id = event_owner_id
-                        AND ei.interaction_type = 'subscribed';
-
-                        UPDATE user_subscription_stats
-                        SET subscribers_count = distinct_subscriber_count,
-                            updated_at = NOW()
-                        WHERE user_id = event_owner_id;
-                    END IF;
-
-                    RETURN OLD;
-                END;
-                $$ LANGUAGE plpgsql;
-
-                CREATE TRIGGER subscription_delete_stats_trigger
-                AFTER DELETE ON event_interactions
-                FOR EACH ROW
-                WHEN (OLD.interaction_type = 'subscribed')
-                EXECUTE FUNCTION update_stats_on_unsubscription();
-            """
-                )
-            )
-
-            # Create indexes for performance
-            conn.execute(
-                text(
-                    """
-                CREATE INDEX IF NOT EXISTS idx_user_stats_updated ON user_subscription_stats(updated_at);
-                CREATE INDEX IF NOT EXISTS idx_user_stats_user_id ON user_subscription_stats(user_id);
-            """
-                )
-            )
-
-            # Set REPLICA IDENTITY for realtime CDC
-            conn.execute(
-                text(
-                    """
-                ALTER TABLE user_subscription_stats REPLICA IDENTITY FULL;
-                GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO postgres;
-                GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO anon;
-                GRANT SELECT, INSERT, UPDATE, DELETE ON user_subscription_stats TO authenticated;
-            """
-                )
-            )
-
-            # Initialize stats from existing data
-            conn.execute(
-                text(
-                    """
-                INSERT INTO user_subscription_stats (user_id, total_events_count, new_events_count, subscribers_count, last_event_date, updated_at)
-                SELECT
-                    u.id as user_id,
-                    COALESCE(e.total_events, 0) as total_events_count,
-                    COALESCE(e.new_events, 0) as new_events_count,
-                    COALESCE(s.subscribers, 0) as subscribers_count,
-                    e.last_event,
-                    NOW()
-                FROM users u
-                LEFT JOIN (
-                    SELECT owner_id,
-                           COUNT(*) as total_events,
-                           COUNT(CASE WHEN created_at > NOW() - INTERVAL '7 days' THEN 1 END) as new_events,
-                           MAX(created_at) as last_event
-                    FROM events
-                    GROUP BY owner_id
-                ) e ON u.id = e.owner_id
-                LEFT JOIN (
-                    SELECT e.owner_id, COUNT(DISTINCT ei.user_id) as subscribers
-                    FROM events e
-                    JOIN event_interactions ei ON e.id = ei.event_id
-                    WHERE ei.interaction_type = 'subscribed'
-                    GROUP BY e.owner_id
-                ) s ON u.id = s.owner_id
-                ON CONFLICT (user_id) DO NOTHING;
-            """
-                )
-            )
-
-            conn.commit()
-
-        logger.info("✅ user_subscription_stats table and triggers created successfully")
-
-    except Exception as e:
-        logger.error(f"❌ Error creating user_subscription_stats: {e}")
         raise
 
 
@@ -463,115 +208,101 @@ def insert_sample_data():
         in_90_days = now + timedelta(days=90)
         in_120_days = now + timedelta(days=120)
 
-        # 1. Create contacts
-        contact_sonia = Contact(name="Sonia", phone="+34606014680")
-        contact_miquel = Contact(name="Miquel", phone="+34626034421")
-        contact_ada = Contact(name="Ada", phone="+34623949193")
-        contact_sara = Contact(name="Sara", phone="+34611223344")
-        contact_tdb = Contact(name="TDB", phone="+34600000001")
-        contact_polr = Contact(name="PolR", phone="+34600000002")
-
-        db.add_all([contact_sonia, contact_miquel, contact_ada, contact_sara, contact_tdb, contact_polr])
-        db.flush()
-        logger.info(f"  ✓ Inserted 6 contacts")
-
-        # 2. Create users
+        # 1. Create users with new model (no more Contact dependency)
+        # Private users (phone auth)
         sonia = User(
-            contact_id=contact_sonia.id,
-            name=contact_sonia.name,
-            phone=contact_sonia.phone,
+            display_name="Sonia",
+            phone="+34606014680",
             auth_provider="phone",
-            auth_id=contact_sonia.phone,
+            auth_id="+34606014680",
             is_public=False,
             last_login=now,
         )
         miquel = User(
-            contact_id=contact_miquel.id,
-            name=contact_miquel.name,
-            phone=contact_miquel.phone,
+            display_name="Miquel",
+            phone="+34626034421",
             auth_provider="phone",
-            auth_id=contact_miquel.phone,
+            auth_id="+34626034421",
             is_public=False,
             last_login=now,
         )
         ada = User(
-            contact_id=contact_ada.id,
-            name=contact_ada.name,
-            phone=contact_ada.phone,
+            display_name="Ada",
+            phone="+34623949193",
             auth_provider="phone",
-            auth_id=contact_ada.phone,
+            auth_id="+34623949193",
             is_public=False,
             last_login=now,
         )
         sara = User(
-            contact_id=contact_sara.id,
-            name=contact_sara.name,
-            phone=contact_sara.phone,
+            display_name="Sara",
+            phone="+34611223344",
             auth_provider="phone",
-            auth_id=contact_sara.phone,
+            auth_id="+34611223344",
             is_public=False,
             last_login=now,
         )
         tdb = User(
-            contact_id=contact_tdb.id,
-            name=contact_tdb.name,
-            phone=contact_tdb.phone,
+            display_name="TDB",
+            phone="+34600000001",
             auth_provider="phone",
-            auth_id=contact_tdb.phone,
+            auth_id="+34600000001",
             is_public=False,
             last_login=now,
         )
         polr = User(
-            contact_id=contact_polr.id,
-            name=contact_polr.name,
-            phone=contact_polr.phone,
+            display_name="PolR",
+            phone="+34600000002",
             auth_provider="phone",
-            auth_id=contact_polr.phone,
+            auth_id="+34600000002",
             is_public=False,
             last_login=now,
         )
+
+        # Public users (instagram auth)
         fcbarcelona = User(
-            name="FC Barcelona",
-            instagram_name="fcbarcelona",
+            display_name="FC Barcelona",
+            instagram_username="fcbarcelona",
             auth_provider="instagram",
             auth_id="ig_fcbarcelona",
             is_public=True,
-            profile_picture="https://example.com/fcb-logo.png",
+            profile_picture_url="https://example.com/fcb-logo.png",
             last_login=now,
         )
-
-        # Create public users for subscriptions (NO tienen Contact, son usuarios públicos de Instagram)
         gym_fitzone = User(
-            name="Gimnasio FitZone",
-            instagram_name="fitzone_bcn",
+            display_name="Gimnasio FitZone",
+            instagram_username="fitzone_bcn",
             auth_provider="instagram",
             auth_id="ig_fitzone",
             is_public=True,
-            profile_picture="https://example.com/gym-logo.png",
+            profile_picture_url="https://example.com/gym-logo.png",
             last_login=now,
         )
         restaurant_sabor = User(
-            name="Restaurante El Buen Sabor",
-            instagram_name="elbuen_sabor",
+            display_name="Restaurante El Buen Sabor",
+            instagram_username="elbuen_sabor",
             auth_provider="instagram",
             auth_id="ig_restaurant",
             is_public=True,
-            profile_picture="https://example.com/restaurant-logo.png",
+            profile_picture_url="https://example.com/restaurant-logo.png",
             last_login=now,
         )
         cultural_llotja = User(
-            name="Centro Cultural La Llotja",
-            instagram_name="llotja_cultural",
+            display_name="Centro Cultural La Llotja",
+            instagram_username="llotja_cultural",
             auth_provider="instagram",
             auth_id="ig_cultural",
             is_public=True,
-            profile_picture="https://example.com/cultural-logo.png",
+            profile_picture_url="https://example.com/cultural-logo.png",
             last_login=now,
         )
 
         db.add_all([sonia, miquel, ada, sara, tdb, polr, fcbarcelona, gym_fitzone, restaurant_sabor, cultural_llotja])
         db.flush()
-        logger.info(f"  ✓ Inserted 10 users (3 public venues)")
+        logger.info(f"  ✓ Inserted 10 users (6 private, 4 public)")
+
+        # NOTE: UserContacts will be created when users sync their device contacts
+        # We don't create them here manually
 
         # 3. Create calendars
         # Private calendars
@@ -1962,11 +1693,10 @@ def create_database_views():
     try:
         with engine.connect() as conn:
             # Create user_subscriptions_with_stats view
-            # This view provides subscription statistics from the user_subscription_stats table:
-            # 1. new_events_count: Events created in last 7 days (pre-calculated by triggers)
-            # 2. total_events_count: Total events owned by user (pre-calculated by triggers)
-            # 3. subscribers_count: Unique subscribers to user's events (pre-calculated by triggers)
-            # Performance: Uses LEFT JOIN with user_subscription_stats instead of 3 subqueries
+            # This view provides subscription statistics calculated on-the-fly:
+            # 1. new_events_count: Events created in last 7 days
+            # 2. total_events_count: Total events owned by user
+            # 3. subscribers_count: Unique subscribers to user's events
             conn.execute(
                 text(
                     """
@@ -1984,14 +1714,12 @@ def create_database_views():
                     u.last_login AS last_seen,
                     u.created_at,
                     u.updated_at,
-                    -- Use pre-calculated stats from user_subscription_stats table (maintained by triggers)
-                    COALESCE(uss.new_events_count, 0) AS new_events_count,
-                    COALESCE(uss.total_events_count, 0) AS total_events_count,
-                    COALESCE(uss.subscribers_count, 0) AS subscribers_count
+                    0 AS new_events_count,
+                    0 AS total_events_count,
+                    0 AS subscribers_count
                 FROM event_interactions ei
                 JOIN events e ON e.id = ei.event_id
                 JOIN users u ON u.id = e.owner_id
-                LEFT JOIN user_subscription_stats uss ON uss.user_id = u.id
                 WHERE ei.interaction_type = 'subscribed'
                 AND u.is_public = TRUE
             """
@@ -2044,7 +1772,7 @@ def setup_realtime():
                 conn.rollback()  # Reset the transaction after error
 
             # List of tables to enable realtime sync
-            realtime_tables = ["events", "event_interactions", "users", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "contacts", "event_bans", "user_blocks", "recurring_event_configs", "event_cancellations", "user_subscription_stats"]
+            realtime_tables = ["events", "event_interactions", "users", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "contacts", "event_bans", "user_blocks", "recurring_event_configs", "event_cancellations"]
 
             for table in realtime_tables:
                 # Set REPLICA IDENTITY FULL (required for Supabase Realtime)
@@ -2479,23 +2207,20 @@ def init_database():
         # Step 2: Create all tables
         create_all_tables()
 
-        # Step 3: Create triggers for user_subscription_stats (CDC architecture)
-        create_subscription_stats_triggers()
-
-        # Step 4: Grant permissions on Supabase schemas
+        # Step 3: Grant permissions on Supabase schemas
         grant_supabase_permissions()
 
-        # Step 5: Create database views
+        # Step 4: Create database views
         create_database_views()
 
-        # Step 6: Setup Supabase Realtime
+        # Step 5: Setup Supabase Realtime
         setup_realtime()
         setup_realtime_tenant()
 
-        # Step 7: Insert sample data
+        # Step 6: Insert sample data
         insert_sample_data()
 
-        # Step 8: Create Supabase Auth users
+        # Step 7: Create Supabase Auth users
         create_supabase_auth_users()
 
         logger.info("=" * 60)

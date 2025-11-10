@@ -3,7 +3,7 @@ import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import '../core/state/app_state.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/empty_state.dart';

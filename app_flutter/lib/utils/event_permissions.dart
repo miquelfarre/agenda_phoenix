@@ -1,4 +1,4 @@
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import '../services/config_service.dart';
 
 /// Utility class for checking event permissions

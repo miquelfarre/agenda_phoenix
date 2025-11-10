@@ -1,12 +1,15 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/app_settings.dart';
+import '../models/ui/app_settings.dart';
 import '../services/city_service.dart';
 import '../services/settings_service.dart';
 import '../utils/error_handler.dart';
 import '../core/mixins/singleton_mixin.dart';
 import '../core/mixins/error_handling_mixin.dart';
+import 'contracts/settings_repository_contract.dart';
 
-class SettingsRepository with SingletonMixin, ErrorHandlingMixin {
+class SettingsRepository
+    with SingletonMixin, ErrorHandlingMixin
+    implements ISettingsRepository {
   SettingsRepository._internal();
 
   factory SettingsRepository() =>

@@ -1,4 +1,4 @@
-import '../models/app_settings.dart';
+import '../models/ui/app_settings.dart';
 import 'api_client.dart';
 import '../core/mixins/error_handling_mixin.dart';
 import '../core/mixins/singleton_mixin.dart';

@@ -1,4 +1,4 @@
-import '../models/country.dart';
+import '../models/ui/country.dart';
 
 class CountryService {
   static final List<Country> _countries = _initializeCountries();

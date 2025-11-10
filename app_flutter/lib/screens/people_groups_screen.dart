@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/group.dart';
+import '../models/domain/group.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../services/config_service.dart';
-import '../models/user.dart';
+import '../models/domain/user.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/contact_card.dart';

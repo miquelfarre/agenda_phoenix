@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../models/calendar.dart';
+import '../models/domain/calendar.dart';
 import '../repositories/calendar_repository.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
@@ -53,7 +53,8 @@ class CalendarOperations {
           final l10n = context.l10n;
           PlatformDialogHelpers.showSnackBar(
             context: context,
-            message: '${l10n.calendarLeft.replaceAll('Has abandonado el calendario', 'Calendario abandonado')}: "${calendar.name}"',
+            message:
+                '${l10n.calendarLeft.replaceAll('Has abandonado el calendario', 'Calendario abandonado')}: "${calendar.name}"',
           );
         }
       }

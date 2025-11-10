@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/event.dart';
-import '../../models/user.dart';
-import '../../models/group.dart';
-import '../../models/calendar.dart';
-import '../../models/event_interaction.dart';
+import '../../models/domain/event.dart';
+import '../../models/domain/user.dart';
+import '../../models/domain/group.dart';
+import '../../models/domain/calendar.dart';
+import '../../models/domain/event_interaction.dart';
 import '../../services/navigation_service.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/config_service.dart';

@@ -133,11 +133,7 @@ async def delete_group_membership(membership_id: int, current_user_id: int = Dep
     print(f"  → is_creator: {is_creator} (owner_id={group.owner_id} == current_user_id={current_user_id})")
 
     # Check if user is admin
-    admin_membership = db.query(GroupMembership).filter(
-        GroupMembership.group_id == db_membership.group_id,
-        GroupMembership.user_id == current_user_id,
-        GroupMembership.role == "admin"
-    ).first()
+    admin_membership = db.query(GroupMembership).filter(GroupMembership.group_id == db_membership.group_id, GroupMembership.user_id == current_user_id, GroupMembership.role == "admin").first()
     is_admin = admin_membership is not None
     print(f"  → is_admin: {is_admin} (admin_membership={'found' if admin_membership else 'NOT found'})")
 

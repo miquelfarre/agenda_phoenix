@@ -1,4 +1,4 @@
-import '../models/calendar.dart';
+import '../models/domain/calendar.dart';
 import '../repositories/calendar_repository.dart';
 import '../services/config_service.dart';
 

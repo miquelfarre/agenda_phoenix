@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../models/group.dart';
+import '../models/domain/group.dart';
 import '../services/config_service.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../ui/styles/app_styles.dart';

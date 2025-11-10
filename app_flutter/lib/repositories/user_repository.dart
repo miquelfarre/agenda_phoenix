@@ -2,16 +2,17 @@ import 'dart:async';
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/realtime_sync.dart';
-import '../models/user.dart' as models;
-import '../models/user_hive.dart';
+import '../models/domain/user.dart' as models;
+import '../models/persistence/user_hive.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../services/supabase_auth_service.dart';
 import '../utils/app_exceptions.dart' as exceptions;
 import '../utils/realtime_filter.dart';
+import 'contracts/user_repository_contract.dart';
 
-class UserRepository {
+class UserRepository implements IUserRepository {
   static const String _boxName = 'current_user';
   final SupabaseService _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
@@ -24,8 +25,14 @@ class UserRepository {
   models.User? _cachedCurrentUser;
 
   final Completer<void> _initCompleter = Completer<void>();
+
+  @override
   Future<void> get initialized => _initCompleter.future;
 
+  @override
+  Stream<models.User?> get dataStream => currentUserStream;
+
+  @override
   Stream<models.User?> get currentUserStream async* {
     // Emit cached user immediately for new subscribers
     if (_cachedCurrentUser != null) {
@@ -35,6 +42,7 @@ class UserRepository {
     yield* _currentUserController.stream;
   }
 
+  @override
   Future<void> initialize() async {
     if (_initCompleter.isCompleted) return;
 
@@ -177,6 +185,41 @@ class UserRepository {
     }
   }
 
+  // --- Realtime subscription and cache management ---
+
+  @override
+  Future<void> startRealtimeSubscription() async {
+    await _startRealtimeSubscription();
+  }
+
+  @override
+  Future<void> stopRealtimeSubscription() async {
+    await _userChannel?.unsubscribe();
+    _userChannel = null;
+  }
+
+  @override
+  bool get isRealtimeConnected => _userChannel != null;
+
+  @override
+  Future<void> loadFromCache() async {
+    _loadCurrentUserFromHive();
+  }
+
+  @override
+  Future<void> saveToCache() async {
+    if (_cachedCurrentUser != null) {
+      await _updateLocalCache(_cachedCurrentUser!);
+    }
+  }
+
+  @override
+  Future<void> clearCache() async {
+    _cachedCurrentUser = null;
+    await _box?.clear();
+    _emitCurrentUser();
+  }
+
   Future<models.User?> getCurrentUser({bool forceRefresh = false}) =>
       _loadCurrentUser(forceRefresh: forceRefresh);
 
@@ -270,6 +313,7 @@ class UserRepository {
     }
   }
 
+  @override
   void dispose() {
     _userChannel?.unsubscribe();
     _currentUserController.close();

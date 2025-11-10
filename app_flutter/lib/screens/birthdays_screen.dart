@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import '../core/state/app_state.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_card/event_card_config.dart';
@@ -18,7 +18,6 @@ class BirthdaysScreen extends ConsumerStatefulWidget {
 }
 
 class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
-
   List<Event> _sortByUpcomingBirthdays(List<Event> birthdays) {
     final now = DateTime.now();
     final currentMonth = now.month;

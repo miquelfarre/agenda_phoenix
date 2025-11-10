@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/user.dart';
+import '../models/domain/user.dart';
 import '../l10n/app_localizations.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';

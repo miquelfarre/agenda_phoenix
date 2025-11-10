@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 
 /// Utility class for event date operations

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../ui/styles/app_styles.dart';
 import '../widgets/adaptive_scaffold.dart';
-import '../models/calendar.dart';
+import '../models/domain/calendar.dart';
 import '../core/state/app_state.dart';
 import '../utils/calendar_permissions.dart';
 import '../utils/error_message_parser.dart';
@@ -187,7 +187,9 @@ class _CreateEditCalendarScreenState
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(calendarRepositoryProvider).deleteCalendar(
+      await ref
+          .read(calendarRepositoryProvider)
+          .deleteCalendar(
             int.parse(widget.calendarId!),
             deleteAssociatedEvents: _deleteAssociatedEvents,
           );

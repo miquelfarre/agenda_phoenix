@@ -5,7 +5,6 @@ OBJETIVO: Verificar que el flujo completo funciona end-to-end:
 1. Mutación via API (POST/PATCH/DELETE)
 2. Realtime notifica cambios (Supabase Realtime)
 3. Endpoints GET reflejan los cambios inmediatamente
-4. Triggers CDC actualizan user_subscription_stats
 
 IMPORTANTE: Estos tests requieren PostgreSQL + Supabase Realtime corriendo.
 Ejecutar con: pytest backend/func_tests/test_realtime_events.py -v -s

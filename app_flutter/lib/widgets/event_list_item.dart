@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_card/event_card_config.dart';
 

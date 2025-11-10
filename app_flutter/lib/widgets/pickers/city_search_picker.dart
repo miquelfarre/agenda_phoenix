@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:eventypop/models/city.dart';
+import 'package:eventypop/models/ui/city.dart';
 import 'package:eventypop/services/city_service.dart';
 import 'package:eventypop/services/country_service.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';

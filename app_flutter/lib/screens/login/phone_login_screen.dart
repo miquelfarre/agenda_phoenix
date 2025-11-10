@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/config_service.dart';
 import '../../services/country_service.dart';
-import '../../models/country.dart';
+import '../../models/ui/country.dart';
 import '../../core/state/app_state.dart';
 
 import '../../widgets/pickers/country_picker.dart';

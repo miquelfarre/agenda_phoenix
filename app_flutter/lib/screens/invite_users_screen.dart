@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/event.dart';
-import '../models/user.dart';
-import '../models/group.dart';
+import '../models/domain/event.dart';
+import '../models/domain/user.dart';
+import '../models/domain/group.dart';
 import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
@@ -199,7 +199,11 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
     );
   }
 
-  Widget _buildContent(BuildContext context, List<dynamic> filteredItems, dynamic l10n) {
+  Widget _buildContent(
+    BuildContext context,
+    List<dynamic> filteredItems,
+    dynamic l10n,
+  ) {
     final users = filteredItems.whereType<User>().toList();
     final groups = filteredItems.whereType<Group>().toList();
 

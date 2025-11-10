@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
-import '../models/user.dart';
+import '../models/domain/user.dart';
 import '../core/state/app_state.dart';
 import '../widgets/subscription_card.dart';
 import '../widgets/empty_state.dart';
@@ -133,8 +133,10 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             child: SearchableList<User>(
               items: users,
               filterFunction: (user, query) {
-                return (user.contactName?.toLowerCase().contains(query) ?? false) ||
-                    (user.instagramName?.toLowerCase().contains(query) ?? false);
+                return (user.contactName?.toLowerCase().contains(query) ??
+                        false) ||
+                    (user.instagramName?.toLowerCase().contains(query) ??
+                        false);
               },
               listBuilder: (context, filteredUsers) {
                 return _buildScrollableContent(filteredUsers, isIOS, l10n, ref);

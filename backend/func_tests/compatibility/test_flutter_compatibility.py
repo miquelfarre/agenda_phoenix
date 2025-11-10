@@ -188,6 +188,7 @@ def sample_data(test_db):
     user1 = User(
         id=1,
         contact_id=1,
+        display_name="Alice Smith",
         name="Alice Smith",  # Display name for private user
         instagram_name="Alice",
         auth_provider="phone",
@@ -200,6 +201,7 @@ def sample_data(test_db):
     user2 = User(
         id=2,
         contact_id=2,
+        display_name="Bob Johnson",
         name="Bob Johnson",  # Display name for public user
         instagram_name="bob_insta",
         auth_provider="instagram",

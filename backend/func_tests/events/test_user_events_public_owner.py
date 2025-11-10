@@ -20,19 +20,10 @@ def test_user_events_includes_public_owner_in_attendees(client):
     Este test hubiera detectado el bug donde el owner público no aparecía
     al actualizar el evento vía realtime.
     """
-    # Create contact for public user
-    contact_data = {
-        "name": "Test Restaurant",
-        "phone": f"+1000{int(datetime.now().timestamp())}",
-    }
-    contact_response = client.post("/api/v1/contacts", json=contact_data)
-    assert contact_response.status_code == 201
-    contact = contact_response.json()
-
     # Create public user (restaurant/gym/etc.)
     public_user_data = {
-        "contact_id": contact["id"],
         "instagram_name": f"restaurant_{datetime.now().timestamp()}",
+        "display_name": f"restaurant_{datetime.now().timestamp()}",
         "auth_provider": "instagram",
         "auth_id": f"ig_restaurant_{datetime.now().timestamp()}",
         "is_public": True,
@@ -44,6 +35,7 @@ def test_user_events_includes_public_owner_in_attendees(client):
     # Create private user (subscriber)
     private_user_data = {
         "name": "Test Subscriber",
+        "display_name": "Test Subscriber",
         "instagram_name": None,
         "phone": f"+2000{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
@@ -106,7 +98,7 @@ def test_user_events_includes_public_owner_in_attendees(client):
 
     # 1. Check owner_name is present
     assert "owner_name" in subscribed_event, "owner_name field must be present"
-    assert subscribed_event["owner_name"] == contact_data["name"], f"owner_name should be '{contact_data['name']}', got '{subscribed_event.get('owner_name')}'"
+    assert subscribed_event["owner_name"] == public_user_data["display_name"], f"owner_name should be '{public_user_data['display_name']}', got '{subscribed_event.get('owner_name')}'"
 
     # 2. Check is_owner_public is correct
     assert "is_owner_public" in subscribed_event, "is_owner_public field must be present"
@@ -141,16 +133,10 @@ def test_user_events_preserves_owner_info_across_updates(client):
     2. Evento se actualiza (vía realtime o manual)
     3. Usuario vuelve a consultar -> owner info debe seguir presente
     """
-    # Setup: Create contact and public user
-    contact_data = {
-        "name": "Test Gym",
-        "phone": f"+3000{int(datetime.now().timestamp())}",
-    }
-    contact = client.post("/api/v1/contacts", json=contact_data).json()
-
+    # Setup: Create public user
     public_user_data = {
-        "contact_id": contact["id"],
         "instagram_name": f"gym_{datetime.now().timestamp()}",
+        "display_name": f"gym_{datetime.now().timestamp()}",
         "auth_provider": "instagram",
         "auth_id": f"ig_gym_{datetime.now().timestamp()}",
         "is_public": True,
@@ -159,6 +145,7 @@ def test_user_events_preserves_owner_info_across_updates(client):
 
     private_user_data = {
         "name": "Test Member",
+        "display_name": "Test Member",
         "phone": f"+4000{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+4000{int(datetime.now().timestamp())}",
@@ -204,7 +191,7 @@ def test_user_events_preserves_owner_info_across_updates(client):
     first_event = next((e for e in first_fetch if e["id"] == event["id"]), None)
 
     assert first_event is not None
-    assert first_event["owner_name"] == contact_data["name"]
+    assert first_event["owner_name"] == public_user_data["display_name"]
     assert first_event["is_owner_public"] is True
 
     # Simulate an update (change event description)
@@ -222,7 +209,7 @@ def test_user_events_preserves_owner_info_across_updates(client):
     assert second_event is not None, "Event should still be in user's events after update"
 
     # CRITICAL: Owner info must not be lost after update
-    assert second_event["owner_name"] == contact_data["name"], "owner_name must be preserved after event update"
+    assert second_event["owner_name"] == public_user_data["display_name"], "owner_name must be preserved after event update"
     assert second_event["is_owner_public"] is True, "is_owner_public must be preserved after event update"
 
     # Check attendees still does NOT include public owner (they are not physical attendees)

@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/group.dart';
-import '../models/group_hive.dart';
+import '../models/domain/group.dart';
+import '../models/persistence/group_hive.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
 import '../utils/app_exceptions.dart' as exceptions;
+import 'contracts/group_repository_contract.dart';
 
-class GroupRepository {
+class GroupRepository implements IGroupRepository {
   static const String _boxName = 'groups';
   final _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
@@ -22,8 +23,14 @@ class GroupRepository {
   RealtimeChannel? _realtimeChannel;
 
   final Completer<void> _initCompleter = Completer<void>();
+
+  @override
   Future<void> get initialized => _initCompleter.future;
 
+  @override
+  Stream<List<Group>> get dataStream => groupsStream;
+
+  @override
   Stream<List<Group>> get groupsStream async* {
     // Wait for initialization to complete
     try {
@@ -44,6 +51,7 @@ class GroupRepository {
     yield* _groupsController.stream;
   }
 
+  @override
   Future<void> initialize() async {
     if (_initCompleter.isCompleted) return;
 
@@ -296,6 +304,11 @@ class GroupRepository {
 
   // --- Local cache and realtime ---
 
+  @override
+  Future<void> startRealtimeSubscription() async {
+    await _startRealtimeSubscription();
+  }
+
   Future<void> _startRealtimeSubscription() async {
     _realtimeChannel = _supabaseService.client
         .channel('groups_realtime')
@@ -306,6 +319,32 @@ class GroupRepository {
           callback: _handleGroupChange,
         )
         .subscribe();
+  }
+
+  @override
+  Future<void> stopRealtimeSubscription() async {
+    await _realtimeChannel?.unsubscribe();
+    _realtimeChannel = null;
+  }
+
+  @override
+  bool get isRealtimeConnected => _realtimeChannel != null;
+
+  @override
+  Future<void> loadFromCache() async {
+    _loadGroupsFromHive();
+  }
+
+  @override
+  Future<void> saveToCache() async {
+    await _updateLocalCache(_cachedGroups);
+  }
+
+  @override
+  Future<void> clearCache() async {
+    _cachedGroups = [];
+    await _box?.clear();
+    _emitCurrentGroups();
   }
 
   void _handleGroupChange(PostgresChangePayload payload) {
@@ -361,6 +400,7 @@ class GroupRepository {
     }
   }
 
+  @override
   void dispose() {
     _realtimeChannel?.unsubscribe();
     _groupsController.close();
@@ -409,9 +449,13 @@ class GroupRepository {
     final isAdmin = group.isAdmin(adminUserId);
     final isSelf = adminUserId == memberUserId;
 
-    print('  → isCreator: $isCreator (ownerId=${group.ownerId} == adminUserId=$adminUserId)');
+    print(
+      '  → isCreator: $isCreator (ownerId=${group.ownerId} == adminUserId=$adminUserId)',
+    );
     print('  → isAdmin: $isAdmin');
-    print('  → isSelf: $isSelf (adminUserId=$adminUserId == memberUserId=$memberUserId)');
+    print(
+      '  → isSelf: $isSelf (adminUserId=$adminUserId == memberUserId=$memberUserId)',
+    );
 
     if (operationType == 'add') {
       print('  → Permission check for ADD: isAdmin=$isAdmin');
@@ -431,7 +475,9 @@ class GroupRepository {
       }
       print('  ✅ PERMISSION GRANTED for ADD');
     } else if (operationType == 'remove') {
-      print('  → Permission check for REMOVE: isCreator=$isCreator OR isAdmin=$isAdmin OR isSelf=$isSelf');
+      print(
+        '  → Permission check for REMOVE: isCreator=$isCreator OR isAdmin=$isAdmin OR isSelf=$isSelf',
+      );
 
       // BUG FIX: Allow creator, admin, or self to remove members
       if (!isCreator && !isAdmin && !isSelf) {

@@ -4,10 +4,9 @@ import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/event.dart';
-import '../models/event_interaction.dart';
-import '../models/recurrence_pattern.dart';
-import '../models/user.dart';
+import '../models/domain/event.dart';
+import '../models/domain/event_interaction.dart';
+import '../models/domain/user.dart';
 import '../repositories/event_repository.dart';
 import '../core/state/app_state.dart';
 import 'create_edit_event_screen.dart';
@@ -288,7 +287,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             ],
 
             if ((_detailedEvent ?? currentEvent).owner?.isPublic == true &&
-                (_detailedEvent ?? currentEvent).owner?.contactName != null) ...[
+                (_detailedEvent ?? currentEvent).owner?.contactName !=
+                    null) ...[
               const SizedBox(height: 32),
               Consumer(
                 builder: (context, ref, child) {
@@ -1263,8 +1263,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         // Navigate to event series screen
         Navigator.of(context).push(
           CupertinoPageRoute(
-            builder: (context) =>
-                EventSeriesDetailScreen(events: seriesEvents, seriesName: event.name),
+            builder: (context) => EventSeriesDetailScreen(
+              events: seriesEvents,
+              seriesName: event.name,
+            ),
           ),
         );
       }

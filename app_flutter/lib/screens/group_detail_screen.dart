@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/group.dart';
-import '../models/user.dart';
+import '../models/domain/group.dart';
+import '../models/domain/user.dart';
 import '../services/config_service.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../ui/helpers/platform/platform_widgets.dart';

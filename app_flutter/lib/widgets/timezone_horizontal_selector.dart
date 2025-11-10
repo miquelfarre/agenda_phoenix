@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../models/country.dart';
-import '../models/selector_option.dart';
+import '../models/ui/country.dart';
+import '../models/ui/selector_option.dart';
 import '../services/country_service.dart';
 import '../services/timezone_service.dart';
 import 'horizontal_selector_widget.dart';

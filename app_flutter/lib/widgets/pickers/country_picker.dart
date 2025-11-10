@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
-import '../../models/country.dart';
+import '../../models/ui/country.dart';
 import '../../services/country_service.dart';
 import '../../services/timezone_service.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';

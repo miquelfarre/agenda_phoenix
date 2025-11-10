@@ -1,10 +1,10 @@
 import 'package:eventypop/app.dart';
 import 'package:eventypop/core/storage/hive_migration.dart';
-import 'package:eventypop/models/calendar_hive.dart';
-import 'package:eventypop/models/event_hive.dart';
-import 'package:eventypop/models/group_hive.dart';
-import 'package:eventypop/models/user_event_note_hive.dart';
-import 'package:eventypop/models/user_hive.dart';
+import 'package:eventypop/models/persistence/calendar_hive.dart';
+import 'package:eventypop/models/persistence/event_hive.dart';
+import 'package:eventypop/models/persistence/group_hive.dart';
+import 'package:eventypop/models/persistence/user_event_note_hive.dart';
+import 'package:eventypop/models/persistence/user_hive.dart';
 import 'package:eventypop/services/api_client.dart';
 import 'package:eventypop/services/config_service.dart';
 import 'package:eventypop/services/timezone_service.dart';

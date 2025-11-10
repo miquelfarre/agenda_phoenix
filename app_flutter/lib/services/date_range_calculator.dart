@@ -1,7 +1,7 @@
 import 'dart:math';
-import '../models/month_option.dart';
-import '../models/day_option.dart';
-import '../models/time_option.dart';
+import '../models/ui/month_option.dart';
+import '../models/ui/day_option.dart';
+import '../models/ui/time_option.dart';
 
 class DateRangeCalculator {
   static DateTime calculateMaxDate(DateTime today, int months) {

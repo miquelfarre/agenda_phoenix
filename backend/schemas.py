@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, ConfigDict
 
 # ============================================================================
-# CONTACT SCHEMAS
+# CONTACT SCHEMAS (LEGACY - DEPRECATED)
 # ============================================================================
 
 
@@ -33,28 +33,83 @@ class ContactResponse(ContactBase):
 
 
 # ============================================================================
+# USER CONTACT SCHEMAS (NEW)
+# ============================================================================
+
+
+class UserContactBase(BaseModel):
+    """Base schema for UserContact"""
+
+    contact_name: str
+    phone_number: str
+
+
+class UserContactCreate(UserContactBase):
+    """Schema for creating a new user contact"""
+
+    pass
+
+
+class UserContactSync(BaseModel):
+    """Schema for syncing contacts from device"""
+
+    contacts: List[UserContactBase]
+
+
+class UserContactResponse(UserContactBase):
+    """Schema for user contact response"""
+
+    id: int
+    owner_id: int
+    registered_user_id: Optional[int]
+    is_registered: bool = False
+    last_synced_at: datetime
+    created_at: datetime
+    updated_at: datetime
+
+    # Enriched data if contact is registered
+    registered_user: Optional[Dict] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserContactSyncResponse(BaseModel):
+    """Response after syncing contacts"""
+
+    synced_count: int
+    registered_count: int
+    registered_contacts: List[Dict]
+
+
+# ============================================================================
 # USER SCHEMAS
 # ============================================================================
 
 
 class UserBase(BaseModel):
-    name: Optional[str] = None  # Display name for both types
-    instagram_name: Optional[str] = None  # Instagram name for public users
-    phone: Optional[str] = None  # Phone number for private users
+    # New fields
+    display_name: str  # REQUIRED - nombre que ve todo el mundo
+    phone: Optional[str] = None  # For phone users
+    instagram_username: Optional[str] = None  # For instagram users
+    profile_picture_url: Optional[str] = None
     auth_provider: str
     auth_id: str
     is_public: bool = False
     is_admin: bool = False
+
+    # Legacy fields (DEPRECATED)
+    name: Optional[str] = None
+    instagram_name: Optional[str] = None
     profile_picture: Optional[str] = None
 
 
 class UserCreate(UserBase):
-    contact_id: Optional[int] = None
+    contact_id: Optional[int] = None  # Legacy field
 
 
 class UserResponse(UserBase):
     id: int
-    contact_id: Optional[int]
+    contact_id: Optional[int]  # Legacy field
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
@@ -535,30 +590,6 @@ class UserBlockResponse(UserBlockBase):
 
 
 # ============================================================================
-# APP BAN SCHEMAS
-# ============================================================================
-
-
-class AppBanBase(BaseModel):
-    reason: Optional[str] = None
-
-
-class AppBanCreate(AppBanBase):
-    user_id: int
-    banned_by: int
-
-
-class AppBanResponse(AppBanBase):
-    id: int
-    user_id: int
-    banned_by: int
-    banned_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# ============================================================================
 # EVENT CANCELLATION SCHEMAS
 # ============================================================================
 
@@ -602,3 +633,53 @@ class EventCancellationViewResponse(BaseModel):
     viewed_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ========================================
+# User Contact Schemas
+# ========================================
+
+
+class UserContactBase(BaseModel):
+    """Schema for contact sync - just name and phone"""
+
+    contact_name: str
+    phone_number: str
+
+
+class UserContactSync(BaseModel):
+    """Schema for syncing device contacts"""
+
+    contacts: List[UserContactBase]
+
+
+class UserContactSyncResponse(BaseModel):
+    """Response after syncing contacts"""
+
+    synced_count: int
+    registered_count: int
+    registered_contacts: List[dict]
+
+
+class UserContactResponse(BaseModel):
+    """Complete contact response with registered user data"""
+
+    id: int
+    owner_id: int
+    contact_name: str
+    phone_number: str
+    registered_user_id: Optional[int]
+    is_registered: bool
+    last_synced_at: datetime
+    created_at: datetime
+    updated_at: datetime
+    registered_user: Optional[dict] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WebhookUserRegistered(BaseModel):
+    """Schema for user registration webhook"""
+
+    user_id: int
+    phone: str

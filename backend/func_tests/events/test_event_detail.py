@@ -25,9 +25,9 @@ def test_users(test_db):
     test_db.commit()
 
     # Create users with contact references
-    user1_data = UserCreate(instagram_name="owner", auth_provider="test", auth_id="test_owner_123", is_public=False, contact_id=contact1.id)
-    user2_data = UserCreate(instagram_name="invitee1", auth_provider="test", auth_id="test_invitee1_456", is_public=False, contact_id=contact2.id)
-    user3_data = UserCreate(instagram_name="invitee2", auth_provider="test", auth_id="test_invitee2_789", is_public=False, contact_id=contact3.id)
+    user1_data = UserCreate(display_name="Owner User", instagram_name="owner", auth_provider="test", auth_id="test_owner_123", is_public=False, contact_id=contact1.id)
+    user2_data = UserCreate(display_name="Invitee One", instagram_name="invitee1", auth_provider="test", auth_id="test_invitee1_456", is_public=False, contact_id=contact2.id)
+    user3_data = UserCreate(display_name="Invitee Two", instagram_name="invitee2", auth_provider="test", auth_id="test_invitee2_789", is_public=False, contact_id=contact3.id)
 
     user1 = user_crud.create(test_db, obj_in=user1_data)
     user2 = user_crud.create(test_db, obj_in=user2_data)

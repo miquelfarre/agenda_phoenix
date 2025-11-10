@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/user.dart' as models;
-import '../models/user_hive.dart';
-import '../models/event.dart';
+import '../models/domain/user.dart' as models;
+import '../models/persistence/user_hive.dart';
+import '../models/domain/event.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
 import '../utils/realtime_filter.dart';
+import 'contracts/subscription_repository_contract.dart';
 
-class SubscriptionRepository {
+class SubscriptionRepository implements ISubscriptionRepository {
   static const String _boxName = 'subscriptions';
   final _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
@@ -23,8 +24,14 @@ class SubscriptionRepository {
   RealtimeChannel? _statsChannel;
 
   final Completer<void> _initCompleter = Completer<void>();
+
+  @override
   Future<void> get initialized => _initCompleter.future;
 
+  @override
+  Stream<List<models.User>> get dataStream => subscriptionsStream;
+
+  @override
   Stream<List<models.User>> get subscriptionsStream async* {
     if (_cachedUsers.isNotEmpty) {
       yield List.from(_cachedUsers);
@@ -32,6 +39,7 @@ class SubscriptionRepository {
     yield* _subscriptionsController.stream;
   }
 
+  @override
   Future<void> initialize() async {
     if (_initCompleter.isCompleted) return;
 
@@ -102,12 +110,46 @@ class SubscriptionRepository {
     }
   }
 
+  @override
   Future<void> refresh() async {
     try {
       await _fetchAndSync();
     } catch (e, _) {
       rethrow;
     }
+  }
+
+  // --- Local cache and realtime ---
+
+  @override
+  Future<void> startRealtimeSubscription() async {
+    await _startRealtimeSubscription();
+  }
+
+  @override
+  Future<void> stopRealtimeSubscription() async {
+    await _statsChannel?.unsubscribe();
+    _statsChannel = null;
+  }
+
+  @override
+  bool get isRealtimeConnected => _statsChannel != null;
+
+  @override
+  Future<void> loadFromCache() async {
+    _loadSubscriptionsFromHive();
+  }
+
+  @override
+  Future<void> saveToCache() async {
+    await _updateLocalCache(_cachedUsers);
+  }
+
+  @override
+  Future<void> clearCache() async {
+    _cachedUsers = [];
+    await _box?.clear();
+    _emitCurrentSubscriptions();
   }
 
   Future<void> createSubscription({required int targetUserId}) async {
@@ -142,13 +184,17 @@ class SubscriptionRepository {
           .map((data) => models.User.fromJson(data))
           .where(
             (user) =>
-                (user.contactName?.toLowerCase().contains(query.toLowerCase()) ??
+                (user.contactName?.toLowerCase().contains(
+                      query.toLowerCase(),
+                    ) ??
                     false) ||
                 (user.instagramName?.toLowerCase().contains(
                       query.toLowerCase(),
                     ) ??
                     false) ||
-                (user.contactName?.toLowerCase().contains(query.toLowerCase()) ??
+                (user.contactName?.toLowerCase().contains(
+                      query.toLowerCase(),
+                    ) ??
                     false),
           )
           .toList();
@@ -233,6 +279,7 @@ class SubscriptionRepository {
     await _fetchAndSync();
   }
 
+  @override
   void dispose() {
     _statsChannel?.unsubscribe();
     _subscriptionsController.close();

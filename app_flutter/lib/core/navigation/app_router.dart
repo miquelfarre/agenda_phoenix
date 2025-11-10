@@ -21,9 +21,9 @@ import '../../screens/add_group_members_screen.dart';
 import '../../screens/contact_detail_screen.dart';
 import '../../services/supabase_auth_service.dart';
 import '../navigation/navigation_shell.dart';
-import '../../models/event.dart';
-import '../../models/group.dart';
-import '../../models/user.dart';
+import '../../models/domain/event.dart';
+import '../../models/domain/group.dart';
+import '../../models/domain/user.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();

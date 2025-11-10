@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../models/selector_option.dart';
+import '../models/ui/selector_option.dart';
 import 'horizontal_selector_widget.dart';
 
 class RecurrenceTimeSelector extends StatelessWidget {

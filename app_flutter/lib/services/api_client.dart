@@ -359,7 +359,9 @@ class ApiClient implements IApiClient {
     // Contacts are private users (is_public=false) who have logged into the app
     // NOT the contacts table, which contains phone contacts
     // Exclude the current user from their own contacts list
-    final result = await get('/users?public=false&enriched=true&exclude_user_id=$currentUserId');
+    final result = await get(
+      '/users?public=false&enriched=true&exclude_user_id=$currentUserId',
+    );
     return List<Map<String, dynamic>>.from(result);
   }
 
@@ -960,6 +962,35 @@ class ApiClient implements IApiClient {
   @override
   Future<void> deleteAppBan(int banId) async {
     await delete('/app_bans/$banId');
+  }
+
+  // ============================================================================
+  // UserContacts API
+  // ============================================================================
+
+  @override
+  Future<Map<String, dynamic>> syncContacts({
+    required List<Map<String, String>> contacts,
+  }) async {
+    final result = await post('/contacts/sync', body: {'contacts': contacts});
+    return result as Map<String, dynamic>;
+  }
+
+  @override
+  Future<List<dynamic>> getMyContacts({
+    bool onlyRegistered = true,
+    int limit = 100,
+    int skip = 0,
+  }) async {
+    final result = await get(
+      '/contacts',
+      queryParams: {
+        'only_registered': onlyRegistered,
+        'limit': limit,
+        'skip': skip,
+      },
+    );
+    return result as List<dynamic>;
   }
 
   static final ApiClient _instance = ApiClient._internal();

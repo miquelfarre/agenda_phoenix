@@ -106,13 +106,15 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
     def get_multi_with_optional_enrichment(self, db: Session, *, public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List:
         """
-        Get users with optional public filter and optional contact enrichment.
+        Get users with optional public filter and optional enrichment.
+
+        UPDATED: Now uses new User fields (display_name, instagram_username) instead of Contact legacy.
 
         Args:
             db: Database session
-            public: Filter by public status (True=has instagram_name, False=no instagram_name, None=all)
-            enriched: Return enriched data with contact information
-            search: Case-insensitive search in instagram_name and contact name
+            public: Filter by public status (True=public users, False=private users, None=all)
+            enriched: Return enriched data (now just returns user fields, kept for compatibility)
+            search: Case-insensitive search in display_name and instagram_username
             skip: Number of records to skip
             limit: Maximum number of records
             order_by: Column name to order by
@@ -128,17 +130,20 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         # Apply search filter if provided
         if search:
             search_term = f"%{search}%"
-            # Join with Contact to search in both instagram_name and contact name
-            query = query.outerjoin(Contact, User.contact_id == Contact.id)
-            query = query.filter(or_(User.instagram_name.ilike(search_term), Contact.name.ilike(search_term)))
+            # Search in display_name, instagram_username, and legacy fields
+            query = query.filter(
+                or_(
+                    User.display_name.ilike(search_term),
+                    User.instagram_username.ilike(search_term),
+                    # Legacy fields for backward compatibility
+                    User.instagram_name.ilike(search_term),
+                    User.name.ilike(search_term),
+                )
+            )
 
         if public is not None:
-            if public:
-                # Public users have an instagram_name
-                query = query.filter(User.instagram_name.isnot(None))
-            else:
-                # Private users don't have an instagram_name
-                query = query.filter(User.instagram_name.is_(None))
+            # Use is_public field instead of checking instagram_name
+            query = query.filter(User.is_public == public)
 
         # Apply ordering and pagination
         order_col = getattr(User, order_by) if order_by and hasattr(User, order_by) else User.id
@@ -151,55 +156,40 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         users = query.all()
 
-        # If enriched, add contact information
+        # If enriched, return dicts with all user data
         if enriched:
-            # Use JOIN to get contact data efficiently
-            results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id)
-
-            # Apply search filter if provided
-            if search:
-                search_term = f"%{search}%"
-                results = results.filter(or_(User.instagram_name.ilike(search_term), Contact.name.ilike(search_term)))
-
-            if public is not None:
-                if public:
-                    results = results.filter(User.instagram_name.isnot(None))
-                else:
-                    results = results.filter(User.instagram_name.is_(None))
-
-            # Apply ordering and pagination consistently on enriched path
-            order_col = getattr(User, order_by) if order_by and hasattr(User, order_by) else User.id
-            if order_dir and order_dir.lower() == "desc":
-                results = results.order_by(order_col.desc())
-            else:
-                results = results.order_by(order_col.asc())
-
-            results = results.offset(max(0, skip)).limit(max(1, min(200, limit))).all()
-
             enriched_users = []
-            for user, contact in results:
-                contact_name = contact.name if contact else None
-                contact_phone = contact.phone if contact else None
+            for user in users:
+                # Use new fields, with fallback to legacy
+                display_name = user.display_name or user.name or f"Usuario #{user.id}"
+                instagram_username = user.instagram_username or user.instagram_name
+                profile_picture_url = user.profile_picture_url or user.profile_picture
 
-                # Build display name
-                instagram_name = user.instagram_name
-                if instagram_name and contact_name:
-                    display_name = f"{instagram_name} ({contact_name})"
-                elif instagram_name:
-                    display_name = instagram_name
-                elif contact_name:
-                    display_name = contact_name
-                else:
-                    display_name = f"Usuario #{user.id}"
+                # For backward compatibility, also include legacy contact fields
+                # (will be None for new users)
+                contact_name = None
+                contact_phone = None
+                if user.contact_id:
+                    contact = db.query(Contact).filter(Contact.id == user.contact_id).first()
+                    if contact:
+                        contact_name = contact.name
+                        contact_phone = contact.phone
 
                 enriched_users.append(
                     {
                         "id": user.id,
-                        "instagram_name": user.instagram_name,
+                        # New fields
+                        "display_name": display_name,
+                        "instagram_username": instagram_username,
+                        "profile_picture_url": profile_picture_url,
+                        "phone": user.phone,
+                        # Standard fields
                         "auth_provider": user.auth_provider,
                         "auth_id": user.auth_id,
                         "is_public": user.is_public,
                         "is_admin": user.is_admin,
+                        # Legacy fields (for backward compatibility)
+                        "instagram_name": user.instagram_name,
                         "profile_picture": user.profile_picture,
                         "contact_id": user.contact_id,
                         "contact_name": contact_name,

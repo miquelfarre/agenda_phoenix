@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import '../repositories/event_repository.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
@@ -40,7 +40,8 @@ class EventOperations {
           final l10n = context.l10n;
           PlatformDialogHelpers.showSnackBar(
             context: context,
-            message: '${l10n.eventDeleted.replaceAll(' exitosamente', '')}: "${event.title}"',
+            message:
+                '${l10n.eventDeleted.replaceAll(' exitosamente', '')}: "${event.title}"',
           );
         }
       } else {
@@ -51,7 +52,8 @@ class EventOperations {
           final l10n = context.l10n;
           PlatformDialogHelpers.showSnackBar(
             context: context,
-            message: '${l10n.eventRemoved.replaceAll(' exitosamente', '')}: "${event.title}"',
+            message:
+                '${l10n.eventRemoved.replaceAll(' exitosamente', '')}: "${event.title}"',
           );
         }
       }

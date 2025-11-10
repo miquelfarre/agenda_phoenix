@@ -16,7 +16,7 @@ class SearchableList<T> extends StatefulWidget {
 
   /// Builder function to create the list widget from filtered items
   final Widget Function(BuildContext context, List<T> filteredItems)
-      listBuilder;
+  listBuilder;
 
   /// Placeholder text for the search field
   final String searchPlaceholder;
@@ -94,13 +94,12 @@ class _SearchableListState<T> extends State<SearchableList<T>> {
             child: CupertinoSearchTextField(
               controller: _searchController,
               placeholder: widget.searchPlaceholder,
-              backgroundColor: widget.searchBackgroundColor ??
+              backgroundColor:
+                  widget.searchBackgroundColor ??
                   CupertinoColors.systemGrey6.resolveFrom(context),
             ),
           ),
-        Expanded(
-          child: widget.listBuilder(context, filteredItems),
-        ),
+        Expanded(child: widget.listBuilder(context, filteredItems)),
       ],
     );
   }

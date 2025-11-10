@@ -35,7 +35,7 @@ async def get_users(public: Optional[bool] = None, enriched: bool = False, searc
         if isinstance(result, list) and len(result) > 0:
             if isinstance(result[0], dict):
                 # Enriched results are dicts
-                result = [r for r in result if r.get('id') != exclude_user_id]
+                result = [r for r in result if r.get("id") != exclude_user_id]
             else:
                 # Non-enriched results are ORM objects
                 result = [r for r in result if r.id != exclude_user_id]
@@ -55,35 +55,40 @@ async def get_current_user(current_user_id: int = Depends(get_current_user_id), 
         raise HTTPException(status_code=404, detail="User not found")
 
     if enriched:
-        # Get contact info if exists
+        # Use new fields with fallback to legacy
+        display_name = db_user.display_name or db_user.name or db_user.instagram_name or f"Usuario #{db_user.id}"
+        instagram_username = db_user.instagram_username or db_user.instagram_name
+        profile_picture_url = db_user.profile_picture_url or db_user.profile_picture
+
+        # Get legacy contact info if exists (for backward compatibility)
         db_contact = None
+        contact_name = None
+        contact_phone = None
         if db_user.contact_id:
             db_contact = contact.get(db, id=db_user.contact_id)
-
-        # Build display name
-        contact_name = db_contact.name if db_contact else None
-        instagram_name = db_user.instagram_name
-        if instagram_name and contact_name:
-            display_name = f"{instagram_name} ({contact_name})"
-        elif instagram_name:
-            display_name = instagram_name
-        elif contact_name:
-            display_name = contact_name
-        else:
-            display_name = f"Usuario #{db_user.id}"
+            if db_contact:
+                contact_name = db_contact.name
+                contact_phone = db_contact.phone
 
         return UserEnrichedResponse(
             id=db_user.id,
-            instagram_name=db_user.instagram_name,
+            # New fields
+            display_name=display_name,
+            instagram_username=instagram_username,
+            profile_picture_url=profile_picture_url,
+            phone=db_user.phone,
+            # Standard fields
             auth_provider=db_user.auth_provider,
             auth_id=db_user.auth_id,
             is_public=db_user.is_public,
             is_admin=db_user.is_admin,
+            # Legacy fields
+            instagram_name=db_user.instagram_name,
             profile_picture=db_user.profile_picture,
             contact_id=db_user.contact_id,
-            contact_name=db_contact.name if db_contact else None,
-            contact_phone=db_contact.phone if db_contact else None,
-            display_name=display_name,
+            contact_name=contact_name,
+            contact_phone=contact_phone,
+            # Metadata
             last_login=db_user.last_login,
             created_at=db_user.created_at,
             updated_at=db_user.updated_at,
@@ -100,35 +105,40 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="User not found")
 
     if enriched:
-        # Get contact info if exists
+        # Use new fields with fallback to legacy
+        display_name = db_user.display_name or db_user.name or db_user.instagram_name or f"Usuario #{db_user.id}"
+        instagram_username = db_user.instagram_username or db_user.instagram_name
+        profile_picture_url = db_user.profile_picture_url or db_user.profile_picture
+
+        # Get legacy contact info if exists (for backward compatibility)
         db_contact = None
+        contact_name = None
+        contact_phone = None
         if db_user.contact_id:
             db_contact = contact.get(db, id=db_user.contact_id)
-
-        # Build display name
-        contact_name = db_contact.name if db_contact else None
-        instagram_name = db_user.instagram_name
-        if instagram_name and contact_name:
-            display_name = f"{instagram_name} ({contact_name})"
-        elif instagram_name:
-            display_name = instagram_name
-        elif contact_name:
-            display_name = contact_name
-        else:
-            display_name = f"Usuario #{db_user.id}"
+            if db_contact:
+                contact_name = db_contact.name
+                contact_phone = db_contact.phone
 
         return UserEnrichedResponse(
             id=db_user.id,
-            instagram_name=db_user.instagram_name,
+            # New fields
+            display_name=display_name,
+            instagram_username=instagram_username,
+            profile_picture_url=profile_picture_url,
+            phone=db_user.phone,
+            # Standard fields
             auth_provider=db_user.auth_provider,
             auth_id=db_user.auth_id,
             is_public=db_user.is_public,
             is_admin=db_user.is_admin,
+            # Legacy fields
+            instagram_name=db_user.instagram_name,
             profile_picture=db_user.profile_picture,
             contact_id=db_user.contact_id,
-            contact_name=db_contact.name if db_contact else None,
-            contact_phone=db_contact.phone if db_contact else None,
-            display_name=display_name,
+            contact_name=contact_name,
+            contact_phone=contact_phone,
+            # Metadata
             last_login=db_user.last_login,
             created_at=db_user.created_at,
             updated_at=db_user.updated_at,
@@ -367,13 +377,15 @@ async def get_user_events(
     # Fetch owner info (name, is_public, profile_picture)
     owner_info = {}  # owner_id -> {name, is_public, profile_picture}
     if owner_ids:
-        owners_query = db.query(models.User, models.Contact).join(models.Contact, models.User.contact_id == models.Contact.id, isouter=True).filter(models.User.id.in_(owner_ids)).all()
+        owners_query = db.query(models.User).filter(models.User.id.in_(owner_ids)).all()
 
-        for user_obj, contact_obj in owners_query:
-            # Determine owner name: use contact name if available, otherwise instagram_name (for Instagram users)
-            owner_name = contact_obj.name if contact_obj else user_obj.instagram_name
-            logger.info(f"[GET /users/{user_id}/events] OWNER INFO: user_id={user_obj.id}, " f"is_public={user_obj.is_public}, has_contact={contact_obj is not None}, " f"owner_name={owner_name}, instagram_name={user_obj.instagram_name}")
-            owner_info[user_obj.id] = {"name": owner_name, "is_public": user_obj.is_public, "profile_picture": user_obj.profile_picture}
+        for user_obj in owners_query:
+            # Use new display_name field (with fallback to legacy fields)
+            owner_name = user_obj.display_name or user_obj.name or user_obj.instagram_name or f"Usuario #{user_obj.id}"
+            profile_picture = user_obj.profile_picture_url or user_obj.profile_picture
+
+            logger.info(f"[GET /users/{user_id}/events] OWNER INFO: user_id={user_obj.id}, " f"is_public={user_obj.is_public}, owner_name={owner_name}")
+            owner_info[user_obj.id] = {"name": owner_name, "is_public": user_obj.is_public, "profile_picture": profile_picture}
 
     # Fetch calendar info (name, color) - assuming calendars table has these fields
     calendar_info = {}  # calendar_id -> {name, color}
@@ -391,9 +403,8 @@ async def get_user_events(
         from sqlalchemy import and_, or_
 
         attendees_query = (
-            db.query(models.EventInteraction.event_id, models.User, models.Contact)
+            db.query(models.EventInteraction.event_id, models.User)
             .join(models.User, models.EventInteraction.user_id == models.User.id)
-            .join(models.Contact, models.User.contact_id == models.Contact.id, isouter=True)
             .filter(
                 models.EventInteraction.event_id.in_(event_ids),
                 or_(models.EventInteraction.status == "accepted", and_(models.EventInteraction.status == "rejected", models.EventInteraction.is_attending == True)),
@@ -402,10 +413,15 @@ async def get_user_events(
             .all()
         )
 
-        for event_id, user_obj, contact_obj in attendees_query:
+        for event_id, user_obj in attendees_query:
             if event_id not in attendees_map:
                 attendees_map[event_id] = []
-            attendees_map[event_id].append({"id": user_obj.id, "contact_name": contact_obj.name if contact_obj else None, "instagram_name": user_obj.instagram_name, "profile_picture": user_obj.profile_picture})
+
+            # Use new fields with fallback to legacy
+            display_name = user_obj.display_name or user_obj.name or f"Usuario #{user_obj.id}"
+            profile_picture = user_obj.profile_picture_url or user_obj.profile_picture
+
+            attendees_map[event_id].append({"id": user_obj.id, "contact_name": display_name, "instagram_name": user_obj.instagram_username or user_obj.instagram_name, "profile_picture": profile_picture})  # Use display_name instead of contact.name
 
     # ============================================================
     # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
@@ -756,6 +772,7 @@ async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
         result.append(
             UserSubscriptionResponse(
                 id=public_user.id,
+                display_name=public_user.display_name,
                 contact_id=public_user.contact_id,
                 instagram_name=public_user.instagram_name,
                 auth_provider=public_user.auth_provider,

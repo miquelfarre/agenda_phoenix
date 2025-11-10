@@ -9,7 +9,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models import AppBan, CalendarMembership, Event, EventCancellation, EventInteraction, User
+from models import CalendarMembership, Event, EventCancellation, EventInteraction, User
 from schemas import EventBase, EventCreate
 
 
@@ -166,12 +166,6 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         owner_exists = db.query(User.id).filter(User.id == obj_in.owner_id).first() is not None
         if not owner_exists:
             return None, "Owner user not found", None
-
-        # Check if owner is banned - return detailed info
-        ban = db.query(AppBan).filter(AppBan.user_id == obj_in.owner_id).first()
-        if ban:
-            ban_detail = {"message": "User is banned from the application", "reason": ban.reason, "banned_at": ban.banned_at.isoformat() if ban.banned_at else None}
-            return None, "User is banned from the application", ban_detail
 
         # Prepare event data
         event_data = obj_in.model_dump()

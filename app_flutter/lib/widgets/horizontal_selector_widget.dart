@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/selector_option.dart';
+import '../models/ui/selector_option.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 class HorizontalSelectorWidget<T> extends StatefulWidget {

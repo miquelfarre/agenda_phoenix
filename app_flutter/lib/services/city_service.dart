@@ -1,4 +1,4 @@
-import '../models/city.dart';
+import '../models/ui/city.dart';
 import '../config/timezone_data.dart';
 
 class CityService {

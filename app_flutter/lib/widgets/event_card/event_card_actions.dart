@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/event.dart';
-import '../../models/event_interaction.dart';
+import '../../models/domain/event.dart';
+import '../../models/domain/event_interaction.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';

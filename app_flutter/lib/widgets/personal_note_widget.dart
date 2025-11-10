@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../core/state/app_state.dart';
 import '../utils/app_exceptions.dart';

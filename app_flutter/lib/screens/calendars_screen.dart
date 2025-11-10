@@ -8,7 +8,7 @@ import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import '../core/state/app_state.dart';
-import '../models/calendar.dart';
+import '../models/domain/calendar.dart';
 import 'calendar_detail_screen.dart';
 import '../utils/error_message_parser.dart';
 import '../utils/calendar_operations.dart';

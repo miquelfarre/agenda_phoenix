@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/app_settings.dart';
+import '../../models/ui/app_settings.dart';
 import '../../repositories/settings_repository.dart';
 
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {

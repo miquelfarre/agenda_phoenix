@@ -6,7 +6,7 @@ import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers/settings_provider.dart';
 import '../core/state/app_state.dart' show blockedUsersStreamProvider;
-import '../models/app_settings.dart';
+import '../models/ui/app_settings.dart';
 import '../services/country_service.dart';
 import '../widgets/country_timezone_selector.dart';
 import '../widgets/language_selector.dart';

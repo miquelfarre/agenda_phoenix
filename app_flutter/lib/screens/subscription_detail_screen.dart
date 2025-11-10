@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
-import '../models/event.dart';
-import '../models/user.dart';
+import '../models/domain/event.dart';
+import '../models/domain/user.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/searchable_list.dart';
@@ -99,9 +99,10 @@ class _SubscriptionDetailScreenState
       await subscriptionRepo.subscribeToUser(widget.publicUser.id);
 
       if (mounted) {
-        final userName = widget.publicUser.contactName ??
-                        widget.publicUser.instagramName ??
-                        'Usuario';
+        final userName =
+            widget.publicUser.contactName ??
+            widget.publicUser.instagramName ??
+            'Usuario';
         PlatformDialogHelpers.showSnackBar(
           context: context,
           message: AppLocalizations.of(context)!.subscribedTo(userName),
@@ -136,9 +137,10 @@ class _SubscriptionDetailScreenState
       await subscriptionRepo.unsubscribeFromUser(widget.publicUser.id);
 
       if (mounted) {
-        final userName = widget.publicUser.contactName ??
-                        widget.publicUser.instagramName ??
-                        'Usuario';
+        final userName =
+            widget.publicUser.contactName ??
+            widget.publicUser.instagramName ??
+            'Usuario';
         PlatformDialogHelpers.showSnackBar(
           context: context,
           message: AppLocalizations.of(context)!.unsubscribedFrom(userName),
@@ -160,7 +162,6 @@ class _SubscriptionDetailScreenState
       if (mounted) setState(() => _isProcessingSubscription = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -271,9 +272,7 @@ class _SubscriptionDetailScreenState
           )
         else
           ...groupedEvents.map((group) {
-            return SliverToBoxAdapter(
-              child: _buildDateGroup(context, group),
-            );
+            return SliverToBoxAdapter(child: _buildDateGroup(context, group));
           }),
       ],
     );

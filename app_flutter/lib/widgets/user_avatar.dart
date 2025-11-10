@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
-import '../models/user.dart';
+import '../models/domain/user.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/state/app_state.dart';

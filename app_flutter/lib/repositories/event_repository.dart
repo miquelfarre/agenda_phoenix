@@ -2,16 +2,17 @@ import 'dart:async';
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/realtime_sync.dart';
-import '../models/event.dart';
-import '../models/event_hive.dart';
-import '../models/event_interaction.dart';
+import '../models/domain/event.dart';
+import '../models/persistence/event_hive.dart';
+import '../models/domain/event_interaction.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../services/api_client.dart';
 import '../utils/app_exceptions.dart' as exceptions;
 import '../utils/realtime_filter.dart';
+import 'contracts/event_repository_contract.dart';
 
-class EventRepository {
+class EventRepository implements IEventRepository {
   static const String _boxName = 'events';
   final SupabaseService _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
@@ -29,8 +30,14 @@ class EventRepository {
   DateTime? _initialSyncCompletedAt;
 
   final Completer<void> _initCompleter = Completer<void>();
+
+  @override
   Future<void> get initialized => _initCompleter.future;
 
+  @override
+  Stream<List<Event>> get dataStream => eventsStream;
+
+  @override
   Stream<List<Event>> get eventsStream async* {
     // Emit cached events immediately for new subscribers
     if (_cachedEvents.isNotEmpty) {
@@ -48,6 +55,7 @@ class EventRepository {
     yield* _interactionsStreamController.stream;
   }
 
+  @override
   Future<void> initialize() async {
     if (_initCompleter.isCompleted) return;
 
@@ -282,6 +290,47 @@ class EventRepository {
     return eventHive?.toEvent();
   }
 
+  // --- IRealtimeRepository Implementation ---
+
+  @override
+  Future<void> startRealtimeSubscription() async {
+    await _startRealtimeSubscription();
+  }
+
+  @override
+  Future<void> stopRealtimeSubscription() async {
+    await _realtimeChannel?.unsubscribe();
+    _realtimeChannel = null;
+  }
+
+  @override
+  bool get isRealtimeConnected => _realtimeChannel != null;
+
+  @override
+  Future<void> loadFromCache() async {
+    _loadEventsFromHive();
+  }
+
+  @override
+  Future<void> saveToCache() async {
+    await _updateLocalCache(_cachedEvents);
+  }
+
+  @override
+  Future<void> clearCache() async {
+    _cachedEvents = [];
+    await _box?.clear();
+    _emitCurrentEvents();
+  }
+
+  @override
+  Future<void> refresh() async {
+    await _fetchAndSync();
+  }
+
+  @override
+  List<Event> getLocalData() => getLocalEvents();
+
   Future<void> _startRealtimeSubscription() async {
     _realtimeChannel = RealtimeUtils.subscribeTable(
       client: _supabaseService.client,
@@ -485,6 +534,7 @@ class EventRepository {
     await _fetchAndSync();
   }
 
+  @override
   void dispose() {
     _realtimeChannel?.unsubscribe();
     _interactionsChannel?.unsubscribe();
