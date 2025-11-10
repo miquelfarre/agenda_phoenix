@@ -353,56 +353,6 @@ class ApiClient implements IApiClient {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchContacts({
-    required int currentUserId,
-  }) async {
-    // Contacts are private users (is_public=false) who have logged into the app
-    // NOT the contacts table, which contains phone contacts
-    // Exclude the current user from their own contacts list
-    final result = await get(
-      '/users?public=false&enriched=true&exclude_user_id=$currentUserId',
-    );
-    return List<Map<String, dynamic>>.from(result);
-  }
-
-  @override
-  Future<Map<String, dynamic>> fetchContact(
-    int contactId, {
-    required int currentUserId,
-  }) async {
-    // Fetch a specific private user (contact)
-    final result = await get('/users/$contactId?enriched=true');
-    return result as Map<String, dynamic>;
-  }
-
-  @override
-  Future<Map<String, dynamic>> createContact(
-    Map<String, dynamic> data, {
-    required int currentUserId,
-  }) async {
-    final result = await post('/contacts', body: data);
-    return result as Map<String, dynamic>;
-  }
-
-  @override
-  Future<Map<String, dynamic>> updateContact(
-    int contactId,
-    Map<String, dynamic> data, {
-    required int currentUserId,
-  }) async {
-    final result = await put('/contacts/$contactId', body: data);
-    return result as Map<String, dynamic>;
-  }
-
-  @override
-  Future<void> deleteContact(
-    int contactId, {
-    required int currentUserId,
-  }) async {
-    await delete('/contacts/$contactId');
-  }
-
-  @override
   Future<List<Map<String, dynamic>>> fetchEvents({
     int? ownerId,
     int? calendarId,

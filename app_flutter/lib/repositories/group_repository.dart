@@ -168,7 +168,7 @@ class GroupRepository implements IGroupRepository {
       final userId = ConfigService.instance.currentUserId;
       final group = _getGroupFromCache(groupId);
 
-      if (!group.isCreator(userId)) {
+      if (!group.isOwner(userId)) {
         throw const exceptions.PermissionDeniedException(
           message: 'Only group creator can delete the group',
         );
@@ -241,7 +241,7 @@ class GroupRepository implements IGroupRepository {
       final userId = ConfigService.instance.currentUserId;
       final group = _getGroupFromCache(groupId);
 
-      if (group.isCreator(userId)) {
+      if (group.isOwner(userId)) {
         throw const exceptions.ConflictException(
           message: 'Group creator cannot leave. Delete the group instead.',
         );
@@ -443,7 +443,7 @@ class GroupRepository implements IGroupRepository {
   ) {
     final group = _getGroupFromCache(groupId);
 
-    final isCreator = group.isCreator(adminUserId);
+    final isOwner = group.isOwner(adminUserId);
     final isAdmin = group.isAdmin(adminUserId);
     final isSelf = adminUserId == memberUserId;
 
@@ -460,7 +460,7 @@ class GroupRepository implements IGroupRepository {
       }
     } else if (operationType == 'remove') {
       // BUG FIX: Allow creator, admin, or self to remove members
-      if (!isCreator && !isAdmin && !isSelf) {
+      if (!isOwner && !isAdmin && !isSelf) {
         throw const exceptions.PermissionDeniedException(
           message: 'No permission to remove member from group',
         );

@@ -76,11 +76,6 @@ class Group {
     return ownerId == userId;
   }
 
-  // Deprecated: Use isOwner instead
-  bool isCreator(int userId) {
-    return isOwner(userId);
-  }
-
   int get totalMemberCount {
     final uniqueIds = <int>{};
     uniqueIds.add(ownerId);

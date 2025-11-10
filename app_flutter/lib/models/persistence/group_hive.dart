@@ -167,9 +167,6 @@ class GroupHive extends HiveObject {
 
   bool isOwner(int userId) => ownerId == userId;
 
-  // Deprecated: Use isOwner instead
-  bool isCreator(int userId) => isOwner(userId);
-
   GroupHive addAdminToCache(int userId) {
     final newAdminIds = List<int>.from(adminIds ?? []);
     if (!newAdminIds.contains(userId)) {

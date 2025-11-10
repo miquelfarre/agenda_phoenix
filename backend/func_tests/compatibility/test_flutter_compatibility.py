@@ -21,19 +21,16 @@ FLUTTER_MODELS = {
             "is_public": bool,
         },
         "optional_fields": {
-            "contact_id": (int, type(None)),
-            "name": (str, type(None)),  # Display name for both public and private users
-            "instagram_name": (str, type(None)),  # For private users or public users
+            "display_name": (str, type(None)),
+            "phone": (str, type(None)),
+            "instagram_username": (str, type(None)),
+            "profile_picture_url": (str, type(None)),
             "auth_provider": (str, type(None)),
             "auth_id": (str, type(None)),
             "is_admin": (bool, type(None)),
-            "profile_picture": (str, type(None)),
             "last_login": (str, type(None)),
             "created_at": (str, type(None)),
             "updated_at": (str, type(None)),
-            # Enriched fields (only when enriched=true)
-            "contact_name": (str, type(None)),
-            "contact_phone": (str, type(None)),
             # Stats fields (only in /users/{id}/subscriptions)
             "new_events_count": (int, type(None)),
             "total_events_count": (int, type(None)),
@@ -178,19 +175,12 @@ def validate_list_of_models(data_list: List[Dict[str, Any]], model_name: str, pa
 @pytest.fixture
 def sample_data(test_db):
     """Create sample data for testing."""
-    # Create contacts
-    contact1 = Contact(id=1, name="Alice Contact", phone="+1234567890")
-    contact2 = Contact(id=2, name="Bob Contact", phone="+0987654321")
-    test_db.add_all([contact1, contact2])
-    test_db.flush()
-
     # Create users
     user1 = User(
         id=1,
-        contact_id=1,
         display_name="Alice Smith",
-        name="Alice Smith",  # Display name for private user
-        instagram_name="Alice",
+        phone="+1234567890",
+        instagram_username="alice",
         auth_provider="phone",
         auth_id="+1234567890",
         is_public=False,
@@ -200,10 +190,8 @@ def sample_data(test_db):
     )
     user2 = User(
         id=2,
-        contact_id=2,
         display_name="Bob Johnson",
-        name="Bob Johnson",  # Display name for public user
-        instagram_name="bob_insta",
+        instagram_username="bob_insta",
         auth_provider="instagram",
         auth_id="12345",
         is_public=True,
@@ -295,12 +283,6 @@ class TestFlutterCompatibility:
         assert response.status_code == 200
         user = response.json()
         errors.extend(validate_model_fields(user, "User", "GET /api/v1/users/1"))
-
-        # GET /api/v1/users with enriched=true
-        response = client.get("/api/v1/users?enriched=true")
-        assert response.status_code == 200
-        users = response.json()
-        errors.extend(validate_list_of_models(users, "User", "GET /api/v1/users?enriched=true"))
 
         # GET /api/v1/users/{id}/subscriptions
         response = client.get("/api/v1/users/1/subscriptions")

@@ -66,10 +66,9 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
     if not owner:
         raise HTTPException(status_code=404, detail="Event owner not found")
 
-    # Get owner contact for full name
-    # Use new fields with fallback to legacy
-    owner_name = owner.display_name or owner.name or f"Usuario #{owner.id}"
-    owner_profile_picture_url = owner.profile_picture_url or owner.profile_picture
+    # Get owner info
+    owner_name = owner.display_name
+    owner_profile_picture_url = owner.profile_picture_url
 
     import logging
 
@@ -172,9 +171,9 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                     continue
 
                 # Use new fields with fallback to legacy
-                user_display_name = interaction_user.display_name or interaction_user.name or f"Usuario #{interaction_user.id}"
-                user_instagram_username = interaction_user.instagram_username or interaction_user.instagram_name
-                user_profile_picture_url = interaction_user.profile_picture_url or interaction_user.profile_picture
+                user_display_name = interaction_user.display_name
+                user_instagram_username = interaction_user.instagram_username
+                user_profile_picture_url = interaction_user.profile_picture_url
                 user_phone = interaction_user.phone
 
                 # Get inviter if exists
@@ -184,8 +183,8 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                 if interaction.invited_by_user_id:
                     inviter = user.get(db, id=interaction.invited_by_user_id)
                     if inviter:
-                        inviter_display_name = inviter.display_name or inviter.name or f"Usuario #{inviter.id}"
-                        inviter_instagram_username = inviter.instagram_username or inviter.instagram_name
+                        inviter_display_name = inviter.display_name
+                        inviter_instagram_username = inviter.instagram_username
 
                 interactions_data.append(
                     {
@@ -255,8 +254,8 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                 if user_interaction.invited_by_user_id:
                     inviter = user.get(db, id=user_interaction.invited_by_user_id)
                     if inviter:
-                        inviter_display_name = inviter.display_name or inviter.name or f"Usuario #{inviter.id}"
-                        inviter_instagram_username = inviter.instagram_username or inviter.instagram_name
+                        inviter_display_name = inviter.display_name
+                        inviter_instagram_username = inviter.instagram_username
 
                 response_data["interactions"] = [
                     {
@@ -304,23 +303,13 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
         for interaction in accepted_interactions:
             user_obj = user.get(db, id=interaction.user_id)
             if user_obj:
-                # Use new fields with fallback to legacy
-                display_name = user_obj.display_name or user_obj.name or f"Usuario #{user_obj.id}"
-                instagram_username = user_obj.instagram_username or user_obj.instagram_name
-                profile_picture_url = user_obj.profile_picture_url or user_obj.profile_picture
-
                 attendees.append(
                     {
                         "id": user_obj.id,
-                        # New fields
-                        "display_name": display_name,
-                        "instagram_username": instagram_username,
-                        "profile_picture_url": profile_picture_url,
+                        "display_name": user_obj.display_name,
+                        "instagram_username": user_obj.instagram_username,
+                        "profile_picture_url": user_obj.profile_picture_url,
                         "phone": user_obj.phone,
-                        # Legacy fields for backward compatibility
-                        "name": display_name,
-                        "instagram_name": instagram_username,
-                        "profile_picture": profile_picture_url,
                     }
                 )
 
@@ -353,18 +342,14 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
         if not user:
             continue
 
-        # Use new fields with fallback to legacy
-        display_name = user.display_name or user.name or f"Usuario #{user.id}"
-        instagram_username = user.instagram_username or user.instagram_name
-
         enriched.append(
             {
                 "id": interaction.id,
                 "event_id": interaction.event_id,
                 "user_id": interaction.user_id,
-                "user_name": display_name,
-                "user_instagram_name": instagram_username,
-                "user_contact_name": display_name,
+                "user_name": user.display_name,
+                "user_instagram_name": user.instagram_username,
+                "user_contact_name": user.display_name,
                 "interaction_type": interaction.interaction_type,
                 "status": interaction.status,
                 "role": interaction.role,
@@ -395,20 +380,12 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     # Build available invitees list
     available = []
     for user_obj in results:
-        instagram_name = user_obj.instagram_name
-        contact_name = contact.name if contact else None
-
-        # Build display name
-        if instagram_name and contact_name:
-            display_name = f"{instagram_name} ({contact_name})"
-        elif instagram_name:
-            display_name = instagram_name
-        elif contact_name:
-            display_name = contact_name
-        else:
-            display_name = f"Usuario #{user_obj.id}"
-
-        available.append({"id": user_obj.id, "instagram_name": instagram_name, "contact_name": contact_name, "display_name": display_name})
+        available.append({
+            "id": user_obj.id,
+            "instagram_name": user_obj.instagram_username,
+            "contact_name": user_obj.display_name,
+            "display_name": user_obj.display_name
+        })
 
     return available
 

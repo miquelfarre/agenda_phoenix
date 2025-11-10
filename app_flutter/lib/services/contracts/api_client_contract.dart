@@ -49,32 +49,7 @@ abstract class IApiClient {
   });
 
   // ============================================================================
-  // Contacts (Legacy - deprecated, usar UserContacts)
-  // ============================================================================
-  Future<List<Map<String, dynamic>>> fetchContacts({
-    required int currentUserId,
-  });
-
-  Future<Map<String, dynamic>> fetchContact(
-    int contactId, {
-    required int currentUserId,
-  });
-
-  Future<Map<String, dynamic>> createContact(
-    Map<String, dynamic> data, {
-    required int currentUserId,
-  });
-
-  Future<Map<String, dynamic>> updateContact(
-    int contactId,
-    Map<String, dynamic> data, {
-    required int currentUserId,
-  });
-
-  Future<void> deleteContact(int contactId, {required int currentUserId});
-
-  // ============================================================================
-  // UserContacts (New system)
+  // UserContacts
   // ============================================================================
   Future<Map<String, dynamic>> syncContacts({
     required List<Map<String, String>> contacts,
