@@ -1,11 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/domain/event.dart';
-import '../models/domain/calendar.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../core/state/app_state.dart';
 import '../widgets/custom_datetime_widget.dart';
-import '../widgets/calendar_horizontal_selector.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import '../services/config_service.dart';
 import 'base/base_form_screen.dart';
@@ -221,59 +219,9 @@ class CreateEditBirthdayEventScreenState
         ),
       ),
 
-      const SizedBox(height: 24),
-      _buildCalendarSection(),
-
       if (getFieldError('title') != null)
         _buildErrorText(getFieldError('title')!),
     ];
-  }
-
-  Widget _buildCalendarSection() {
-    final calendarsAsync = ref.watch(calendarsStreamProvider);
-    final l10n = context.l10n;
-
-    if (calendarsAsync.isLoading) {
-      return const CupertinoActivityIndicator();
-    }
-
-    if (calendarsAsync.hasError) {
-      return Text(
-        l10n.errorLoadingCalendarsDetail(calendarsAsync.error.toString()),
-        style: const TextStyle(color: CupertinoColors.systemRed),
-      );
-    }
-
-    if (!calendarsAsync.hasValue) {
-      return const SizedBox.shrink();
-    }
-
-    final calendars = calendarsAsync.value!;
-
-    if (calendars.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: CalendarHorizontalSelector(
-                calendars: calendars.cast<Calendar>(),
-                selectedCalendarId: _selectedCalendarId,
-                onSelected: (calendarId) {
-                  setFieldValue('calendarId', calendarId);
-                },
-                isDisabled: true,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
   }
 
   Widget _buildErrorText(String error) {
