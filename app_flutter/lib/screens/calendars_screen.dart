@@ -158,7 +158,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     }
 
     return AdaptivePageScaffold(
-      title: isIOS ? null : l10n.calendars,
+      title: l10n.calendars,
       body: body,
     );
   }

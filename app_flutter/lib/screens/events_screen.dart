@@ -291,7 +291,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     return AdaptivePageScaffold(
       key: const Key('events_screen_scaffold'),
-      title: isIOS ? null : l10n.events,
+      title: l10n.events,
       body: body,
       floatingActionButton: !isIOS
           ? Column(

@@ -200,9 +200,9 @@ def test_realtime_accept_invitation_updates_interactions():
     assert event_data["attendees"] is not None
     user2_attendee = next((a for a in event_data["attendees"] if a["id"] == user2["id"]), None)
     assert user2_attendee is not None
-    # Backend returns new fields (display_name, instagram_username) and legacy fields (name, instagram_name)
+    # Backend returns new fields (display_name, instagram_username)
     assert "display_name" in user2_attendee
-    assert "name" in user2_attendee
+    assert user2_attendee["display_name"] == user2_data["display_name"]
 
 
 def test_realtime_reject_invitation_updates_interactions():

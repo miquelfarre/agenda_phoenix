@@ -4,6 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../models/domain/event.dart';
 import '../models/domain/user.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
+import '../ui/styles/app_styles.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/searchable_list.dart';
 import 'event_detail_screen.dart';
@@ -130,17 +131,47 @@ class _SubscriptionDetailScreenState
       return;
     }
 
+    // Show confirmation dialog
+    final userName =
+        widget.publicUser.displayName ??
+        widget.publicUser.instagramUsername ??
+        'Usuario';
+
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(AppLocalizations.of(context)!.unfollow),
+        content: Text(
+          '¿Estás seguro de que quieres dejar de seguir a $userName?',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(AppLocalizations.of(context)!.unfollow),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return; // User cancelled
+    }
+
     setState(() => _isProcessingSubscription = true);
 
     try {
+      print('🔴 [DEBUG] Unsubscribing from user ${widget.publicUser.id}');
       final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
       await subscriptionRepo.unsubscribeFromUser(widget.publicUser.id);
+      print('🔴 [DEBUG] Unsubscribe completed');
 
       if (mounted) {
-        final userName =
-            widget.publicUser.displayName ??
-            widget.publicUser.instagramUsername ??
-            'Usuario';
         PlatformDialogHelpers.showSnackBar(
           context: context,
           message: AppLocalizations.of(context)!.unsubscribedFrom(userName),
@@ -148,9 +179,14 @@ class _SubscriptionDetailScreenState
       }
 
       // Realtime handles refresh automatically via SubscriptionRepository
+      print('🔴 [DEBUG] Navigating back to subscriptions screen');
 
-      await _loadData();
+      if (mounted) {
+        // Navigate back to subscriptions screen
+        Navigator.of(context).pop();
+      }
     } catch (e) {
+      print('🔴 [DEBUG] Error unsubscribing: $e');
       if (mounted) {
         PlatformDialogHelpers.showSnackBar(
           context: context,
@@ -171,21 +207,35 @@ class _SubscriptionDetailScreenState
           '${AppLocalizations.of(context)!.events} - ${widget.publicUser.displayName ?? widget.publicUser.instagramUsername ?? 'User'}',
           style: const TextStyle(fontSize: 16),
         ),
-        trailing: CupertinoButton(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          onPressed: _isProcessingSubscription
-              ? null
-              : _isSubscribed
-              ? () {
-                  _unsubscribeFromUser();
-                }
-              : () {
-                  _subscribeToUser();
-                },
-          child: Text(
-            _isSubscribed
-                ? AppLocalizations.of(context)!.unfollow
-                : AppLocalizations.of(context)!.follow,
+        trailing: Container(
+          decoration: BoxDecoration(
+            color: _isProcessingSubscription
+                ? CupertinoColors.systemGrey5.resolveFrom(context)
+                : AppStyles.primaryColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            minSize: 0,
+            onPressed: _isProcessingSubscription
+                ? null
+                : _isSubscribed
+                ? () {
+                    _unsubscribeFromUser();
+                  }
+                : () {
+                    _subscribeToUser();
+                  },
+            child: Text(
+              _isSubscribed
+                  ? AppLocalizations.of(context)!.unfollow
+                  : AppLocalizations.of(context)!.follow,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: CupertinoColors.white,
+              ),
+            ),
           ),
         ),
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),

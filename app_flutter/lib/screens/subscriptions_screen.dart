@@ -109,7 +109,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
 
     return AdaptivePageScaffold(
       key: const Key('subscriptions_screen_scaffold'),
-      title: PlatformWidgets.isIOS ? null : l10n.subscriptions,
+      title: l10n.subscriptions,
       actions: [
         if (kDebugMode)
           Padding(
@@ -179,11 +179,39 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   Future<void> _removeUser(User user, WidgetRef ref) async {
     final l10n = context.l10n;
     final currentContext = context;
+    final userName = user.displayName ?? user.instagramUsername ?? 'Usuario';
+
+    // Show confirmation dialog
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(l10n.unfollow),
+        content: Text(
+          '¿Estás seguro de que quieres dejar de seguir a $userName?',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.unfollow),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return; // User cancelled
+    }
+
     try {
       await ref
           .read(subscriptionRepositoryProvider)
           .deleteSubscription(targetUserId: user.id);
-      final userName = user.displayName ?? user.instagramUsername ?? 'Usuario';
       _showSuccessMessage(l10n.unsubscribedFrom(userName));
     } catch (e) {
       // ignore: use_build_context_synchronously

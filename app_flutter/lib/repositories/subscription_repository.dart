@@ -80,21 +80,27 @@ class SubscriptionRepository implements ISubscriptionRepository {
 
   Future<void> _fetchAndSync() async {
     try {
+      print('🟢 [SYNC] Starting fetch and sync');
       final userId = ConfigService.instance.currentUserId;
       final response = await _apiClient.fetchUserSubscriptions(userId);
+      print('🟢 [SYNC] Fetched ${response.length} subscriptions from API');
       _cachedUsers = response
           .map((data) => models.User.fromJson(data))
           .toList();
+      print('🟢 [SYNC] Parsed ${_cachedUsers.length} users');
 
       await _updateLocalCache(_cachedUsers);
+      print('🟢 [SYNC] Updated local cache');
 
       // Set sync timestamp to now (after successful fetch)
       // This ensures we only process realtime events that occur AFTER this fetch
       _rt.setServerSyncTs(DateTime.now().toUtc());
 
       _emitCurrentSubscriptions();
+      print('🟢 [SYNC] Emitted current subscriptions to stream');
       // ignore: empty_catches
     } catch (e) {
+      print('🟢 [SYNC] ERROR: $e');
       // Intentionally ignore realtime errors
     }
   }
@@ -280,9 +286,18 @@ class SubscriptionRepository implements ISubscriptionRepository {
   /// Unsubscribe from a user
   @override
   Future<void> unsubscribeFromUser(int userId) async {
-    await _apiClient.delete('/users/$userId/subscribe');
+    print('🟠 [REPO] Calling API to unsubscribe from user $userId');
+    try {
+      final result = await _apiClient.delete('/users/$userId/subscribe');
+      print('🟠 [REPO] API response: $result');
+    } catch (e) {
+      print('🟠 [REPO] API error: $e');
+      rethrow;
+    }
     // Refresh subscriptions after unsubscribing
+    print('🟠 [REPO] Fetching and syncing subscriptions');
     await _fetchAndSync();
+    print('🟠 [REPO] Fetch and sync completed');
   }
 
   @override

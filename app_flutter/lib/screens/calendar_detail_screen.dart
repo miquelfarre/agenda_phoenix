@@ -34,6 +34,10 @@ class CalendarDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
+  String? _ownerName;
+  bool _isLoadingOwner = true;
+  bool _isProcessingLeave = false;
+
   Calendar? get _calendar {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
     return calendarsAsync.maybeWhen(
@@ -58,6 +62,56 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     return CalendarPermissions.isOwner(calendar);
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _loadOwnerInfo();
+  }
+
+  Future<void> _loadOwnerInfo() async {
+    // Wait a bit for the calendar to be available from the stream
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    final calendar = _calendar;
+    if (calendar == null || calendar.ownerId == 0) {
+      // Retry once more after a delay
+      await Future.delayed(const Duration(milliseconds: 200));
+      final calendarRetry = _calendar;
+      if (calendarRetry == null || calendarRetry.ownerId == 0) {
+        if (mounted) {
+          setState(() {
+            _ownerName = null;
+            _isLoadingOwner = false;
+          });
+        }
+        return;
+      }
+    }
+
+    final calendarToUse = _calendar!;
+
+    try {
+      final userRepo = ref.read(userRepositoryProvider);
+      final owner = await userRepo.getUserById(calendarToUse.ownerId);
+
+      if (mounted) {
+        setState(() {
+          _ownerName = owner?.displayName ??
+                       owner?.instagramUsername ??
+                       'Usuario';
+          _isLoadingOwner = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _ownerName = 'Usuario';
+          _isLoadingOwner = false;
+        });
+      }
+    }
+  }
+
   Color _parseCalendarColor() {
     if (widget.calendarColor == null) return AppStyles.blue600;
 
@@ -72,62 +126,69 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     }
   }
 
-  Future<void> _showCalendarOptions() async {
+  Future<void> _showLeaveConfirmation() async {
+    if (_isProcessingLeave) return;
+
     final l10n = context.l10n;
     final calendar = _calendar;
     if (calendar == null) return;
 
-    // Check if user has edit permissions (owner OR admin)
-    final calendarRepository = ref.read(calendarRepositoryProvider);
-    final canEdit = await CalendarPermissions.canEdit(
-      calendar: calendar,
-      repository: calendarRepository,
-    );
+    final calendarName = widget.calendarName;
 
-    if (!mounted) return;
-
-    final actions = <CupertinoActionSheetAction>[
-      // Show edit option if user is owner OR admin
-      if (canEdit)
-        CupertinoActionSheetAction(
-          onPressed: () {
-            Navigator.pop(context);
-            context.push('/calendars/${widget.calendarId}/edit');
-          },
-          child: Text(l10n.editCalendar),
-        ),
-      CupertinoActionSheetAction(
-        isDestructiveAction: true,
-        onPressed: () {
-          Navigator.pop(context);
-          _deleteOrLeaveCalendar(calendar);
-        },
-        child: Text(_isOwner ? l10n.deleteCalendar : l10n.leaveCalendar),
-      ),
-    ];
-
-    showCupertinoModalPopup<void>(
+    // Show confirmation dialog
+    final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (BuildContext context) => CupertinoActionSheet(
-        actions: actions,
-        cancelButton: CupertinoActionSheetAction(
-          isDefaultAction: true,
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(_isOwner ? 'Eliminar calendario' : 'Abandonar calendario'),
+        content: Text(
+          _isOwner
+              ? '¿Estás seguro de que quieres eliminar el calendario "$calendarName"?'
+              : '¿Estás seguro de que quieres abandonar el calendario "$calendarName"?',
         ),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(_isOwner ? 'Eliminar' : 'Abandonar'),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+        ],
       ),
     );
+
+    if (confirmed != true) {
+      return; // User cancelled
+    }
+
+    _deleteOrLeaveCalendar(calendar);
   }
 
   Future<void> _deleteOrLeaveCalendar(Calendar calendar) async {
-    await CalendarOperations.deleteOrLeaveCalendar(
-      calendar: calendar,
-      repository: ref.read(calendarRepositoryProvider),
-      context: context,
-      shouldNavigate: true, // Navigate back to calendars list
-      showSuccessMessage: true,
-    );
-    // Realtime will automatically update the calendars list
+    setState(() => _isProcessingLeave = true);
+
+    try {
+      print('🔴 [DEBUG] ${_isOwner ? "Deleting" : "Leaving"} calendar ${calendar.id}');
+
+      await CalendarOperations.deleteOrLeaveCalendar(
+        calendar: calendar,
+        repository: ref.read(calendarRepositoryProvider),
+        context: context,
+        shouldNavigate: true, // Navigate back to calendars list
+        showSuccessMessage: true,
+      );
+
+      print('🔴 [DEBUG] Calendar operation completed successfully');
+      // Realtime will automatically update the calendars list
+    } catch (e) {
+      print('🔴 [DEBUG] Error during calendar operation: $e');
+      rethrow;
+    } finally {
+      if (mounted) setState(() => _isProcessingLeave = false);
+    }
   }
 
   @override
@@ -150,31 +211,64 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
-        middle: Row(
+        middle: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: calendarColor,
-                shape: BoxShape.circle,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: calendarColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    widget.calendarName,
+                    style: const TextStyle(fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                widget.calendarName,
-                style: const TextStyle(fontSize: 16),
-                overflow: TextOverflow.ellipsis,
+            if (_ownerName != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  _ownerName!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: CupertinoColors.systemGrey.resolveFrom(context),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
           ],
         ),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _showCalendarOptions,
-          child: const Icon(CupertinoIcons.ellipsis_circle, size: 28),
+        trailing: Container(
+          decoration: BoxDecoration(
+            color: _isProcessingLeave
+                ? CupertinoColors.systemGrey5.resolveFrom(context)
+                : AppStyles.primaryColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            minSize: 0,
+            onPressed: _isProcessingLeave ? null : _showLeaveConfirmation,
+            child: Text(
+              _isOwner ? 'Eliminar' : 'Abandonar',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: CupertinoColors.white,
+              ),
+            ),
+          ),
         ),
       ),
       child: SafeArea(
