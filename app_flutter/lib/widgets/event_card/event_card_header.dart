@@ -8,6 +8,7 @@ import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../config/app_constants.dart';
 import '../../core/state/app_state.dart';
+import '../../services/config_service.dart';
 import 'event_card_config.dart';
 
 /// Widget for building the event card header (invitation banner, owner avatar)
@@ -226,10 +227,13 @@ class EventCardAttendeesRow extends ConsumerWidget {
       }
     }
 
-    // Don't filter out current user - show all attendees including themselves
-    final allAttendees = attendeeData;
+    // Filter out current user
+    final currentUserId = ConfigService.instance.currentUserId;
+    final otherAttendees = attendeeData
+        .where((a) => (a['id'] as int?) != currentUserId)
+        .toList();
 
-    if (allAttendees.isEmpty) return const SizedBox.shrink();
+    if (otherAttendees.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
@@ -249,7 +253,7 @@ class EventCardAttendeesRow extends ConsumerWidget {
             child: Wrap(
               spacing: 6,
               runSpacing: 4,
-              children: allAttendees.take(6).map((a) {
+              children: otherAttendees.take(6).map((a) {
                 final name = (a['display_name'] as String?) ?? '';
                 final initials = name.trim().isNotEmpty
                     ? name.trim().split(RegExp(r"\s+")).first[0].toUpperCase()

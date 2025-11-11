@@ -328,6 +328,7 @@ class _SubscriptionDetailScreenState
       eventBuilder: (event) {
         return EventListItem(
           event: event,
+          hideInvitationStatus: true,
           onTap: (event) {
             Navigator.of(context).push(
               CupertinoPageRoute<void>(

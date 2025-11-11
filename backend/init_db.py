@@ -200,6 +200,7 @@ def insert_sample_data():
         tomorrow = now + timedelta(days=1)
         in_2_days = now + timedelta(days=2)
         in_3_days = now + timedelta(days=3)
+        in_4_days = now + timedelta(days=4)
         in_5_days = now + timedelta(days=5)
         in_7_days = now + timedelta(days=7)
         in_10_days = now + timedelta(days=10)
@@ -969,6 +970,13 @@ def insert_sample_data():
             event_type="regular",
             owner_id=gym_fitzone.id,
         )
+        gym_hiit = Event(
+            name="HIIT Intensivo",
+            description="Entrenamiento de alta intensidad - HIIT para todos los niveles",
+            start_date=in_4_days.replace(hour=18, minute=0),
+            event_type="regular",
+            owner_id=gym_fitzone.id,
+        )
 
         # Restaurante El Buen Sabor events
         restaurant_tasting = Event(
@@ -1023,9 +1031,9 @@ def insert_sample_data():
             owner_id=cultural_llotja.id,
         )
 
-        db.add_all([gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba, restaurant_tasting, restaurant_cooking, restaurant_brunch, cultural_concert, cultural_expo, cultural_theater, cultural_workshop])
+        db.add_all([gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba, gym_hiit, restaurant_tasting, restaurant_cooking, restaurant_brunch, cultural_concert, cultural_expo, cultural_theater, cultural_workshop])
         db.flush()
-        logger.info(f"  ✓ Inserted 12 events for public venues (5 gym, 3 restaurant, 4 cultural)")
+        logger.info(f"  ✓ Inserted 13 events for public venues (6 gym, 3 restaurant, 4 cultural)")
 
         # 16. Create shared family events
         family_dinner = Event(
@@ -1414,7 +1422,7 @@ def insert_sample_data():
         # === PUBLIC VENUES INTERACTIONS ===
 
         # Gym FitZone owns their events
-        for event in [gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba]:
+        for event in [gym_spinning, gym_yoga_morning, gym_crossfit, gym_pilates, gym_zumba, gym_hiit]:
             interactions.append(
                 EventInteraction(
                     event_id=event.id,
@@ -1518,6 +1526,20 @@ def insert_sample_data():
                 status="pending",
                 invited_by_user_id=miquel.id,
                 personal_note="¡Vamos juntos al Clásico! Tengo entradas 🎫⚽",
+            )
+        )
+
+        # Miquel invites Sonia to Gym Spinning class (public user event to which Sonia is already subscribed)
+        # This tests the scenario: private user invites current user to a public user event they're subscribed to
+        # User will have BOTH "subscribed" and "invited" interactions for same event (allowed by updated constraint)
+        interactions.append(
+            EventInteraction(
+                event_id=gym_spinning.id,
+                user_id=sonia.id,
+                interaction_type="invited",
+                status="pending",
+                invited_by_user_id=miquel.id,
+                personal_note="¿Vienes a spinning el martes? Vamos juntos 🚴‍♂️",
             )
         )
 

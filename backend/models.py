@@ -409,8 +409,9 @@ class EventInteraction(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    # Unique constraint: one active interaction per user per event
-    __table_args__ = (UniqueConstraint("event_id", "user_id", name="uq_event_user_interaction"),)
+    # Unique constraint: one interaction per user per event per type
+    # Allows user to have both "subscribed" and "invited" interactions for same event
+    __table_args__ = (UniqueConstraint("event_id", "user_id", "interaction_type", name="uq_event_user_interaction"),)
 
     # Relationships
     event = relationship("Event", back_populates="interactions")

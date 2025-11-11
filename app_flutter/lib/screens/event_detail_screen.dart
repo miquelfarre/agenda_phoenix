@@ -620,7 +620,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         try {
           final user = User.fromJson(a);
           attendeeUsers.add(user);
-          // ignore: empty_catches
         } catch (e) {
           // Intentionally ignore malformed user data
         }
@@ -631,7 +630,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         .where((u) => u.id != currentUserId)
         .toList();
 
-    if (otherAttendees.isEmpty) return const SizedBox.shrink();
+    if (otherAttendees.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       margin: EdgeInsets.zero,
