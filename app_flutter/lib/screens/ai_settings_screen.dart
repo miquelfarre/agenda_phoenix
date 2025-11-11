@@ -4,6 +4,7 @@ import '../services/ai/ai_config_service.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import '../config/app_constants.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 /// Pantalla de configuración de Google Gemini API
 class AISettingsScreen extends StatefulWidget {
@@ -110,20 +111,20 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar API Key'),
-        content: const Text(
+        title: Text(context.l10n.deleteApiKey),
+        content: Text(
           '¿Estás seguro de que quieres eliminar la API key de Gemini? '
           'Los comandos de voz dejarán de funcionar.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(context.l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),

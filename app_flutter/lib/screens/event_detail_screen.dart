@@ -10,6 +10,8 @@ import '../models/domain/user.dart';
 import '../repositories/event_repository.dart';
 import '../core/state/app_state.dart';
 import 'create_edit_event_screen.dart';
+import 'create_edit_recurring_event_screen.dart';
+import 'create_edit_birthday_event_screen.dart';
 import 'invite_users_screen.dart';
 import '../services/config_service.dart';
 import '../widgets/event_card.dart';
@@ -754,9 +756,17 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   }
 
   Future<void> _editEvent(BuildContext context) async {
-    final updatedEvent = await Navigator.of(
-      context,
-    ).pushScreen(context, CreateEditEventScreen(eventToEdit: currentEvent));
+    Widget editScreen;
+
+    if (currentEvent.isBirthday) {
+      editScreen = CreateEditBirthdayEventScreen(eventToEdit: currentEvent);
+    } else if (currentEvent.isRecurring) {
+      editScreen = CreateEditRecurringEventScreen(eventToEdit: currentEvent);
+    } else {
+      editScreen = CreateEditEventScreen(eventToEdit: currentEvent);
+    }
+
+    final updatedEvent = await Navigator.of(context).pushScreen(context, editScreen);
 
     if (updatedEvent != null) {
       // Realtime handles refresh automatically via EventRepository

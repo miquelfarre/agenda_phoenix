@@ -1508,9 +1508,33 @@
   "@publicCalendars": {
     "description": "Calendarios disponibles públicamente"
   },
+  "createNew": "Crear Nuevo",
+  "@createNew": {
+    "description": "Título del menú de creación"
+  },
   "createCalendar": "Crear Calendario",
   "@createCalendar": {
     "description": "Botón para crear un nuevo calendario"
+  },
+  "createBirthday": "Crear Cumpleaños",
+  "@createBirthday": {
+    "description": "Botón para crear un cumpleaños"
+  },
+  "personName": "Nombre de la persona",
+  "@personName": {
+    "description": "Placeholder para el nombre de la persona en cumpleaños"
+  },
+  "recurringEventDescription": "Crea eventos que se repiten automáticamente",
+  "@recurringEventDescription": {
+    "description": "Descripción para la opción de evento recurrente"
+  },
+  "birthdayEventDescription": "Añade cumpleaños de tus contactos",
+  "@birthdayEventDescription": {
+    "description": "Descripción para la opción de cumpleaños"
+  },
+  "calendarDescription": "Organiza eventos en calendarios personalizados",
+  "@calendarDescription": {
+    "description": "Descripción para la opción de calendario"
   },
   "editCalendar": "Editar Calendario",
   "@editCalendar": {
@@ -1922,6 +1946,50 @@
   "chooseWhatHappensToEvents": "Elige qué sucede con los eventos del calendario",
   "@chooseWhatHappensToEvents": {
     "description": "Descripción para la sección de eliminar calendario"
+  },
+  "deleteApiKey": "Eliminar API Key",
+  "@deleteApiKey": {
+    "description": "Título del diálogo para eliminar API key"
+  },
+  "voiceAssistant": "Asistente de Voz",
+  "@voiceAssistant": {
+    "description": "Título del asistente de voz"
+  },
+  "voiceAiCommands": "Comandos de Voz IA",
+  "@voiceAiCommands": {
+    "description": "Título de la sección de comandos de voz"
+  },
+  "leaveCalendar": "Abandonar calendario",
+  "@leaveCalendar": {
+    "description": "Acción para abandonar un calendario"
+  },
+  "leave": "Abandonar",
+  "@leave": {
+    "description": "Botón para abandonar"
+  },
+  "completeInformation": "Completar información",
+  "@completeInformation": {
+    "description": "Título para completar información"
+  },
+  "stop": "Detener",
+  "@stop": {
+    "description": "Botón para detener"
+  },
+  "cancelAndEditManually": "Cancelar y editar manualmente",
+  "@cancelAndEditManually": {
+    "description": "Botón para cancelar y editar manualmente"
+  },
+  "noAdditionalParameters": "Sin parámetros adicionales",
+  "@noAdditionalParameters": {
+    "description": "Texto cuando no hay parámetros adicionales"
+  },
+  "configureGeminiDescription": "Configura Google Gemini para usar comandos de voz y crear eventos hablando",
+  "@configureGeminiDescription": {
+    "description": "Descripción de la sección de configuración de Google Gemini en ajustes"
+  },
+  "configureAi": "Configurar IA",
+  "@configureAi": {
+    "description": "Botón para configurar la inteligencia artificial"
   }
 }
 

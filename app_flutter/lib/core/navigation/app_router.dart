@@ -12,7 +12,6 @@ import '../../screens/create_edit_calendar_screen.dart';
 import '../../screens/calendars_screen.dart';
 import '../../screens/birthdays_screen.dart';
 import '../../screens/settings_screen.dart';
-import '../../screens/create_edit_event_screen.dart';
 import '../../screens/event_detail_screen.dart';
 import '../../screens/people_groups_screen.dart';
 import '../../screens/group_detail_screen.dart';
@@ -63,12 +62,6 @@ class AppRouter {
             name: 'events',
             builder: (context, state) => const EventsScreen(),
             routes: [
-              GoRoute(
-                path: 'create',
-                name: 'event-create',
-                builder: (context, state) => const CreateEditEventScreen(),
-              ),
-
               GoRoute(
                 path: ':eventId',
                 name: 'event-detail',

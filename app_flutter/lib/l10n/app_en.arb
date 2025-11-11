@@ -1695,9 +1695,33 @@
   "@publicCalendars": {
     "description": "Publicly available calendars"
   },
+  "createNew": "Create New",
+  "@createNew": {
+    "description": "Title of creation menu"
+  },
   "createCalendar": "Create Calendar",
   "@createCalendar": {
     "description": "Button to create a new calendar"
+  },
+  "createBirthday": "Create Birthday",
+  "@createBirthday": {
+    "description": "Button to create a birthday"
+  },
+  "personName": "Person's name",
+  "@personName": {
+    "description": "Placeholder for person's name in birthday"
+  },
+  "recurringEventDescription": "Create events that repeat automatically",
+  "@recurringEventDescription": {
+    "description": "Description for recurring event option"
+  },
+  "birthdayEventDescription": "Add birthdays of your contacts",
+  "@birthdayEventDescription": {
+    "description": "Description for birthday option"
+  },
+  "calendarDescription": "Organize events in custom calendars",
+  "@calendarDescription": {
+    "description": "Description for calendar option"
   },
   "editCalendar": "Edit Calendar",
   "@editCalendar": {
@@ -2172,5 +2196,49 @@
   "chooseWhatHappensToEvents": "Choose what happens to calendar events",
   "@chooseWhatHappensToEvents": {
     "description": "Description for delete calendar section"
+  },
+  "deleteApiKey": "Delete API Key",
+  "@deleteApiKey": {
+    "description": "Title of dialog to delete API key"
+  },
+  "voiceAssistant": "Voice Assistant",
+  "@voiceAssistant": {
+    "description": "Voice assistant title"
+  },
+  "voiceAiCommands": "Voice AI Commands",
+  "@voiceAiCommands": {
+    "description": "Voice commands section title"
+  },
+  "leaveCalendar": "Leave calendar",
+  "@leaveCalendar": {
+    "description": "Action to leave a calendar"
+  },
+  "leave": "Leave",
+  "@leave": {
+    "description": "Leave button"
+  },
+  "completeInformation": "Complete information",
+  "@completeInformation": {
+    "description": "Title to complete information"
+  },
+  "stop": "Stop",
+  "@stop": {
+    "description": "Stop button"
+  },
+  "cancelAndEditManually": "Cancel and edit manually",
+  "@cancelAndEditManually": {
+    "description": "Button to cancel and edit manually"
+  },
+  "noAdditionalParameters": "No additional parameters",
+  "@noAdditionalParameters": {
+    "description": "Text when there are no additional parameters"
+  },
+  "configureGeminiDescription": "Configure Google Gemini to use voice commands and create events by speaking",
+  "@configureGeminiDescription": {
+    "description": "Description of the Google Gemini configuration section in settings"
+  },
+  "configureAi": "Configure AI",
+  "@configureAi": {
+    "description": "Button to configure artificial intelligence"
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/ai/base_voice_service.dart';
 import '../services/ai/voice_workflow_context.dart';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 /// Pantalla de flujo de trabajo inteligente por voz
 /// Permite completar múltiples acciones relacionadas en secuencia
@@ -292,7 +293,7 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
     return Scaffold(
       backgroundColor: isIOS ? CupertinoColors.systemBackground : null,
       appBar: AppBar(
-        title: const Text('Asistente de Voz'),
+        title: Text(context.l10n.voiceAssistant),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(_context),

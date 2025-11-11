@@ -2751,7 +2751,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publicCalendars => 'Public Calendars';
 
   @override
+  String get createNew => 'Create New';
+
+  @override
   String get createCalendar => 'Create Calendar';
+
+  @override
+  String get createBirthday => 'Create Birthday';
+
+  @override
+  String get personName => 'Person\'s name';
+
+  @override
+  String get recurringEventDescription => 'Create events that repeat automatically';
+
+  @override
+  String get birthdayEventDescription => 'Add birthdays of your contacts';
+
+  @override
+  String get calendarDescription => 'Calendar Description';
 
   @override
   String get editCalendar => 'Edit Calendar';
@@ -2761,9 +2779,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarName => 'Calendar Name';
-
-  @override
-  String get calendarDescription => 'Calendar Description';
 
   @override
   String get calendarColor => 'Calendar Color';
@@ -3071,4 +3086,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseWhatHappensToEvents => 'Choose what happens to calendar events';
+
+  @override
+  String get deleteApiKey => 'Delete API Key';
+
+  @override
+  String get voiceAssistant => 'Voice Assistant';
+
+  @override
+  String get voiceAiCommands => 'Voice AI Commands';
+
+  @override
+  String get completeInformation => 'Complete information';
+
+  @override
+  String get cancelAndEditManually => 'Cancel and edit manually';
+
+  @override
+  String get noAdditionalParameters => 'No additional parameters';
+
+  @override
+  String get configureGeminiDescription => 'Configure Google Gemini to use voice commands and create events by speaking';
+
+  @override
+  String get configureAi => 'Configure AI';
 }

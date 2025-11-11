@@ -167,18 +167,18 @@ class SettingsScreen extends ConsumerWidget {
                 color: AppStyles.primary600,
               ),
               const SizedBox(width: 8),
-              const Text('Comandos de Voz IA', style: AppStyles.cardTitle),
+              Text(l10n.voiceAiCommands, style: AppStyles.cardTitle),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            'Configura Google Gemini para usar comandos de voz y crear eventos hablando',
+            l10n.configureGeminiDescription,
             style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.grey700),
           ),
           const SizedBox(height: 12),
           AdaptiveButton(
             config: AdaptiveButtonConfig.secondary(),
-            text: 'Configurar IA',
+            text: l10n.configureAi,
             icon: CupertinoIcons.settings,
             onPressed: () {
               Navigator.of(context).push(

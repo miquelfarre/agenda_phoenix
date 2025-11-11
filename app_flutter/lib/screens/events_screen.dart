@@ -249,7 +249,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         isIOS: isIOS,
       ),
       loading: () => Center(child: PlatformWidgets.platformLoadingIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(child: Text('${context.l10n.error}: $e')),
     );
 
     if (isIOS) {

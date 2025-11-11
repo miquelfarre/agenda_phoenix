@@ -139,7 +139,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text(_isOwner ? 'Eliminar calendario' : 'Abandonar calendario'),
+        title: Text(_isOwner ? l10n.deleteCalendar : l10n.leaveCalendar),
         content: Text(
           _isOwner
               ? '¿Estás seguro de que quieres eliminar el calendario "$calendarName"?'
@@ -149,7 +149,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(_isOwner ? 'Eliminar' : 'Abandonar'),
+            child: Text(_isOwner ? l10n.delete : l10n.leave),
           ),
           CupertinoDialogAction(
             isDefaultAction: true,
@@ -261,7 +261,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
             minSize: 0,
             onPressed: _isProcessingLeave ? null : _showLeaveConfirmation,
             child: Text(
-              _isOwner ? 'Eliminar' : 'Abandonar',
+              _isOwner ? context.l10n.delete : context.l10n.leave,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,

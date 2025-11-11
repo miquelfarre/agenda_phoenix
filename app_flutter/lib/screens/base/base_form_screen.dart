@@ -49,7 +49,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
 
   bool get showSaveInNavBar => true;
 
-  bool get confirmCancelIfDirty => true;
+  bool get confirmCancelIfDirty => false;
 
   String get unsavedChangesMessage => context.l10n.unsavedChangesWarning;
 
@@ -172,10 +172,8 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
   CupertinoNavigationBar buildNavigationBar() {
     return CupertinoNavigationBar(
       leading: showCancelButton
-          ? CupertinoButton(
-              padding: EdgeInsets.zero,
+          ? CupertinoNavigationBarBackButton(
               onPressed: handleCancel,
-              child: Text(cancelButtonText),
             )
           : null,
       middle: Text(screenTitle),

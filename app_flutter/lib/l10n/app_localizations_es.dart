@@ -185,7 +185,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get start => 'Comenzar';
 
   @override
-  String get stop => 'Parar';
+  String get stop => 'Detener';
 
   @override
   String get pause => 'Pausar';
@@ -218,7 +218,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get upload => 'Subir';
 
   @override
-  String get leave => 'Salir';
+  String get leave => 'Abandonar';
 
   @override
   String get stay => 'Quedarse';
@@ -2751,7 +2751,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get publicCalendars => 'Calendarios Públicos';
 
   @override
+  String get createNew => 'Crear Nuevo';
+
+  @override
   String get createCalendar => 'Crear Calendario';
+
+  @override
+  String get createBirthday => 'Crear Cumpleaños';
+
+  @override
+  String get personName => 'Nombre de la persona';
+
+  @override
+  String get recurringEventDescription => 'Crea eventos que se repiten automáticamente';
+
+  @override
+  String get birthdayEventDescription => 'Añade cumpleaños de tus contactos';
+
+  @override
+  String get calendarDescription => 'Descripción del Calendario';
 
   @override
   String get editCalendar => 'Editar Calendario';
@@ -2761,9 +2779,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get calendarName => 'Nombre del Calendario';
-
-  @override
-  String get calendarDescription => 'Descripción del Calendario';
 
   @override
   String get calendarColor => 'Color del Calendario';
@@ -3071,4 +3086,28 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chooseWhatHappensToEvents => 'Elige qué sucede con los eventos del calendario';
+
+  @override
+  String get deleteApiKey => 'Eliminar API Key';
+
+  @override
+  String get voiceAssistant => 'Asistente de Voz';
+
+  @override
+  String get voiceAiCommands => 'Comandos de Voz IA';
+
+  @override
+  String get completeInformation => 'Completar información';
+
+  @override
+  String get cancelAndEditManually => 'Cancelar y editar manualmente';
+
+  @override
+  String get noAdditionalParameters => 'Sin parámetros adicionales';
+
+  @override
+  String get configureGeminiDescription => 'Configura Google Gemini para usar comandos de voz y crear eventos hablando';
+
+  @override
+  String get configureAi => 'Configurar IA';
 }

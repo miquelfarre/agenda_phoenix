@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/ai/base_voice_service.dart';
 import '../services/ai/voice_conversation_context.dart';
 import 'package:eventypop/ui/helpers/platform/platform_detection.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 /// Pantalla conversacional para recolectar datos faltantes por voz
 class VoiceConversationScreen extends ConsumerStatefulWidget {
@@ -196,7 +197,7 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
     return Scaffold(
       backgroundColor: isIOS ? CupertinoColors.systemBackground : null,
       appBar: AppBar(
-        title: const Text('Completar información'),
+        title: Text(context.l10n.completeInformation),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -349,7 +350,7 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
                   ElevatedButton.icon(
                     onPressed: _stopRecording,
                     icon: const Icon(Icons.stop),
-                    label: const Text('Detener'),
+                    label: Text(context.l10n.stop),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
@@ -387,7 +388,7 @@ CRÍTICO: Devuelve SOLO el JSON con el campo "$currentField", sin texto adiciona
               // Botón para cancelar
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancelar y editar manualmente'),
+                child: Text(context.l10n.cancelAndEditManually),
               ),
             ],
           ),

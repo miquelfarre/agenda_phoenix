@@ -443,7 +443,7 @@ abstract class AppLocalizations {
   /// **'Start'**
   String get start;
 
-  /// No description provided for @stop.
+  /// Stop button
   ///
   /// In en, this message translates to:
   /// **'Stop'**
@@ -509,7 +509,7 @@ abstract class AppLocalizations {
   /// **'Upload'**
   String get upload;
 
-  /// No description provided for @leave.
+  /// Leave button
   ///
   /// In en, this message translates to:
   /// **'Leave'**
@@ -5303,11 +5303,47 @@ abstract class AppLocalizations {
   /// **'Public Calendars'**
   String get publicCalendars;
 
+  /// Title of creation menu
+  ///
+  /// In en, this message translates to:
+  /// **'Create New'**
+  String get createNew;
+
   /// Button to create a new calendar
   ///
   /// In en, this message translates to:
   /// **'Create Calendar'**
   String get createCalendar;
+
+  /// Button to create a birthday
+  ///
+  /// In en, this message translates to:
+  /// **'Create Birthday'**
+  String get createBirthday;
+
+  /// Placeholder for person's name in birthday
+  ///
+  /// In en, this message translates to:
+  /// **'Person\'s name'**
+  String get personName;
+
+  /// Description for recurring event option
+  ///
+  /// In en, this message translates to:
+  /// **'Create events that repeat automatically'**
+  String get recurringEventDescription;
+
+  /// Description for birthday option
+  ///
+  /// In en, this message translates to:
+  /// **'Add birthdays of your contacts'**
+  String get birthdayEventDescription;
+
+  /// Label for calendar description input
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Description'**
+  String get calendarDescription;
 
   /// Button to edit a calendar
   ///
@@ -5326,12 +5362,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calendar Name'**
   String get calendarName;
-
-  /// Label for calendar description input
-  ///
-  /// In en, this message translates to:
-  /// **'Calendar Description'**
-  String get calendarDescription;
 
   /// Label for calendar color picker
   ///
@@ -5902,6 +5932,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose what happens to calendar events'**
   String get chooseWhatHappensToEvents;
+
+  /// Title of dialog to delete API key
+  ///
+  /// In en, this message translates to:
+  /// **'Delete API Key'**
+  String get deleteApiKey;
+
+  /// Voice assistant title
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Assistant'**
+  String get voiceAssistant;
+
+  /// Voice commands section title
+  ///
+  /// In en, this message translates to:
+  /// **'Voice AI Commands'**
+  String get voiceAiCommands;
+
+  /// Title to complete information
+  ///
+  /// In en, this message translates to:
+  /// **'Complete information'**
+  String get completeInformation;
+
+  /// Button to cancel and edit manually
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel and edit manually'**
+  String get cancelAndEditManually;
+
+  /// Text when there are no additional parameters
+  ///
+  /// In en, this message translates to:
+  /// **'No additional parameters'**
+  String get noAdditionalParameters;
+
+  /// Description of the Google Gemini configuration section in settings
+  ///
+  /// In en, this message translates to:
+  /// **'Configure Google Gemini to use voice commands and create events by speaking'**
+  String get configureGeminiDescription;
+
+  /// Button to configure artificial intelligence
+  ///
+  /// In en, this message translates to:
+  /// **'Configure AI'**
+  String get configureAi;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
