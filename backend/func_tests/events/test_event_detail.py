@@ -101,18 +101,12 @@ def test_get_event_as_owner_includes_all_interactions(client, test_event_with_in
     assert interaction_data["user"]["display_name"] == "Invitee One"
     assert interaction_data["user"]["instagram_username"] == "invitee1"
     assert interaction_data["user"]["phone_number"] == "+1234567891"
-    # Legacy fields should also be present for backward compatibility
-    assert interaction_data["user"]["contact_name"] == "Invitee One"
-    assert interaction_data["user"]["instagram_name"] == "invitee1"
 
     # Check inviter object is complete
     assert "inviter" in interaction_data
     assert interaction_data["inviter"]["id"] == owner.id
     assert interaction_data["inviter"]["display_name"] == "Owner User"
     assert interaction_data["inviter"]["instagram_username"] == "owner"
-    # Legacy fields
-    assert interaction_data["inviter"]["contact_name"] == "Owner User"
-    assert interaction_data["inviter"]["instagram_name"] == "owner"
 
     # Check second interaction (invitee2 - accepted)
     interaction_data2 = next((i for i in data["interactions"] if i["user_id"] == invitee2.id), None)
@@ -150,9 +144,6 @@ def test_get_event_as_invitee_includes_only_own_interaction(client, test_event_w
     assert interaction_data["inviter"]["id"] == owner.id
     assert interaction_data["inviter"]["display_name"] == "Owner User"
     assert interaction_data["inviter"]["instagram_username"] == "owner"
-    # Legacy fields
-    assert interaction_data["inviter"]["contact_name"] == "Owner User"
-    assert interaction_data["inviter"]["instagram_name"] == "owner"
 
 
 def test_get_event_attendees_populated(client, test_db, test_users):
@@ -232,9 +223,6 @@ def test_get_event_inviter_object_complete(client, test_db, test_users):
     assert interaction["inviter"]["id"] == owner.id
     assert interaction["inviter"]["display_name"] == "Owner User"
     assert interaction["inviter"]["instagram_username"] == "owner"
-    # Legacy fields
-    assert interaction["inviter"]["contact_name"] == "Owner User"
-    assert interaction["inviter"]["instagram_name"] == "owner"
 
 
 def test_get_event_unauthenticated_no_interactions(client, test_db, test_users):

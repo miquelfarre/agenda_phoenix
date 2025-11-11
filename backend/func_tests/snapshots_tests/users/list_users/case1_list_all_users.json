@@ -37,8 +37,8 @@
         "is_admin": false,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "profile_picture": null,
-        "instagram_name": null
+        "profile_picture_url": null,
+        "instagram_username": null
       },
       {
         "name": null,
@@ -52,8 +52,8 @@
         "is_admin": false,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}",
-        "profile_picture": null,
-        "instagram_name": null
+        "profile_picture_url": null,
+        "instagram_username": null
       }
     ]
   }

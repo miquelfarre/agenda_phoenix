@@ -80,7 +80,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
     def get_display_name(self, db: Session, user_id: int) -> str:
         """
-        Get user's display name (instagram_name or contact name or fallback).
+        Get user's display name (instagram_username or contact name or fallback).
 
         Args:
             db: Database session
@@ -95,9 +95,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         user, contact = result
 
-        # Priority: instagram_name > contact_name > fallback
-        if user.instagram_name:
-            return user.instagram_name
+        # Priority: instagram_username > contact_name > fallback
+        if user.instagram_username:
+            return user.instagram_username
         if contact and contact.name:
             return contact.name
 
@@ -149,13 +149,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
                     User.display_name.ilike(search_term),
                     User.instagram_username.ilike(search_term),
                     # Legacy fields for backward compatibility
-                    User.instagram_name.ilike(search_term),
+                    User.instagram_username.ilike(search_term),
                     User.name.ilike(search_term),
                 )
             )
 
         if public is not None:
-            # Use is_public field instead of checking instagram_name
+            # Use is_public field instead of checking instagram_username
             query = query.filter(User.is_public == public)
 
         # Apply ordering and pagination
@@ -175,8 +175,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             for user in users:
                 # Use new fields, with fallback to legacy
                 display_name = user.display_name or user.name or f"Usuario #{user.id}"
-                instagram_username = user.instagram_username or user.instagram_name
-                profile_picture_url = user.profile_picture_url or user.profile_picture
+                instagram_username = user.instagram_username
+                profile_picture_url = user.profile_picture_url
 
                 # For backward compatibility, also include legacy contact fields
                 # (will be None for new users)
@@ -201,13 +201,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
                         "auth_id": user.auth_id,
                         "is_public": user.is_public,
                         "is_admin": user.is_admin,
-                        # Legacy fields (for backward compatibility)
-                        "instagram_name": user.instagram_name,
-                        "profile_picture": user.profile_picture,
                         "contact_id": user.contact_id,
                         "contact_name": contact_name,
                         "contact_phone": contact_phone,
-                        "display_name": display_name,
                         "last_login": user.last_login,
                         "created_at": user.created_at,
                         "updated_at": user.updated_at,
@@ -228,7 +224,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         Returns:
             Dictionary with statistics or None if user doesn't exist or isn't public:
             - user_id: User ID
-            - instagram_name: Instagram name
+            - instagram_username: Instagram username
             - total_subscribers: Number of subscribers
             - total_events: Total number of events created
             - events_stats: List of event statistics (event_id, event_name, event_start_date, total_joined)
@@ -256,7 +252,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
             events_stats.append({"event_id": event.id, "event_name": event.name, "event_start_date": event.start_date, "total_joined": total_joined})
 
-        return {"user_id": user_id, "instagram_name": db_user.instagram_name, "total_subscribers": total_subscribers, "total_events": total_events, "events_stats": events_stats}
+        return {"user_id": user_id, "instagram_username": db_user.instagram_username, "total_subscribers": total_subscribers, "total_events": total_events, "events_stats": events_stats}
 
 
 # Singleton instance

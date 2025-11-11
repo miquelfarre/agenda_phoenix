@@ -13,7 +13,7 @@
         "name": "FC Barcelona",
         "auth_provider": "instagram",
         "is_public": true,
-        "instagram_name": "fcbarcelona"
+        "instagram_username": "fcbarcelona"
       }
     ],
     "events": [

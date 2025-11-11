@@ -3,13 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/domain/event.dart';
-import '../../models/domain/user.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../config/app_constants.dart';
 import '../../core/state/app_state.dart';
-import '../../services/config_service.dart';
 import 'event_card_config.dart';
 
 /// Widget for building the event card header (invitation banner, owner avatar)
@@ -220,28 +218,18 @@ class EventCardAttendeesRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUserId = ConfigService.instance.currentUserId;
-
-    // Parse attendees from both User objects and Maps
+    // Parse attendees from Maps
     final List<Map<String, dynamic>> attendeeData = [];
     for (final a in event.attendees) {
-      if (a is User) {
-        attendeeData.add({
-          'id': a.id,
-          'display_name': a.displayName,
-          'profile_picture_url': a.profilePictureUrl,
-        });
-      } else if (a is Map<String, dynamic>) {
+      if (a is Map<String, dynamic>) {
         attendeeData.add(a);
       }
     }
 
-    // Filter out current user
-    final otherAttendees = attendeeData
-        .where((a) => a['id'] != currentUserId)
-        .toList();
+    // Don't filter out current user - show all attendees including themselves
+    final allAttendees = attendeeData;
 
-    if (otherAttendees.isEmpty) return const SizedBox.shrink();
+    if (allAttendees.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
@@ -261,9 +249,8 @@ class EventCardAttendeesRow extends ConsumerWidget {
             child: Wrap(
               spacing: 6,
               runSpacing: 4,
-              children: otherAttendees.take(6).map((a) {
-                final name =
-                    (a['display_name'] as String?) ?? (a['full_name'] as String?) ?? (a['name'] as String?) ?? '';
+              children: allAttendees.take(6).map((a) {
+                final name = (a['display_name'] as String?) ?? '';
                 final initials = name.trim().isNotEmpty
                     ? name.trim().split(RegExp(r"\s+")).first[0].toUpperCase()
                     : '?';

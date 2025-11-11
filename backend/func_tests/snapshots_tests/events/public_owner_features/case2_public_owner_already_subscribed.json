@@ -6,7 +6,7 @@
         "id": 1,
         "name": "FC Barcelona",
         "is_public": true,
-        "instagram_name": "fcbarcelona",
+        "instagram_username": "fcbarcelona",
         "auth_provider": "instagram"
       },
       {
@@ -103,9 +103,9 @@
       "attendees": [
         {
           "id": "{{ID}}",
-          "full_name": "Alice",
-          "instagram_name": null,
-          "profile_picture": null
+          "display_name": "Alice",
+          "instagram_username": null,
+          "profile_picture_url": null
         }
       ],
       "invitation_stats": null

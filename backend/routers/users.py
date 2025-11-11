@@ -27,7 +27,7 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 @router.get("")
 async def get_users(public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, exclude_user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
-    """Get all users, optionally filtered by public status, with optional search by instagram_name/contact name, optionally enriched with contact info, optionally excluding a specific user ID"""
+    """Get all users, optionally filtered by public status, with optional search by instagram_username/contact name, optionally enriched with contact info, optionally excluding a specific user ID"""
     result = user.get_multi_with_optional_enrichment(db, public=public, enriched=enriched, search=search, skip=offset, limit=limit, order_by=order_by or "id", order_dir=order_dir)
 
     # Filter out excluded user if specified

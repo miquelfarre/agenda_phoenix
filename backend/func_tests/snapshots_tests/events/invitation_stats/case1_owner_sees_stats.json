@@ -86,10 +86,10 @@
           "updated_at": "{{TIMESTAMP}}",
           "user": {
             "id": "{{ID}}",
-            "full_name": "Bob",
-            "instagram_name": null,
+            "display_name": "Bob",
+            "instagram_username": null,
             "phone_number": "+1234567891",
-            "profile_picture": null
+            "profile_picture_url": null
           },
           "inviter": null
         },
@@ -107,10 +107,10 @@
           "updated_at": "{{TIMESTAMP}}",
           "user": {
             "id": "{{ID}}",
-            "full_name": "Charlie",
-            "instagram_name": null,
+            "display_name": "Charlie",
+            "instagram_username": null,
             "phone_number": "+1234567892",
-            "profile_picture": null
+            "profile_picture_url": null
           },
           "inviter": null
         },
@@ -128,10 +128,10 @@
           "updated_at": "{{TIMESTAMP}}",
           "user": {
             "id": "{{ID}}",
-            "full_name": "David",
-            "instagram_name": null,
+            "display_name": "David",
+            "instagram_username": null,
             "phone_number": "+1234567893",
-            "profile_picture": null
+            "profile_picture_url": null
           },
           "inviter": null
         }
@@ -148,9 +148,9 @@
       "attendees": [
         {
           "id": "{{ID}}",
-          "full_name": "Bob",
-          "instagram_name": null,
-          "profile_picture": null
+          "display_name": "Bob",
+          "instagram_username": null,
+          "profile_picture_url": null
         }
       ],
       "invitation_stats": {

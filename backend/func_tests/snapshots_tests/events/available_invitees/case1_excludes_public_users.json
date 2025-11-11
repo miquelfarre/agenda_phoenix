@@ -23,7 +23,7 @@
       {
         "id": 4,
         "name": "FC Barcelona",
-        "instagram_name": "fcbarcelona",
+        "instagram_username": "fcbarcelona",
         "auth_provider": "instagram",
         "is_public": true
       }
@@ -47,13 +47,13 @@
     "body": [
       {
         "id": "{{ID}}",
-        "instagram_name": null,
+        "instagram_username": null,
         "contact_name": "Bob",
         "display_name": "Bob"
       },
       {
         "id": "{{ID}}",
-        "instagram_name": null,
+        "instagram_username": null,
         "contact_name": "Charlie",
         "display_name": "Charlie"
       }

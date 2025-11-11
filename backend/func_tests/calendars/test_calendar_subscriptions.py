@@ -47,8 +47,9 @@ def api_request(method, endpoint, user_id=None, json=None, params=None):
     return response
 
 
-def test_discover_public_calendars():
-    """Test discovery of public calendars via GET /calendars/public"""
+@pytest.fixture
+def public_calendars():
+    """Fixture that fetches and validates public calendars"""
     response = api_request("GET", "/calendars/public")
     assert response.status_code == 200, f"Failed to fetch public calendars: {response.text}"
 
@@ -74,29 +75,33 @@ def test_discover_public_calendars():
         else:
             calendars_without_hash.append(calendar)
 
+    assert len(calendars_with_hash) > 0, "Should have at least one calendar with share_hash"
+
+    return calendars
+
+
+def test_discover_public_calendars(public_calendars):
+    """Test discovery of public calendars via GET /calendars/public"""
+    calendars = public_calendars
+
+    # Separate calendars by whether they have share_hash (for display)
+    calendars_with_hash = [c for c in calendars if c["share_hash"] is not None]
+    calendars_without_hash = [c for c in calendars if c["share_hash"] is None]
+
     # Verify design: calendars from public users should NOT have share_hash
     # Only calendars from private users should have share_hash
     print(f"✅ Found {len(calendars)} public calendars:")
     print(f"   - {len(calendars_with_hash)} with share_hash (from private users)")
     print(f"   - {len(calendars_without_hash)} without share_hash (from public users)")
 
-    assert len(calendars_with_hash) > 0, "Should have at least one calendar with share_hash"
-    return calendars
 
-
-def test_subscribe_to_calendar_via_share_hash():
-    """Test subscribing to a public calendar using share_hash"""
-    # Get public calendars
-    calendars_response = api_request("GET", "/calendars/public")
-    assert calendars_response.status_code == 200
-    calendars = calendars_response.json()
-    assert len(calendars) > 0, "Need at least one public calendar"
-
+@pytest.fixture
+def subscribed_user_with_calendar(public_calendars):
+    """Fixture that creates a user and subscribes them to a calendar"""
     # Pick a calendar with share_hash (should be "Festivos Barcelona 2025" from Sara, a private user)
-    calendar = next((c for c in calendars if c["share_hash"] is not None), None)
+    calendar = next((c for c in public_calendars if c["share_hash"] is not None), None)
     assert calendar is not None, "Need at least one calendar with share_hash"
     share_hash = calendar["share_hash"]
-    calendar_name = calendar["name"]
 
     # Create a test user
     random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
@@ -123,6 +128,16 @@ def test_subscribe_to_calendar_via_share_hash():
     assert subscription["user_id"] == user_id, "Subscription user_id must match"
     assert subscription["status"] == "active", "New subscription should be active"
 
+    return {"user_id": user_id, "share_hash": share_hash, "calendar": calendar}
+
+
+def test_subscribe_to_calendar_via_share_hash(subscribed_user_with_calendar):
+    """Test subscribing to a public calendar using share_hash"""
+    user_id = subscribed_user_with_calendar["user_id"]
+    share_hash = subscribed_user_with_calendar["share_hash"]
+    calendar = subscribed_user_with_calendar["calendar"]
+    calendar_name = calendar["name"]
+
     print(f"✅ User {user_id} subscribed to '{calendar_name}' ({share_hash})")
 
     # Try to subscribe again (should fail with 409)
@@ -131,15 +146,14 @@ def test_subscribe_to_calendar_via_share_hash():
 
     print(f"✅ Duplicate subscription correctly rejected")
 
-    return user_id, share_hash, calendar
 
-
-def test_unsubscribe_from_calendar():
+def test_unsubscribe_from_calendar(subscribed_user_with_calendar):
     """Test unsubscribing from a calendar"""
-    # First subscribe
-    user_id, share_hash, calendar = test_subscribe_to_calendar_via_share_hash()
+    user_id = subscribed_user_with_calendar["user_id"]
+    share_hash = subscribed_user_with_calendar["share_hash"]
+    calendar = subscribed_user_with_calendar["calendar"]
 
-    # Now unsubscribe
+    # Unsubscribe
     unsubscribe_response = api_request("DELETE", f"/calendars/{share_hash}/subscribe", user_id=user_id)
     assert unsubscribe_response.status_code == 200, f"Failed to unsubscribe: {unsubscribe_response.text}"
 
@@ -506,13 +520,61 @@ def test_get_user_calendars_includes_memberships():
     print(f"✅ Calendars where user is a member are included")
 
 
+def _run_discover_test():
+    """Helper function to run discover test without pytest"""
+    # Get public calendars directly
+    response = api_request("GET", "/calendars/public")
+    assert response.status_code == 200
+    calendars = response.json()
+
+    # Pass to test
+    test_discover_public_calendars(calendars)
+    return calendars
+
+
+def _run_subscribe_test():
+    """Helper function to run subscribe test without pytest"""
+    # Get calendars
+    response = api_request("GET", "/calendars/public")
+    calendars = response.json()
+
+    # Create subscription data
+    calendar = next((c for c in calendars if c["share_hash"] is not None), None)
+    share_hash = calendar["share_hash"]
+
+    random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
+    user_data = {
+        "display_name": "Test Subscriber",
+        "contact_name": "Test Subscriber",
+        "phone_number": f"+9999{random_suffix}",
+        "auth_provider": "phone",
+        "auth_id": f"+9999{random_suffix}",
+        "is_public": False,
+    }
+    user_response = api_request("POST", "/users", json=user_data)
+    user_id = user_response.json()["id"]
+
+    subscribe_response = api_request("POST", f"/calendars/{share_hash}/subscribe", user_id=user_id)
+    assert subscribe_response.status_code == 201
+
+    subscription_data = {"user_id": user_id, "share_hash": share_hash, "calendar": calendar}
+    test_subscribe_to_calendar_via_share_hash(subscription_data)
+    return subscription_data
+
+
+def _run_unsubscribe_test():
+    """Helper function to run unsubscribe test without pytest"""
+    subscription_data = _run_subscribe_test()
+    test_unsubscribe_from_calendar(subscription_data)
+
+
 if __name__ == "__main__":
     print("🧪 Testing Calendar Subscriptions")
     print("=" * 60)
 
-    test_discover_public_calendars()
-    test_subscribe_to_calendar_via_share_hash()
-    test_unsubscribe_from_calendar()
+    _run_discover_test()
+    _run_subscribe_test()
+    _run_unsubscribe_test()
     test_subscribed_calendar_events_in_user_events()
     test_subscriber_count_trigger()
     test_accessible_calendar_ids()

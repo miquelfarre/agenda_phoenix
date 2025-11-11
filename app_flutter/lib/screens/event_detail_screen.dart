@@ -382,7 +382,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               ),
               const SizedBox(height: 4),
               Text(
-                owner.displayName!,
+                owner.displayName,
                 style: TextStyle(fontSize: 16, color: AppStyles.black87),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -679,8 +679,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             spacing: 12,
             runSpacing: 12,
             children: otherAttendees.map((user) {
-              final initials = (user.displayName ?? '').trim().isNotEmpty
-                  ? user.displayName!
+              final initials = user.displayName.trim().isNotEmpty
+                  ? user.displayName
                         .trim()
                         .split(RegExp(r"\s+"))
                         .first[0]
@@ -712,7 +712,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                   SizedBox(
                     width: 60,
                     child: Text(
-                      user.displayName?.split(' ').first ?? 'User',
+                      user.displayName.split(' ').first,
                       style: TextStyle(
                         fontSize: 11,
                         color: AppStyles.grey600,

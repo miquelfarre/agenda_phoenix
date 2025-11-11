@@ -12,7 +12,7 @@
         "id": 2,
         "name": "FC Barcelona",
         "is_public": true,
-        "instagram_name": "fcbarcelona",
+        "instagram_username": "fcbarcelona",
         "auth_provider": "instagram"
       }
     ],
@@ -63,13 +63,13 @@
     "body": [
       {
         "name": null,
-        "instagram_name": "fcbarcelona",
+        "instagram_username": "fcbarcelona",
         "phone": null,
         "auth_provider": "instagram",
         "auth_id": "{{ID}}",
         "is_public": true,
         "is_admin": false,
-        "profile_picture": null,
+        "profile_picture_url": null,
         "id": "{{ID}}",
         "contact_id": null,
         "last_login": null,

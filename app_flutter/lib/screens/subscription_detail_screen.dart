@@ -100,10 +100,7 @@ class _SubscriptionDetailScreenState
       await subscriptionRepo.subscribeToUser(widget.publicUser.id);
 
       if (mounted) {
-        final userName =
-            widget.publicUser.displayName ??
-            widget.publicUser.instagramUsername ??
-            'Usuario';
+        final userName = widget.publicUser.displayName;
         PlatformDialogHelpers.showSnackBar(
           context: context,
           message: AppLocalizations.of(context)!.subscribedTo(userName),
@@ -132,10 +129,7 @@ class _SubscriptionDetailScreenState
     }
 
     // Show confirmation dialog
-    final userName =
-        widget.publicUser.displayName ??
-        widget.publicUser.instagramUsername ??
-        'Usuario';
+    final userName = widget.publicUser.displayName;
 
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
@@ -204,7 +198,7 @@ class _SubscriptionDetailScreenState
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(
-          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.displayName ?? widget.publicUser.instagramUsername ?? 'User'}',
+          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.displayName}',
           style: const TextStyle(fontSize: 16),
         ),
         trailing: Container(
@@ -216,7 +210,7 @@ class _SubscriptionDetailScreenState
           ),
           child: CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            minSize: 0,
+            minimumSize: Size.zero,
             onPressed: _isProcessingSubscription
                 ? null
                 : _isSubscribed

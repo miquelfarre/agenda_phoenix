@@ -12,7 +12,7 @@
         "id": 2,
         "name": "FC Barcelona",
         "is_public": true,
-        "instagram_name": "fcbarcelona",
+        "instagram_username": "fcbarcelona",
         "auth_provider": "instagram"
       }
     ],

@@ -109,9 +109,9 @@
         "attendees": [
           {
             "id": "{{ID}}",
-            "full_name": "Sonia",
-            "instagram_name": null,
-            "profile_picture": null
+            "display_name": "Sonia",
+            "instagram_username": null,
+            "profile_picture_url": null
           }
         ],
         "invitation_stats": null

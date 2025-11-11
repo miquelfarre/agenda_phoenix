@@ -133,8 +133,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
             child: SearchableList<User>(
               items: users,
               filterFunction: (user, query) {
-                return (user.displayName?.toLowerCase().contains(query) ??
-                        false) ||
+                return user.displayName.toLowerCase().contains(query) ||
                     (user.instagramUsername?.toLowerCase().contains(query) ??
                         false);
               },
@@ -179,7 +178,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen>
   Future<void> _removeUser(User user, WidgetRef ref) async {
     final l10n = context.l10n;
     final currentContext = context;
-    final userName = user.displayName ?? user.instagramUsername ?? 'Usuario';
+    final userName = user.displayName;
 
     // Show confirmation dialog
     final confirmed = await showCupertinoDialog<bool>(

@@ -6,7 +6,7 @@
         "id": 1,
         "name": "FC Barcelona",
         "is_public": true,
-        "instagram_name": "fcbarcelona",
+        "instagram_username": "fcbarcelona",
         "auth_provider": "instagram"
       },
       {
@@ -65,7 +65,7 @@
     "status_code": 200,
     "body": {
       "user_id": "{{ID}}",
-      "instagram_name": "fcbarcelona",
+      "instagram_username": "fcbarcelona",
       "total_subscribers": 2,
       "total_events": 2,
       "events_stats": [

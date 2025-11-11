@@ -33,9 +33,8 @@ dependencies:
   hive_ce: ^2.6.0
   hive_ce_flutter: ^2.1.0
 
-  # Supabase for authentication
-  supabase_flutter: ^2.3.4
-  gotrue: ^2.0.0
+  # Supabase for authentication and realtime
+  supabase_flutter: ^2.10.3
 
   # UI & UX
   cached_network_image: ^3.3.1

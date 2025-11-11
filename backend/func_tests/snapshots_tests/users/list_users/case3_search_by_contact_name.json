@@ -7,13 +7,13 @@
         "id": 1,
         "name": "User One",
         "phone": "+1234567890",
-        "instagram_name": "user_one"
+        "instagram_username": "user_one"
       },
       {
         "id": 2,
         "name": "Test User",
         "phone": "+1234567891",
-        "instagram_name": "test_user"
+        "instagram_username": "test_user"
       }
     ]
   },
@@ -26,12 +26,12 @@
     "body": [
       {
         "id": "{{ID}}",
-        "instagram_name": "test_user",
+        "instagram_username": "test_user",
         "auth_provider": "phone",
         "auth_id": "{{ID}}",
         "is_public": false,
         "is_admin": false,
-        "profile_picture": null,
+        "profile_picture_url": null,
         "contact_id": "{{ID}}",
         "contact_name": "Test User",
         "contact_phone": "+1234567891",

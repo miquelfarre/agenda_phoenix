@@ -193,15 +193,10 @@ class SubscriptionRepository implements ISubscriptionRepository {
           .map((data) => models.User.fromJson(data))
           .where(
             (user) =>
-                (user.displayName?.toLowerCase().contains(
-                      query.toLowerCase(),
-                    ) ??
-                    false) ||
+                user.displayName.toLowerCase().contains(
+                  query.toLowerCase(),
+                ) ||
                 (user.instagramUsername?.toLowerCase().contains(
-                      query.toLowerCase(),
-                    ) ??
-                    false) ||
-                (user.displayName?.toLowerCase().contains(
                       query.toLowerCase(),
                     ) ??
                     false),

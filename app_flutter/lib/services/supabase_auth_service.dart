@@ -1,5 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
-import 'package:gotrue/gotrue.dart' as gotrue;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config_service.dart';
 
 class SupabaseAuthService {
@@ -17,7 +16,7 @@ class SupabaseAuthService {
     }
   }
 
-  static gotrue.User? get currentUser {
+  static User? get currentUser {
     final configService = ConfigService.instance;
     if (configService.isTestMode) {
       final testUserInfo = configService.testUserInfo;
@@ -94,7 +93,7 @@ class SupabaseAuthService {
   }
 }
 
-class _MockSupabaseUser implements gotrue.User {
+class _MockSupabaseUser implements User {
   final Map<String, dynamic> _userInfo;
 
   _MockSupabaseUser(this._userInfo);

@@ -22,7 +22,7 @@ def test_user_events_includes_public_owner_in_attendees(client):
     """
     # Create public user (restaurant/gym/etc.)
     public_user_data = {
-        "instagram_name": f"restaurant_{datetime.now().timestamp()}",
+        "instagram_username": f"restaurant_{datetime.now().timestamp()}",
         "display_name": f"restaurant_{datetime.now().timestamp()}",
         "auth_provider": "instagram",
         "auth_id": f"ig_restaurant_{datetime.now().timestamp()}",
@@ -34,9 +34,8 @@ def test_user_events_includes_public_owner_in_attendees(client):
 
     # Create private user (subscriber)
     private_user_data = {
-        "name": "Test Subscriber",
         "display_name": "Test Subscriber",
-        "instagram_name": None,
+        "instagram_username": None,
         "phone": f"+2000{int(datetime.now().timestamp())}",
         "auth_provider": "phone",
         "auth_id": f"+2000{int(datetime.now().timestamp())}",
@@ -135,7 +134,7 @@ def test_user_events_preserves_owner_info_across_updates(client):
     """
     # Setup: Create public user
     public_user_data = {
-        "instagram_name": f"gym_{datetime.now().timestamp()}",
+        "instagram_username": f"gym_{datetime.now().timestamp()}",
         "display_name": f"gym_{datetime.now().timestamp()}",
         "auth_provider": "instagram",
         "auth_id": f"ig_gym_{datetime.now().timestamp()}",
@@ -144,7 +143,6 @@ def test_user_events_preserves_owner_info_across_updates(client):
     public_user = client.post("/api/v1/users", json=public_user_data).json()
 
     private_user_data = {
-        "name": "Test Member",
         "display_name": "Test Member",
         "phone": f"+4000{int(datetime.now().timestamp())}",
         "auth_provider": "phone",

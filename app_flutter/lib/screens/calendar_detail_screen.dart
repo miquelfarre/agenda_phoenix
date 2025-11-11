@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
 import '../models/domain/event.dart';
 import '../models/domain/calendar.dart';
@@ -35,7 +34,6 @@ class CalendarDetailScreen extends ConsumerStatefulWidget {
 
 class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
   String? _ownerName;
-  bool _isLoadingOwner = true;
   bool _isProcessingLeave = false;
 
   Calendar? get _calendar {
@@ -81,7 +79,6 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
         if (mounted) {
           setState(() {
             _ownerName = null;
-            _isLoadingOwner = false;
           });
         }
         return;
@@ -99,14 +96,12 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
           _ownerName = owner?.displayName ??
                        owner?.instagramUsername ??
                        'Usuario';
-          _isLoadingOwner = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _ownerName = 'Usuario';
-          _isLoadingOwner = false;
         });
       }
     }
@@ -258,7 +253,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
           ),
           child: CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            minSize: 0,
+            minimumSize: Size.zero,
             onPressed: _isProcessingLeave ? null : _showLeaveConfirmation,
             child: Text(
               _isOwner ? context.l10n.delete : context.l10n.leave,

@@ -14,7 +14,7 @@
     "method": "PUT",
     "endpoint": "/api/v1/users/9999",
     "body": {
-      "instagram_name": "fantasma",
+      "instagram_username": "fantasma",
       "auth_provider": "phone",
       "auth_id": "+34600000000"
     },

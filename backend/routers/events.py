@@ -201,27 +201,16 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "updated_at": interaction.updated_at.isoformat(),
                         "user": {
                             "id": interaction_user.id,
-                            # New fields
                             "display_name": user_display_name,
                             "instagram_username": user_instagram_username,
                             "profile_picture_url": user_profile_picture_url,
-                            # Legacy fields for backward compatibility
-                            "name": user_display_name,
-                            "contact_name": user_display_name,
-                            "instagram_name": user_instagram_username,
                             "phone_number": user_phone,
-                            "profile_picture": user_profile_picture_url,
                         },
                         "inviter": (
                             {
                                 "id": inviter.id,
-                                # New fields
                                 "display_name": inviter_display_name,
                                 "instagram_username": inviter_instagram_username,
-                                # Legacy fields
-                                "name": inviter_display_name,
-                                "contact_name": inviter_display_name,
-                                "instagram_name": inviter_instagram_username,
                             }
                             if inviter
                             else None
@@ -272,13 +261,8 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "inviter": (
                             {
                                 "id": inviter.id,
-                                # New fields
                                 "display_name": inviter_display_name,
                                 "instagram_username": inviter_instagram_username,
-                                # Legacy fields
-                                "name": inviter_display_name,
-                                "contact_name": inviter_display_name,
-                                "instagram_name": inviter_instagram_username,
                             }
                             if inviter
                             else None
@@ -347,9 +331,8 @@ async def get_event_interactions_enriched(event_id: int, db: Session = Depends(g
                 "id": interaction.id,
                 "event_id": interaction.event_id,
                 "user_id": interaction.user_id,
-                "user_name": user.display_name,
-                "user_instagram_name": user.instagram_username,
-                "user_contact_name": user.display_name,
+                "user_display_name": user.display_name,
+                "user_instagram_username": user.instagram_username,
                 "interaction_type": interaction.interaction_type,
                 "status": interaction.status,
                 "role": interaction.role,
@@ -382,8 +365,7 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     for user_obj in results:
         available.append({
             "id": user_obj.id,
-            "instagram_name": user_obj.instagram_username,
-            "contact_name": user_obj.display_name,
+            "instagram_username": user_obj.instagram_username,
             "display_name": user_obj.display_name
         })
 
