@@ -1,4 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Permisos para comandos de voz -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <!-- Permisos para contactos -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
     <application
         android:label="app_flutter"
         android:name="${applicationName}"

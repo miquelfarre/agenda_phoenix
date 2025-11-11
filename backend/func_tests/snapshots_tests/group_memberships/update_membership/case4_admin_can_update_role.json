@@ -1,0 +1,62 @@
+{
+  "description": "Admin can update role of another member",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice (Creator)",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob (Admin)",
+        "phone": "+1234567891"
+      },
+      {
+        "id": 3,
+        "name": "Charlie (Member)",
+        "phone": "+1234567892"
+      }
+    ],
+    "groups": [
+      {
+        "id": 1,
+        "name": "Team A",
+        "owner_id": 1
+      }
+    ],
+    "group_memberships": [
+      {
+        "id": 1,
+        "group_id": 1,
+        "user_id": 2,
+        "role": "admin"
+      },
+      {
+        "id": 2,
+        "group_id": 1,
+        "user_id": 3,
+        "role": "member"
+      }
+    ]
+  },
+  "request": {
+    "method": "PUT",
+    "endpoint": "/api/v1/group_memberships/2",
+    "body": {
+      "role": "admin"
+    },
+    "auth_user_id": 2
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "id": "{{ID}}",
+      "group_id": "{{ID}}",
+      "user_id": "{{ID}}",
+      "role": "admin",
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  }
+}

@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/event.dart';
-import '../models/user.dart';
-import '../models/group.dart';
-import '../services/api_client.dart';
+import '../models/domain/event.dart';
+import '../models/domain/user.dart';
+import '../models/domain/group.dart';
 import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
+import '../widgets/searchable_list.dart';
 import '../services/config_service.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
@@ -23,7 +23,8 @@ class InviteUsersScreen extends ConsumerStatefulWidget {
   ConsumerState<InviteUsersScreen> createState() => _InviteUsersScreenState();
 }
 
-class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with WidgetsBindingObserver {
+class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
+    with WidgetsBindingObserver {
   List<User> _availableUsers = [];
   List<Group> _groups = [];
   final Set<int> _recentlyInvitedUserIds = {};
@@ -32,7 +33,6 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
   bool _isLoading = false;
   bool isSending = false;
   String? _error;
-  String searchQuery = '';
 
   @override
   void initState() {
@@ -60,7 +60,6 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
   }
 
   Future<void> _loadData() async {
-    print('🔵 [InviteUsersScreen] _loadData START');
     setState(() {
       _isLoading = true;
       _error = null;
@@ -86,20 +85,17 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
         return;
       }
 
-      print('🔵 [InviteUsersScreen] Calling fetchAvailableInvitees...');
-      final users = await ApiClient().fetchAvailableInvitees(eventId);
-      print('🔵 [InviteUsersScreen] fetchAvailableInvitees completed, available users: ${users.length}');
+      final userRepo = ref.read(userRepositoryProvider);
+      final users = await userRepo.fetchAvailableInvitees(eventId);
 
       if (mounted) {
         setState(() {
-          _availableUsers = users.map((u) => User.fromJson(u)).toList();
+          _availableUsers = users;
           _groups = [];
           _isLoading = false;
         });
-        print('🔵 [InviteUsersScreen] setState completed, _isLoading=false');
       }
     } catch (e) {
-      print('🔴 [InviteUsersScreen] ERROR: $e');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -111,64 +107,33 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
 
   void _toggleUser(int userId) {
     setState(() {
-      selectedUserIds.contains(userId) ? selectedUserIds.remove(userId) : selectedUserIds.add(userId);
+      selectedUserIds.contains(userId)
+          ? selectedUserIds.remove(userId)
+          : selectedUserIds.add(userId);
     });
   }
 
   void _toggleGroup(int groupId) {
     setState(() {
-      selectedGroupIds.contains(groupId) ? selectedGroupIds.remove(groupId) : selectedGroupIds.add(groupId);
+      selectedGroupIds.contains(groupId)
+          ? selectedGroupIds.remove(groupId)
+          : selectedGroupIds.add(groupId);
     });
   }
 
-  List<User> _getFilteredUsers() {
-    final filteredUsers = _availableUsers.where((user) {
+  List<User> _getBaseUsers() {
+    return _availableUsers.where((user) {
       return !_recentlyInvitedUserIds.contains(user.id);
     }).toList();
-
-    if (searchQuery.isEmpty) return filteredUsers;
-
-    final query = searchQuery.toLowerCase();
-    return filteredUsers.where((user) {
-      return user.displayName.toLowerCase().contains(query) || (user.displaySubtitle?.toLowerCase().contains(query) ?? false);
-    }).toList();
-  }
-
-  List<Group> _getFilteredGroups() {
-    if (searchQuery.isEmpty) return _groups;
-
-    final query = searchQuery.toLowerCase();
-    return _groups.where((group) {
-      return group.name.toLowerCase().contains(query) || group.description.toLowerCase().contains(query);
-    }).toList();
-  }
-
-  Widget _buildSearchField() {
-    final l10n = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: CupertinoSearchTextField(
-        placeholder: l10n.search,
-        onChanged: (value) {
-          setState(() {
-            searchQuery = value;
-          });
-        },
-        style: TextStyle(color: AppStyles.grey700),
-        backgroundColor: AppStyles.grey100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
   }
 
   Widget _buildBody(BuildContext context) {
-    return SafeArea(child: _buildContent());
-  }
-
-  Widget _buildContent() {
     final l10n = context.l10n;
+
     if (_isLoading) {
-      return Center(child: PlatformWidgets.platformLoadingIndicator(radius: 16));
+      return Center(
+        child: PlatformWidgets.platformLoadingIndicator(radius: 16),
+      );
     }
 
     if (_error != null) {
@@ -176,9 +141,16 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PlatformWidgets.platformIcon(CupertinoIcons.exclamationmark_triangle, size: 48, color: AppStyles.grey500),
+            PlatformWidgets.platformIcon(
+              CupertinoIcons.exclamationmark_triangle,
+              size: 48,
+              color: AppStyles.grey500,
+            ),
             const SizedBox(height: 16),
-            Text(l10n.appErrorLoadingData, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700)),
+            Text(
+              l10n.appErrorLoadingData,
+              style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700),
+            ),
             const SizedBox(height: 8),
             Text(
               _error!.replaceFirst('Exception: ', ''),
@@ -186,52 +158,119 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
               style: AppStyles.bodyTextSmall.copyWith(color: AppStyles.grey600),
             ),
             const SizedBox(height: 24),
-            PlatformWidgets.platformButton(onPressed: _loadData, child: Text(l10n.retry)),
+            PlatformWidgets.platformButton(
+              onPressed: _loadData,
+              child: Text(l10n.retry),
+            ),
           ],
         ),
       );
     }
 
-    final users = _getFilteredUsers();
-    final groups = _getFilteredGroups();
+    final baseUsers = _getBaseUsers();
 
-    if (users.isEmpty && groups.isEmpty && searchQuery.isEmpty) {
-      return EmptyState(message: l10n.noUsersOrGroupsAvailable, icon: CupertinoIcons.person_badge_plus);
+    if (baseUsers.isEmpty && _groups.isEmpty) {
+      return SafeArea(
+        child: EmptyState(
+          message: l10n.noUsersOrGroupsAvailable,
+          icon: CupertinoIcons.person_badge_plus,
+        ),
+      );
     }
+
+    return SafeArea(
+      child: SearchableList<dynamic>(
+        items: [...baseUsers, ..._groups],
+        filterFunction: (item, query) {
+          if (item is User) {
+            return item.displayName.toLowerCase().contains(query) ||
+                (item.displaySubtitle?.toLowerCase().contains(query) ?? false);
+          } else if (item is Group) {
+            return item.name.toLowerCase().contains(query) ||
+                item.description.toLowerCase().contains(query);
+          }
+          return false;
+        },
+        listBuilder: (context, filteredItems) {
+          return _buildContent(context, filteredItems, l10n);
+        },
+        searchPlaceholder: l10n.search,
+      ),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    List<dynamic> filteredItems,
+    dynamic l10n,
+  ) {
+    final users = filteredItems.whereType<User>().toList();
+    final groups = filteredItems.whereType<Group>().toList();
 
     return ListView(
       physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
       children: [
-        _buildSearchField(),
-        if (searchQuery.isNotEmpty && users.isEmpty && groups.isEmpty) ...[
+        if (filteredItems.isEmpty) ...[
           Padding(
             padding: const EdgeInsets.all(32.0),
-            child: EmptyState(message: l10n.noSearchResults, icon: CupertinoIcons.search),
+            child: EmptyState(
+              message: l10n.noSearchResults,
+              icon: CupertinoIcons.search,
+            ),
           ),
         ],
         if (users.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: Text(l10n.users, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700)),
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
+            child: Text(
+              l10n.users,
+              style: AppStyles.cardTitle.copyWith(color: AppStyles.grey700),
+            ),
           ),
           ...users.map((user) {
             final isSelected = selectedUserIds.contains(user.id);
-            return SelectableCard(title: user.displayName, subtitle: user.displaySubtitle, icon: CupertinoIcons.person, color: AppStyles.blue600, selected: isSelected, onTap: () => _toggleUser(user.id), onChanged: (_) => _toggleUser(user.id));
+            return SelectableCard(
+              title: user.displayName,
+              subtitle: user.displaySubtitle,
+              icon: CupertinoIcons.person,
+              color: AppStyles.blue600,
+              selected: isSelected,
+              onTap: () => _toggleUser(user.id),
+              onChanged: (_) => _toggleUser(user.id),
+            );
           }),
         ],
         if (groups.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
             child: Text(
               l10n.groups,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, decoration: TextDecoration.none).copyWith(color: AppStyles.grey700),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                decoration: TextDecoration.none,
+              ).copyWith(color: AppStyles.grey700),
             ),
           ),
           ...groups.map((group) {
             final isSelected = selectedGroupIds.contains(group.id);
 
-            return SelectableCard(title: group.name, subtitle: group.description, icon: CupertinoIcons.person_2, color: AppStyles.blue600, selected: isSelected, onTap: () => _toggleGroup(group.id), onChanged: (_) => _toggleGroup(group.id));
+            return SelectableCard(
+              title: group.name,
+              subtitle: group.description,
+              icon: CupertinoIcons.person_2,
+              color: AppStyles.blue600,
+              selected: isSelected,
+              onTap: () => _toggleGroup(group.id),
+              onChanged: (_) => _toggleGroup(group.id),
+            );
           }),
         ],
       ],
@@ -268,19 +307,20 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
         }
       }
 
-      final eventInteractionRepository = ref.read(eventInteractionRepositoryProvider);
+      final eventInteractionRepository = ref.read(
+        eventInteractionRepositoryProvider,
+      );
       int successCount = 0;
       int errorCount = 0;
 
       for (final userId in allUserIds) {
         try {
-          await eventInteractionRepository.sendInvitation(eventId, userId, null);
+          await eventInteractionRepository.sendInvitation(eventId, userId);
           successCount++;
 
           _recentlyInvitedUserIds.add(userId);
         } catch (e) {
           errorCount++;
-          print('Failed to invite user $userId: $e');
         }
       }
 
@@ -293,11 +333,19 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
 
         final l10n = context.l10n;
         if (successCount > 0) {
-          PlatformWidgets.showSnackBar(message: '$successCount ${l10n.invitationsSent}', isError: false);
+          PlatformWidgets.showSnackBar(
+            context: context,
+            message: '$successCount ${l10n.invitationsSent}',
+            isError: false,
+          );
         }
 
         if (errorCount > 0) {
-          PlatformWidgets.showSnackBar(message: '$errorCount ${l10n.invitationsFailed}', isError: true);
+          PlatformWidgets.showSnackBar(
+            context: context,
+            message: '$errorCount ${l10n.invitationsFailed}',
+            isError: true,
+          );
         }
 
         if (successCount > 0 && errorCount == 0) {
@@ -310,7 +358,11 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
           isSending = false;
         });
 
-        PlatformWidgets.showSnackBar(message: 'Error sending invitations: $e', isError: true);
+        PlatformWidgets.showSnackBar(
+          context: context,
+          message: 'Error sending invitations: $e',
+          isError: true,
+        );
       }
     }
   }
@@ -318,7 +370,11 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AdaptivePageScaffold(title: l10n.inviteToEvent, actions: _buildActions(), body: _buildBody(context));
+    return AdaptivePageScaffold(
+      title: l10n.inviteToEvent,
+      actions: _buildActions(),
+      body: _buildBody(context),
+    );
   }
 
   List<Widget> _buildActions() {
@@ -327,7 +383,14 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
       return [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: SizedBox(width: 20, height: 20, child: PlatformWidgets.platformLoadingIndicator(radius: 10, color: AppStyles.white)),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: PlatformWidgets.platformLoadingIndicator(
+              radius: 10,
+              color: AppStyles.white,
+            ),
+          ),
         ),
       ];
     }
@@ -340,7 +403,12 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen> with Widg
       Tooltip(
         message: l10n.sendInvitations,
         child: AdaptiveButton(
-          config: const AdaptiveButtonConfig(variant: ButtonVariant.text, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.leading),
+          config: const AdaptiveButtonConfig(
+            variant: ButtonVariant.text,
+            size: ButtonSize.medium,
+            fullWidth: false,
+            iconPosition: IconPosition.leading,
+          ),
           text: PlatformWidgets.isIOS ? l10n.send : null,
           icon: PlatformWidgets.isIOS ? null : CupertinoIcons.paperplane,
           onPressed: _sendInvitations,

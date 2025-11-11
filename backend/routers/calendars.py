@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from auth import get_current_user_id
-from crud import calendar, calendar_membership
+from crud import calendar, calendar_membership, event
 from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import check_calendar_permission, get_db
 from schemas import (
@@ -27,37 +27,26 @@ router = APIRouter(prefix="/api/v1/calendars", tags=["calendars"])
 
 
 @router.get("", response_model=List[CalendarResponse])
-async def get_calendars(
-    user_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: Optional[str] = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
-    """Get all calendars, optionally filtered by owner user_id"""
+async def get_calendars(current_user_id: int = Depends(get_current_user_id), limit: int = 50, offset: int = 0, db: Session = Depends(get_db)):
+    """
+    Get all calendars accessible to the authenticated user.
+
+    Requires JWT authentication - provide token in Authorization header.
+
+    Returns:
+    - Calendars owned by the user
+    - Calendars where the user is a member (excluding calendars from public users)
+    - Public calendars the user is subscribed to (excluding calendars from public users)
+    """
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return calendar.get_multi_filtered(
-        db,
-        owner_id=user_id,
-        skip=offset,
-        limit=limit,
-        order_by=order_by or "id",
-        order_dir=order_dir
-    )
+    return calendar.get_all_user_calendars(db, user_id=current_user_id, skip=offset, limit=limit)
 
 
 @router.get("/public", response_model=List[CalendarResponse])
-async def get_public_calendars(
-    category: Optional[str] = None,
-    search: Optional[str] = None,
-    limit: int = 50,
-    offset: int = 0,
-    db: Session = Depends(get_db)
-):
+async def get_public_calendars(category: Optional[str] = None, search: Optional[str] = None, limit: int = 50, offset: int = 0, db: Session = Depends(get_db)):
     """
     Get discoverable public calendars.
 
@@ -71,13 +60,23 @@ async def get_public_calendars(
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return calendar_subscription.get_public_calendars(
-        db,
-        category=category,
-        search=search,
-        skip=offset,
-        limit=limit
-    )
+    return calendar_subscription.get_public_calendars(db, category=category, search=search, skip=offset, limit=limit)
+
+
+@router.get("/share/{share_hash}", response_model=CalendarResponse)
+async def get_calendar_by_share_hash(share_hash: str, db: Session = Depends(get_db)):
+    """
+    Get a public calendar by its share hash.
+
+    This endpoint is for looking up public calendars using their unique 8-character
+    share hash. Returns 403 if the calendar is not public.
+    """
+    db_calendar = calendar.get_by_share_hash(db, share_hash=share_hash)
+    if not db_calendar:
+        raise HTTPException(status_code=404, detail="Calendar not found")
+    if not db_calendar.is_public:
+        raise HTTPException(status_code=403, detail="Calendar is not public")
+    return db_calendar
 
 
 @router.get("/{calendar_id}", response_model=CalendarResponse)
@@ -90,10 +89,16 @@ async def get_calendar(calendar_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=CalendarResponse, status_code=201)
-async def create_calendar(calendar_data: CalendarCreate, db: Session = Depends(get_db)):
+async def create_calendar(calendar_data: CalendarBase, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Create a new calendar"""
+    # Create CalendarCreate with owner_id from authenticated user
+    # Use model_dump to get all fields and add owner_id
+    data_dict = calendar_data.model_dump()
+    data_dict["owner_id"] = current_user_id
+    create_data = CalendarCreate(**data_dict)
+
     # Create with validation (checks owner exists)
-    db_calendar, error = calendar.create_with_validation(db, obj_in=calendar_data)
+    db_calendar, error = calendar.create_with_validation(db, obj_in=create_data)
 
     if error:
         raise HTTPException(status_code=404, detail=error)
@@ -102,12 +107,7 @@ async def create_calendar(calendar_data: CalendarCreate, db: Session = Depends(g
 
 
 @router.put("/{calendar_id}", response_model=CalendarResponse)
-async def update_calendar(
-    calendar_id: int,
-    calendar_data: CalendarBase,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_calendar(calendar_id: int, calendar_data: CalendarBase, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update an existing calendar.
 
@@ -126,16 +126,16 @@ async def update_calendar(
 
 
 @router.delete("/{calendar_id}")
-async def delete_calendar(
-    calendar_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def delete_calendar(calendar_id: int, delete_events: bool = False, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Delete a calendar.
 
     Requires JWT authentication - provide token in Authorization header.
     Only the calendar owner or calendar admins can delete calendars.
+
+    Args:
+        delete_events: If True, delete all events in the calendar.
+                      If False, events remain but lose their calendar association.
     """
     # Check permissions (owner or admin)
     check_calendar_permission(calendar_id, current_user_id, db)
@@ -144,8 +144,23 @@ async def delete_calendar(
     if not db_calendar:
         raise HTTPException(status_code=404, detail="Calendar not found")
 
+    # Handle associated events based on delete_events parameter
+    calendar_events = event.get_by_calendar(db, calendar_id=calendar_id)
+
+    if delete_events:
+        # Delete all events in the calendar
+        for calendar_event in calendar_events:
+            event.delete(db, id=calendar_event.id)
+    else:
+        # Remove calendar association (set calendar_id to NULL)
+        for calendar_event in calendar_events:
+            event.update(db, db_obj=calendar_event, obj_in={"calendar_id": None})
+
+    # Delete the calendar
     calendar.delete(db, id=calendar_id)
-    return {"message": "Calendar deleted successfully", "id": calendar_id}
+
+    events_msg = f" and {len(calendar_events)} events" if delete_events else ""
+    return {"message": f"Calendar deleted successfully{events_msg}", "id": calendar_id}
 
 
 @router.get("/{calendar_id}/memberships", response_model=List[CalendarMembershipResponse])
@@ -179,11 +194,7 @@ async def add_calendar_member(calendar_id: int, membership_data: CalendarMembers
 
 
 @router.post("/{share_hash}/subscribe", response_model=CalendarSubscriptionResponse, status_code=201)
-async def subscribe_to_calendar(
-    share_hash: str,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def subscribe_to_calendar(share_hash: str, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Subscribe to a public calendar using its share hash.
 
@@ -203,11 +214,7 @@ async def subscribe_to_calendar(
         raise HTTPException(status_code=400, detail="Cannot subscribe to private calendars")
 
     # Create subscription data
-    subscription_data = CalendarSubscriptionCreate(
-        calendar_id=db_calendar.id,
-        user_id=current_user_id,
-        status="active"
-    )
+    subscription_data = CalendarSubscriptionCreate(calendar_id=db_calendar.id, user_id=current_user_id, status="active")
 
     # Create with validation (checks calendar is public, user exists, no duplicate)
     db_subscription, error = calendar_subscription.create_with_validation(db, obj_in=subscription_data)
@@ -225,11 +232,7 @@ async def subscribe_to_calendar(
 
 
 @router.delete("/{share_hash}/subscribe")
-async def unsubscribe_from_calendar(
-    share_hash: str,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def unsubscribe_from_calendar(share_hash: str, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Unsubscribe from a public calendar using its share hash.
 
@@ -245,11 +248,7 @@ async def unsubscribe_from_calendar(
         raise HTTPException(status_code=404, detail="Calendar not found")
 
     # Get existing subscription
-    db_subscription = calendar_subscription.get_subscription(
-        db,
-        calendar_id=db_calendar.id,
-        user_id=current_user_id
-    )
+    db_subscription = calendar_subscription.get_subscription(db, calendar_id=db_calendar.id, user_id=current_user_id)
 
     if not db_subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")

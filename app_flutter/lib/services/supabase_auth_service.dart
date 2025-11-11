@@ -1,5 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
-import 'package:gotrue/gotrue.dart' as gotrue;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config_service.dart';
 
 class SupabaseAuthService {
@@ -17,7 +16,7 @@ class SupabaseAuthService {
     }
   }
 
-  static gotrue.User? get currentUser {
+  static User? get currentUser {
     final configService = ConfigService.instance;
     if (configService.isTestMode) {
       final testUserInfo = configService.testUserInfo;
@@ -52,7 +51,8 @@ class SupabaseAuthService {
     }
   }
 
-  static Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+  static Stream<AuthState> get authStateChanges =>
+      _supabase.auth.onAuthStateChange;
 
   static Future<void> signOut() async {
     try {
@@ -63,7 +63,11 @@ class SupabaseAuthService {
     }
   }
 
-  static Future<void> signInWithPhone({required String phoneNumber, required Function() onCodeSent, required Function(String error) onError}) async {
+  static Future<void> signInWithPhone({
+    required String phoneNumber,
+    required Function() onCodeSent,
+    required Function(String error) onError,
+  }) async {
     try {
       await _supabase.auth.signInWithOtp(phone: phoneNumber);
       onCodeSent();
@@ -72,9 +76,16 @@ class SupabaseAuthService {
     }
   }
 
-  static Future<AuthResponse> verifyOTP({required String phoneNumber, required String token}) async {
+  static Future<AuthResponse> verifyOTP({
+    required String phoneNumber,
+    required String token,
+  }) async {
     try {
-      final response = await _supabase.auth.verifyOTP(type: OtpType.sms, phone: phoneNumber, token: token);
+      final response = await _supabase.auth.verifyOTP(
+        type: OtpType.sms,
+        phone: phoneNumber,
+        token: token,
+      );
       return response;
     } catch (e) {
       rethrow;
@@ -82,7 +93,7 @@ class SupabaseAuthService {
   }
 }
 
-class _MockSupabaseUser implements gotrue.User {
+class _MockSupabaseUser implements User {
   final Map<String, dynamic> _userInfo;
 
   _MockSupabaseUser(this._userInfo);
@@ -97,7 +108,8 @@ class _MockSupabaseUser implements gotrue.User {
   String? get phone => _userInfo['phoneNumber'] as String?;
 
   @override
-  String get createdAt => DateTime.now().subtract(const Duration(days: 30)).toIso8601String();
+  String get createdAt =>
+      DateTime.now().subtract(const Duration(days: 30)).toIso8601String();
 
   @override
   String get aud => 'authenticated';
@@ -106,7 +118,8 @@ class _MockSupabaseUser implements gotrue.User {
   Map<String, dynamic> get appMetadata => {};
 
   @override
-  String? get confirmedAt => DateTime.now().subtract(const Duration(days: 30)).toIso8601String();
+  String? get confirmedAt =>
+      DateTime.now().subtract(const Duration(days: 30)).toIso8601String();
 
   @override
   String? get emailConfirmedAt => null;
@@ -118,10 +131,12 @@ class _MockSupabaseUser implements gotrue.User {
   List<UserIdentity>? get identities => null;
 
   @override
-  String? get lastSignInAt => DateTime.now().subtract(const Duration(hours: 1)).toIso8601String();
+  String? get lastSignInAt =>
+      DateTime.now().subtract(const Duration(hours: 1)).toIso8601String();
 
   @override
-  String? get phoneConfirmedAt => DateTime.now().subtract(const Duration(days: 30)).toIso8601String();
+  String? get phoneConfirmedAt =>
+      DateTime.now().subtract(const Duration(days: 30)).toIso8601String();
 
   @override
   String? get role => 'authenticated';

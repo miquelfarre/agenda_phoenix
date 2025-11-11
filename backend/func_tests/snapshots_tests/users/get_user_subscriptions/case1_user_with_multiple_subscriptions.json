@@ -1,0 +1,126 @@
+{
+  "description": "Get all public users that user 1 is subscribed to (multiple subscriptions)",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+34600000001",
+        "is_public": false
+      },
+      {
+        "id": 2,
+        "name": "FC Barcelona",
+        "is_public": true,
+        "instagram_username": "fcbarcelona",
+        "auth_provider": "instagram"
+      },
+      {
+        "id": 3,
+        "name": "Real Madrid",
+        "is_public": true,
+        "instagram_username": "realmadrid",
+        "auth_provider": "instagram"
+      },
+      {
+        "id": 4,
+        "name": "Bob",
+        "phone": "+34600000004",
+        "is_public": false
+      }
+    ],
+    "events": [
+      {
+        "id": 1,
+        "name": "Barcelona vs Real Madrid",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 2
+      },
+      {
+        "id": 2,
+        "name": "Barcelona Training",
+        "start_date": "2025-12-02T10:00:00",
+        "owner_id": 2
+      },
+      {
+        "id": 3,
+        "name": "Madrid vs Atletico",
+        "start_date": "2025-12-05T20:00:00",
+        "owner_id": 3
+      },
+      {
+        "id": 4,
+        "name": "Bob's Private Event",
+        "start_date": "2025-12-10T15:00:00",
+        "owner_id": 4
+      }
+    ],
+    "event_interactions": [
+      {
+        "event_id": 1,
+        "user_id": 1,
+        "interaction_type": "subscribed"
+      },
+      {
+        "event_id": 2,
+        "user_id": 1,
+        "interaction_type": "subscribed"
+      },
+      {
+        "event_id": 3,
+        "user_id": 1,
+        "interaction_type": "subscribed"
+      },
+      {
+        "event_id": 4,
+        "user_id": 1,
+        "interaction_type": "subscribed"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/api/v1/users/1/subscriptions"
+  },
+  "expected": {
+    "status_code": 200,
+    "body": [
+      {
+        "name": null,
+        "instagram_username": "fcbarcelona",
+        "phone": null,
+        "auth_provider": "instagram",
+        "auth_id": "{{ID}}",
+        "is_public": true,
+        "is_admin": false,
+        "profile_picture_url": null,
+        "id": "{{ID}}",
+        "contact_id": null,
+        "last_login": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "new_events_count": 2,
+        "total_events_count": 2,
+        "subscribers_count": 1
+      },
+      {
+        "name": null,
+        "instagram_username": "realmadrid",
+        "phone": null,
+        "auth_provider": "instagram",
+        "auth_id": "{{ID}}",
+        "is_public": true,
+        "is_admin": false,
+        "profile_picture_url": null,
+        "id": "{{ID}}",
+        "contact_id": null,
+        "last_login": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "new_events_count": 1,
+        "total_events_count": 1,
+        "subscribers_count": 1
+      }
+    ]
+  }
+}

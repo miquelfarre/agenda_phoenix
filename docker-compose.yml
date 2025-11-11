@@ -222,6 +222,30 @@ services:
       realtime:
         condition: service_started
 
+  # EventyPop MCP Server (Model Context Protocol)
+  # Provides dynamic metadata about operations, API schemas, and intelligent workflows
+  mcp:
+    build:
+      context: ./eventypop_mcp
+      dockerfile: Dockerfile
+    container_name: agenda_phoenix_mcp
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      # MCP server runs in stdio mode but we expose port for monitoring
+      MCP_PORT: 8002
+      LOG_LEVEL: ${MCP_LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    volumes:
+      # Mount schemas as read-only for hot-reload without rebuilding
+      - ./eventypop_mcp/schemas:/app/schemas:ro
+
 volumes:
   db_data:
   storage_data:

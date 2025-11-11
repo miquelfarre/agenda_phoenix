@@ -22,17 +22,7 @@ class CRUDGroupMembership(CRUDBase[GroupMembership, GroupMembershipCreate, Group
         """Get all group memberships for a specific user"""
         return self.get_multi(db, filters={"user_id": user_id})
 
-    def get_multi_filtered(
-        self,
-        db: Session,
-        *,
-        group_id: Optional[int] = None,
-        user_id: Optional[int] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "id",
-        order_dir: str = "asc"
-    ) -> List[GroupMembership]:
+    def get_multi_filtered(self, db: Session, *, group_id: Optional[int] = None, user_id: Optional[int] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List[GroupMembership]:
         """
         Get multiple group memberships with filters and pagination
 
@@ -50,28 +40,13 @@ class CRUDGroupMembership(CRUDBase[GroupMembership, GroupMembershipCreate, Group
         if user_id is not None:
             filters["user_id"] = user_id
 
-        return self.get_multi(
-            db,
-            skip=skip,
-            limit=limit,
-            order_by=order_by,
-            order_dir=order_dir,
-            filters=filters
-        )
+        return self.get_multi(db, skip=skip, limit=limit, order_by=order_by, order_dir=order_dir, filters=filters)
 
     def exists_membership(self, db: Session, *, group_id: int, user_id: int) -> bool:
         """Check if membership exists for group-user pair (optimized)"""
-        return db.query(GroupMembership.id).filter(
-            GroupMembership.group_id == group_id,
-            GroupMembership.user_id == user_id
-        ).first() is not None
+        return db.query(GroupMembership.id).filter(GroupMembership.group_id == group_id, GroupMembership.user_id == user_id).first() is not None
 
-    def create_with_validation(
-        self,
-        db: Session,
-        *,
-        obj_in: GroupMembershipCreate
-    ) -> tuple[Optional[GroupMembership], Optional[str]]:
+    def create_with_validation(self, db: Session, *, obj_in: GroupMembershipCreate) -> tuple[Optional[GroupMembership], Optional[str]]:
         """
         Create a new group membership with validation
 

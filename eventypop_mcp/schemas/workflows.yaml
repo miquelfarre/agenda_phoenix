@@ -1,0 +1,146 @@
+# EventyPop Workflow Suggestions
+# Define qué acciones sugerir después de completar cada operación
+
+workflows:
+  CREATE_CALENDAR:
+    suggestions:
+      - action: UPDATE_CALENDAR
+        priority: medium
+        condition:
+          field: is_public
+          value: false
+        questions:
+          es: "¿Quieres que el calendario sea público para que otros puedan suscribirse?"
+          en: "Do you want to make the calendar public so others can subscribe?"
+        default_parameters:
+          calendar_id: "{result.id}"
+          is_public: true
+
+      - action: UPDATE_CALENDAR
+        priority: medium
+        condition:
+          field: is_public
+          value: true
+          and:
+            field: category
+            is_null: true
+        questions:
+          es: "¿Quieres categorizar el calendario para que otros lo encuentren? (festivos, deportes, cultural...)"
+          en: "Do you want to categorize the calendar so others can find it? (holidays, sports, cultural...)"
+        default_parameters:
+          calendar_id: "{result.id}"
+
+      - action: CREATE_EVENT
+        priority: high
+        questions:
+          es: "¿Quieres crear un evento en este calendario?"
+          en: "Do you want to create an event in this calendar?"
+        default_parameters:
+          calendar_id: "{result.id}"
+
+      - action: INVITE_TO_CALENDAR
+        priority: high
+        questions:
+          es: "¿Quieres compartir el calendario con alguien?"
+          en: "Do you want to share the calendar with someone?"
+        default_parameters:
+          calendar_id: "{result.id}"
+          role: "member"
+
+      - action: INVITE_TO_CALENDAR
+        priority: low
+        questions:
+          es: "¿Quieres hacer a alguien administrador del calendario?"
+          en: "Do you want to make someone an administrator of the calendar?"
+        default_parameters:
+          calendar_id: "{result.id}"
+          role: "admin"
+
+  CREATE_EVENT:
+    suggestions:
+      - action: INVITE_USER_TO_EVENT
+        priority: high
+        questions:
+          es: "¿Quieres invitar a alguien a este evento?"
+          en: "Do you want to invite someone to this event?"
+        default_parameters:
+          event_id: "{result.id}"
+
+      - action: INVITE_GROUP_TO_EVENT
+        priority: medium
+        condition:
+          user_has_groups: true
+        questions:
+          es: "¿Quieres invitar a un grupo completo?"
+          en: "Do you want to invite an entire group?"
+        default_parameters:
+          event_id: "{result.id}"
+
+      - action: CREATE_EVENT
+        priority: medium
+        condition:
+          has: calendar_id
+        questions:
+          es: "¿Quieres crear otro evento en este calendario?"
+          en: "Do you want to create another event in this calendar?"
+        default_parameters:
+          calendar_id: "{parameters.calendar_id}"
+
+      - action: UPDATE_EVENT
+        priority: low
+        questions:
+          es: "¿Quieres añadir más detalles al evento? (descripción, ubicación...)"
+          en: "Do you want to add more details to the event? (description, location...)"
+        default_parameters:
+          event_id: "{result.id}"
+
+  INVITE_TO_CALENDAR:
+    suggestions:
+      - action: INVITE_TO_CALENDAR
+        priority: high
+        questions:
+          es: "¿Quieres invitar a alguien más?"
+          en: "Do you want to invite someone else?"
+        default_parameters:
+          calendar_id: "{parameters.calendar_id}"
+          role: "{parameters.role}"
+
+  INVITE_USER_TO_EVENT:
+    suggestions:
+      - action: INVITE_USER_TO_EVENT
+        priority: high
+        questions:
+          es: "¿Quieres invitar a alguien más al evento?"
+          en: "Do you want to invite someone else to the event?"
+        default_parameters:
+          event_id: "{parameters.event_id}"
+
+  SUBSCRIBE_TO_CALENDAR:
+    suggestions:
+      - action: SEARCH_PUBLIC_CALENDARS
+        priority: low
+        questions:
+          es: "¿Quieres suscribirte a más calendarios?"
+          en: "Do you want to subscribe to more calendars?"
+
+  UPDATE_CALENDAR:
+    suggestions:
+      - action: CREATE_EVENT
+        priority: medium
+        questions:
+          es: "¿Quieres crear un evento en este calendario?"
+          en: "Do you want to create an event in this calendar?"
+        default_parameters:
+          calendar_id: "{parameters.calendar_id}"
+
+# Prioridades globales
+priority_order:
+  - high
+  - medium
+  - low
+
+# Número máximo de sugerencias a mostrar simultáneamente
+max_suggestions: 3
+
+# Estrategia cuando hay más sugerencias que el máximo
+overflow_strategy: highest_priority  # Opciones: highest_priority, ask_user, show_all

@@ -18,29 +18,13 @@ router = APIRouter(prefix="/api/v1/event_bans", tags=["event_bans"])
 
 
 @router.get("", response_model=List[EventBanResponse])
-async def get_event_bans(
-    event_id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_event_bans(event_id: Optional[int] = None, user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all event bans, optionally filtered by event_id and/or user_id, with pagination and ordering"""
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return event_ban.get_multi_filtered(
-        db,
-        event_id=event_id,
-        user_id=user_id,
-        skip=offset,
-        limit=limit,
-        order_by=order_by,
-        order_dir=order_dir
-    )
+    return event_ban.get_multi_filtered(db, event_id=event_id, user_id=user_id, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
 
 @router.get("/{ban_id}", response_model=EventBanResponse)

@@ -1,0 +1,92 @@
+{
+  "name": "Get event interactions successfully",
+  "description": "Obtener todas las interacciones de un evento",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Sonia",
+        "phone": "+34606014680"
+      },
+      {
+        "id": 2,
+        "name": "Miquel",
+        "phone": "+34606014681"
+      },
+      {
+        "id": 3,
+        "name": "Ana",
+        "phone": "+34606014682"
+      }
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Cena con amigos",
+        "start_date": "2025-11-15T20:00:00",
+        "event_type": "regular",
+        "owner_id": 1
+      }
+    ],
+    "event_interactions": [
+      {
+        "event_id": 100,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "accepted"
+      },
+      {
+        "event_id": 100,
+        "user_id": 3,
+        "interaction_type": "invited",
+        "status": "pending"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/api/v1/events/100/interactions"
+  },
+  "expected_response": {
+    "status_code": 200
+  },
+  "expected": {
+    "status_code": 200,
+    "body": [
+      {
+        "interaction_type": "invited",
+        "status": "accepted",
+        "role": null,
+        "personal_note": null,
+        "cancellation_note": null,
+        "is_attending": false,
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "invited_via_group_id": null,
+        "read_at": null,
+        "is_new": true,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      },
+      {
+        "interaction_type": "invited",
+        "status": "pending",
+        "role": null,
+        "personal_note": null,
+        "cancellation_note": null,
+        "is_attending": false,
+        "id": "{{ID}}",
+        "event_id": "{{ID}}",
+        "user_id": "{{ID}}",
+        "invited_by_user_id": null,
+        "invited_via_group_id": null,
+        "read_at": null,
+        "is_new": true,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}"
+      }
+    ]
+  }
+}

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
-import '../models/user.dart';
+import '../models/domain/user.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/state/app_state.dart';
@@ -12,13 +12,25 @@ class UserAvatar extends ConsumerWidget {
   final double radius;
   final bool showOnlineIndicator;
 
-  const UserAvatar({super.key, required this.user, this.radius = 20, this.showOnlineIndicator = true});
+  const UserAvatar({
+    super.key,
+    required this.user,
+    this.radius = 20,
+    this.showOnlineIndicator = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logoAsync = ref.watch(logoPathProvider(user.id));
     final localPath = logoAsync.value;
-    return Stack(children: [if (localPath != null) _buildLocalAvatar(localPath) else _buildAvatar(context)]);
+    return Stack(
+      children: [
+        if (localPath != null)
+          _buildLocalAvatar(localPath)
+        else
+          _buildAvatar(context),
+      ],
+    );
   }
 
   Widget _buildLocalAvatar(String path) {
@@ -28,14 +40,17 @@ class UserAvatar extends ConsumerWidget {
         height: radius * 2,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          image: DecorationImage(image: FileImage(File(path)), fit: BoxFit.cover),
+          image: DecorationImage(
+            image: FileImage(File(path)),
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildAvatar(BuildContext context) {
-    final profilePicture = user.profilePicture;
+    final profilePicture = user.profilePictureUrl;
 
     if (profilePicture == null || profilePicture.isEmpty) {
       return _buildInitialsAvatar(context);
@@ -69,7 +84,11 @@ class UserAvatar extends ConsumerWidget {
         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         child: Text(
           _getInitials(context, user.displayName),
-          style: AppStyles.headlineSmall.copyWith(fontSize: radius * 0.6, fontWeight: FontWeight.w600, color: AppStyles.white),
+          style: AppStyles.headlineSmall.copyWith(
+            fontSize: radius * 0.6,
+            fontWeight: FontWeight.w600,
+            color: AppStyles.white,
+          ),
         ),
       ),
     );
@@ -83,7 +102,18 @@ class UserAvatar extends ConsumerWidget {
   }
 
   Color _generateColorFromName(String name) {
-    final colors = [AppStyles.blue600, AppStyles.green600, AppStyles.orange600, AppStyles.purple600, AppStyles.red600, AppStyles.teal600, AppStyles.indigo600, AppStyles.pink600, AppStyles.amber600, AppStyles.cyan600];
+    final colors = [
+      AppStyles.blue600,
+      AppStyles.green600,
+      AppStyles.orange600,
+      AppStyles.purple600,
+      AppStyles.red600,
+      AppStyles.teal600,
+      AppStyles.indigo600,
+      AppStyles.pink600,
+      AppStyles.amber600,
+      AppStyles.cyan600,
+    ];
 
     int hash = 0;
     for (int i = 0; i < name.length; i++) {

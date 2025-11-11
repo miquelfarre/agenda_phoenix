@@ -1,0 +1,10 @@
+{
+  "status_code": 403,
+  "body": {
+    "_status_code": 403,
+    "body": {
+      "detail": "Only the group creator or admins can update memberships"
+    }
+  },
+  "note": "Auto-generated snapshot. Update with --update-snapshots flag."
+}

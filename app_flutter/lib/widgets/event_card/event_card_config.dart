@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../../models/event.dart';
+import '../../models/domain/event.dart';
 
 class EventCardConfig {
   final bool showChevron;
@@ -9,6 +9,7 @@ class EventCardConfig {
   final bool navigateAfterDelete;
   final bool showNewBadge;
   final bool showDate;
+  final bool showCalendarBadge;
 
   final String? customTitle;
   final String? customSubtitle;
@@ -34,6 +35,7 @@ class EventCardConfig {
     this.navigateAfterDelete = false,
     this.showNewBadge = false,
     this.showDate = false,
+    this.showCalendarBadge = true,
     this.customTitle,
     this.customSubtitle,
     this.customStatus,
@@ -57,6 +59,7 @@ class EventCardConfig {
     bool? navigateAfterDelete,
     bool? showNewBadge,
     bool? showDate,
+    bool? showCalendarBadge,
     String? customTitle,
     String? customSubtitle,
     String? customStatus,
@@ -79,6 +82,7 @@ class EventCardConfig {
       navigateAfterDelete: navigateAfterDelete ?? this.navigateAfterDelete,
       showNewBadge: showNewBadge ?? this.showNewBadge,
       showDate: showDate ?? this.showDate,
+      showCalendarBadge: showCalendarBadge ?? this.showCalendarBadge,
       customTitle: customTitle ?? this.customTitle,
       customSubtitle: customSubtitle ?? this.customSubtitle,
       customStatus: customStatus ?? this.customStatus,
@@ -95,20 +99,47 @@ class EventCardConfig {
     );
   }
 
-  factory EventCardConfig.simple({Function(Event)? onEdit, Function(Event, {bool shouldNavigate})? onDelete}) {
-    return EventCardConfig(showChevron: true, showActions: true, showInvitationStatus: false, showOwner: true, onEdit: onEdit, onDelete: onDelete);
+  factory EventCardConfig.simple({
+    Function(Event)? onEdit,
+    Function(Event, {bool shouldNavigate})? onDelete,
+  }) {
+    return EventCardConfig(
+      showChevron: true,
+      showActions: true,
+      showInvitationStatus: false,
+      showOwner: true,
+      onEdit: onEdit,
+      onDelete: onDelete,
+    );
   }
 
   factory EventCardConfig.invitation({required String status}) {
-    return EventCardConfig(showChevron: true, showActions: false, showInvitationStatus: true, showOwner: true, invitationStatus: status);
+    return EventCardConfig(
+      showChevron: true,
+      showActions: false,
+      showInvitationStatus: true,
+      showOwner: true,
+      invitationStatus: status,
+    );
   }
 
   factory EventCardConfig.readOnly() {
-    return const EventCardConfig(showChevron: true, showActions: false, showInvitationStatus: false, showOwner: true);
+    return const EventCardConfig(
+      showChevron: true,
+      showActions: false,
+      showInvitationStatus: false,
+      showOwner: true,
+    );
   }
 
   factory EventCardConfig.withCustomAction({required Widget action}) {
-    return EventCardConfig(showChevron: false, showActions: false, showInvitationStatus: false, showOwner: true, customAction: action);
+    return EventCardConfig(
+      showChevron: false,
+      showActions: false,
+      showInvitationStatus: false,
+      showOwner: true,
+      customAction: action,
+    );
   }
 
   @override

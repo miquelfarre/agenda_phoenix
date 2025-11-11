@@ -6,7 +6,6 @@ COBERTURA COMPLETA:
 2. Event Interactions (INSERT, UPDATE, DELETE)
 3. Groups (INSERT, UPDATE, DELETE)
 4. Calendars (calendar_memberships INSERT, DELETE)
-5. Subscriptions (user_subscription_stats via triggers)
 
 Ejecutar con: pytest backend/func_tests/test_realtime_complete.py -v -s
 """
@@ -78,17 +77,6 @@ def get_user_calendars(user_id: int) -> List[Dict]:
     return response.json()
 
 
-def get_user_stats(user_id: int) -> Dict:
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM user_subscription_stats WHERE user_id = %s",
-                (user_id,)
-            )
-            result = cursor.fetchone()
-            return dict(result) if result else None
-
-
 def wait_for_realtime(seconds: float = 2.0):
     time.sleep(seconds)
 
@@ -96,6 +84,7 @@ def wait_for_realtime(seconds: float = 2.0):
 # ============================================================================
 # EVENTS TABLE - INSERT, UPDATE, DELETE
 # ============================================================================
+
 
 class TestEventsRealtimeINSERT:
     """Tabla: events - Evento: INSERT"""
@@ -152,6 +141,9 @@ class TestEventsRealtimeUPDATE:
         # Update
         update_data = {"name": "Updated Name"}
         response = api_request("PUT", f"/events/{event_id}", json_data=update_data, user_id=user_id)
+        if response.status_code != 200:
+            print(f"ERROR: PUT /events/{event_id} returned {response.status_code}")
+            print(f"Response body: {response.text}")
         assert response.status_code == 200
 
         wait_for_realtime()
@@ -207,6 +199,7 @@ class TestEventsRealtimeDELETE:
 # ============================================================================
 # EVENT_INTERACTIONS TABLE - INSERT, UPDATE, DELETE
 # ============================================================================
+
 
 class TestEventInteractionsRealtimeINSERT:
     """Tabla: event_interactions - Evento: INSERT"""
@@ -297,8 +290,7 @@ class TestEventInteractionsRealtimeUPDATE:
         events_after = get_user_events(invitee_id)
         event_after = next((e for e in events_after if e["id"] == event_id), None)
 
-        assert event_after["interaction"]["status"] == "accepted", \
-            f"Expected status='accepted', got '{event_after['interaction']['status']}'"
+        assert event_after["interaction"]["status"] == "accepted", f"Expected status='accepted', got '{event_after['interaction']['status']}'"
 
         print(f"✅ UPDATE interaction: Status changed to accepted via Realtime")
 
@@ -419,7 +411,7 @@ class TestEventInteractionsRealtimeUPDATE:
         wait_for_realtime()
 
         # Set note
-        note_data = {"note": "My personal note"}
+        note_data = {"personal_note": "My personal note"}
         response = api_request("PATCH", f"/interactions/{interaction_id}", json_data=note_data, user_id=invitee_id)
         assert response.status_code == 200
 
@@ -429,7 +421,7 @@ class TestEventInteractionsRealtimeUPDATE:
         events = get_user_events(invitee_id)
         event = next((e for e in events if e["id"] == event_id), None)
 
-        assert event["interaction"].get("note") == "My personal note"
+        assert event["interaction"].get("personal_note") == "My personal note"
 
         print(f"✅ UPDATE interaction (note): note updated via Realtime")
 
@@ -498,6 +490,7 @@ class TestEventInteractionsRealtimeDELETE:
 # ============================================================================
 # GROUPS TABLE - INSERT, UPDATE, DELETE
 # ============================================================================
+
 
 class TestGroupsRealtimeINSERT:
     """Tabla: groups - Evento: INSERT"""
@@ -692,6 +685,7 @@ class TestGroupsRealtimeDELETE:
 # CALENDAR_MEMBERSHIPS TABLE - INSERT, DELETE
 # ============================================================================
 
+
 class TestCalendarMembershipsRealtimeINSERT:
     """Tabla: calendar_memberships - Evento: INSERT"""
 
@@ -728,10 +722,12 @@ class TestCalendarMembershipsRealtimeINSERT:
         # Create public calendar
         calendar_data = {"name": "Public Calendar", "is_public": True}
         response = api_request("POST", "/calendars", json_data=calendar_data, user_id=owner_id)
-        calendar_id = response.json()["id"]
+        calendar = response.json()
+        calendar_id = calendar["id"]
+        share_hash = calendar.get("share_hash")
 
-        # Subscribe
-        response = api_request("POST", f"/calendars/{calendar_id}/subscribe", user_id=subscriber_id)
+        # Subscribe using share_hash
+        response = api_request("POST", f"/calendars/{share_hash}/subscribe", user_id=subscriber_id)
         assert response.status_code == 201
 
         wait_for_realtime()
@@ -745,7 +741,7 @@ class TestCalendarMembershipsRealtimeINSERT:
         print(f"✅ INSERT calendar_membership (subscribe): Subscriber sees calendar")
 
         # Cleanup
-        api_request("DELETE", f"/calendars/{calendar_id}/unsubscribe", user_id=subscriber_id)
+        api_request("DELETE", f"/calendars/{share_hash}/subscribe", user_id=subscriber_id)
         api_request("DELETE", f"/calendars/{calendar_id}", user_id=owner_id)
 
 
@@ -760,13 +756,15 @@ class TestCalendarMembershipsRealtimeDELETE:
         # Create and subscribe
         calendar_data = {"name": "Calendar to Unsubscribe", "is_public": True}
         response = api_request("POST", "/calendars", json_data=calendar_data, user_id=owner_id)
-        calendar_id = response.json()["id"]
+        calendar = response.json()
+        calendar_id = calendar["id"]
+        share_hash = calendar["share_hash"]
 
-        api_request("POST", f"/calendars/{calendar_id}/subscribe", user_id=subscriber_id)
+        api_request("POST", f"/calendars/{share_hash}/subscribe", user_id=subscriber_id)
         wait_for_realtime()
 
         # Unsubscribe
-        response = api_request("DELETE", f"/calendars/{calendar_id}/unsubscribe", user_id=subscriber_id)
+        response = api_request("DELETE", f"/calendars/{share_hash}/subscribe", user_id=subscriber_id)
         assert response.status_code == 200
 
         wait_for_realtime()
@@ -806,123 +804,6 @@ class TestCalendarMembershipsRealtimeDELETE:
         assert calendar_id not in calendar_ids, f"❌ Calendar {calendar_id} still exists"
 
         print(f"✅ DELETE calendar: Calendar removed from all users")
-
-
-# ============================================================================
-# USER_SUBSCRIPTION_STATS TABLE - UPDATE (via triggers)
-# ============================================================================
-
-class TestUserSubscriptionStatsRealtimeUPDATE:
-    """Tabla: user_subscription_stats - Evento: UPDATE (triggers CDC)"""
-
-    def test_create_event_increments_total_events_count(self):
-        """POST /events → Trigger → UPDATE stats → Realtime → total_events_count++"""
-        user_id = 1
-
-        initial_stats = get_user_stats(user_id)
-        initial_count = initial_stats["total_events_count"]
-
-        event_data = {
-            "name": "Event for Stats",
-            "start_date": "2025-12-01T10:00:00Z",
-            "event_type": "regular",
-            "owner_id": user_id,
-        }
-        response = api_request("POST", "/events", json_data=event_data, user_id=user_id)
-        event_id = response.json()["id"]
-
-        wait_for_realtime()
-
-        final_stats = get_user_stats(user_id)
-        final_count = final_stats["total_events_count"]
-
-        assert final_count == initial_count + 1, \
-            f"Expected {initial_count + 1}, got {final_count}"
-
-        print(f"✅ UPDATE stats (trigger): total_events_count incremented")
-
-        # Cleanup
-        api_request("DELETE", f"/events/{event_id}", user_id=user_id)
-
-    def test_delete_event_decrements_total_events_count(self):
-        """DELETE /events/X → Trigger → UPDATE stats → Realtime → total_events_count--"""
-        user_id = 1
-
-        # Create event
-        event_data = {
-            "name": "Event to Delete for Stats",
-            "start_date": "2025-12-01T10:00:00Z",
-            "event_type": "regular",
-            "owner_id": user_id,
-        }
-        response = api_request("POST", "/events", json_data=event_data, user_id=user_id)
-        event_id = response.json()["id"]
-        wait_for_realtime()
-
-        stats_after_create = get_user_stats(user_id)
-        count_after_create = stats_after_create["total_events_count"]
-
-        # Delete
-        api_request("DELETE", f"/events/{event_id}", user_id=user_id)
-        wait_for_realtime()
-
-        stats_after_delete = get_user_stats(user_id)
-        count_after_delete = stats_after_delete["total_events_count"]
-
-        assert count_after_delete == count_after_create - 1, \
-            f"Expected {count_after_create - 1}, got {count_after_delete}"
-
-        print(f"✅ UPDATE stats (trigger): total_events_count decremented")
-
-    def test_subscribe_increments_subscribers_count(self):
-        """POST /users/X/subscribe → Trigger → UPDATE stats → Realtime → subscribers_count++"""
-        subscriber_id = 1
-        target_id = 2
-
-        initial_stats = get_user_stats(target_id)
-        initial_subscribers = initial_stats["subscribers_count"]
-
-        response = api_request("POST", f"/users/{target_id}/subscribe", user_id=subscriber_id)
-        assert response.status_code == 201
-
-        wait_for_realtime()
-
-        final_stats = get_user_stats(target_id)
-        final_subscribers = final_stats["subscribers_count"]
-
-        assert final_subscribers == initial_subscribers + 1, \
-            f"Expected {initial_subscribers + 1}, got {final_subscribers}"
-
-        print(f"✅ UPDATE stats (trigger): subscribers_count incremented")
-
-        # Cleanup
-        api_request("DELETE", f"/users/{target_id}/subscribe", user_id=subscriber_id)
-
-    def test_unsubscribe_decrements_subscribers_count(self):
-        """DELETE /users/X/subscribe → Trigger → UPDATE stats → Realtime → subscribers_count--"""
-        subscriber_id = 1
-        target_id = 2
-
-        # Subscribe first
-        api_request("POST", f"/users/{target_id}/subscribe", user_id=subscriber_id)
-        wait_for_realtime()
-
-        stats_after_subscribe = get_user_stats(target_id)
-        subscribers_after_subscribe = stats_after_subscribe["subscribers_count"]
-
-        # Unsubscribe
-        response = api_request("DELETE", f"/users/{target_id}/subscribe", user_id=subscriber_id)
-        assert response.status_code == 200
-
-        wait_for_realtime()
-
-        stats_after_unsubscribe = get_user_stats(target_id)
-        subscribers_after_unsubscribe = stats_after_unsubscribe["subscribers_count"]
-
-        assert subscribers_after_unsubscribe == subscribers_after_subscribe - 1, \
-            f"Expected {subscribers_after_subscribe - 1}, got {subscribers_after_unsubscribe}"
-
-        print(f"✅ UPDATE stats (trigger): subscribers_count decremented")
 
 
 if __name__ == "__main__":

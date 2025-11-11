@@ -1,0 +1,117 @@
+{
+  "description": "Get user events including joined events (admin/member with accepted status)",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
+    ],
+    "events": [
+      {
+        "id": 1,
+        "name": "Alice Event",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 1
+      },
+      {
+        "id": 2,
+        "name": "Bob Event",
+        "start_date": "2025-12-02T10:00:00",
+        "owner_id": 2
+      }
+    ],
+    "event_interactions": [
+      {
+        "event_id": 2,
+        "user_id": 1,
+        "interaction_type": "joined",
+        "status": "accepted",
+        "role": "member"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/api/v1/users/1/events"
+  },
+  "expected": {
+    "status_code": 200,
+    "personal_note": "Should return Alice's event and Bob's event (Alice joined as member)",
+    "body": [
+      {
+        "name": "Alice Event",
+        "description": null,
+        "start_date": "{{TIMESTAMP}}",
+        "event_type": "regular",
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "calendar_id": null,
+        "parent_recurring_event_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "interaction": null,
+        "interactions": null,
+        "owner_name": "Alice",
+        "owner_profile_picture": null,
+        "is_owner_public": false,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "calendar_name": null,
+        "calendar_color": null,
+        "is_birthday": false,
+        "attendees": [],
+        "invitation_stats": null
+      },
+      {
+        "name": "Bob Event",
+        "description": null,
+        "start_date": "{{TIMESTAMP}}",
+        "event_type": "regular",
+        "id": "{{ID}}",
+        "owner_id": "{{ID}}",
+        "calendar_id": null,
+        "parent_recurring_event_id": null,
+        "created_at": "{{TIMESTAMP}}",
+        "updated_at": "{{TIMESTAMP}}",
+        "interaction": {
+          "id": "{{ID}}",
+          "interaction_type": "joined",
+          "status": "accepted",
+          "role": "member",
+          "invited_by_user_id": null,
+          "personal_note": null,
+          "is_attending": false,
+          "read_at": null,
+          "is_new": true
+        },
+        "interactions": null,
+        "owner_name": "Bob",
+        "owner_profile_picture": null,
+        "is_owner_public": false,
+        "can_subscribe_to_owner": null,
+        "is_subscribed_to_owner": null,
+        "owner_upcoming_events": null,
+        "calendar_name": null,
+        "calendar_color": null,
+        "is_birthday": false,
+        "attendees": [
+          {
+            "id": "{{ID}}",
+            "display_name": "Alice",
+            "instagram_username": null,
+            "profile_picture_url": null
+          }
+        ],
+        "invitation_stats": null
+      }
+    ]
+  }
+}

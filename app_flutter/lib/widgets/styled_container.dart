@@ -10,13 +10,26 @@ class StyledContainer extends StatelessWidget {
   final List<BoxShadow>? boxShadow;
   final BoxBorder? border;
 
-  const StyledContainer({super.key, required this.child, this.padding, this.color, this.borderRadius, this.boxShadow, this.border});
+  const StyledContainer({
+    super.key,
+    required this.child,
+    this.padding,
+    this.color,
+    this.borderRadius,
+    this.boxShadow,
+    this.border,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: padding ?? AppStyles.cardPadding,
-      decoration: BoxDecoration(color: color ?? AppStyles.cardBackgroundColor, borderRadius: borderRadius ?? AppStyles.cardRadius, boxShadow: boxShadow ?? AppStyles.cardDecoration.boxShadow, border: border),
+      decoration: BoxDecoration(
+        color: color ?? AppStyles.cardBackgroundColor,
+        borderRadius: borderRadius ?? AppStyles.cardRadius,
+        boxShadow: boxShadow ?? AppStyles.cardDecoration.boxShadow,
+        border: border,
+      ),
       child: child,
     );
   }

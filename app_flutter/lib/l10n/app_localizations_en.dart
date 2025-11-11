@@ -433,7 +433,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newEvents => 'new events';
 
   @override
-  String get subscriber => 'subscriber';
+  String get subscriber => 'Subscriber';
 
   @override
   String get subscribers => 'subscribers';
@@ -619,10 +619,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupName => 'Group Name';
 
   @override
+  String get groupNamePlaceholder => 'Enter group name';
+
+  @override
   String get groupDescription => 'Group Description';
 
   @override
+  String get groupDescriptionPlaceholder => 'Enter group description (optional)';
+
+  @override
+  String get deleteGroupConfirmation => 'Are you sure you want to delete this group? This action cannot be undone.';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
   String get inviteToGroup => 'Invite to Group';
+
+  @override
+  String get addMembers => 'Add Members';
+
+  @override
+  String get manageMembers => 'Manage Members';
+
+  @override
+  String get searchContacts => 'Search contacts...';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get clearSelection => 'Clear';
+
+  @override
+  String membersAdded(int count) {
+    return '$count member(s) added';
+  }
+
+  @override
+  String addSelectedMembers(int count) {
+    return 'Add $count Member(s)';
+  }
+
+  @override
+  String get noContactsToAdd => 'No contacts available to add';
+
+  @override
+  String get noContactsFoundWithSearch => 'No contacts match your search';
 
   @override
   String get groupCreated => 'Group created successfully';
@@ -695,6 +740,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaveGroup => 'Leave Group';
+
+  @override
+  String confirmLeaveGroup(String groupName) {
+    return 'Are you sure you want to leave $groupName?';
+  }
+
+  @override
+  String leftGroup(String groupName) {
+    return 'You left $groupName';
+  }
+
+  @override
+  String get groupNotFound => 'Group not found';
+
+  @override
+  String get noMembers => 'No members in this group';
+
+  @override
+  String get creator => 'Creator';
 
   @override
   String get groupInvitations => 'Group Invitations';
@@ -1500,9 +1564,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addEventDetailsHint => 'Add details about your event...';
-
-  @override
-  String get addMembers => 'Add Members';
 
   @override
   String get searchFriends => 'Search Friends';
@@ -2690,7 +2751,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publicCalendars => 'Public Calendars';
 
   @override
+  String get createNew => 'Create New';
+
+  @override
   String get createCalendar => 'Create Calendar';
+
+  @override
+  String get createBirthday => 'Create Birthday';
+
+  @override
+  String get personName => 'Person\'s name';
+
+  @override
+  String get recurringEventDescription => 'Create events that repeat automatically';
+
+  @override
+  String get birthdayEventDescription => 'Add birthdays of your contacts';
+
+  @override
+  String get calendarDescription => 'Calendar Description';
 
   @override
   String get editCalendar => 'Edit Calendar';
@@ -2700,9 +2779,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarName => 'Calendar Name';
-
-  @override
-  String get calendarDescription => 'Calendar Description';
 
   @override
   String get calendarColor => 'Calendar Color';
@@ -2753,7 +2829,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToCreateCalendar => 'Failed to create calendar. Please try again.';
 
   @override
-  String get publicCalendar => 'Public Calendar';
+  String get publicCalendar => 'Public calendar';
 
   @override
   String get othersCanSearchAndSubscribe => 'Others can search and subscribe';
@@ -2862,4 +2938,176 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noEventsInSeries => 'No events in this series';
+
+  @override
+  String get form => 'Form';
+
+  @override
+  String get unsavedChangesWarning => 'You have unsaved changes. Are you sure you want to leave?';
+
+  @override
+  String selectLabel(String label) {
+    return 'Select $label';
+  }
+
+  @override
+  String get organizeEventsHint => 'Organize your events by creating calendars or subscribe to public ones';
+
+  @override
+  String get noPublicCalendarsAvailable => 'No public calendars available';
+
+  @override
+  String get tryDifferentSearch => 'Try searching for a different name or keyword';
+
+  @override
+  String get publicCalendarsWillAppearHere => 'Public calendars will appear here when available';
+
+  @override
+  String unsubscribedFrom(String calendarName) {
+    return 'Unsubscribed from $calendarName';
+  }
+
+  @override
+  String subscribedTo(String calendarName) {
+    return 'Subscribed to $calendarName';
+  }
+
+  @override
+  String noPermissionToOperation(String operation) {
+    return 'You don\'t have permission to $operation this calendar.';
+  }
+
+  @override
+  String get calendarNotFoundDeleted => 'Calendar not found. It may have been deleted.';
+
+  @override
+  String get alreadySubscribed => 'You are already subscribed to this calendar.';
+
+  @override
+  String get notSubscribed => 'You are not subscribed to this calendar.';
+
+  @override
+  String failedToOperationCalendar(String operation) {
+    return 'Failed to $operation calendar. Please try again.';
+  }
+
+  @override
+  String get invitationsFailed => 'invitations failed';
+
+  @override
+  String get useCustomTimezone => 'Use custom timezone';
+
+  @override
+  String errorLoadingCalendarsDetail(String error) {
+    return 'Error loading calendars: $error';
+  }
+
+  @override
+  String get eventIdMissing => 'Event ID is missing';
+
+  @override
+  String testAuthFailed(String error) {
+    return 'Test authentication failed: $error';
+  }
+
+  @override
+  String get errorLeavingEvent => 'Error leaving event';
+
+  @override
+  String get loadingEventSeries => 'Loading event series...';
+
+  @override
+  String get errorLoadingEventSeries => 'Error loading event series';
+
+  @override
+  String partiallyInvited(int partiallyInvitedCount, int totalMembers) {
+    return '$partiallyInvitedCount/$totalMembers invited';
+  }
+
+  @override
+  String get noItemsAvailable => 'No items available';
+
+  @override
+  String get searchByNameOrCode => 'Search by name or #code';
+
+  @override
+  String get enterCodePrecededByHash => 'Enter the 8-character code preceded by #';
+
+  @override
+  String get noCalendarsSearchByCode => 'You have no calendars. Search by #code to subscribe.';
+
+  @override
+  String get calendarNotFoundByHash => 'No calendar found with that code';
+
+  @override
+  String get subscribe => 'Subscribe';
+
+  @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
+  String get leaveCalendar => 'Leave calendar';
+
+  @override
+  String get confirmLeaveCalendar => 'Are you sure you want to leave this calendar?';
+
+  @override
+  String get calendarLeft => 'You have left the calendar';
+
+  @override
+  String get errorLeavingCalendar => 'Error leaving calendar';
+
+  @override
+  String get privateCalendar => 'Private calendar';
+
+  @override
+  String get owner => 'Owner';
+
+  @override
+  String get admin => 'Admin';
+
+  @override
+  String get member => 'Member';
+
+  @override
+  String get calendarInformation => 'Calendar Information';
+
+  @override
+  String get visibility => 'Visibility';
+
+  @override
+  String get discoverableCalendar => 'Discoverable Calendar';
+
+  @override
+  String get appearsInSearch => 'Appears in public search';
+
+  @override
+  String get onlyViaShareLink => 'Only accessible via share link';
+
+  @override
+  String get chooseWhatHappensToEvents => 'Choose what happens to calendar events';
+
+  @override
+  String get deleteApiKey => 'Delete API Key';
+
+  @override
+  String get voiceAssistant => 'Voice Assistant';
+
+  @override
+  String get voiceAiCommands => 'Voice AI Commands';
+
+  @override
+  String get completeInformation => 'Complete information';
+
+  @override
+  String get cancelAndEditManually => 'Cancel and edit manually';
+
+  @override
+  String get noAdditionalParameters => 'No additional parameters';
+
+  @override
+  String get configureGeminiDescription => 'Configure Google Gemini to use voice commands and create events by speaking';
+
+  @override
+  String get configureAi => 'Configure AI';
 }

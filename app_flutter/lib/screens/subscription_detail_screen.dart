@@ -1,28 +1,35 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
-import 'package:eventypop/ui/helpers/platform/platform_navigation.dart';
-import 'package:eventypop/ui/styles/app_styles.dart';
-import '../models/subscription.dart';
-import '../models/event.dart';
-import '../services/api_client.dart';
-import '../widgets/adaptive_scaffold.dart';
-import '../widgets/empty_state.dart';
-import '../widgets/events_list.dart';
+import '../l10n/app_localizations.dart';
+import '../models/domain/event.dart';
+import '../models/domain/user.dart';
+import '../ui/helpers/platform/dialog_helpers.dart';
+import '../ui/styles/app_styles.dart';
+import '../widgets/event_list_item.dart';
+import '../widgets/searchable_list.dart';
 import 'event_detail_screen.dart';
+import '../core/state/app_state.dart';
+import '../utils/event_date_utils.dart';
+import '../widgets/event_date_section.dart';
 
 class SubscriptionDetailScreen extends ConsumerStatefulWidget {
-  final Subscription subscription;
+  final User publicUser;
 
-  const SubscriptionDetailScreen({super.key, required this.subscription});
+  const SubscriptionDetailScreen({super.key, required this.publicUser});
 
   @override
-  ConsumerState<SubscriptionDetailScreen> createState() => _SubscriptionDetailScreenState();
+  ConsumerState<SubscriptionDetailScreen> createState() =>
+      _SubscriptionDetailScreenState();
 }
 
-class _SubscriptionDetailScreenState extends ConsumerState<SubscriptionDetailScreen> {
+class _SubscriptionDetailScreenState
+    extends ConsumerState<SubscriptionDetailScreen> {
+  bool _isProcessingSubscription = false;
+
+  final Set<int> _hiddenEventIds = <int>{};
+
   List<Event> _events = [];
+  bool _isSubscribed = false;
   bool _isLoading = false;
   String? _error;
 
@@ -33,28 +40,40 @@ class _SubscriptionDetailScreenState extends ConsumerState<SubscriptionDetailScr
   }
 
   Future<void> _loadData() async {
-    print('🔵 [SubscriptionDetailScreen] _loadData START');
+    if (_isLoading && !_isProcessingSubscription) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      print('🔵 [SubscriptionDetailScreen] Calling Backend API for user events...');
-      final publicUserId = widget.subscription.subscribedToId;
-      final eventsData = await ApiClient().fetchUserEvents(publicUserId);
-      final events = eventsData.map((e) => Event.fromJson(e)).toList();
-      print('🔵 [SubscriptionDetailScreen] Backend API completed, events count: ${events.length}');
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      final events = await subscriptionRepo.fetchUserEvents(
+        widget.publicUser.id,
+      );
+
+      // Check if user is subscribed by looking at the subscriptions stream
+      final subscriptionsAsync = ref.read(subscriptionsStreamProvider);
+      final subscriptions = subscriptionsAsync.when(
+        data: (subs) => subs,
+        loading: () => <User>[],
+        error: (error, stack) => <User>[],
+      );
+      final isSubscribed = subscriptions.any(
+        (sub) => sub.id == widget.publicUser.id,
+      );
 
       if (mounted) {
         setState(() {
           _events = events;
+          _isSubscribed = isSubscribed;
           _isLoading = false;
         });
-        print('🔵 [SubscriptionDetailScreen] setState completed, _isLoading=false');
       }
     } catch (e) {
-      print('🔴 [SubscriptionDetailScreen] ERROR: $e');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -64,74 +83,283 @@ class _SubscriptionDetailScreenState extends ConsumerState<SubscriptionDetailScr
     }
   }
 
+  Future<void> _refreshEvents() async {
+    _hiddenEventIds.clear();
+    await _loadData();
+  }
+
+  Future<void> _subscribeToUser() async {
+    if (_isProcessingSubscription) {
+      return;
+    }
+
+    setState(() => _isProcessingSubscription = true);
+
+    try {
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      await subscriptionRepo.subscribeToUser(widget.publicUser.id);
+
+      if (mounted) {
+        final userName = widget.publicUser.displayName;
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: AppLocalizations.of(context)!.subscribedTo(userName),
+        );
+      }
+
+      // Realtime handles refresh automatically via SubscriptionRepository
+
+      await _loadData();
+    } catch (e) {
+      if (mounted) {
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: 'Error: ${e.toString()}',
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingSubscription = false);
+    }
+  }
+
+  Future<void> _unsubscribeFromUser() async {
+    if (_isProcessingSubscription) {
+      return;
+    }
+
+    // Show confirmation dialog
+    final userName = widget.publicUser.displayName;
+
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(AppLocalizations.of(context)!.unfollow),
+        content: Text(
+          '¿Estás seguro de que quieres dejar de seguir a $userName?',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(AppLocalizations.of(context)!.unfollow),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return; // User cancelled
+    }
+
+    setState(() => _isProcessingSubscription = true);
+
+    try {
+      print('🔴 [DEBUG] Unsubscribing from user ${widget.publicUser.id}');
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      await subscriptionRepo.unsubscribeFromUser(widget.publicUser.id);
+      print('🔴 [DEBUG] Unsubscribe completed');
+
+      if (mounted) {
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: AppLocalizations.of(context)!.unsubscribedFrom(userName),
+        );
+      }
+
+      // Realtime handles refresh automatically via SubscriptionRepository
+      print('🔴 [DEBUG] Navigating back to subscriptions screen');
+
+      if (mounted) {
+        // Navigate back to subscriptions screen
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      print('🔴 [DEBUG] Error unsubscribing: $e');
+      if (mounted) {
+        PlatformDialogHelpers.showSnackBar(
+          context: context,
+          message: 'Error: ${e.toString()}',
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingSubscription = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final title = widget.subscription.subscribed?.displayName.isNotEmpty == true ? widget.subscription.subscribed!.displayName : (widget.subscription.subscribed?.fullName ?? widget.subscription.subscribed?.instagramName ?? l10n.unknownUser);
-
-    return AdaptivePageScaffold(
-      title: title,
-      body: SafeArea(child: _buildBody()),
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(
+          '${AppLocalizations.of(context)!.events} - ${widget.publicUser.displayName}',
+          style: const TextStyle(fontSize: 16),
+        ),
+        trailing: Container(
+          decoration: BoxDecoration(
+            color: _isProcessingSubscription
+                ? CupertinoColors.systemGrey5.resolveFrom(context)
+                : AppStyles.primaryColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            minimumSize: Size.zero,
+            onPressed: _isProcessingSubscription
+                ? null
+                : _isSubscribed
+                ? () {
+                    _unsubscribeFromUser();
+                  }
+                : () {
+                    _subscribeToUser();
+                  },
+            child: Text(
+              _isSubscribed
+                  ? AppLocalizations.of(context)!.unfollow
+                  : AppLocalizations.of(context)!.follow,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: CupertinoColors.white,
+              ),
+            ),
+          ),
+        ),
+        backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
+      ),
+      child: SafeArea(child: _buildContent()),
     );
   }
 
-  Widget _buildBody() {
-    final l10n = context.l10n;
-
+  Widget _buildContent() {
     if (_isLoading) {
-      return Center(child: PlatformWidgets.platformLoadingIndicator(radius: 16));
+      return const Center(child: CupertinoActivityIndicator());
     }
 
     if (_error != null) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              PlatformWidgets.platformIcon(CupertinoIcons.exclamationmark_triangle, color: AppStyles.grey500, size: 48),
-              const SizedBox(height: 12),
-              Text(
-                _error!.replaceFirst('Exception: ', ''),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppStyles.grey700),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.errorLoadingEvents,
+              style: const TextStyle(
+                color: CupertinoColors.destructiveRed,
+                fontSize: 16,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            CupertinoButton(
+              onPressed: _refreshEvents,
+              child: Text(AppLocalizations.of(context)!.retry),
+            ),
+          ],
         ),
       );
     }
 
-    if (_events.isEmpty) {
-      return EmptyState(message: l10n.noEvents, icon: CupertinoIcons.calendar);
-    }
+    List<Event> baseEvents = _events;
 
-    return EventsList(
-      events: _events,
-      onEventTap: _openEventDetail,
-      onDelete: (Event event, {bool shouldNavigate = false}) async {},
-      navigateAfterDelete: false,
-      onRefresh: () async {
-        await _loadData();
+    baseEvents = baseEvents
+        .where((e) => e.id == null || !_hiddenEventIds.contains(e.id))
+        .toList();
+
+    return SearchableList<Event>(
+      items: baseEvents,
+      filterFunction: (event, query) {
+        return event.title.toLowerCase().contains(query) ||
+            (event.description?.toLowerCase().contains(query) ?? false);
+      },
+      listBuilder: (context, filteredEvents) {
+        return _buildEventsList(context, filteredEvents);
+      },
+      searchPlaceholder: AppLocalizations.of(context)!.searchEvents,
+    );
+  }
+
+  Widget _buildEventsList(BuildContext context, List<Event> eventsToShow) {
+    final groupedEvents = EventDateUtils.groupEventsByDate(eventsToShow);
+
+    return CustomScrollView(
+      physics: const ClampingScrollPhysics(),
+      slivers: [
+        if (eventsToShow.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    CupertinoIcons.calendar,
+                    size: 64,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    AppLocalizations.of(context)!.noEventsFound,
+                    style: const TextStyle(
+                      color: CupertinoColors.systemGrey,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...groupedEvents.map((group) {
+            return SliverToBoxAdapter(child: _buildDateGroup(context, group));
+          }),
+      ],
+    );
+  }
+
+  Widget _buildDateGroup(BuildContext context, Map<String, dynamic> group) {
+    return EventDateSection(
+      dateGroup: group,
+      eventBuilder: (event) {
+        return EventListItem(
+          event: event,
+          onTap: (event) {
+            Navigator.of(context).push(
+              CupertinoPageRoute<void>(
+                builder: (_) => EventDetailScreen(event: event),
+              ),
+            );
+          },
+          onDelete: _deleteEvent,
+          navigateAfterDelete: false,
+        );
       },
     );
   }
 
-  void _openEventDetail(Event event) async {
-    if (!mounted) return;
-
-    await Navigator.of(context).push(PlatformNavigation.platformPageRoute(builder: (_) => EventDetailScreen(event: event)));
-
-    if (!mounted) return;
-
-    await _loadData();
-
-    if (!mounted) return;
-
-    if (_events.isEmpty) {
-      if (mounted && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+  Future<void> _deleteEvent(Event event, {bool shouldNavigate = false}) async {
+    try {
+      if (event.id == null) {
+        throw Exception('Event ID is null');
       }
+
+      // Public user events can only be LEFT, never DELETED
+      // (user is never owner/admin of public user events)
+      await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+
+      // Remove from local list
+      if (mounted) {
+        setState(() {
+          _events.removeWhere((e) => e.id == event.id);
+        });
+      }
+    } catch (e, _) {
+      rethrow;
     }
   }
 }

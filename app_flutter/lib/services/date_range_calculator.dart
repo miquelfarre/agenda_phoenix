@@ -1,7 +1,7 @@
 import 'dart:math';
-import '../models/month_option.dart';
-import '../models/day_option.dart';
-import '../models/time_option.dart';
+import '../models/ui/month_option.dart';
+import '../models/ui/day_option.dart';
+import '../models/ui/time_option.dart';
 
 class DateRangeCalculator {
   static DateTime calculateMaxDate(DateTime today, int months) {
@@ -16,7 +16,11 @@ class DateRangeCalculator {
     return DateTime(targetYear, targetMonth, targetDay);
   }
 
-  static List<MonthOption> generateMonthOptions(DateTime start, DateTime end, String locale) {
+  static List<MonthOption> generateMonthOptions(
+    DateTime start,
+    DateTime end,
+    String locale,
+  ) {
     final options = <MonthOption>[];
     var current = DateTime(start.year, start.month, 1);
     final endMonth = DateTime(end.year, end.month, 1);
@@ -29,7 +33,11 @@ class DateRangeCalculator {
     return options;
   }
 
-  static List<DayOption> generateDayOptions(int month, int year, String locale) {
+  static List<DayOption> generateDayOptions(
+    int month,
+    int year,
+    String locale,
+  ) {
     final daysInMonth = DateTime(year, month + 1, 0).day;
     final options = <DayOption>[];
 
@@ -65,7 +73,13 @@ class DateRangeCalculator {
     final minutesToAdd = 15 - remainder;
     final rounded = time.add(Duration(minutes: minutesToAdd));
 
-    return DateTime(rounded.year, rounded.month, rounded.day, rounded.hour, rounded.minute);
+    return DateTime(
+      rounded.year,
+      rounded.month,
+      rounded.day,
+      rounded.hour,
+      rounded.minute,
+    );
   }
 
   static int getTimeOptionIndex(DateTime time, List<TimeOption> options) {

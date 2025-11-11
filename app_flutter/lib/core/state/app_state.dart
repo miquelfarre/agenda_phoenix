@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/event.dart';
-import '../../models/user.dart';
-import '../../models/group.dart';
-import '../../models/calendar.dart';
-import '../../models/event_interaction.dart';
+import '../../models/domain/event.dart';
+import '../../models/domain/user.dart';
+import '../../models/domain/group.dart';
+import '../../models/domain/calendar.dart';
+import '../../models/domain/event_interaction.dart';
 import '../../services/navigation_service.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/config_service.dart';
@@ -32,8 +32,12 @@ final authStateProvider = StreamProvider<supabase_flutter.AuthState>((ref) {
 
 // --- Services ---
 
-final configServiceProvider = Provider<ConfigService>((ref) => ConfigService.instance);
-final navigationServiceProvider = Provider<NavigationService>((ref) => NavigationService());
+final configServiceProvider = Provider<ConfigService>(
+  (ref) => ConfigService.instance,
+);
+final navigationServiceProvider = Provider<NavigationService>(
+  (ref) => NavigationService(),
+);
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 
 // --- Repositories ---
@@ -87,7 +91,10 @@ final localeProvider = localeNotifierProvider;
 
 // --- Logo Provider ---
 
-final logoPathProvider = FutureProvider.family<String?, int>((ref, userId) async {
+final logoPathProvider = FutureProvider.family<String?, int>((
+  ref,
+  userId,
+) async {
   return await LogoService.instance.getLogoPath(userId);
 });
 
@@ -123,7 +130,9 @@ final blockedUsersStreamProvider = StreamProvider<List<User>>((ref) {
   return repository.blockedUsersStream;
 });
 
-final eventInteractionsStreamProvider = StreamProvider<List<EventInteraction>>((ref) {
+final eventInteractionsStreamProvider = StreamProvider<List<EventInteraction>>((
+  ref,
+) {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.interactionsStream;
 });

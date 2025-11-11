@@ -26,17 +26,10 @@ class CRUDEventCancellation(CRUDBase[EventCancellation, EventCancellationCreate,
             List of EventCancellation instances not yet viewed by the user
         """
         # Get cancellation IDs already viewed by this user
-        viewed_cancellation_ids = db.query(EventCancellationView.cancellation_id).filter(
-            EventCancellationView.user_id == user_id
-        ).scalar_subquery()
+        viewed_cancellation_ids = db.query(EventCancellationView.cancellation_id).filter(EventCancellationView.user_id == user_id).scalar_subquery()
 
         # Get all cancellations for this user that haven't been viewed
-        cancellations = db.query(EventCancellation).filter(
-            EventCancellation.event_id.in_(
-                db.query(EventCancellation.event_id).distinct()
-            ),
-            ~EventCancellation.id.in_(viewed_cancellation_ids)
-        ).all()
+        cancellations = db.query(EventCancellation).filter(EventCancellation.event_id.in_(db.query(EventCancellation.event_id).distinct()), ~EventCancellation.id.in_(viewed_cancellation_ids)).all()
 
         return cancellations
 
@@ -54,27 +47,19 @@ class CRUDEventCancellation(CRUDBase[EventCancellation, EventCancellationCreate,
             (None, error_message) if failed
         """
         # Check if cancellation exists
-        cancellation = db.query(EventCancellation).filter(
-            EventCancellation.id == cancellation_id
-        ).first()
+        cancellation = db.query(EventCancellation).filter(EventCancellation.id == cancellation_id).first()
 
         if not cancellation:
             return None, "Cancellation not found"
 
         # Check if already viewed
-        existing_view = db.query(EventCancellationView).filter(
-            EventCancellationView.cancellation_id == cancellation_id,
-            EventCancellationView.user_id == user_id
-        ).first()
+        existing_view = db.query(EventCancellationView).filter(EventCancellationView.cancellation_id == cancellation_id, EventCancellationView.user_id == user_id).first()
 
         if existing_view:
             return existing_view.id, None  # Already viewed, return existing view ID
 
         # Create view record
-        view = EventCancellationView(
-            cancellation_id=cancellation_id,
-            user_id=user_id
-        )
+        view = EventCancellationView(cancellation_id=cancellation_id, user_id=user_id)
         db.add(view)
         db.commit()
         db.refresh(view)

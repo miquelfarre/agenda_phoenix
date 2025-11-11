@@ -1,0 +1,32 @@
+{
+  "name": "Create user successfully",
+  "description": "Crear un usuario nuevo con contacto",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Contact Existente",
+        "phone": "+34606014680"
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/api/v1/users",
+    "body": {
+      "contact_id": 1,
+      "instagram_username": "sonia_user",
+      "auth_provider": "phone",
+      "auth_id": "+34606014680"
+    }
+  },
+  "expected_response": {
+    "status_code": 201
+  },
+  "expected": {
+    "status_code": 400,
+    "body": {
+      "detail": "User already exists for this auth provider"
+    }
+  }
+}

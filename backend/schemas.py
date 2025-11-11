@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, ConfigDict
 
 # ============================================================================
-# CONTACT SCHEMAS
+# CONTACT SCHEMAS (LEGACY - DEPRECATED)
 # ============================================================================
 
 
@@ -38,21 +38,24 @@ class ContactResponse(ContactBase):
 
 
 class UserBase(BaseModel):
-    username: Optional[str] = None
+    # New fields
+    display_name: str  # REQUIRED - nombre que ve todo el mundo
+    phone: Optional[str] = None  # For phone users
+    instagram_username: Optional[str] = None  # For instagram users
+    profile_picture_url: Optional[str] = None
     auth_provider: str
     auth_id: str
     is_public: bool = False
     is_admin: bool = False
-    profile_picture_url: Optional[str] = None
+
 
 
 class UserCreate(UserBase):
-    contact_id: Optional[int] = None
+    pass
 
 
 class UserResponse(UserBase):
     id: int
-    contact_id: Optional[int]
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
@@ -64,20 +67,18 @@ class UserEnrichedResponse(UserBase):
     """User response with enriched contact information"""
 
     id: int
-    contact_id: Optional[int]
-    contact_name: Optional[str]  # From Contact table
-    contact_phone: Optional[str]  # From Contact table
     display_name: str  # Computed display name
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserSubscriptionResponse(UserBase):
     """User response with subscription statistics"""
 
     id: int
-    contact_id: Optional[int]
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
@@ -102,7 +103,7 @@ class UserPublicStats(BaseModel):
     """Statistics for a public user"""
 
     user_id: int
-    username: Optional[str]
+    instagram_username: Optional[str]
     total_subscribers: int  # Total number of subscribers
     total_events: int  # Total number of events created
     events_stats: List[EventStats]  # Stats for each event
@@ -124,6 +125,16 @@ class EventCreate(EventBase):
     owner_id: int
     calendar_id: Optional[int] = None
     parent_recurring_event_id: Optional[int] = None
+
+
+class EventUpdate(BaseModel):
+    """Schema for updating events - all fields are optional"""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+    start_date: Optional[datetime] = None
+    event_type: Optional[str] = None
+    calendar_id: Optional[int] = None
 
 
 class UpcomingEventSummary(BaseModel):
@@ -184,8 +195,8 @@ class EventInteractionBase(BaseModel):
     interaction_type: str
     status: Optional[str] = None
     role: Optional[str] = None
-    note: Optional[str] = None
-    rejection_message: Optional[str] = None
+    personal_note: Optional[str] = None
+    cancellation_note: Optional[str] = None
     is_attending: Optional[bool] = None
 
 
@@ -202,8 +213,8 @@ class EventInteractionUpdate(BaseModel):
     interaction_type: Optional[str] = None
     status: Optional[str] = None
     role: Optional[str] = None
-    note: Optional[str] = None
-    rejection_message: Optional[str] = None
+    personal_note: Optional[str] = None
+    cancellation_note: Optional[str] = None
     is_attending: Optional[bool] = None
 
 
@@ -227,9 +238,8 @@ class EventInteractionEnrichedResponse(EventInteractionBase):
     id: int
     event_id: int
     user_id: int
-    user_name: str  # Display name (username or contact name)
-    user_username: Optional[str]
-    user_contact_name: Optional[str]
+    user_name: str  # Display name
+    user_instagram_username: Optional[str]
     invited_by_user_id: Optional[int]
     invited_via_group_id: Optional[int]
     read_at: Optional[datetime]
@@ -242,8 +252,7 @@ class AvailableInviteeResponse(BaseModel):
     """User available to be invited to an event"""
 
     id: int
-    username: Optional[str]
-    contact_name: Optional[str]
+    instagram_username: Optional[str]
     display_name: str  # Computed display name
 
 
@@ -273,8 +282,10 @@ class EventInteractionWithEventResponse(EventInteractionBase):
 
 class CalendarBase(BaseModel):
     name: str
-    start_date: Optional[datetime] = None  # Optional: for temporal calendars
-    end_date: Optional[datetime] = None  # Optional: for temporal calendars
+    description: Optional[str] = None
+    is_public: bool = False
+    is_discoverable: Optional[bool] = None
+    share_hash: Optional[str] = None
 
 
 class CalendarCreate(CalendarBase):
@@ -285,11 +296,11 @@ class CalendarResponse(CalendarBase):
     id: int
     owner_id: int
     is_public: bool = False
-    is_discoverable: bool = True
-    description: Optional[str] = None
     category: Optional[str] = None
     share_hash: Optional[str] = None
     subscriber_count: int = 0
+    start_date: Optional[datetime] = None  # For temporal calendars
+    end_date: Optional[datetime] = None  # For temporal calendars
     created_at: datetime
     updated_at: datetime
 
@@ -398,12 +409,15 @@ class GroupBase(BaseModel):
 
 
 class GroupCreate(GroupBase):
-    created_by: int
+    owner_id: int
 
 
 class GroupResponse(GroupBase):
     id: int
-    created_by: int
+    owner_id: int
+    owner: Optional["UserResponse"] = None
+    members: List["UserResponse"] = []
+    admins: List["UserResponse"] = []
     created_at: datetime
     updated_at: datetime
 
@@ -426,6 +440,7 @@ class GroupMembershipCreate(GroupMembershipBase):
 
 class GroupMembershipUpdate(BaseModel):
     """Schema for updating group membership (currently only role)"""
+
     role: Optional[str] = None  # "admin" or "member"
 
 
@@ -515,30 +530,6 @@ class UserBlockResponse(UserBlockBase):
 
 
 # ============================================================================
-# APP BAN SCHEMAS
-# ============================================================================
-
-
-class AppBanBase(BaseModel):
-    reason: Optional[str] = None
-
-
-class AppBanCreate(AppBanBase):
-    user_id: int
-    banned_by: int
-
-
-class AppBanResponse(AppBanBase):
-    id: int
-    user_id: int
-    banned_by: int
-    banned_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# ============================================================================
 # EVENT CANCELLATION SCHEMAS
 # ============================================================================
 
@@ -582,3 +573,59 @@ class EventCancellationViewResponse(BaseModel):
     viewed_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ========================================
+# User Contact Schemas
+# ========================================
+
+
+class UserContactBase(BaseModel):
+    """Schema for contact sync - just name and phone"""
+
+    contact_name: str
+    phone_number: str
+
+
+class UserContactCreate(UserContactBase):
+    """Schema for creating a new user contact"""
+
+    pass
+
+
+class UserContactSync(BaseModel):
+    """Schema for syncing device contacts"""
+
+    contacts: List[UserContactBase]
+
+
+class UserContactSyncResponse(BaseModel):
+    """Response after syncing contacts"""
+
+    synced_count: int
+    registered_count: int
+    registered_contacts: List[dict]
+
+
+class UserContactResponse(BaseModel):
+    """Complete contact response with registered user data"""
+
+    id: int
+    owner_id: int
+    contact_name: str
+    phone_number: str
+    registered_user_id: Optional[int]
+    is_registered: bool
+    last_synced_at: datetime
+    created_at: datetime
+    updated_at: datetime
+    registered_user: Optional[dict] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WebhookUserRegistered(BaseModel):
+    """Schema for user registration webhook"""
+
+    user_id: int
+    phone: str

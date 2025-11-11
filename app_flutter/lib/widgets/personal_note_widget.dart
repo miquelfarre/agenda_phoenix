@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
-import '../models/event.dart';
+import '../models/domain/event.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../services/api_client.dart';
+import '../core/state/app_state.dart';
 import '../utils/app_exceptions.dart';
 import 'adaptive/adaptive_button.dart';
 import 'adaptive/configs/button_config.dart';
@@ -13,7 +13,11 @@ class PersonalNoteWidget extends ConsumerStatefulWidget {
   final Event event;
   final ValueChanged<Event> onEventUpdated;
 
-  const PersonalNoteWidget({super.key, required this.event, required this.onEventUpdated});
+  const PersonalNoteWidget({
+    super.key,
+    required this.event,
+    required this.onEventUpdated,
+  });
 
   @override
   ConsumerState<PersonalNoteWidget> createState() => _PersonalNoteWidgetState();
@@ -41,7 +45,8 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
   void didUpdateWidget(covariant PersonalNoteWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.event.id != widget.event.id || oldWidget.event.personalNote != widget.event.personalNote) {
+    if (oldWidget.event.id != widget.event.id ||
+        oldWidget.event.personalNote != widget.event.personalNote) {
       _event = widget.event;
 
       if (!_isSaving && !_preventOverwrite) {
@@ -75,7 +80,8 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
         return;
       }
 
-      await ApiClientFactory.instance.patch('/api/v1/events/${_event.id}/interaction', body: {'note': note});
+      final eventRepo = ref.read(eventRepositoryProvider);
+      await eventRepo.updatePersonalNote(_event.id!, note);
 
       if (mounted) {
         setState(() {
@@ -89,11 +95,16 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
 
         // Realtime handles refresh automatically via EventRepository
 
-        PlatformWidgets.showGlobalPlatformMessage(message: l10n.personalNoteUpdated);
+        PlatformWidgets.showGlobalPlatformMessage(
+          message: l10n.personalNoteUpdated,
+        );
       }
     } catch (e) {
       if (mounted) {
-        PlatformWidgets.showGlobalPlatformMessage(message: l10n.errorSavingNote, isError: true);
+        PlatformWidgets.showGlobalPlatformMessage(
+          message: l10n.errorSavingNote,
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -110,7 +121,8 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
     _preventOverwrite = true;
 
     try {
-      await ApiClientFactory.instance.patch('/api/v1/events/${_event.id}/interaction', body: {'note': null});
+      final eventRepo = ref.read(eventRepositoryProvider);
+      await eventRepo.updatePersonalNote(_event.id!, null);
 
       // Realtime handles refresh automatically via EventRepository
 
@@ -126,7 +138,9 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
           _isEditing = false;
         });
 
-        PlatformWidgets.showGlobalPlatformMessage(message: l10n.personalNoteDeleted);
+        PlatformWidgets.showGlobalPlatformMessage(
+          message: l10n.personalNoteDeleted,
+        );
       }
     } on ApiException catch (apiErr) {
       if (apiErr.statusCode == 404) {
@@ -144,16 +158,24 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
             _isEditing = false;
           });
 
-          PlatformWidgets.showGlobalPlatformMessage(message: l10n.personalNoteDeleted);
+          PlatformWidgets.showGlobalPlatformMessage(
+            message: l10n.personalNoteDeleted,
+          );
         }
       } else {
         if (mounted) {
-          PlatformWidgets.showGlobalPlatformMessage(message: l10n.errorSavingNote, isError: true);
+          PlatformWidgets.showGlobalPlatformMessage(
+            message: l10n.errorSavingNote,
+            isError: true,
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        PlatformWidgets.showGlobalPlatformMessage(message: l10n.errorSavingNote, isError: true);
+        PlatformWidgets.showGlobalPlatformMessage(
+          message: l10n.errorSavingNote,
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -168,7 +190,14 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
 
   Future<void> _confirmAndDelete() async {
     final l10n = context.l10n;
-    final shouldDelete = await PlatformWidgets.showPlatformConfirmDialog(context, title: l10n.deleteNote, message: l10n.deleteNoteConfirmation, confirmText: l10n.delete, cancelText: l10n.cancel, isDestructive: true);
+    final shouldDelete = await PlatformWidgets.showPlatformConfirmDialog(
+      context,
+      title: l10n.deleteNote,
+      message: l10n.deleteNoteConfirmation,
+      confirmText: l10n.delete,
+      cancelText: l10n.cancel,
+      isDestructive: true,
+    );
 
     if (shouldDelete == true) {
       await _deleteNote();
@@ -193,20 +222,36 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppStyles.blueShade100, borderRadius: BorderRadius.circular(8)),
-                  child: PlatformWidgets.platformIcon(isIOS ? CupertinoIcons.doc_text : CupertinoIcons.doc, color: AppStyles.blue600, size: 20),
+                  decoration: BoxDecoration(
+                    color: AppStyles.blueShade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: PlatformWidgets.platformIcon(
+                    isIOS ? CupertinoIcons.doc_text : CupertinoIcons.doc,
+                    color: AppStyles.blue600,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   l10n.personalNote,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppStyles.black87),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppStyles.black87,
+                  ),
                 ),
               ],
             ),
 
             const SizedBox(height: 12),
 
-            if (!hasNote && !_isEditing) _buildAddButton(l10n) else if (hasNote && !_isEditing) _buildViewCard(l10n) else if (_isEditing) _buildEditForm(l10n, isIOS),
+            if (!hasNote && !_isEditing)
+              _buildAddButton(l10n)
+            else if (hasNote && !_isEditing)
+              _buildViewCard(l10n)
+            else if (_isEditing)
+              _buildEditForm(l10n, isIOS),
           ],
         ),
       ),
@@ -217,11 +262,19 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.privateNoteHint, style: TextStyle(fontSize: 14, color: AppStyles.grey600)),
+        Text(
+          l10n.privateNoteHint,
+          style: TextStyle(fontSize: 14, color: AppStyles.grey600),
+        ),
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
-          child: AdaptiveButton(config: AdaptiveButtonConfigExtended.submit(), text: l10n.addPersonalNote, icon: CupertinoIcons.add, onPressed: () => setState(() => _isEditing = true)),
+          child: AdaptiveButton(
+            config: AdaptiveButtonConfig.primary(),
+            text: l10n.addPersonalNote,
+            icon: CupertinoIcons.add,
+            onPressed: () => setState(() => _isEditing = true),
+          ),
         ),
       ],
     );
@@ -239,7 +292,10 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppStyles.blueShade100),
           ),
-          child: Text(_currentNote!, style: TextStyle(fontSize: 14, color: AppStyles.black87)),
+          child: Text(
+            _currentNote!,
+            style: TextStyle(fontSize: 14, color: AppStyles.black87),
+          ),
         ),
         const SizedBox(height: 12),
         Row(
@@ -259,7 +315,12 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: AdaptiveButton(config: AdaptiveButtonConfigExtended.destructive(), text: l10n.delete, icon: CupertinoIcons.trash, onPressed: _isSaving ? null : _confirmAndDelete),
+              child: AdaptiveButton(
+                config: AdaptiveButtonConfigExtended.destructive(),
+                text: l10n.delete,
+                icon: CupertinoIcons.trash,
+                onPressed: _isSaving ? null : _confirmAndDelete,
+              ),
             ),
           ],
         ),
@@ -292,7 +353,7 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
             children: [
               Expanded(
                 child: AdaptiveButton(
-                  config: AdaptiveButtonConfigExtended.cancel(),
+                  config: AdaptiveButtonConfig.secondary(),
                   text: l10n.cancel,
                   onPressed: () {
                     setState(() {
@@ -305,7 +366,7 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
               const SizedBox(width: 12),
               Expanded(
                 child: AdaptiveButton(
-                  config: AdaptiveButtonConfigExtended.submit(),
+                  config: AdaptiveButtonConfig.primary(),
                   text: l10n.save,
                   onPressed: () async {
                     final note = _controller.text.trim();

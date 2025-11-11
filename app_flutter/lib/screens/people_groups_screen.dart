@@ -1,21 +1,23 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/group.dart';
+import '../models/domain/group.dart' as domain;
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../services/config_service.dart';
-import '../models/user.dart';
+import '../services/contacts_sync_service.dart';
+import '../services/test_contacts_helper.dart';
+import '../models/domain/user.dart';
 import 'package:eventypop/l10n/app_localizations.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/contact_card.dart';
 import '../widgets/adaptive_scaffold.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:eventypop/widgets/adaptive/adaptive_button.dart';
-import 'package:eventypop/widgets/adaptive/configs/button_config.dart';
-import '../services/api_client.dart';
 import '../core/state/app_state.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PeopleGroupsScreen extends ConsumerStatefulWidget {
   const PeopleGroupsScreen({super.key});
@@ -23,7 +25,8 @@ class PeopleGroupsScreen extends ConsumerStatefulWidget {
   ConsumerState<PeopleGroupsScreen> createState() => _PeopleGroupsScreenState();
 }
 
-class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with WidgetsBindingObserver {
+class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
+    with WidgetsBindingObserver {
   late PageController _pageController;
   int _tabIndex = 0;
   TextEditingController searchController = TextEditingController();
@@ -61,7 +64,13 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
   }
 
   Future<void> _checkContactsPermission() async {
-    await Permission.contacts.status;
+    final ContactsSyncService contactsService = ContactsSyncService();
+    final hasPermission = await contactsService.checkPermission();
+
+    if (!hasPermission) {
+      // Try to request permission
+      await contactsService.requestPermission();
+    }
   }
 
   Future<void> _loadContacts() async {
@@ -73,16 +82,60 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
     });
 
     try {
-      // Fetch contacts from backend API (not migrated to Realtime)
-      final contactsData = await ApiClient().fetchContacts(currentUserId: userId);
+      // Import ContactsSyncService at the top of the file
+      final ContactsSyncService contactsService = ContactsSyncService();
+
+      // Check permission first
+      var hasPermission = await contactsService.checkPermission();
+      print('📱 Initial permission check: $hasPermission');
+
+      // If no permission, try to request it
+      if (!hasPermission) {
+        print('📱 Requesting contacts permission...');
+        hasPermission = await contactsService.requestPermission();
+        print('📱 Permission request result: $hasPermission');
+      }
+
+      if (!hasPermission) {
+        print('📱 Permission denied, showing error');
+        if (mounted) {
+          setState(() {
+            _contactsError = 'Contacts permission not granted';
+            _isLoadingContacts = false;
+          });
+        }
+        return;
+      }
+
+      // Sync phone contacts with backend
+      print('📱 Syncing phone contacts...');
+      final syncResult = await contactsService.syncPhoneContacts();
+      print('📱 Sync result: $syncResult');
+
+      // Get registered contacts from backend
+      print('📱 Getting registered contacts...');
+      final contactsData = await contactsService.getRegisteredContacts();
+      print('📱 Registered contacts count: ${contactsData.length}');
+
+      // Convert to User objects
+      final contacts = <User>[];
+      for (final contactData in contactsData) {
+        if (contactData['registered_user'] != null) {
+          contacts.add(User.fromJson(contactData['registered_user'] as Map<String, dynamic>));
+        }
+      }
+
+      print('📱 Final contacts count: ${contacts.length}');
 
       if (mounted) {
         setState(() {
-          _contacts = contactsData.map((c) => User.fromJson(c)).toList();
+          _contacts = contacts.where((user) => user.id != userId).toList();
           _isLoadingContacts = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      print('📱 Error loading contacts: $e');
+      print('📱 Stack trace: $stack');
       if (mounted) {
         setState(() {
           _contactsError = e.toString();
@@ -93,14 +146,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
   }
 
   Future<void> _navigateToCreateGroup() async {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text(AppLocalizations.of(context)?.createGroup ?? 'Create Group'),
-        content: Text(AppLocalizations.of(context)?.seriesEditNotAvailable ?? 'This feature will be available soon'),
-        actions: [CupertinoDialogAction(child: Text(AppLocalizations.of(context)?.ok ?? 'OK'), onPressed: () => Navigator.of(context).pop())],
-      ),
-    );
+    await context.push('/people/groups/create');
   }
 
   Widget _buildContactsTab() {
@@ -124,24 +170,43 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          PlatformWidgets.platformIcon(isPermissionError ? CupertinoIcons.person_2 : CupertinoIcons.exclamationmark_triangle, size: 64, color: isPermissionError ? AppStyles.orange600 : AppStyles.grey500),
+          PlatformWidgets.platformIcon(
+            isPermissionError
+                ? CupertinoIcons.person_2
+                : CupertinoIcons.exclamationmark_triangle,
+            size: 64,
+            color: isPermissionError ? AppStyles.orange600 : AppStyles.grey500,
+          ),
           const SizedBox(height: 16),
-          Text(isPermissionError ? l10n.contactsPermissionRequired : l10n.errorLoadingFriends, style: AppStyles.cardTitle.copyWith(color: AppStyles.black87, fontSize: 18)),
+          Text(
+            isPermissionError
+                ? l10n.contactsPermissionRequired
+                : l10n.errorLoadingFriends,
+            style: AppStyles.cardTitle.copyWith(
+              color: AppStyles.black87,
+              fontSize: 18,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
-            isPermissionError ? l10n.contactsPermissionInstructions : error.toString(),
+            isPermissionError
+                ? l10n.contactsPermissionInstructions
+                : error.toString(),
             textAlign: TextAlign.center,
-            style: AppStyles.bodyText.copyWith(color: AppStyles.grey600, fontSize: 16),
+            style: AppStyles.bodyText.copyWith(
+              color: AppStyles.grey600,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 24),
           if (isPermissionError) ...[
             AdaptiveButton(
               key: const Key('people_groups_grant_permission_button'),
-              config: AdaptiveButtonConfigExtended.submit(),
+              config: AdaptiveButtonConfig.primary(),
               text: l10n.allowAccess,
               icon: CupertinoIcons.person_2,
               onPressed: () async {
-                final hasPermission = await Permission.contacts.request().isGranted;
+                final hasPermission = await FlutterContacts.requestPermission();
                 if (hasPermission) {
                   await _loadContacts();
                 } else {
@@ -174,7 +239,10 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
               child: PlatformWidgets.platformTextField(
                 controller: searchController,
                 placeholder: l10n.searchFriends,
-                prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.search, color: AppStyles.grey400),
+                prefixIcon: PlatformWidgets.platformIcon(
+                  CupertinoIcons.search,
+                  color: AppStyles.grey400,
+                ),
               ),
             ),
           ),
@@ -184,9 +252,19 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  PlatformWidgets.platformIcon(CupertinoIcons.search, size: 64, color: AppStyles.grey400),
+                  PlatformWidgets.platformIcon(
+                    CupertinoIcons.search,
+                    size: 64,
+                    color: AppStyles.grey400,
+                  ),
                   const SizedBox(height: 16),
-                  Text(l10n.noContactsMessage, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey600, fontSize: 18)),
+                  Text(
+                    l10n.noContactsMessage,
+                    style: AppStyles.cardTitle.copyWith(
+                      color: AppStyles.grey600,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -200,9 +278,32 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PlatformWidgets.platformIcon(CupertinoIcons.person_2, size: 64, color: AppStyles.grey400),
+            PlatformWidgets.platformIcon(
+              CupertinoIcons.person_2,
+              size: 64,
+              color: AppStyles.grey400,
+            ),
             const SizedBox(height: 16),
-            Text(l10n.noContactsMessage, style: AppStyles.cardTitle.copyWith(color: AppStyles.grey600, fontSize: 18)),
+            Text(
+              l10n.noContactsMessage,
+              style: AppStyles.cardTitle.copyWith(
+                color: AppStyles.grey600,
+                fontSize: 18,
+              ),
+            ),
+            // Only show in debug mode
+            if (kDebugMode) ...[
+              const SizedBox(height: 24),
+              AdaptiveButton(
+                config: AdaptiveButtonConfig.secondary(),
+                text: 'Add Test Contacts',
+                icon: CupertinoIcons.person_add,
+                onPressed: () async {
+                  await TestContactsHelper.addTestContacts();
+                  await _loadContacts();
+                },
+              ),
+            ],
           ],
         ),
       );
@@ -210,7 +311,11 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
 
     return ListView.builder(
       physics: const ClampingScrollPhysics(),
-      padding: EdgeInsets.only(top: PlatformWidgets.isIOS ? 12.0 : 8.0, left: 8.0, right: 8.0),
+      padding: EdgeInsets.only(
+        top: PlatformWidgets.isIOS ? 12.0 : 8.0,
+        left: 8.0,
+        right: 8.0,
+      ),
       itemCount: filteredContacts.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -219,12 +324,21 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
             child: PlatformWidgets.platformTextField(
               controller: searchController,
               placeholder: l10n.searchFriends,
-              prefixIcon: PlatformWidgets.platformIcon(CupertinoIcons.search, color: AppStyles.grey400),
+              prefixIcon: PlatformWidgets.platformIcon(
+                CupertinoIcons.search,
+                color: AppStyles.grey400,
+              ),
             ),
           );
         }
 
         final contactIndex = index - 1;
+
+        // Safety check to prevent RangeError
+        if (contactIndex >= filteredContacts.length) {
+          return const SizedBox.shrink();
+        }
+
         final contact = filteredContacts[contactIndex];
         return ContactCard(
           contact: contact,
@@ -242,15 +356,31 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
 
     return groupsAsync.when(
       data: (groups) {
-        final userGroups = groups.where((group) => group.members.any((member) => member.id == userId)).toList();
+        final userGroups = groups
+            .where(
+              (group) =>
+                  group.ownerId == userId ||
+                  group.members.any((member) => member.id == userId) ||
+                  group.admins.any((admin) => admin.id == userId),
+            )
+            .toList();
+
+        for (var _ in userGroups) {}
 
         if (userGroups.isEmpty) {
-          return EmptyState(message: l10n.noGroupsMessage, icon: CupertinoIcons.group);
+          return EmptyState(
+            message: l10n.noGroupsMessage,
+            icon: CupertinoIcons.group,
+          );
         }
 
         return ListView.builder(
           physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.only(top: PlatformWidgets.isIOS ? 12.0 : 8.0, left: 8.0, right: 8.0),
+          padding: EdgeInsets.only(
+            top: PlatformWidgets.isIOS ? 12.0 : 8.0,
+            left: 8.0,
+            right: 8.0,
+          ),
           itemCount: userGroups.length,
           itemBuilder: (context, index) {
             final group = userGroups[index];
@@ -258,26 +388,30 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
           },
         );
       },
-      loading: () => const Center(child: CupertinoActivityIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${l10n.error}: $error'),
-            const SizedBox(height: 16),
-            CupertinoButton(
-              onPressed: () {
-                ref.invalidate(groupsStreamProvider);
-              },
-              child: Text(l10n.retry),
-            ),
-          ],
-        ),
-      ),
+      loading: () {
+        return const Center(child: CupertinoActivityIndicator());
+      },
+      error: (error, stack) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${l10n.error}: $error'),
+              const SizedBox(height: 16),
+              CupertinoButton(
+                onPressed: () {
+                  ref.invalidate(groupsStreamProvider);
+                },
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildGroupCard(Group group, AppLocalizations l10n) {
+  Widget _buildGroupCard(domain.Group group, AppLocalizations l10n) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Container(
@@ -286,21 +420,23 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
           leading: Container(
             width: 50,
             height: 50,
-            decoration: BoxDecoration(color: AppStyles.purple600, borderRadius: BorderRadius.circular(25)),
+            decoration: BoxDecoration(
+              color: AppStyles.purple600,
+              borderRadius: BorderRadius.circular(25),
+            ),
             child: Icon(CupertinoIcons.group, color: AppStyles.white, size: 24),
           ),
           title: Text(group.name, style: AppStyles.cardTitle),
-          subtitle: Text(l10n.membersLabel(group.members.length), style: AppStyles.bodyText.copyWith(color: AppStyles.grey600)),
-          trailing: PlatformWidgets.platformIcon(CupertinoIcons.chevron_right, color: AppStyles.grey400),
+          subtitle: Text(
+            l10n.membersLabel(group.members.length),
+            style: AppStyles.bodyText.copyWith(color: AppStyles.grey600),
+          ),
+          trailing: PlatformWidgets.platformIcon(
+            CupertinoIcons.chevron_right,
+            color: AppStyles.grey400,
+          ),
           onTap: () {
-            showCupertinoDialog(
-              context: context,
-              builder: (context) => CupertinoAlertDialog(
-                title: Text(context.l10n.groupDetails),
-                content: Text(AppLocalizations.of(context)?.seriesEditNotAvailable ?? 'This feature will be available soon'),
-                actions: [CupertinoDialogAction(child: Text(AppLocalizations.of(context)?.ok ?? 'OK'), onPressed: () => Navigator.of(context).pop())],
-              ),
-            );
+            context.push('/people/groups/${group.id}', extra: group);
           },
         ),
       ),
@@ -315,75 +451,136 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen> with Wi
     return AdaptivePageScaffold(
       key: const Key('people_groups_screen_scaffold'),
       title: l10n.peopleAndGroups,
-      floatingActionButton: _tabIndex == 1
-          ? CupertinoButton.filled(
-              key: const Key('people_groups_create_group_fab'),
-              onPressed: _navigateToCreateGroup,
-              child: Icon(CupertinoIcons.plus, color: AppStyles.white),
-            )
-          : null,
-      body: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: isIOS ? CupertinoColors.systemGroupedBackground.resolveFrom(context) : AppStyles.grey100, borderRadius: BorderRadius.circular(12)),
-            child: Row(
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    key: const Key('people_groups_contacts_tab'),
-                    onTap: () {
-                      setState(() {
-                        _tabIndex = 0;
-                      });
-                      _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(color: _tabIndex == 0 ? AppStyles.primary600 : AppStyles.transparent, borderRadius: BorderRadius.circular(12)),
-                      child: Text(
-                        l10n.contacts,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: _tabIndex == 0 ? AppStyles.white : AppStyles.grey600, fontWeight: FontWeight.w600),
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isIOS
+                        ? CupertinoColors.systemGroupedBackground.resolveFrom(
+                            context,
+                          )
+                        : AppStyles.grey100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          key: const Key('people_groups_contacts_tab'),
+                          onTap: () {
+                            setState(() {
+                              _tabIndex = 0;
+                            });
+                            _pageController.animateToPage(
+                              0,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _tabIndex == 0
+                                  ? AppStyles.primary600
+                                  : AppStyles.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              l10n.contacts,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _tabIndex == 0
+                                    ? AppStyles.white
+                                    : AppStyles.grey600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      Expanded(
+                        child: GestureDetector(
+                          key: const Key('people_groups_groups_tab'),
+                          onTap: () {
+                            setState(() {
+                              _tabIndex = 1;
+                            });
+                            _pageController.animateToPage(
+                              1,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _tabIndex == 1
+                                  ? AppStyles.primary600
+                                  : AppStyles.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              l10n.groups,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _tabIndex == 1
+                                    ? AppStyles.white
+                                    : AppStyles.grey600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
-                  child: GestureDetector(
-                    key: const Key('people_groups_groups_tab'),
-                    onTap: () {
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
                       setState(() {
-                        _tabIndex = 1;
+                        _tabIndex = index;
                       });
-                      _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(color: _tabIndex == 1 ? AppStyles.primary600 : AppStyles.transparent, borderRadius: BorderRadius.circular(12)),
-                      child: Text(
-                        l10n.groups,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: _tabIndex == 1 ? AppStyles.white : AppStyles.grey600, fontWeight: FontWeight.w600),
+                    children: [
+                      Builder(
+                        builder: (context) {
+                          return _buildContactsTab();
+                        },
                       ),
-                    ),
+                      Builder(
+                        builder: (context) {
+                          return _buildGroupsTab();
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _tabIndex = index;
-                });
-              },
-              children: [_buildContactsTab(), _buildGroupsTab()],
-            ),
-          ),
-        ],
+            // FAB positioned over the content
+            if (_tabIndex == 1)
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: CupertinoButton.filled(
+                  key: const Key('people_groups_create_group_fab'),
+                  onPressed: _navigateToCreateGroup,
+                  padding: const EdgeInsets.all(16),
+                  child: Icon(
+                    CupertinoIcons.plus,
+                    color: AppStyles.white,
+                    size: 28,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

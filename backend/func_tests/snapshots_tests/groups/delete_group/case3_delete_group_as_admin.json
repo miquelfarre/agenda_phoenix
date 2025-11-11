@@ -1,0 +1,48 @@
+{
+  "description": "Admin can delete a group successfully",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice (Creator)",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob (Admin)",
+        "phone": "+1234567891"
+      }
+    ],
+    "groups": [
+      {
+        "id": 1,
+        "name": "Team A",
+        "description": "To be deleted",
+        "owner_id": 1
+      }
+    ],
+    "group_memberships": [
+      {
+        "id": 1,
+        "group_id": 1,
+        "user_id": 2,
+        "role": "admin"
+      }
+    ]
+  },
+  "request": {
+    "method": "DELETE",
+    "endpoint": "/api/v1/groups/1",
+    "auth_user_id": 2
+  },
+  "expected": {
+    "status_code": 200,
+    "body_contains": [
+      "Group deleted successfully"
+    ],
+    "body": {
+      "message": "Group deleted successfully",
+      "id": "{{ID}}"
+    }
+  }
+}

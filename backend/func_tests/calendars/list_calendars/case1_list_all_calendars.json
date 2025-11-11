@@ -44,28 +44,31 @@
     "body": [
       {
         "name": "Calendario Personal",
-        "start_date": null,
-        "end_date": null,
+        "description": null,
+        "is_public": false,
+        "is_discoverable": true,
+        "share_hash": null,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
-        "created_at": "{{TIMESTAMP}}",
-        "updated_at": "{{TIMESTAMP}}"
-      },
-      {
-        "name": "Calendario de Trabajo",
+        "category": null,
+        "subscriber_count": 0,
         "start_date": null,
         "end_date": null,
-        "id": "{{ID}}",
-        "owner_id": "{{ID}}",
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"
       },
       {
         "name": "Calendario Familiar",
-        "start_date": null,
-        "end_date": null,
+        "description": null,
+        "is_public": false,
+        "is_discoverable": true,
+        "share_hash": null,
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
+        "category": null,
+        "subscriber_count": 0,
+        "start_date": null,
+        "end_date": null,
         "created_at": "{{TIMESTAMP}}",
         "updated_at": "{{TIMESTAMP}}"
       }

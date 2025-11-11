@@ -68,9 +68,7 @@ def main() -> int:
         "slot_name": "supabase_realtime_rls",
         "ip_version": "IPv4",
         # Prefer POSTGRES_PASSWORD from env if present, fallback to compose default
-        "db_password": os.environ.get(
-            "POSTGRES_PASSWORD", "yoursupersecretandlongpostgrespassword"
-        ),
+        "db_password": os.environ.get("POSTGRES_PASSWORD", "yoursupersecretandlongpostgrespassword"),
         "ssl_enforced": False,
         "temporary_slot": True,
     }

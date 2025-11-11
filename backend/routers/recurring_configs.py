@@ -18,27 +18,13 @@ router = APIRouter(prefix="/api/v1/recurring_configs", tags=["recurring_configs"
 
 
 @router.get("", response_model=List[RecurringEventConfigResponse])
-async def get_recurring_configs(
-    event_id: Optional[int] = None,
-    limit: int = 50,
-    offset: int = 0,
-    order_by: str = "id",
-    order_dir: str = "asc",
-    db: Session = Depends(get_db)
-):
+async def get_recurring_configs(event_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all recurring event configs, optionally filtered by event_id, with pagination and ordering"""
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    return recurring_config.get_multi_filtered(
-        db,
-        event_id=event_id,
-        skip=offset,
-        limit=limit,
-        order_by=order_by,
-        order_dir=order_dir
-    )
+    return recurring_config.get_multi_filtered(db, event_id=event_id, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
 
 @router.get("/{config_id}", response_model=RecurringEventConfigResponse)
@@ -67,12 +53,7 @@ async def create_recurring_config(config_data: RecurringEventConfigCreate, db: S
 
 
 @router.put("/{config_id}", response_model=RecurringEventConfigResponse)
-async def update_recurring_config(
-    config_id: int,
-    config_data: RecurringEventConfigBase,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def update_recurring_config(config_id: int, config_data: RecurringEventConfigBase, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Update an existing recurring config.
 
@@ -91,11 +72,7 @@ async def update_recurring_config(
 
 
 @router.delete("/{config_id}")
-async def delete_recurring_config(
-    config_id: int,
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
+async def delete_recurring_config(config_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Delete a recurring config.
 

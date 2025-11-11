@@ -8,7 +8,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models import Contact, Event, EventInteraction, RecurringEventConfig, User
+from models import Event, EventInteraction, RecurringEventConfig, User
 from schemas import EventInteractionCreate, EventInteractionUpdate
 
 
@@ -87,7 +87,7 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
         """
         return db.query(EventInteraction.id).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == user_id).first() is not None
 
-    def get_enriched_by_event(self, db: Session, event_id: int) -> List[tuple[EventInteraction, User, Optional[Contact]]]:
+    def get_enriched_by_event(self, db: Session, event_id: int) -> List[tuple[EventInteraction, User]]:
         """
         Get event interactions with user information (enriched).
 
@@ -98,9 +98,9 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
             event_id: Event ID
 
         Returns:
-            List of (EventInteraction, User, Contact) tuples
+            List of (EventInteraction, User) tuples
         """
-        return db.query(EventInteraction, User, Contact).outerjoin(User, EventInteraction.user_id == User.id).outerjoin(Contact, User.contact_id == Contact.id).filter(EventInteraction.event_id == event_id).all()
+        return db.query(EventInteraction, User).outerjoin(User, EventInteraction.user_id == User.id).filter(EventInteraction.event_id == event_id).all()
 
     def get_enriched_by_user(self, db: Session, user_id: int, *, interaction_type: Optional[str] = None, status: Optional[str] = None) -> List[tuple[EventInteraction, Event]]:
         """
@@ -161,23 +161,11 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
         if not instance_event_ids:
             return 0
 
-        result = db.query(EventInteraction).filter(
-            EventInteraction.event_id.in_(instance_event_ids),
-            EventInteraction.user_id == user_id,
-            EventInteraction.interaction_type == "invited",
-            EventInteraction.status == "pending"
-        ).update({"status": "rejected"}, synchronize_session=False)
+        result = db.query(EventInteraction).filter(EventInteraction.event_id.in_(instance_event_ids), EventInteraction.user_id == user_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "pending").update({"status": "rejected"}, synchronize_session=False)
         db.commit()
         return result
 
-    def get_event_ids_by_user_type_status(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        interaction_type: str,
-        status: Optional[str] = None
-    ) -> List[int]:
+    def get_event_ids_by_user_type_status(self, db: Session, *, user_id: int, interaction_type: str, status: Optional[str] = None) -> List[int]:
         """
         Get list of event IDs for a user filtered by interaction type and optional status.
 
@@ -190,10 +178,7 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
         Returns:
             List of event IDs
         """
-        query = db.query(EventInteraction.event_id).filter(
-            EventInteraction.user_id == user_id,
-            EventInteraction.interaction_type == interaction_type
-        )
+        query = db.query(EventInteraction.event_id).filter(EventInteraction.user_id == user_id, EventInteraction.interaction_type == interaction_type)
 
         if status:
             query = query.filter(EventInteraction.status == status)
@@ -201,13 +186,7 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
         results = query.all()
         return [eid for (eid,) in results]
 
-    def get_invitations_by_user_and_events(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        event_ids: List[int]
-    ) -> dict:
+    def get_invitations_by_user_and_events(self, db: Session, *, user_id: int, event_ids: List[int]) -> dict:
         """
         Get invitation status map for a user across multiple events.
 
@@ -222,11 +201,7 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
         if not event_ids:
             return {}
 
-        results = db.query(EventInteraction.event_id, EventInteraction.status).filter(
-            EventInteraction.event_id.in_(event_ids),
-            EventInteraction.user_id == user_id,
-            EventInteraction.interaction_type == "invited"
-        ).all()
+        results = db.query(EventInteraction.event_id, EventInteraction.status).filter(EventInteraction.event_id.in_(event_ids), EventInteraction.user_id == user_id, EventInteraction.interaction_type == "invited").all()
 
         return {event_id: status for event_id, status in results}
 
@@ -245,24 +220,10 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
         if not event_ids:
             return []
 
-        return db.query(EventInteraction).filter(
-            EventInteraction.event_id.in_(event_ids),
-            EventInteraction.user_id == user_id
-        ).all()
+        return db.query(EventInteraction).filter(EventInteraction.event_id.in_(event_ids), EventInteraction.user_id == user_id).all()
 
     def get_multi_with_optional_enrichment(
-        self,
-        db: Session,
-        *,
-        event_id: Optional[int] = None,
-        user_id: Optional[int] = None,
-        interaction_type: Optional[str] = None,
-        status: Optional[str] = None,
-        enriched: bool = False,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "created_at",
-        order_dir: str = "desc"
+        self, db: Session, *, event_id: Optional[int] = None, user_id: Optional[int] = None, interaction_type: Optional[str] = None, status: Optional[str] = None, enriched: bool = False, skip: int = 0, limit: int = 50, order_by: str = "created_at", order_dir: str = "desc"
     ) -> Union[List[EventInteraction], List[tuple], List[dict]]:
         """
         Get interactions with optional filters, enrichment, and hierarchical filtering.
@@ -349,8 +310,8 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
                             "role": interaction.role,
                             "invited_by_user_id": interaction.invited_by_user_id,
                             "invited_via_group_id": interaction.invited_via_group_id,
-                            "note": interaction.note,
-                            "rejection_message": interaction.rejection_message,
+                            "personal_note": interaction.personal_note,
+                            "cancellation_note": interaction.cancellation_note,
                             "read_at": interaction.read_at,
                             "is_new": interaction.is_new,
                             "created_at": interaction.created_at,
@@ -410,22 +371,14 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
             - rejected: number of rejected invitations
         """
         # Get all invitations for this event
-        invitations = db.query(EventInteraction).filter(
-            EventInteraction.event_id == event_id,
-            EventInteraction.interaction_type == "invited"
-        ).all()
+        invitations = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.interaction_type == "invited").all()
 
         total_invited = len(invitations)
         accepted = sum(1 for i in invitations if i.status == "accepted")
         pending = sum(1 for i in invitations if i.status == "pending")
         rejected = sum(1 for i in invitations if i.status == "rejected")
 
-        return {
-            "total_invited": total_invited,
-            "accepted": accepted,
-            "pending": pending,
-            "rejected": rejected
-        }
+        return {"total_invited": total_invited, "accepted": accepted, "pending": pending, "rejected": rejected}
 
 
 # Singleton instance

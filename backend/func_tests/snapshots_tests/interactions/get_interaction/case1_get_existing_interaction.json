@@ -1,0 +1,57 @@
+{
+  "description": "Get an existing interaction successfully",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+1234567890"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "phone": "+1234567891"
+      }
+    ],
+    "events": [
+      {
+        "id": 1,
+        "name": "Party",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 1
+      }
+    ],
+    "event_interactions": [
+      {
+        "event_id": 1,
+        "user_id": 2,
+        "interaction_type": "invited",
+        "status": "pending"
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/api/v1/interactions/1"
+  },
+  "expected": {
+    "status_code": 200,
+    "body": {
+      "interaction_type": "invited",
+      "status": "pending",
+      "role": null,
+      "personal_note": null,
+      "cancellation_note": null,
+      "is_attending": false,
+      "id": "{{ID}}",
+      "event_id": "{{ID}}",
+      "user_id": "{{ID}}",
+      "invited_by_user_id": null,
+      "invited_via_group_id": null,
+      "read_at": null,
+      "is_new": true,
+      "created_at": "{{TIMESTAMP}}",
+      "updated_at": "{{TIMESTAMP}}"
+    }
+  }
+}

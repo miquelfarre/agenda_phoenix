@@ -6,7 +6,8 @@ import '../utils/test_mode_validator.dart';
 class ConfigService with SingletonMixin, ErrorHandlingMixin {
   ConfigService._internal();
 
-  factory ConfigService() => SingletonMixin.getInstance(() => ConfigService._internal());
+  factory ConfigService() =>
+      SingletonMixin.getInstance(() => ConfigService._internal());
   static ConfigService get instance => ConfigService();
 
   @override
@@ -71,13 +72,14 @@ class ConfigService with SingletonMixin, ErrorHandlingMixin {
     final validationResult = TestModeValidator.validateTestModeActivation();
 
     if (!validationResult.isValid) {
-      throw Exception('Test mode not allowed: ${validationResult.violations.join(', ')}');
+      throw Exception(
+        'Test mode not allowed: ${validationResult.violations.join(', ')}',
+      );
     }
 
     _isTestMode = true;
     // Don't generate test credentials - let Supabase use anonymous auth
     // _generateTestCredentials();
-    print('🔧 [TestMode] Test mode enabled - using anonymous Supabase auth');
     TestModeValidator.logTestModeStatus(isEnabled: true);
   }
 
@@ -119,7 +121,10 @@ class ConfigService with SingletonMixin, ErrorHandlingMixin {
   bool get useRecurringInstances => _useRecurringInstances;
 
   int _getUserIdFromEnvironment() {
-    const String userIdString = String.fromEnvironment('USER_ID', defaultValue: '8');
+    const String userIdString = String.fromEnvironment(
+      'USER_ID',
+      defaultValue: '8',
+    );
     return int.tryParse(userIdString) ?? 8;
   }
 

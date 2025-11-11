@@ -5,7 +5,8 @@ import '../../ui/helpers/l10n/l10n_helpers.dart';
 import '../../widgets/adaptive_scaffold.dart';
 import '../../screens/events_screen.dart';
 import '../../screens/subscriptions_screen.dart';
-import '../../screens/communities_screen.dart';
+import '../../screens/calendars_screen.dart';
+import '../../screens/people_groups_screen.dart';
 import '../../widgets/adaptive/adaptive_button.dart';
 import '../../ui/helpers/platform/dialog_helpers.dart';
 
@@ -29,9 +30,26 @@ class _NavigationShellState extends State<NavigationShell> {
     final l10n = context.l10n;
 
     _navigationItems = [
-      AdaptiveNavigationItem(icon: CupertinoIcons.calendar, label: l10n.events, screen: const EventsScreen()),
-      AdaptiveNavigationItem(icon: CupertinoIcons.square_stack, label: l10n.subscriptions, screen: SubscriptionsScreen()),
-      AdaptiveNavigationItem(icon: CupertinoIcons.rectangle_stack_person_crop, label: l10n.communities, screen: const CommunitiesScreen()),
+      AdaptiveNavigationItem(
+        icon: CupertinoIcons.calendar,
+        label: l10n.events,
+        screen: const EventsScreen(),
+      ),
+      AdaptiveNavigationItem(
+        icon: CupertinoIcons.square_stack,
+        label: l10n.subscriptions,
+        screen: SubscriptionsScreen(),
+      ),
+      AdaptiveNavigationItem(
+        icon: CupertinoIcons.rectangle_stack_person_crop,
+        label: l10n.calendars,
+        screen: const CalendarsScreen(),
+      ),
+      AdaptiveNavigationItem(
+        icon: CupertinoIcons.person_2_fill,
+        label: l10n.peopleAndGroups,
+        screen: const PeopleGroupsScreen(),
+      ),
     ];
 
     _updateSelectedIndex();
@@ -44,8 +62,10 @@ class _NavigationShellState extends State<NavigationShell> {
       _selectedIndex = 0;
     } else if (location.startsWith('/subscriptions')) {
       _selectedIndex = 1;
-    } else if (location.startsWith('/communities')) {
+    } else if (location.startsWith('/calendars')) {
       _selectedIndex = 2;
+    } else if (location.startsWith('/people')) {
+      _selectedIndex = 3;
     }
   }
 
@@ -64,7 +84,10 @@ class _NavigationShellState extends State<NavigationShell> {
         context.go('/subscriptions');
         break;
       case 2:
-        context.go('/communities');
+        context.go('/calendars');
+        break;
+      case 3:
+        context.go('/people');
         break;
     }
   }
@@ -72,7 +95,9 @@ class _NavigationShellState extends State<NavigationShell> {
   @override
   Widget build(BuildContext context) {
     if (_navigationItems == null) {
-      return AdaptivePageScaffold(body: Center(child: PlatformWidgets.platformLoadingIndicator()));
+      return AdaptivePageScaffold(
+        body: Center(child: PlatformWidgets.platformLoadingIndicator()),
+      );
     }
 
     if (widget.child != null) {
@@ -85,7 +110,12 @@ class _NavigationShellState extends State<NavigationShell> {
         actions: [
           AdaptiveButton(
             key: const Key('navigation_shell_settings_button'),
-            config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+            config: const AdaptiveButtonConfig(
+              variant: ButtonVariant.icon,
+              size: ButtonSize.medium,
+              fullWidth: false,
+              iconPosition: IconPosition.only,
+            ),
             icon: CupertinoIcons.ellipsis_vertical,
             onPressed: () => _showSettingsMenu(context),
           ),
@@ -102,7 +132,12 @@ class _NavigationShellState extends State<NavigationShell> {
       actions: [
         AdaptiveButton(
           key: const Key('navigation_shell_fallback_settings_button'),
-          config: const AdaptiveButtonConfig(variant: ButtonVariant.icon, size: ButtonSize.medium, fullWidth: false, iconPosition: IconPosition.only),
+          config: const AdaptiveButtonConfig(
+            variant: ButtonVariant.icon,
+            size: ButtonSize.medium,
+            fullWidth: false,
+            iconPosition: IconPosition.only,
+          ),
           icon: CupertinoIcons.ellipsis_vertical,
           onPressed: () => _showSettingsMenu(context),
         ),
@@ -114,9 +149,17 @@ class _NavigationShellState extends State<NavigationShell> {
   Future<void> _showSettingsMenu(BuildContext context) async {
     final l10n = context.l10n;
 
-    final sheetActions = [PlatformAction(text: l10n.settings, value: 'settings'), PlatformAction(text: l10n.calendars, value: 'calendars'), PlatformAction(text: l10n.birthdays, value: 'birthdays')];
+    final sheetActions = [
+      PlatformAction(text: l10n.settings, value: 'settings'),
+      PlatformAction(text: l10n.calendars, value: 'calendars'),
+      PlatformAction(text: l10n.birthdays, value: 'birthdays'),
+    ];
 
-    final result = await PlatformDialogHelpers.showPlatformActionSheet<String>(context, title: '', actions: sheetActions);
+    final result = await PlatformDialogHelpers.showPlatformActionSheet<String>(
+      context,
+      title: '',
+      actions: sheetActions,
+    );
 
     if (!mounted) return;
 

@@ -1,0 +1,45 @@
+{
+  "description": "Cannot invite public users to events (FC Barcelona cannot be invited)",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+34900000001",
+        "is_public": false
+      },
+      {
+        "id": 2,
+        "name": "FC Barcelona",
+        "auth_provider": "instagram",
+        "is_public": true,
+        "instagram_username": "fcbarcelona"
+      }
+    ],
+    "events": [
+      {
+        "id": 100,
+        "name": "Private Party",
+        "start_date": "2025-12-15T20:00:00",
+        "owner_id": 1
+      }
+    ]
+  },
+  "request": {
+    "method": "POST",
+    "endpoint": "/api/v1/interactions",
+    "body": {
+      "event_id": 100,
+      "user_id": 2,
+      "interaction_type": "invited",
+      "status": "pending",
+      "invited_by_user_id": 1
+    }
+  },
+  "expected": {
+    "status_code": 403,
+    "body": {
+      "detail": "Public users cannot be invited to events. Only private users can receive invitations."
+    }
+  }
+}

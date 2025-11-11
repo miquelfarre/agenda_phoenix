@@ -1,26 +1,37 @@
 import 'dart:async';
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/user.dart' as models;
-import '../models/user_hive.dart';
+import '../models/domain/user.dart' as models;
+import '../models/persistence/user_hive.dart';
+import '../models/domain/event.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
+import '../utils/realtime_filter.dart';
+import 'contracts/subscription_repository_contract.dart';
 
-class SubscriptionRepository {
+class SubscriptionRepository implements ISubscriptionRepository {
   static const String _boxName = 'subscriptions';
   final _supabaseService = SupabaseService.instance;
   final _apiClient = ApiClient();
+  final RealtimeSync _rt = RealtimeSync();
 
   Box<UserHive>? _box;
-  final StreamController<List<models.User>> _subscriptionsController = StreamController<List<models.User>>.broadcast();
+  final StreamController<List<models.User>> _subscriptionsController =
+      StreamController<List<models.User>>.broadcast();
   List<models.User> _cachedUsers = [];
   RealtimeChannel? _statsChannel;
 
   final Completer<void> _initCompleter = Completer<void>();
+
+  @override
   Future<void> get initialized => _initCompleter.future;
 
+  @override
+  Stream<List<models.User>> get dataStream => subscriptionsStream;
+
+  @override
   Stream<List<models.User>> get subscriptionsStream async* {
     if (_cachedUsers.isNotEmpty) {
       yield List.from(_cachedUsers);
@@ -28,11 +39,11 @@ class SubscriptionRepository {
     yield* _subscriptionsController.stream;
   }
 
+  @override
   Future<void> initialize() async {
     if (_initCompleter.isCompleted) return;
 
     try {
-      print('🚀 [SubscriptionRepository] Initializing...');
       _box = await Hive.openBox<UserHive>(_boxName);
 
       // Load subscriptions from Hive cache first (if any)
@@ -45,7 +56,6 @@ class SubscriptionRepository {
       await _startRealtimeSubscription();
 
       _emitCurrentSubscriptions();
-      print('✅ [SubscriptionRepository] Initialization complete');
 
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
@@ -63,95 +73,137 @@ class SubscriptionRepository {
 
     try {
       _cachedUsers = _box!.values.map((userHive) => userHive.toUser()).toList();
-
-      print('✅ [SubscriptionRepository] Loaded ${_cachedUsers.length} subscriptions from Hive cache');
     } catch (e) {
-      print('❌ [SubscriptionRepository] Error loading from Hive: $e');
       _cachedUsers = [];
     }
   }
 
   Future<void> _fetchAndSync() async {
     try {
-      print('📡 [SubscriptionRepository] Fetching subscriptions from API...');
+      print('🟢 [SYNC] Starting fetch and sync');
       final userId = ConfigService.instance.currentUserId;
       final response = await _apiClient.fetchUserSubscriptions(userId);
-      _cachedUsers = response.map((data) => models.User.fromJson(data)).toList();
+      print('🟢 [SYNC] Fetched ${response.length} subscriptions from API');
+      _cachedUsers = response
+          .map((data) => models.User.fromJson(data))
+          .toList();
+      print('🟢 [SYNC] Parsed ${_cachedUsers.length} users');
 
       await _updateLocalCache(_cachedUsers);
+      print('🟢 [SYNC] Updated local cache');
+
+      // Set sync timestamp to now (after successful fetch)
+      // This ensures we only process realtime events that occur AFTER this fetch
+      _rt.setServerSyncTs(DateTime.now().toUtc());
 
       _emitCurrentSubscriptions();
-      print('✅ [SubscriptionRepository] Fetched ${_cachedUsers.length} subscriptions');
+      print('🟢 [SYNC] Emitted current subscriptions to stream');
+      // ignore: empty_catches
     } catch (e) {
-      print('❌ [SubscriptionRepository] Error fetching subscriptions: $e');
+      print('🟢 [SYNC] ERROR: $e');
+      // Intentionally ignore realtime errors
     }
   }
 
   Future<void> _updateLocalCache(List<models.User> users) async {
     if (_box == null) return;
 
-    print('💾 [SubscriptionRepository] Updating Hive cache with ${users.length} users...');
     await _box!.clear();
 
     for (final user in users) {
       final userHive = UserHive.fromUser(user);
       await _box!.put(user.id, userHive);
     }
-    print('✅ [SubscriptionRepository] Hive cache updated');
   }
 
+  @override
   Future<void> refresh() async {
     try {
-      print('🔄 [SubscriptionRepository] Manual refresh requested');
       await _fetchAndSync();
-    } catch (e, stackTrace) {
-      print('❌ [SubscriptionRepository] Error refreshing: $e');
-      print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
+  // --- Local cache and realtime ---
+
+  @override
+  Future<void> startRealtimeSubscription() async {
+    await _startRealtimeSubscription();
+  }
+
+  @override
+  Future<void> stopRealtimeSubscription() async {
+    await _statsChannel?.unsubscribe();
+    _statsChannel = null;
+  }
+
+  @override
+  bool get isRealtimeConnected => _statsChannel != null;
+
+  @override
+  Future<void> loadFromCache() async {
+    _loadSubscriptionsFromHive();
+  }
+
+  @override
+  Future<void> saveToCache() async {
+    await _updateLocalCache(_cachedUsers);
+  }
+
+  @override
+  Future<void> clearCache() async {
+    _cachedUsers = [];
+    await _box?.clear();
+    _emitCurrentSubscriptions();
+  }
+
+  @override
   Future<void> createSubscription({required int targetUserId}) async {
     try {
-      print('➕ [SubscriptionRepository] Creating subscription to user $targetUserId');
-      await _apiClient.subscribeToUser(ConfigService.instance.currentUserId, targetUserId);
+      await _apiClient.subscribeToUser(
+        ConfigService.instance.currentUserId,
+        targetUserId,
+      );
       await _fetchAndSync();
-      print('✅ [SubscriptionRepository] Subscription created');
-    } catch (e, stackTrace) {
-      print('❌ [SubscriptionRepository] Error creating subscription: $e');
-      print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
+  @override
   Future<void> deleteSubscription({required int targetUserId}) async {
     try {
-      print('🗑️ [SubscriptionRepository] Deleting subscription to user $targetUserId');
       final currentUserId = ConfigService.instance.currentUserId;
-      final interactions = await _apiClient.fetchInteractions(userId: currentUserId, interactionType: 'subscribed');
 
-      final targetInteraction = interactions.firstWhere((interaction) => interaction['target_user_id'] == targetUserId, orElse: () => throw Exception('Subscription not found'));
+      // Usar el endpoint correcto que borra TODAS las suscripciones a eventos del usuario
+      await _apiClient.unsubscribeFromUser(currentUserId, targetUserId);
 
-      await _apiClient.deleteInteraction(targetInteraction['id']);
       await _fetchAndSync();
-      print('✅ [SubscriptionRepository] Subscription deleted');
-    } catch (e, stackTrace) {
-      print('❌ [SubscriptionRepository] Error deleting subscription: $e');
-      print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
 
+  @override
   Future<List<models.User>> searchPublicUsers({required String query}) async {
     try {
-      print('🔍 [SubscriptionRepository] Searching public users: "$query"');
       final usersData = await _apiClient.fetchUsers(isPublic: true);
-      final results = usersData.map((data) => models.User.fromJson(data)).where((user) => (user.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false) || (user.email?.toLowerCase().contains(query.toLowerCase()) ?? false)).toList();
-      print('✅ [SubscriptionRepository] Found ${results.length} users matching "$query"');
+      final results = usersData
+          .map((data) => models.User.fromJson(data))
+          .where(
+            (user) =>
+                user.displayName.toLowerCase().contains(
+                  query.toLowerCase(),
+                ) ||
+                (user.instagramUsername?.toLowerCase().contains(
+                      query.toLowerCase(),
+                    ) ??
+                    false),
+          )
+          .toList();
       return results;
-    } catch (e, stackTrace) {
-      print('❌ [SubscriptionRepository] Error searching public users: $e');
-      print('📍 [SubscriptionRepository] Stack trace: $stackTrace');
+    } catch (e, _) {
       rethrow;
     }
   }
@@ -161,13 +213,25 @@ class SubscriptionRepository {
     // now handles all interactions (including subscriptions). This avoids conflicts
     // with duplicate Realtime subscriptions to the same table.
 
-    _statsChannel = RealtimeUtils.subscribeTable(client: _supabaseService.client, schema: 'public', table: 'user_subscription_stats', onChange: _handleStatsChange);
-
-    print('✅ [SubscriptionRepository] Realtime subscription started for user_subscription_stats table');
+    _statsChannel = RealtimeUtils.subscribeTable(
+      client: _supabaseService.client,
+      schema: 'public',
+      table: 'user_subscription_stats',
+      onChange: _handleStatsChange,
+    );
   }
 
   void _handleStatsChange(PostgresChangePayload payload) {
     if (payload.eventType == PostgresChangeEvent.delete) return;
+
+    // Filter out historical events from initial payload
+    if (!RealtimeFilter.shouldProcessEvent(
+      payload,
+      'subscription_stats',
+      _rt,
+    )) {
+      return;
+    }
 
     final statsRecord = Map<String, dynamic>.from(payload.newRecord);
     final affectedUserId = statsRecord['user_id'] as int?;
@@ -176,16 +240,21 @@ class SubscriptionRepository {
     final userIndex = _cachedUsers.indexWhere((u) => u.id == affectedUserId);
     if (userIndex == -1) return;
 
-    print('📊 [SubscriptionRepository] Stats updated for user $affectedUserId');
     final user = _cachedUsers[userIndex];
-    _cachedUsers[userIndex] = user.copyWith(newEventsCount: statsRecord['new_events_count'] as int? ?? user.newEventsCount, totalEventsCount: statsRecord['total_events_count'] as int? ?? user.totalEventsCount, subscribersCount: statsRecord['subscribers_count'] as int? ?? user.subscribersCount);
+    _cachedUsers[userIndex] = user.copyWith(
+      newEventsCount:
+          statsRecord['new_events_count'] as int? ?? user.newEventsCount,
+      totalEventsCount:
+          statsRecord['total_events_count'] as int? ?? user.totalEventsCount,
+      subscribersCount:
+          statsRecord['subscribers_count'] as int? ?? user.subscribersCount,
+    );
 
     // Update Hive cache
     final updatedUserHive = UserHive.fromUser(_cachedUsers[userIndex]);
     _box?.put(affectedUserId, updatedUserHive);
 
     _emitCurrentSubscriptions();
-    print('✅ [SubscriptionRepository] Stats update applied to user $affectedUserId');
   }
 
   void _emitCurrentSubscriptions() {
@@ -194,8 +263,40 @@ class SubscriptionRepository {
     }
   }
 
+  /// Fetch events from a specific user
+  @override
+  Future<List<Event>> fetchUserEvents(int userId) async {
+    final eventsData = await _apiClient.fetchUserEvents(userId);
+    return eventsData.map((data) => Event.fromJson(data)).toList();
+  }
+
+  /// Subscribe to a user
+  @override
+  Future<void> subscribeToUser(int userId) async {
+    await _apiClient.post('/users/$userId/subscribe');
+    // Refresh subscriptions after subscribing
+    await _fetchAndSync();
+  }
+
+  /// Unsubscribe from a user
+  @override
+  Future<void> unsubscribeFromUser(int userId) async {
+    print('🟠 [REPO] Calling API to unsubscribe from user $userId');
+    try {
+      final result = await _apiClient.delete('/users/$userId/subscribe');
+      print('🟠 [REPO] API response: $result');
+    } catch (e) {
+      print('🟠 [REPO] API error: $e');
+      rethrow;
+    }
+    // Refresh subscriptions after unsubscribing
+    print('🟠 [REPO] Fetching and syncing subscriptions');
+    await _fetchAndSync();
+    print('🟠 [REPO] Fetch and sync completed');
+  }
+
+  @override
   void dispose() {
-    print('👋 [SubscriptionRepository] Disposing...');
     _statsChannel?.unsubscribe();
     _subscriptionsController.close();
     _box?.close();

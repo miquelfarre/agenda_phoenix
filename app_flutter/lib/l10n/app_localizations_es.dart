@@ -107,7 +107,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get add => 'Añadir';
 
   @override
-  String get remove => 'Quitar';
+  String get remove => 'Eliminar';
 
   @override
   String get close => 'Cerrar';
@@ -185,7 +185,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get start => 'Comenzar';
 
   @override
-  String get stop => 'Parar';
+  String get stop => 'Detener';
 
   @override
   String get pause => 'Pausar';
@@ -218,7 +218,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get upload => 'Subir';
 
   @override
-  String get leave => 'Salir';
+  String get leave => 'Abandonar';
 
   @override
   String get stay => 'Quedarse';
@@ -433,7 +433,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get newEvents => 'eventos nuevos';
 
   @override
-  String get subscriber => 'suscriptor';
+  String get subscriber => 'Suscriptor';
 
   @override
   String get subscribers => 'suscriptores';
@@ -619,10 +619,55 @@ class AppLocalizationsEs extends AppLocalizations {
   String get groupName => 'Nombre del Grupo';
 
   @override
+  String get groupNamePlaceholder => 'Ingresa el nombre del grupo';
+
+  @override
   String get groupDescription => 'Descripción del Grupo';
 
   @override
+  String get groupDescriptionPlaceholder => 'Ingresa la descripción del grupo (opcional)';
+
+  @override
+  String get deleteGroupConfirmation => '¿Estás seguro de que quieres eliminar este grupo? Esta acción no se puede deshacer.';
+
+  @override
+  String get saveChanges => 'Guardar Cambios';
+
+  @override
   String get inviteToGroup => 'Invitar al Grupo';
+
+  @override
+  String get addMembers => 'Añadir Miembros';
+
+  @override
+  String get manageMembers => 'Administrar Miembros';
+
+  @override
+  String get searchContacts => 'Buscar contactos...';
+
+  @override
+  String selectedCount(int count) {
+    return '$count seleccionado(s)';
+  }
+
+  @override
+  String get clearSelection => 'Limpiar';
+
+  @override
+  String membersAdded(int count) {
+    return '$count miembro(s) añadido(s)';
+  }
+
+  @override
+  String addSelectedMembers(int count) {
+    return 'Añadir $count Miembro(s)';
+  }
+
+  @override
+  String get noContactsToAdd => 'No hay contactos disponibles para añadir';
+
+  @override
+  String get noContactsFoundWithSearch => 'No se encontraron contactos con tu búsqueda';
 
   @override
   String get groupCreated => 'Grupo creado exitosamente';
@@ -695,6 +740,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get leaveGroup => 'Salir del Grupo';
+
+  @override
+  String confirmLeaveGroup(String groupName) {
+    return '¿Estás seguro de que quieres salir de $groupName?';
+  }
+
+  @override
+  String leftGroup(String groupName) {
+    return 'Saliste de $groupName';
+  }
+
+  @override
+  String get groupNotFound => 'Grupo no encontrado';
+
+  @override
+  String get noMembers => 'No hay miembros en este grupo';
+
+  @override
+  String get creator => 'Creador';
 
   @override
   String get groupInvitations => 'Invitaciones de Grupos';
@@ -1500,9 +1564,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get addEventDetailsHint => 'Añade detalles sobre tu evento...';
-
-  @override
-  String get addMembers => 'Añadir Miembros';
 
   @override
   String get searchFriends => 'Buscar Amigos';
@@ -2643,7 +2704,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get failedToUpdateFCMToken => 'Error al actualizar token FCM';
 
   @override
-  String get authUserHasNoPhoneNumber => 'Authenticated user has no phone number';
+  String get authUserHasNoPhoneNumber => 'El usuario autenticado no tiene número de teléfono';
 
   @override
   String eventsBy(String name) {
@@ -2690,7 +2751,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get publicCalendars => 'Calendarios Públicos';
 
   @override
+  String get createNew => 'Crear Nuevo';
+
+  @override
   String get createCalendar => 'Crear Calendario';
+
+  @override
+  String get createBirthday => 'Crear Cumpleaños';
+
+  @override
+  String get personName => 'Nombre de la persona';
+
+  @override
+  String get recurringEventDescription => 'Crea eventos que se repiten automáticamente';
+
+  @override
+  String get birthdayEventDescription => 'Añade cumpleaños de tus contactos';
+
+  @override
+  String get calendarDescription => 'Descripción del Calendario';
 
   @override
   String get editCalendar => 'Editar Calendario';
@@ -2700,9 +2779,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get calendarName => 'Nombre del Calendario';
-
-  @override
-  String get calendarDescription => 'Descripción del Calendario';
 
   @override
   String get calendarColor => 'Color del Calendario';
@@ -2753,7 +2829,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get failedToCreateCalendar => 'Error al crear el calendario. Por favor, inténtalo de nuevo.';
 
   @override
-  String get publicCalendar => 'Calendario Público';
+  String get publicCalendar => 'Calendario público';
 
   @override
   String get othersCanSearchAndSubscribe => 'Otros pueden buscar y suscribirse';
@@ -2862,4 +2938,176 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noEventsInSeries => 'No hay eventos en esta serie';
+
+  @override
+  String get form => 'Formulario';
+
+  @override
+  String get unsavedChangesWarning => 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
+
+  @override
+  String selectLabel(String label) {
+    return 'Seleccionar $label';
+  }
+
+  @override
+  String get organizeEventsHint => 'Organiza tus eventos creando calendarios o suscríbete a calendarios públicos';
+
+  @override
+  String get noPublicCalendarsAvailable => 'No hay calendarios públicos disponibles';
+
+  @override
+  String get tryDifferentSearch => 'Intenta buscar con un nombre o palabra clave diferente';
+
+  @override
+  String get publicCalendarsWillAppearHere => 'Los calendarios públicos aparecerán aquí cuando estén disponibles';
+
+  @override
+  String unsubscribedFrom(String calendarName) {
+    return 'Desuscrito de $calendarName';
+  }
+
+  @override
+  String subscribedTo(String calendarName) {
+    return 'Suscrito a $calendarName';
+  }
+
+  @override
+  String noPermissionToOperation(String operation) {
+    return 'No tienes permiso para $operation este calendario.';
+  }
+
+  @override
+  String get calendarNotFoundDeleted => 'Calendario no encontrado. Puede haber sido eliminado.';
+
+  @override
+  String get alreadySubscribed => 'Ya estás suscrito a este calendario.';
+
+  @override
+  String get notSubscribed => 'No estás suscrito a este calendario.';
+
+  @override
+  String failedToOperationCalendar(String operation) {
+    return 'Error al $operation calendario. Por favor, inténtalo de nuevo.';
+  }
+
+  @override
+  String get invitationsFailed => 'invitaciones fallidas';
+
+  @override
+  String get useCustomTimezone => 'Usar zona horaria personalizada';
+
+  @override
+  String errorLoadingCalendarsDetail(String error) {
+    return 'Error al cargar calendarios: $error';
+  }
+
+  @override
+  String get eventIdMissing => 'El ID del evento falta';
+
+  @override
+  String testAuthFailed(String error) {
+    return 'Error en la autenticación de prueba: $error';
+  }
+
+  @override
+  String get errorLeavingEvent => 'Error al salir del evento';
+
+  @override
+  String get loadingEventSeries => 'Cargando serie de eventos...';
+
+  @override
+  String get errorLoadingEventSeries => 'Error al cargar la serie de eventos';
+
+  @override
+  String partiallyInvited(int partiallyInvitedCount, int totalMembers) {
+    return '$partiallyInvitedCount/$totalMembers invitados';
+  }
+
+  @override
+  String get noItemsAvailable => 'No hay elementos disponibles';
+
+  @override
+  String get searchByNameOrCode => 'Buscar por nombre o #código';
+
+  @override
+  String get enterCodePrecededByHash => 'Introduce el código de 8 caracteres precedido de #';
+
+  @override
+  String get noCalendarsSearchByCode => 'No tienes calendarios. Busca por #código para suscribirte.';
+
+  @override
+  String get calendarNotFoundByHash => 'No se encontró ningún calendario con ese código';
+
+  @override
+  String get subscribe => 'Suscribirse';
+
+  @override
+  String get unsubscribe => 'Desuscribirse';
+
+  @override
+  String get leaveCalendar => 'Abandonar calendario';
+
+  @override
+  String get confirmLeaveCalendar => '¿Estás seguro de que quieres abandonar este calendario?';
+
+  @override
+  String get calendarLeft => 'Has abandonado el calendario';
+
+  @override
+  String get errorLeavingCalendar => 'Error al abandonar el calendario';
+
+  @override
+  String get privateCalendar => 'Calendario privado';
+
+  @override
+  String get owner => 'Propietario';
+
+  @override
+  String get admin => 'Administrador';
+
+  @override
+  String get member => 'Miembro';
+
+  @override
+  String get calendarInformation => 'Información del calendario';
+
+  @override
+  String get visibility => 'Visibilidad';
+
+  @override
+  String get discoverableCalendar => 'Calendario descubrible';
+
+  @override
+  String get appearsInSearch => 'Aparece en búsquedas públicas';
+
+  @override
+  String get onlyViaShareLink => 'Solo accesible mediante enlace compartido';
+
+  @override
+  String get chooseWhatHappensToEvents => 'Elige qué sucede con los eventos del calendario';
+
+  @override
+  String get deleteApiKey => 'Eliminar API Key';
+
+  @override
+  String get voiceAssistant => 'Asistente de Voz';
+
+  @override
+  String get voiceAiCommands => 'Comandos de Voz IA';
+
+  @override
+  String get completeInformation => 'Completar información';
+
+  @override
+  String get cancelAndEditManually => 'Cancelar y editar manualmente';
+
+  @override
+  String get noAdditionalParameters => 'Sin parámetros adicionales';
+
+  @override
+  String get configureGeminiDescription => 'Configura Google Gemini para usar comandos de voz y crear eventos hablando';
+
+  @override
+  String get configureAi => 'Configurar IA';
 }

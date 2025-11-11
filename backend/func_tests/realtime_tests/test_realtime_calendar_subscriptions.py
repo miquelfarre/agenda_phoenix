@@ -73,7 +73,7 @@ def get_calendar_from_db(calendar_id: int) -> Optional[Dict]:
                 FROM calendars
                 WHERE id = %s
                 """,
-                (calendar_id,)
+                (calendar_id,),
             )
             result = cursor.fetchone()
             return dict(result) if result else None
@@ -91,7 +91,7 @@ def get_calendar_subscriptions_from_db(calendar_id: int) -> List[Dict]:
                 WHERE calendar_id = %s
                 ORDER BY subscribed_at DESC
                 """,
-                (calendar_id,)
+                (calendar_id,),
             )
             results = cursor.fetchall()
             return [dict(row) for row in results]
@@ -112,11 +112,10 @@ def verify_replica_identity():
             results = cursor.fetchall()
 
             for row in results:
-                table_name = row['relname']
-                replica_identity = row['relreplident']
+                table_name = row["relname"]
+                replica_identity = row["relreplident"]
                 # 'f' = FULL, 'd' = DEFAULT, 'n' = NOTHING, 'i' = INDEX
-                assert replica_identity == 'f', \
-                    f"Table {table_name} should have REPLICA IDENTITY FULL, got '{replica_identity}'"
+                assert replica_identity == "f", f"Table {table_name} should have REPLICA IDENTITY FULL, got '{replica_identity}'"
 
             print(f"✅ REPLICA IDENTITY FULL verified for calendars and calendar_subscriptions")
 
@@ -156,7 +155,8 @@ class TestCalendarSubscriptionRealtimeFlow:
         # 2. Crear usuario de test
         random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
         user_data = {
-            "full_name": "Realtime Test User",
+            "contact_name": "Realtime Test User",
+            "display_name": "Realtime Test User",
             "phone_number": f"+8888{random_suffix}",
             "auth_provider": "phone",
             "auth_id": f"+8888{random_suffix}",
@@ -181,15 +181,13 @@ class TestCalendarSubscriptionRealtimeFlow:
         updated_calendar = calendar_response.json()
 
         expected_count = initial_count + 1
-        assert updated_calendar["subscriber_count"] == expected_count, \
-            f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
+        assert updated_calendar["subscriber_count"] == expected_count, f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
 
         print(f"   ✅ API subscriber_count: {initial_count} -> {updated_calendar['subscriber_count']}")
 
         # 6. Verificar subscriber_count via BD directa
         calendar_from_db = get_calendar_from_db(calendar_id)
-        assert calendar_from_db["subscriber_count"] == expected_count, \
-            f"DB subscriber count should be {expected_count}, got {calendar_from_db['subscriber_count']}"
+        assert calendar_from_db["subscriber_count"] == expected_count, f"DB subscriber count should be {expected_count}, got {calendar_from_db['subscriber_count']}"
 
         print(f"   ✅ DB subscriber_count: {calendar_from_db['subscriber_count']}")
         print(f"   ✅ Realtime CDC working correctly!")
@@ -219,7 +217,8 @@ class TestCalendarSubscriptionRealtimeFlow:
         # 2. Crear usuario y suscribirse
         random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
         user_data = {
-            "full_name": "Realtime Test User 2",
+            "contact_name": "Realtime Test User 2",
+            "display_name": "Realtime Test User 2",
             "phone_number": f"+7777{random_suffix}",
             "auth_provider": "phone",
             "auth_id": f"+7777{random_suffix}",
@@ -250,15 +249,13 @@ class TestCalendarSubscriptionRealtimeFlow:
         updated_calendar = calendar_response.json()
 
         expected_count = initial_count
-        assert updated_calendar["subscriber_count"] == expected_count, \
-            f"Subscriber count should return to {expected_count}, got {updated_calendar['subscriber_count']}"
+        assert updated_calendar["subscriber_count"] == expected_count, f"Subscriber count should return to {expected_count}, got {updated_calendar['subscriber_count']}"
 
         print(f"   ✅ API subscriber_count: {count_after_subscribe} -> {updated_calendar['subscriber_count']}")
 
         # 6. Verificar subscriber_count via BD directa
         calendar_from_db = get_calendar_from_db(calendar_id)
-        assert calendar_from_db["subscriber_count"] == expected_count, \
-            f"DB subscriber count should be {expected_count}, got {calendar_from_db['subscriber_count']}"
+        assert calendar_from_db["subscriber_count"] == expected_count, f"DB subscriber count should be {expected_count}, got {calendar_from_db['subscriber_count']}"
 
         print(f"   ✅ DB subscriber_count: {calendar_from_db['subscriber_count']}")
         print(f"   ✅ Realtime CDC working correctly!")
@@ -289,7 +286,8 @@ class TestCalendarSubscriptionRealtimeFlow:
         for i in range(3):
             random_suffix = f"{int(datetime.now().timestamp())}{random.randint(1000, 9999)}"
             user_data = {
-                "full_name": f"Realtime Test User {i+1}",
+                "contact_name": f"Realtime Test User {i+1}",
+                "display_name": f"Realtime Test User {i+1}",
                 "phone_number": f"+6666{random_suffix}",
                 "auth_provider": "phone",
                 "auth_id": f"+6666{random_suffix}",
@@ -314,8 +312,7 @@ class TestCalendarSubscriptionRealtimeFlow:
         updated_calendar = calendar_response.json()
 
         expected_count = initial_count + 3
-        assert updated_calendar["subscriber_count"] == expected_count, \
-            f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
+        assert updated_calendar["subscriber_count"] == expected_count, f"Subscriber count should be {expected_count}, got {updated_calendar['subscriber_count']}"
 
         print(f"   ✅ API subscriber_count: {initial_count} -> {updated_calendar['subscriber_count']}")
 

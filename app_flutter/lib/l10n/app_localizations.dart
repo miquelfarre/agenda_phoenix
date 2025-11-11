@@ -443,7 +443,7 @@ abstract class AppLocalizations {
   /// **'Start'**
   String get start;
 
-  /// No description provided for @stop.
+  /// Stop button
   ///
   /// In en, this message translates to:
   /// **'Stop'**
@@ -509,7 +509,7 @@ abstract class AppLocalizations {
   /// **'Upload'**
   String get upload;
 
-  /// No description provided for @leave.
+  /// Leave button
   ///
   /// In en, this message translates to:
   /// **'Leave'**
@@ -935,10 +935,10 @@ abstract class AppLocalizations {
   /// **'new events'**
   String get newEvents;
 
-  /// No description provided for @subscriber.
+  /// Subscriber role
   ///
   /// In en, this message translates to:
-  /// **'subscriber'**
+  /// **'Subscriber'**
   String get subscriber;
 
   /// No description provided for @subscribers.
@@ -1307,17 +1307,95 @@ abstract class AppLocalizations {
   /// **'Group Name'**
   String get groupName;
 
+  /// No description provided for @groupNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter group name'**
+  String get groupNamePlaceholder;
+
   /// No description provided for @groupDescription.
   ///
   /// In en, this message translates to:
   /// **'Group Description'**
   String get groupDescription;
 
+  /// No description provided for @groupDescriptionPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter group description (optional)'**
+  String get groupDescriptionPlaceholder;
+
+  /// No description provided for @deleteGroupConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this group? This action cannot be undone.'**
+  String get deleteGroupConfirmation;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
   /// No description provided for @inviteToGroup.
   ///
   /// In en, this message translates to:
   /// **'Invite to Group'**
   String get inviteToGroup;
+
+  /// No description provided for @addMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Members'**
+  String get addMembers;
+
+  /// No description provided for @manageMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Members'**
+  String get manageMembers;
+
+  /// No description provided for @searchContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search contacts...'**
+  String get searchContacts;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @clearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearSelection;
+
+  /// No description provided for @membersAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} member(s) added'**
+  String membersAdded(int count);
+
+  /// No description provided for @addSelectedMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {count} Member(s)'**
+  String addSelectedMembers(int count);
+
+  /// No description provided for @noContactsToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts available to add'**
+  String get noContactsToAdd;
+
+  /// No description provided for @noContactsFoundWithSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts match your search'**
+  String get noContactsFoundWithSearch;
 
   /// No description provided for @groupCreated.
   ///
@@ -1438,6 +1516,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave Group'**
   String get leaveGroup;
+
+  /// No description provided for @confirmLeaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave {groupName}?'**
+  String confirmLeaveGroup(String groupName);
+
+  /// No description provided for @leftGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You left {groupName}'**
+  String leftGroup(String groupName);
+
+  /// No description provided for @groupNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Group not found'**
+  String get groupNotFound;
+
+  /// No description provided for @noMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'No members in this group'**
+  String get noMembers;
+
+  /// No description provided for @creator.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator'**
+  String get creator;
 
   /// No description provided for @groupInvitations.
   ///
@@ -2944,12 +3052,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add details about your event...'**
   String get addEventDetailsHint;
-
-  /// No description provided for @addMembers.
-  ///
-  /// In en, this message translates to:
-  /// **'Add Members'**
-  String get addMembers;
 
   /// No description provided for @searchFriends.
   ///
@@ -5201,11 +5303,47 @@ abstract class AppLocalizations {
   /// **'Public Calendars'**
   String get publicCalendars;
 
+  /// Title of creation menu
+  ///
+  /// In en, this message translates to:
+  /// **'Create New'**
+  String get createNew;
+
   /// Button to create a new calendar
   ///
   /// In en, this message translates to:
   /// **'Create Calendar'**
   String get createCalendar;
+
+  /// Button to create a birthday
+  ///
+  /// In en, this message translates to:
+  /// **'Create Birthday'**
+  String get createBirthday;
+
+  /// Placeholder for person's name in birthday
+  ///
+  /// In en, this message translates to:
+  /// **'Person\'s name'**
+  String get personName;
+
+  /// Description for recurring event option
+  ///
+  /// In en, this message translates to:
+  /// **'Create events that repeat automatically'**
+  String get recurringEventDescription;
+
+  /// Description for birthday option
+  ///
+  /// In en, this message translates to:
+  /// **'Add birthdays of your contacts'**
+  String get birthdayEventDescription;
+
+  /// Label for calendar description input
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Description'**
+  String get calendarDescription;
 
   /// Button to edit a calendar
   ///
@@ -5224,12 +5362,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calendar Name'**
   String get calendarName;
-
-  /// Label for calendar description input
-  ///
-  /// In en, this message translates to:
-  /// **'Calendar Description'**
-  String get calendarDescription;
 
   /// Label for calendar color picker
   ///
@@ -5327,10 +5459,10 @@ abstract class AppLocalizations {
   /// **'Failed to create calendar. Please try again.'**
   String get failedToCreateCalendar;
 
-  /// Label for public calendar toggle
+  /// Label for public calendar
   ///
   /// In en, this message translates to:
-  /// **'Public Calendar'**
+  /// **'Public calendar'**
   String get publicCalendar;
 
   /// Description for public calendar feature
@@ -5536,6 +5668,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No events in this series'**
   String get noEventsInSeries;
+
+  /// Generic title for forms
+  ///
+  /// In en, this message translates to:
+  /// **'Form'**
+  String get form;
+
+  /// Warning when user tries to leave with unsaved changes
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Are you sure you want to leave?'**
+  String get unsavedChangesWarning;
+
+  /// Text to select an item with dynamic label
+  ///
+  /// In en, this message translates to:
+  /// **'Select {label}'**
+  String selectLabel(String label);
+
+  /// Help text for organizing events with calendars
+  ///
+  /// In en, this message translates to:
+  /// **'Organize your events by creating calendars or subscribe to public ones'**
+  String get organizeEventsHint;
+
+  /// Message when there are no public calendars
+  ///
+  /// In en, this message translates to:
+  /// **'No public calendars available'**
+  String get noPublicCalendarsAvailable;
+
+  /// Suggestion to try a different search
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching for a different name or keyword'**
+  String get tryDifferentSearch;
+
+  /// Empty state message for public calendars
+  ///
+  /// In en, this message translates to:
+  /// **'Public calendars will appear here when available'**
+  String get publicCalendarsWillAppearHere;
+
+  /// Confirmation message when unsubscribing from a calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribed from {calendarName}'**
+  String unsubscribedFrom(String calendarName);
+
+  /// Confirmation message when subscribing to a calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed to {calendarName}'**
+  String subscribedTo(String calendarName);
+
+  /// Permission error message with dynamic operation
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to {operation} this calendar.'**
+  String noPermissionToOperation(String operation);
+
+  /// Message when a calendar is not found
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar not found. It may have been deleted.'**
+  String get calendarNotFoundDeleted;
+
+  /// Message when user is already subscribed
+  ///
+  /// In en, this message translates to:
+  /// **'You are already subscribed to this calendar.'**
+  String get alreadySubscribed;
+
+  /// Message when user is not subscribed
+  ///
+  /// In en, this message translates to:
+  /// **'You are not subscribed to this calendar.'**
+  String get notSubscribed;
+
+  /// Error message when operating on calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to {operation} calendar. Please try again.'**
+  String failedToOperationCalendar(String operation);
+
+  /// Text indicating failed invitations
+  ///
+  /// In en, this message translates to:
+  /// **'invitations failed'**
+  String get invitationsFailed;
+
+  /// Option to use a custom timezone
+  ///
+  /// In en, this message translates to:
+  /// **'Use custom timezone'**
+  String get useCustomTimezone;
+
+  /// Detailed error message when loading calendars
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading calendars: {error}'**
+  String errorLoadingCalendarsDetail(String error);
+
+  /// Error when event ID is missing
+  ///
+  /// In en, this message translates to:
+  /// **'Event ID is missing'**
+  String get eventIdMissing;
+
+  /// Error message for test authentication
+  ///
+  /// In en, this message translates to:
+  /// **'Test authentication failed: {error}'**
+  String testAuthFailed(String error);
+
+  /// Error message when leaving an event
+  ///
+  /// In en, this message translates to:
+  /// **'Error leaving event'**
+  String get errorLeavingEvent;
+
+  /// Loading message for event series
+  ///
+  /// In en, this message translates to:
+  /// **'Loading event series...'**
+  String get loadingEventSeries;
+
+  /// Error message when loading event series
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading event series'**
+  String get errorLoadingEventSeries;
+
+  /// Shows how many members have been invited out of total
+  ///
+  /// In en, this message translates to:
+  /// **'{partiallyInvitedCount}/{totalMembers} invited'**
+  String partiallyInvited(int partiallyInvitedCount, int totalMembers);
+
+  /// Message when no items are available in a selector
+  ///
+  /// In en, this message translates to:
+  /// **'No items available'**
+  String get noItemsAvailable;
+
+  /// Calendar search placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or #code'**
+  String get searchByNameOrCode;
+
+  /// Help text for code search
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 8-character code preceded by #'**
+  String get enterCodePrecededByHash;
+
+  /// Message when no calendars exist
+  ///
+  /// In en, this message translates to:
+  /// **'You have no calendars. Search by #code to subscribe.'**
+  String get noCalendarsSearchByCode;
+
+  /// Message when calendar not found by hash
+  ///
+  /// In en, this message translates to:
+  /// **'No calendar found with that code'**
+  String get calendarNotFoundByHash;
+
+  /// Subscribe button
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get subscribe;
+
+  /// Unsubscribe button
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe'**
+  String get unsubscribe;
+
+  /// Action to leave a calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Leave calendar'**
+  String get leaveCalendar;
+
+  /// Confirmation to leave calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave this calendar?'**
+  String get confirmLeaveCalendar;
+
+  /// Confirmation message when leaving calendar
+  ///
+  /// In en, this message translates to:
+  /// **'You have left the calendar'**
+  String get calendarLeft;
+
+  /// Error when leaving calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Error leaving calendar'**
+  String get errorLeavingCalendar;
+
+  /// Label for private calendar
+  ///
+  /// In en, this message translates to:
+  /// **'Private calendar'**
+  String get privateCalendar;
+
+  /// Owner role
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get owner;
+
+  /// Admin role
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get admin;
+
+  /// Member role
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get member;
+
+  /// Header for calendar information section
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Information'**
+  String get calendarInformation;
+
+  /// Header for visibility settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get visibility;
+
+  /// Label for discoverable calendar switch
+  ///
+  /// In en, this message translates to:
+  /// **'Discoverable Calendar'**
+  String get discoverableCalendar;
+
+  /// Subtitle when calendar is discoverable
+  ///
+  /// In en, this message translates to:
+  /// **'Appears in public search'**
+  String get appearsInSearch;
+
+  /// Subtitle when calendar is not discoverable
+  ///
+  /// In en, this message translates to:
+  /// **'Only accessible via share link'**
+  String get onlyViaShareLink;
+
+  /// Description for delete calendar section
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what happens to calendar events'**
+  String get chooseWhatHappensToEvents;
+
+  /// Title of dialog to delete API key
+  ///
+  /// In en, this message translates to:
+  /// **'Delete API Key'**
+  String get deleteApiKey;
+
+  /// Voice assistant title
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Assistant'**
+  String get voiceAssistant;
+
+  /// Voice commands section title
+  ///
+  /// In en, this message translates to:
+  /// **'Voice AI Commands'**
+  String get voiceAiCommands;
+
+  /// Title to complete information
+  ///
+  /// In en, this message translates to:
+  /// **'Complete information'**
+  String get completeInformation;
+
+  /// Button to cancel and edit manually
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel and edit manually'**
+  String get cancelAndEditManually;
+
+  /// Text when there are no additional parameters
+  ///
+  /// In en, this message translates to:
+  /// **'No additional parameters'**
+  String get noAdditionalParameters;
+
+  /// Description of the Google Gemini configuration section in settings
+  ///
+  /// In en, this message translates to:
+  /// **'Configure Google Gemini to use voice commands and create events by speaking'**
+  String get configureGeminiDescription;
+
+  /// Button to configure artificial intelligence
+  ///
+  /// In en, this message translates to:
+  /// **'Configure AI'**
+  String get configureAi;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

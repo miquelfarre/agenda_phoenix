@@ -3,7 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class PermissionService {
   static const String _contactsPermissionAskedKey = 'contacts_permission_asked';
-  static const String _contactsPermissionDeniedKey = 'contacts_permission_denied';
+  static const String _contactsPermissionDeniedKey =
+      'contacts_permission_denied';
 
   static Future<bool> shouldShowContactsPermissionDialog() async {
     try {

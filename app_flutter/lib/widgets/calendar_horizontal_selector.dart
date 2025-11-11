@@ -1,33 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
-import '../models/calendar.dart';
-import '../models/selector_option.dart';
+import '../models/domain/calendar.dart';
+import '../models/ui/selector_option.dart';
 import 'horizontal_selector_widget.dart';
 
 class CalendarHorizontalSelector extends StatelessWidget {
   final List<Calendar> calendars;
 
-  final String? selectedCalendarId;
+  final int? selectedCalendarId;
 
-  final Function(String calendarId) onSelected;
+  final Function(int calendarId) onSelected;
 
   final bool isDisabled;
 
   final String? label;
 
-  const CalendarHorizontalSelector({super.key, required this.calendars, this.selectedCalendarId, required this.onSelected, this.isDisabled = false, this.label});
+  const CalendarHorizontalSelector({
+    super.key,
+    required this.calendars,
+    this.selectedCalendarId,
+    required this.onSelected,
+    this.isDisabled = false,
+    this.label,
+  });
 
   List<SelectorOption<Calendar>> _transformCalendars() {
     return calendars.map((calendar) {
-      Color calendarColor;
-      try {
-        final colorStr = calendar.color.replaceFirst('#', '');
-        calendarColor = Color(int.parse('FF$colorStr', radix: 16));
-      } catch (e) {
-        calendarColor = Colors.blue;
-      }
-
-      return SelectorOption<Calendar>(value: calendar, displayText: calendar.name, highlightColor: calendarColor, isSelected: calendar.id == selectedCalendarId, isEnabled: !isDisabled);
+      return SelectorOption<Calendar>(
+        value: calendar,
+        displayText: calendar.name,
+        highlightColor: Colors.blue,
+        isSelected: calendar.id == selectedCalendarId,
+        isEnabled: !isDisabled,
+      );
     }).toList();
   }
 

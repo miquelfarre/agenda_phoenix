@@ -6,34 +6,62 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 
-class Contact(Base):
+class UserContact(Base):
     """
-    Contact model - Phone contacts from user's device.
-    Each user has their own contact list.
+    UserContact model - Contactos del dispositivo de cada usuario.
+
+    Cada usuario tiene su propia lista de contactos (de su teléfono).
+    Cuando un contacto se registra, se crea la relación con el User.
+
+    Ejemplo:
+    - Sonia tiene a Juan (+34666) en su teléfono → UserContact(owner_id=sonia.id, phone_number="+34666", contact_name="Juan")
+    - Juan se registra → Se actualiza UserContact.registered_user_id = juan.id
+    - Miquel también tiene a Juan → UserContact(owner_id=miquel.id, phone_number="+34666", contact_name="Juanito")
+    - Ambos apuntan al mismo registered_user_id
     """
 
-    __tablename__ = "contacts"
+    __tablename__ = "user_contacts"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    owner_id = Column(Integer, ForeignKey("users.id", use_alter=True, name="fk_contact_owner"), nullable=True, index=True)  # Owner of this contact (NULL for contacts that represent registered users)
-    name = Column(String(255), nullable=False)
-    phone = Column(String(50), unique=True, nullable=False, index=True)  # Keep phone unique globally
+
+    # Ownership (a quién pertenece este contacto)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Contact info (del dispositivo)
+    contact_name = Column(String(255), nullable=False)  # Nombre que el owner le puso en su teléfono
+    phone_number = Column(String(50), nullable=False, index=True)  # Número de teléfono (NO unique)
+
+    # Registered user (si el contacto está registrado en la app)
+    registered_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+
+    # Sync metadata
+    last_synced_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint("owner_id", "phone_number", name="uq_owner_phone"),  # Un usuario no puede tener el mismo teléfono duplicado
+        Index("idx_user_contacts_registered", "registered_user_id"),
+        Index("idx_user_contacts_owner", "owner_id"),
+        Index("idx_user_contacts_phone", "phone_number"),
+    )
+
     # Relationships
-    owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_contacts")
-    user = relationship("User", foreign_keys="User.contact_id", back_populates="contact", uselist=False)
+    owner = relationship("User", foreign_keys=[owner_id], back_populates="my_contacts")
+    registered_user = relationship("User", foreign_keys=[registered_user_id], back_populates="contact_entries")
 
     def __repr__(self):
-        return f"<Contact(id={self.id}, name='{self.name}', phone='{self.phone}')>"
+        return f"<UserContact(id={self.id}, owner_id={self.owner_id}, contact_name='{self.contact_name}', phone='{self.phone_number}')>"
 
     def to_dict(self):
         return {
             "id": self.id,
             "owner_id": self.owner_id,
-            "name": self.name,
-            "phone": self.phone,
+            "contact_name": self.contact_name,
+            "phone_number": self.phone_number,
+            "registered_user_id": self.registered_user_id,
+            "last_synced_at": self.last_synced_at.isoformat() if self.last_synced_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -41,50 +69,63 @@ class Contact(Base):
 
 class User(Base):
     """
-    User model - Users who have logged in.
-    Two types: private (phone auth) and public (instagram auth).
+    User model - Usuarios que han completado el registro en la app.
+
+    Tipos:
+    - Private (phone auth): Usuarios normales que se registran con teléfono
+    - Public (instagram auth): Organizaciones/negocios con Instagram
     """
 
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=True, unique=True, index=True)
-    username = Column(String(100), nullable=True, index=True)  # For Instagram users
-    auth_provider = Column(String(20), nullable=False)  # 'phone' or 'instagram'
+
+    # Authentication
+    auth_provider = Column(String(20), nullable=False, index=True)  # 'phone' or 'instagram'
     auth_id = Column(String(255), nullable=False, unique=True, index=True)  # Phone number or Instagram user ID
+
+    # Profile
+    display_name = Column(String(200), nullable=False)  # Nombre que ve todo el mundo (REQUIRED)
+    phone = Column(String(20), nullable=True, unique=True, index=True)  # Solo para phone users
+    instagram_username = Column(String(100), nullable=True, unique=True, index=True)  # Solo para instagram users
+    profile_picture_url = Column(String(500), nullable=True)
+
+    # User type
     is_public = Column(Boolean, nullable=False, default=False, index=True)  # True for instagram users, False for phone users
     is_admin = Column(Boolean, nullable=False, default=False, index=True)  # True for super admins
-    profile_picture_url = Column(String(500), nullable=True)
+
+    # Metadata
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
-    contact = relationship("Contact", foreign_keys=[contact_id], back_populates="user")
-    owned_contacts = relationship("Contact", foreign_keys="Contact.owner_id", back_populates="owner", cascade="all, delete-orphan")
+    my_contacts = relationship("UserContact", foreign_keys="UserContact.owner_id", back_populates="owner", cascade="all, delete-orphan")
+    contact_entries = relationship("UserContact", foreign_keys="UserContact.registered_user_id", back_populates="registered_user")
     calendars = relationship("Calendar", back_populates="user", cascade="all, delete-orphan")
     calendar_memberships = relationship("CalendarMembership", foreign_keys="CalendarMembership.user_id", back_populates="user", cascade="all, delete-orphan")
-    created_groups = relationship("Group", back_populates="creator", cascade="all, delete-orphan")
+    owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
     group_memberships = relationship("GroupMembership", back_populates="user", cascade="all, delete-orphan")
     events = relationship("Event", foreign_keys="Event.owner_id", back_populates="owner", cascade="all, delete-orphan")
     interactions = relationship("EventInteraction", foreign_keys="EventInteraction.user_id", back_populates="user", cascade="all, delete-orphan")
     blocked_users = relationship("UserBlock", foreign_keys="UserBlock.blocker_user_id", back_populates="blocker", cascade="all, delete-orphan")
     blocked_by_users = relationship("UserBlock", foreign_keys="UserBlock.blocked_user_id", back_populates="blocked", cascade="all, delete-orphan")
-    subscription_stats = relationship("UserSubscriptionStats", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<User(id={self.id}, auth_provider='{self.auth_provider}', username='{self.username}')>"
+        return f"<User(id={self.id}, display_name='{self.display_name}', auth_provider='{self.auth_provider}')>"
 
     def to_dict(self):
         return {
             "id": self.id,
-            "contact_id": self.contact_id,
-            "username": self.username,
+            "display_name": self.display_name,
+            "phone": self.phone,
+            "instagram_username": self.instagram_username,
+            "profile_picture_url": self.profile_picture_url,
             "auth_provider": self.auth_provider,
             "auth_id": self.auth_id,
             "is_public": self.is_public,
             "is_admin": self.is_admin,
-            "profile_picture_url": self.profile_picture_url,
+            # Metadata
             "last_login": self.last_login.isoformat() if self.last_login else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
@@ -213,9 +254,9 @@ class CalendarSubscription(Base):
     # Unique constraint: un usuario solo puede tener una suscripción por calendar
     __table_args__ = (
         UniqueConstraint("calendar_id", "user_id", name="uq_calendar_user_subscription"),
-        Index('idx_calendar_subscriptions_calendar', 'calendar_id'),
-        Index('idx_calendar_subscriptions_user', 'user_id'),
-        Index('idx_calendar_subscriptions_status', 'status'),
+        Index("idx_calendar_subscriptions_calendar", "calendar_id"),
+        Index("idx_calendar_subscriptions_user", "user_id"),
+        Index("idx_calendar_subscriptions_status", "status"),
     )
 
     # Relationships
@@ -246,23 +287,23 @@ class Group(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    created_by = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
-    creator = relationship("User", back_populates="created_groups")
+    owner = relationship("User", back_populates="owned_groups")
     memberships = relationship("GroupMembership", back_populates="group", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Group(id={self.id}, name='{self.name}', created_by={self.created_by})>"
+        return f"<Group(id={self.id}, name='{self.name}', owner_id={self.owner_id})>"
 
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "created_by": self.created_by,
+            "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -361,8 +402,8 @@ class EventInteraction(Base):
     role = Column(String(50), nullable=True)  # 'owner', 'admin', null (member)
     invited_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     invited_via_group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
-    note = Column(Text, nullable=True)  # Personal note for this event
-    rejection_message = Column(Text, nullable=True)  # Message when rejecting invitation
+    personal_note = Column(Text, nullable=True)  # Personal reminder note ("bring skates to skating class")
+    cancellation_note = Column(Text, nullable=True)  # Cancellation/rejection note ("canceling the event because it's too late")
     is_attending = Column(Boolean, default=False, nullable=True)  # Whether user is attending despite rejecting invitation (for public events)
     read_at = Column(TIMESTAMP(timezone=True), nullable=True)  # Timestamp when interaction was marked as read
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
@@ -425,8 +466,8 @@ class EventInteraction(Base):
             "role": self.role,
             "invited_by_user_id": self.invited_by_user_id,
             "invited_via_group_id": self.invited_via_group_id,
-            "note": self.note,
-            "rejection_message": self.rejection_message,
+            "personal_note": self.personal_note,
+            "cancellation_note": self.cancellation_note,
             "read_at": self.read_at.isoformat() if self.read_at else None,
             "is_new": self.is_new,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -548,39 +589,6 @@ class UserBlock(Base):
         }
 
 
-class AppBan(Base):
-    """
-    AppBan model - Admin bans for entire application access.
-    When a user is banned here, they cannot use the application at all.
-    """
-
-    __tablename__ = "app_bans"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
-    banned_by = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    reason = Column(Text, nullable=True)
-    banned_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
-    # Relationships
-    user = relationship("User", foreign_keys=[user_id], backref="app_ban")
-    banner = relationship("User", foreign_keys=[banned_by])
-
-    def __repr__(self):
-        return f"<AppBan(id={self.id}, user_id={self.user_id}, banned_by={self.banned_by})>"
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "banned_by": self.banned_by,
-            "reason": self.reason,
-            "banned_at": self.banned_at.isoformat() if self.banned_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
-
-
 class EventCancellation(Base):
     """
     EventCancellation model - Tracks cancelled events with optional message.
@@ -642,49 +650,4 @@ class EventCancellationView(Base):
             "cancellation_id": self.cancellation_id,
             "user_id": self.user_id,
             "viewed_at": self.viewed_at.isoformat() if self.viewed_at else None,
-        }
-
-
-class UserSubscriptionStats(Base):
-    """
-    Statistics table for user subscriptions.
-
-    This table is populated and maintained by database triggers:
-    - event_insert_stats_trigger: Updates when events are created
-    - event_delete_stats_trigger: Updates when events are deleted
-    - subscription_insert_stats_trigger: Updates when users subscribe
-    - subscription_delete_stats_trigger: Updates when users unsubscribe
-
-    Fields:
-        user_id: Foreign key to users table
-        new_events_count: Number of events created in last 7 days
-        total_events_count: Total number of events created by user
-        subscribers_count: Number of unique subscribers to user's events
-        last_event_date: Timestamp of most recent event creation
-        updated_at: Last update timestamp (auto-updated by trigger)
-    """
-
-    __tablename__ = "user_subscription_stats"
-
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, doc="User ID (FK)")
-    new_events_count = Column(Integer, default=0, nullable=False, doc="Events in last 7 days")
-    total_events_count = Column(Integer, default=0, nullable=False, doc="Total events created")
-    subscribers_count = Column(Integer, default=0, nullable=False, doc="Number of subscribers")
-    last_event_date = Column(TIMESTAMP(timezone=True), nullable=True, doc="Last event creation timestamp")
-    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, doc="Last stats update")
-
-    # Relationship to User
-    user = relationship("User", back_populates="subscription_stats")
-
-    def __repr__(self):
-        return f"<UserSubscriptionStats(user_id={self.user_id}, events={self.total_events_count}, subscribers={self.subscribers_count})>"
-
-    def to_dict(self):
-        return {
-            "user_id": self.user_id,
-            "new_events_count": self.new_events_count,
-            "total_events_count": self.total_events_count,
-            "subscribers_count": self.subscribers_count,
-            "last_event_date": self.last_event_date.isoformat() if self.last_event_date else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

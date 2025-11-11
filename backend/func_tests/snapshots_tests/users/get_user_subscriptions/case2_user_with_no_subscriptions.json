@@ -1,0 +1,36 @@
+{
+  "description": "Get subscriptions for user with no subscriptions (empty list)",
+  "setup": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice",
+        "phone": "+34600000001",
+        "is_public": false
+      },
+      {
+        "id": 2,
+        "name": "FC Barcelona",
+        "is_public": true,
+        "instagram_username": "fcbarcelona",
+        "auth_provider": "instagram"
+      }
+    ],
+    "events": [
+      {
+        "id": 1,
+        "name": "Barcelona vs Real Madrid",
+        "start_date": "2025-12-01T18:00:00",
+        "owner_id": 2
+      }
+    ]
+  },
+  "request": {
+    "method": "GET",
+    "endpoint": "/api/v1/users/1/subscriptions"
+  },
+  "expected": {
+    "status_code": 200,
+    "body": []
+  }
+}

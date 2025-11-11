@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../../models/event.dart';
+import '../../models/domain/event.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import '../../l10n/app_localizations.dart';
@@ -22,7 +22,9 @@ class EventCardBadges extends StatelessWidget {
     }
 
     // Calendar badge
-    if (event.calendarId != null && event.calendarName != null) {
+    if (config.showCalendarBadge &&
+        event.calendarId != null &&
+        event.calendarName != null) {
       badges.add(_buildCalendarBadge());
     }
 
@@ -52,16 +54,27 @@ class EventCardBadges extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(AppStyles.red600, 0.08),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.red600, 0.2), width: 0.5),
+        border: Border.all(
+          color: AppStyles.colorWithOpacity(AppStyles.red600, 0.2),
+          width: 0.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PlatformWidgets.platformIcon(CupertinoIcons.sparkles, size: 11, color: AppStyles.red600),
+          PlatformWidgets.platformIcon(
+            CupertinoIcons.sparkles,
+            size: 11,
+            color: AppStyles.red600,
+          ),
           const SizedBox(width: 3),
           Text(
             'NEW',
-            style: AppStyles.bodyText.copyWith(fontSize: 11, color: AppStyles.red600, fontWeight: FontWeight.w600),
+            style: AppStyles.bodyText.copyWith(
+              fontSize: 11,
+              color: AppStyles.red600,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -74,7 +87,10 @@ class EventCardBadges extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.08),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.2), width: 0.5),
+        border: Border.all(
+          color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.2),
+          width: 0.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -83,12 +99,19 @@ class EventCardBadges extends StatelessWidget {
             Container(
               width: 8,
               height: 8,
-              decoration: BoxDecoration(color: _parseColor(event.calendarColor!), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: _parseColor(event.calendarColor!),
+                shape: BoxShape.circle,
+              ),
             ),
           if (event.calendarColor != null) const SizedBox(width: 4),
           Text(
             event.calendarName!,
-            style: AppStyles.bodyText.copyWith(fontSize: 11, color: AppStyles.blue600, fontWeight: FontWeight.w500),
+            style: AppStyles.bodyText.copyWith(
+              fontSize: 11,
+              color: AppStyles.blue600,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -102,16 +125,27 @@ class EventCardBadges extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.08),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.2), width: 0.5),
+        border: Border.all(
+          color: AppStyles.colorWithOpacity(AppStyles.orange600, 0.2),
+          width: 0.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PlatformWidgets.platformIcon(CupertinoIcons.gift, size: 11, color: AppStyles.orange600),
+          PlatformWidgets.platformIcon(
+            CupertinoIcons.gift,
+            size: 11,
+            color: AppStyles.orange600,
+          ),
           const SizedBox(width: 3),
           Text(
             l10n.isBirthday,
-            style: AppStyles.bodyText.copyWith(fontSize: 11, color: AppStyles.orange600, fontWeight: FontWeight.w500),
+            style: AppStyles.bodyText.copyWith(
+              fontSize: 11,
+              color: AppStyles.orange600,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -125,16 +159,27 @@ class EventCardBadges extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(AppStyles.green600, 0.08),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: AppStyles.colorWithOpacity(AppStyles.green600, 0.2), width: 0.5),
+        border: Border.all(
+          color: AppStyles.colorWithOpacity(AppStyles.green600, 0.2),
+          width: 0.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PlatformWidgets.platformIcon(CupertinoIcons.repeat, size: 11, color: AppStyles.green600),
+          PlatformWidgets.platformIcon(
+            CupertinoIcons.repeat,
+            size: 11,
+            color: AppStyles.green600,
+          ),
           const SizedBox(width: 3),
           Text(
             l10n.recurringEvent,
-            style: AppStyles.bodyText.copyWith(fontSize: 11, color: AppStyles.green600, fontWeight: FontWeight.w500),
+            style: AppStyles.bodyText.copyWith(
+              fontSize: 11,
+              color: AppStyles.green600,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

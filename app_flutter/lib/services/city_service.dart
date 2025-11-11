@@ -1,4 +1,4 @@
-import '../models/city.dart';
+import '../models/ui/city.dart';
 import '../config/timezone_data.dart';
 
 class CityService {
@@ -35,7 +35,11 @@ class CityService {
             final timezone = tz['timezone'] ?? '';
             final countryCode = _extractCountryCode(timezone);
 
-            return City(name: tz['city'] ?? '', countryCode: countryCode, timezone: timezone);
+            return City(
+              name: tz['city'] ?? '',
+              countryCode: countryCode,
+              timezone: timezone,
+            );
           })
           .toList();
 
@@ -73,6 +77,7 @@ class CityService {
       'UTC': 'UTC',
     };
 
-    return timezoneToCountry[timezone] ?? timezone.split('/').first.toUpperCase();
+    return timezoneToCountry[timezone] ??
+        timezone.split('/').first.toUpperCase();
   }
 }

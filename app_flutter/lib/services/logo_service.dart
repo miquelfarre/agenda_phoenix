@@ -19,7 +19,13 @@ class LogoService {
 
   Future<String?> getLogoPath(int userId) async {
     final prefs = await SharedPreferences.getInstance();
-    final map = Map<String, String>.from((prefs.getStringList(_prefsKey)?.asMap().map((k, v) => MapEntry(v.split('|')[0], v.split('|')[1])) ?? {}));
+    final map = Map<String, String>.from(
+      (prefs
+              .getStringList(_prefsKey)
+              ?.asMap()
+              .map((k, v) => MapEntry(v.split('|')[0], v.split('|')[1])) ??
+          {}),
+    );
     final path = map[userId.toString()];
     if (path == null) return null;
     final exists = await File(path).exists();
@@ -56,7 +62,9 @@ class LogoService {
   Future<void> _index(int userId, String path) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_prefsKey) ?? <String>[];
-    final map = {for (final entry in raw) entry.split('|')[0]: entry.split('|')[1]};
+    final map = {
+      for (final entry in raw) entry.split('|')[0]: entry.split('|')[1],
+    };
     map[userId.toString()] = path;
     final serialized = [for (final e in map.entries) '${e.key}|${e.value}'];
     await prefs.setStringList(_prefsKey, serialized);
@@ -65,7 +73,9 @@ class LogoService {
   Future<void> _unindex(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_prefsKey) ?? <String>[];
-    final map = {for (final entry in raw) entry.split('|')[0]: entry.split('|')[1]};
+    final map = {
+      for (final entry in raw) entry.split('|')[0]: entry.split('|')[1],
+    };
     map.remove(userId.toString());
     final serialized = [for (final e in map.entries) '${e.key}|${e.value}'];
     await prefs.setStringList(_prefsKey, serialized);

@@ -9,7 +9,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models import AppBan, CalendarMembership, Event, EventCancellation, EventInteraction, User
+from models import CalendarMembership, Event, EventCancellation, EventInteraction, User
 from schemas import EventBase, EventCreate
 
 
@@ -50,17 +50,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         """
         return self.get_multi(db, skip=skip, limit=limit, filters={"calendar_id": calendar_id})
 
-    def get_multi_filtered(
-        self,
-        db: Session,
-        *,
-        owner_id: Optional[int] = None,
-        calendar_id: Optional[int] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "start_date",
-        order_dir: str = "asc"
-    ) -> List[Event]:
+    def get_multi_filtered(self, db: Session, *, owner_id: Optional[int] = None, calendar_id: Optional[int] = None, skip: int = 0, limit: int = 50, order_by: str = "start_date", order_dir: str = "asc") -> List[Event]:
         """
         Get multiple events with filters and pagination
 
@@ -72,20 +62,35 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
             order_by: Column name to order by
             order_dir: Order direction (asc/desc)
         """
+        from sqlalchemy.orm import noload
+
         filters = {}
         if owner_id is not None:
             filters["owner_id"] = owner_id
         if calendar_id is not None:
             filters["calendar_id"] = calendar_id
 
-        return self.get_multi(
-            db,
-            skip=skip,
-            limit=limit,
-            order_by=order_by,
-            order_dir=order_dir,
-            filters=filters
-        )
+        # Use noload for interactions relationship - list endpoint doesn't need them
+        query = db.query(self.model).options(noload(self.model.interactions))
+
+        # Apply filters
+        for key, value in filters.items():
+            if hasattr(self.model, key):
+                query = query.filter(getattr(self.model, key) == value)
+
+        # Apply ordering
+        if order_by and hasattr(self.model, order_by):
+            order_col = getattr(self.model, order_by)
+        else:
+            order_col = self.model.id
+
+        if order_dir.lower() == "desc":
+            query = query.order_by(order_col.desc())
+        else:
+            query = query.order_by(order_col.asc())
+
+        # Apply pagination
+        return query.offset(skip).limit(limit).all()
 
     def check_user_access(self, db: Session, *, event_id: int, user_id: int) -> bool:
         """
@@ -105,21 +110,13 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
             return True
 
         # Check 2: Has EventInteraction
-        has_interaction = db.query(EventInteraction.id).filter(
-            EventInteraction.event_id == event_id,
-            EventInteraction.user_id == user_id
-        ).first() is not None
+        has_interaction = db.query(EventInteraction.id).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == user_id).first() is not None
         if has_interaction:
             return True
 
         # Check 3: Member of calendar containing the event
         if event.calendar_id:
-            has_calendar_access = db.query(CalendarMembership.id).filter(
-                CalendarMembership.calendar_id == event.calendar_id,
-                CalendarMembership.user_id == user_id,
-                CalendarMembership.status == "accepted",
-                CalendarMembership.role.in_(["owner", "admin"])
-            ).first() is not None
+            has_calendar_access = db.query(CalendarMembership.id).filter(CalendarMembership.calendar_id == event.calendar_id, CalendarMembership.user_id == user_id, CalendarMembership.status == "accepted", CalendarMembership.role.in_(["owner", "admin"])).first() is not None
             if has_calendar_access:
                 return True
 
@@ -157,12 +154,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
 
         return event_ids
 
-    def create_with_validation(
-        self,
-        db: Session,
-        *,
-        obj_in: EventCreate
-    ) -> Tuple[Optional[Event], Optional[str], Optional[dict]]:
+    def create_with_validation(self, db: Session, *, obj_in: EventCreate) -> Tuple[Optional[Event], Optional[str], Optional[dict]]:
         """
         Create a new event with validation
 
@@ -174,16 +166,6 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         owner_exists = db.query(User.id).filter(User.id == obj_in.owner_id).first() is not None
         if not owner_exists:
             return None, "Owner user not found", None
-
-        # Check if owner is banned - return detailed info
-        ban = db.query(AppBan).filter(AppBan.user_id == obj_in.owner_id).first()
-        if ban:
-            ban_detail = {
-                "message": "User is banned from the application",
-                "reason": ban.reason,
-                "banned_at": ban.banned_at.isoformat() if ban.banned_at else None
-            }
-            return None, "User is banned from the application", ban_detail
 
         # Prepare event data
         event_data = obj_in.model_dump()
@@ -199,15 +181,12 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         db.refresh(db_event)
         return db_event, None, None
 
-    def update_with_validation(
-        self,
-        db: Session,
-        *,
-        event_id: int,
-        obj_in: EventCreate
-    ) -> Tuple[Optional[Event], Optional[str]]:
+    def update_with_validation(self, db: Session, *, event_id: int, obj_in) -> Tuple[Optional[Event], Optional[str]]:
         """
         Update an event with validation
+
+        Args:
+            obj_in: EventCreate or EventUpdate schema
 
         Returns:
             (Event, None) if successful
@@ -218,18 +197,19 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         if not db_event:
             return None, "Event not found"
 
+        # Prepare event data - exclude unset fields for partial updates
+        event_data = obj_in.model_dump(exclude_unset=True)
+
         # If owner changed, validate new owner exists
-        if obj_in.owner_id != db_event.owner_id:
-            owner_exists = db.query(User.id).filter(User.id == obj_in.owner_id).first() is not None
+        if "owner_id" in event_data and event_data["owner_id"] != db_event.owner_id:
+            owner_exists = db.query(User.id).filter(User.id == event_data["owner_id"]).first() is not None
             if not owner_exists:
                 return None, "Owner user not found"
 
-        # Prepare event data
-        event_data = obj_in.model_dump()
-
         # Ensure dates are timezone-aware
-        if event_data["start_date"].tzinfo is None:
-            event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
+        if "start_date" in event_data and event_data["start_date"] is not None:
+            if event_data["start_date"].tzinfo is None:
+                event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
 
         # Update event
         for key, value in event_data.items():
@@ -240,14 +220,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         db.refresh(db_event)
         return db_event, None
 
-    def delete_with_cancellations(
-        self,
-        db: Session,
-        *,
-        event_id: int,
-        cancelled_by_user_id: Optional[int] = None,
-        cancellation_message: Optional[str] = None
-    ) -> Tuple[Optional[int], Optional[str]]:
+    def delete_with_cancellations(self, db: Session, *, event_id: int, cancelled_by_user_id: Optional[int] = None, cancellation_message: Optional[str] = None) -> Tuple[Optional[int], Optional[str]]:
         """
         Delete an event and optionally create cancellation notifications.
 
@@ -265,27 +238,18 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
 
         # If it's a recurring base event, get all instances
         if db_event.event_type == "recurring":
-            instances = db.query(Event).filter(
-                Event.parent_recurring_event_id == event_id
-            ).all()
+            instances = db.query(Event).filter(Event.parent_recurring_event_id == event_id).all()
             events_to_delete.extend(instances)
 
         # Create cancellation records if requested
         if cancelled_by_user_id:
             for event in events_to_delete:
                 # Get all users with interactions to this event
-                interactions = db.query(EventInteraction).filter(
-                    EventInteraction.event_id == event.id
-                ).all()
+                interactions = db.query(EventInteraction).filter(EventInteraction.event_id == event.id).all()
 
                 if interactions:
                     # Create cancellation record
-                    cancellation = EventCancellation(
-                        event_id=event.id,
-                        event_name=event.name,
-                        cancelled_by_user_id=cancelled_by_user_id,
-                        message=cancellation_message
-                    )
+                    cancellation = EventCancellation(event_id=event.id, event_name=event.name, cancelled_by_user_id=cancelled_by_user_id, message=cancellation_message)
                     db.add(cancellation)
                     db.flush()
 
@@ -307,37 +271,22 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         - Public users
 
         Returns:
-            List of tuples (User, Contact)
+            List of tuples (User)
         """
-        from models import Contact, EventInteraction, User, UserBlock
+        from models import EventInteraction, User, UserBlock
 
         db_event = self.get(db, id=event_id)
         if not db_event:
             return []
 
         # Get user IDs that already have interactions with this event
-        invited_user_ids_subquery = db.query(EventInteraction.user_id).filter(
-            EventInteraction.event_id == event_id
-        ).scalar_subquery()
+        invited_user_ids_subquery = db.query(EventInteraction.user_id).filter(EventInteraction.event_id == event_id).scalar_subquery()
 
         # Get user IDs that have mutual blocks with the event owner
-        blocked_user_ids_subquery = db.query(UserBlock.blocked_user_id).filter(
-            UserBlock.blocker_user_id == db_event.owner_id
-        ).union(
-            db.query(UserBlock.blocker_user_id).filter(
-                UserBlock.blocked_user_id == db_event.owner_id
-            )
-        ).scalar_subquery()
+        blocked_user_ids_subquery = db.query(UserBlock.blocked_user_id).filter(UserBlock.blocker_user_id == db_event.owner_id).union(db.query(UserBlock.blocker_user_id).filter(UserBlock.blocked_user_id == db_event.owner_id)).scalar_subquery()
 
         # Get all users NOT in the invited list, NOT the owner, NOT blocked, NOT public
-        results = db.query(User, Contact).outerjoin(
-            Contact, User.contact_id == Contact.id
-        ).filter(
-            User.id != db_event.owner_id,
-            User.is_public == False,
-            ~User.id.in_(invited_user_ids_subquery),
-            ~User.id.in_(blocked_user_ids_subquery)
-        ).all()
+        results = db.query(User).filter(User.id != db_event.owner_id, User.is_public == False, ~User.id.in_(invited_user_ids_subquery), ~User.id.in_(blocked_user_ids_subquery)).all()
 
         return results
 
@@ -401,11 +350,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         if not event_ids:
             return []
 
-        query = db.query(Event).filter(
-            Event.id.in_(event_ids),
-            Event.start_date >= from_date,
-            Event.start_date <= to_date
-        )
+        query = db.query(Event).filter(Event.id.in_(event_ids), Event.start_date >= from_date, Event.start_date <= to_date)
 
         if search:
             like = f"%{search}%"
@@ -427,10 +372,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         """
         now = datetime.now(timezone.utc)
 
-        return db.query(Event).filter(
-            Event.owner_id == owner_id,
-            Event.start_date >= now
-        ).order_by(Event.start_date.asc()).limit(limit).all()
+        return db.query(Event).filter(Event.owner_id == owner_id, Event.start_date >= now).order_by(Event.start_date.asc()).limit(limit).all()
 
 
 # Singleton instance

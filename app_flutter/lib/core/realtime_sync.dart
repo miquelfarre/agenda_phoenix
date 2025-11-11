@@ -12,7 +12,10 @@ class RealtimeSync {
   }
 
   /// Initialize sync timestamp from either server time or rows' updated_at/inserted_at.
-  void setServerSyncTsFromResponse({DateTime? serverTimeUtc, Iterable<Json>? rows}) {
+  void setServerSyncTsFromResponse({
+    DateTime? serverTimeUtc,
+    Iterable<Json>? rows,
+  }) {
     if (serverTimeUtc != null) {
       _serverSyncTs = serverTimeUtc.toUtc();
       return;
@@ -31,7 +34,10 @@ class RealtimeSync {
   }
 
   /// For INSERT/UPDATE, only process if commit_ts is after serverSyncTs + margin.
-  bool shouldProcessInsertOrUpdate(DateTime? commitTsUtc, {Duration margin = const Duration(seconds: 1)}) {
+  bool shouldProcessInsertOrUpdate(
+    DateTime? commitTsUtc, {
+    Duration margin = const Duration(seconds: 1),
+  }) {
     if (commitTsUtc == null) return true;
     return commitTsUtc.isAfter(_serverSyncTs.add(margin));
   }
@@ -41,9 +47,25 @@ class RealtimeSync {
 }
 
 class RealtimeUtils {
-  static RealtimeChannel subscribeTable({required SupabaseClient client, required String schema, required String table, PostgresChangeEvent event = PostgresChangeEvent.all, PostgresChangeFilter? filter, required void Function(PostgresChangePayload payload) onChange}) {
-    final channelName = 'postgres_changes:$schema:$table:${filter != null ? '${filter.column}=${filter.value}' : 'all'}';
-    final chan = client.channel(channelName).onPostgresChanges(event: event, schema: schema, table: table, filter: filter, callback: onChange);
+  static RealtimeChannel subscribeTable({
+    required SupabaseClient client,
+    required String schema,
+    required String table,
+    PostgresChangeEvent event = PostgresChangeEvent.all,
+    PostgresChangeFilter? filter,
+    required void Function(PostgresChangePayload payload) onChange,
+  }) {
+    final channelName =
+        'postgres_changes:$schema:$table:${filter != null ? '${filter.column}=${filter.value}' : 'all'}';
+    final chan = client
+        .channel(channelName)
+        .onPostgresChanges(
+          event: event,
+          schema: schema,
+          table: table,
+          filter: filter,
+          callback: onChange,
+        );
     chan.subscribe();
     return chan;
   }

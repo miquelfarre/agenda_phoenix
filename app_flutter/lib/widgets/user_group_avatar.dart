@@ -15,7 +15,10 @@ class UserGroupAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppStyles.colorWithOpacity(color, 0.10),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppStyles.colorWithOpacity(color, 0.30), width: 1.2),
+        border: Border.all(
+          color: AppStyles.colorWithOpacity(color, 0.30),
+          width: 1.2,
+        ),
       ),
       child: PlatformWidgets.platformIcon(icon, color: color, size: 28),
     );

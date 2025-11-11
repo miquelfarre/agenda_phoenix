@@ -2,35 +2,42 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/event.dart';
-import '../models/recurrence_pattern.dart';
-import '../models/calendar.dart';
+import '../models/domain/event.dart';
+import '../models/domain/calendar.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import '../core/state/app_state.dart';
 import '../widgets/custom_datetime_widget.dart';
 import '../widgets/calendar_horizontal_selector.dart';
 import '../widgets/timezone_horizontal_selector.dart';
-import '../widgets/recurrence_time_selector.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
-import '../models/country.dart';
+import '../models/ui/country.dart';
 import '../services/country_service.dart';
 import '../services/timezone_service.dart';
 import '../services/config_service.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'base/base_form_screen.dart';
 import '../core/providers/settings_provider.dart';
+import '../widgets/create_tabs_selector.dart';
+import 'create_edit_recurring_event_screen.dart';
+import 'create_edit_calendar_screen.dart';
+import 'create_edit_birthday_event_screen.dart';
 
 class CreateEditEventScreen extends BaseFormScreen {
   final Event? eventToEdit;
-  final bool isRecurring;
 
-  const CreateEditEventScreen({super.key, this.eventToEdit, this.isRecurring = false});
+  const CreateEditEventScreen({
+    super.key,
+    this.eventToEdit,
+  });
 
   @override
   CreateEditEventScreenState createState() => CreateEditEventScreenState();
 }
 
-class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScreen> {
+class CreateEditEventScreenState
+    extends BaseFormScreenState<CreateEditEventScreen> {
+
+  bool get _isEditMode => widget.eventToEdit != null;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -44,15 +51,21 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
 
   bool _useCustomCalendar = false;
 
-  DateTime get _selectedDate => getFieldValue<DateTime>('startDate') ?? _normalizeToFiveMinutes(DateTime.now());
-  bool get _isRecurringEvent => getFieldValue<bool>('isRecurring') ?? false;
-  List<RecurrencePattern> get _patterns => getFieldValue<List<RecurrencePattern>>('patterns') ?? [];
-  bool get _isBirthday => getFieldValue<bool>('isBirthday') ?? false;
-  String? get _selectedCalendarId => getFieldValue<String?>('calendarId');
+  DateTime get _selectedDate =>
+      getFieldValue<DateTime>('startDate') ??
+      _normalizeToFiveMinutes(DateTime.now());
+
+  int? get _selectedCalendarId => getFieldValue<int?>('calendarId');
 
   static DateTime _normalizeToFiveMinutes(DateTime dateTime) {
     final normalizedMinute = (dateTime.minute / 5).round() * 5;
-    return DateTime(dateTime.year, dateTime.month, dateTime.day, dateTime.hour, normalizedMinute);
+    return DateTime(
+      dateTime.year,
+      dateTime.month,
+      dateTime.day,
+      dateTime.hour,
+      normalizedMinute,
+    );
   }
 
   @override
@@ -69,27 +82,27 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
         _defaultCity = settings.defaultCity;
         _customCity = settings.defaultCity;
 
-        _selectedCountry = CountryService.getCountryByCode(settings.defaultCountryCode);
+        _selectedCountry = CountryService.getCountryByCode(
+          settings.defaultCountryCode,
+        );
       });
     });
   }
 
   @override
   void initializeFormData() {
-    if (widget.eventToEdit != null) {
+    if (_isEditMode) {
       final event = widget.eventToEdit!;
       _titleController.text = event.title;
       _descriptionController.text = event.description ?? '';
       setFieldValue('startDate', _normalizeToFiveMinutes(event.startDate));
-      setFieldValue('isRecurring', event.isRecurringEvent);
-      setFieldValue('patterns', event.recurrencePatterns.toList());
-      setFieldValue('isBirthday', event.isBirthday);
       setFieldValue('calendarId', event.calendarId);
+
+      if (event.calendarId != null) {
+        _useCustomCalendar = true;
+      }
     } else {
       setFieldValue('startDate', _normalizeToFiveMinutes(DateTime.now()));
-      setFieldValue('isRecurring', widget.isRecurring);
-      setFieldValue('patterns', <RecurrencePattern>[]);
-      setFieldValue('isBirthday', false);
       setFieldValue('calendarId', null);
     }
   }
@@ -102,10 +115,14 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
   }
 
   @override
-  String get screenTitle => widget.eventToEdit == null ? context.l10n.createEvent : context.l10n.editEvent;
+  String get screenTitle => _isEditMode
+      ? context.l10n.editEvent
+      : context.l10n.createEvent;
 
   @override
-  String get submitButtonText => widget.eventToEdit == null ? context.l10n.createEvent : context.l10n.save;
+  String get submitButtonText => _isEditMode
+      ? context.l10n.save
+      : context.l10n.createEvent;
 
   @override
   bool get showSaveInNavBar => false;
@@ -117,13 +134,6 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
     if (_titleController.text.trim().isEmpty) {
       setFieldError('title', l10n.fieldRequired(l10n.eventTitle));
       return false;
-    }
-
-    if (_isRecurringEvent) {
-      if (_patterns.isEmpty) {
-        setFieldError('patterns', l10n.addAtLeastOnePattern);
-        return false;
-      }
     }
 
     return true;
@@ -138,27 +148,23 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
         'description': _descriptionController.text.trim(),
         'start_date': _selectedDate.toIso8601String(),
         'owner_id': ConfigService.instance.currentUserId,
-        'is_recurring': _isRecurringEvent,
-        'event_type': _isRecurringEvent ? 'parent' : 'standalone',
+        'is_recurring': false,
+        'event_type': 'standalone',
         'location': 'Madrid',
         'recurrence_pattern': null,
-        'is_birthday': _isBirthday,
+        'is_birthday': false,
         'calendar_id': _selectedCalendarId,
         'timezone': _selectedTimezone,
         'city': _useCustomTimezone ? _customCity : _defaultCity,
         'country_code': _selectedCountry?.code ?? 'ES',
       };
 
-      if (_isRecurringEvent) {
-        eventData['patterns'] = _patterns.map((p) => p.toJson()).toList();
-      }
-
-      if (widget.eventToEdit != null) {
-        await ref.read(eventServiceProvider).updateEvent(widget.eventToEdit!.id!, eventData);
-        // Realtime handles refresh automatically via EventRepository
+      if (_isEditMode) {
+        await ref
+            .read(eventServiceProvider)
+            .updateEvent(widget.eventToEdit!.id!, eventData);
       } else {
         await ref.read(eventServiceProvider).createEvent(eventData);
-        // Realtime handles refresh automatically via EventRepository
       }
 
       return true;
@@ -174,189 +180,153 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
   @override
   void onFormSubmitSuccess() {
     final l10n = context.l10n;
-    PlatformDialogHelpers.showSnackBar(message: widget.eventToEdit != null ? l10n.eventUpdated : l10n.eventCreated);
+    final eventName = _titleController.text.trim();
+    PlatformDialogHelpers.showSnackBar(
+      context: context,
+      message: _isEditMode
+          ? '${l10n.eventUpdated.replaceAll(' exitosamente', '')}: "$eventName"'
+          : '${l10n.eventCreated.replaceAll(' exitosamente', '')}: "$eventName"',
+    );
 
     if (mounted) {
       Navigator.of(context).pop();
-    } else {}
+    }
+  }
+
+  void _onOptionSelected(CreateOptionType option) {
+    Navigator.of(context).pushReplacement(
+      CupertinoPageRoute(
+        builder: (context) {
+          switch (option) {
+            case CreateOptionType.recurring:
+              return const CreateEditRecurringEventScreen();
+            case CreateOptionType.birthday:
+              return const CreateEditBirthdayEventScreen();
+            case CreateOptionType.calendar:
+              return const CreateEditCalendarScreen();
+          }
+        },
+      ),
+    );
   }
 
   @override
   List<Widget> buildFormFields() {
     final l10n = context.l10n;
     return [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CupertinoButton(
-            padding: const EdgeInsets.all(8),
-            onPressed: () {
-              setState(() {
-                if (_isRecurringEvent) {
-                  setFieldValue('isRecurring', false);
-                  setFieldValue('patterns', <RecurrencePattern>[]);
-                }
-                if (_isBirthday) {
-                  setFieldValue('isBirthday', false);
-                  setFieldValue('calendarId', null);
-                }
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: (!_isRecurringEvent && !_isBirthday) ? CupertinoColors.activeBlue : CupertinoColors.systemGrey6,
-                borderRadius: BorderRadius.circular(12),
-                border: (_isRecurringEvent || _isBirthday) ? Border.all(color: CupertinoColors.systemGrey4, width: 1.5) : null,
-              ),
-              child: Icon(CupertinoIcons.calendar, size: 28, color: (!_isRecurringEvent && !_isBirthday) ? CupertinoColors.white : CupertinoColors.systemGrey2),
-            ),
+      if (!_isEditMode) ...[
+        CreateOptionsSelector(
+          onOptionSelected: _onOptionSelected,
+        ),
+        const SizedBox(height: 32),
+        Text(
+          l10n.createEvent,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
+        ),
+        const SizedBox(height: 16),
+      ],
+      buildTextField(
+        fieldName: 'title',
+        label: l10n.title,
+        placeholder: l10n.eventNamePlaceholder,
+        controller: _titleController,
+        required: true,
+      ),
 
-          const SizedBox(width: 16),
-
-          CupertinoButton(
-            padding: const EdgeInsets.all(8),
-            onPressed: () {
-              setState(() {
-                final willBeRecurring = !_isRecurringEvent;
-
-                setFieldValue('isRecurring', willBeRecurring);
-
-                if (willBeRecurring) {
-                  if (_isBirthday) {
-                    setFieldValue('isBirthday', false);
-                    setFieldValue('calendarId', null);
-                  }
-                } else {
-                  setFieldValue('patterns', <RecurrencePattern>[]);
-                }
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: _isRecurringEvent ? CupertinoColors.activeBlue : CupertinoColors.systemGrey5, borderRadius: BorderRadius.circular(12)),
-              child: Icon(CupertinoIcons.repeat, size: 28, color: _isRecurringEvent ? CupertinoColors.white : CupertinoColors.systemGrey),
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          CupertinoButton(
-            padding: const EdgeInsets.all(8),
-            onPressed: () async {
-              final willBeBirthday = !_isBirthday;
-              setState(() {
-                setFieldValue('isBirthday', willBeBirthday);
-
-                if (willBeBirthday) {
-                  if (_isRecurringEvent) {
-                    setFieldValue('isRecurring', false);
-                    setFieldValue('patterns', <RecurrencePattern>[]);
-                  }
-
-                  final dateOnly = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
-                  setFieldValue('startDate', dateOnly);
-
-                  _useCustomCalendar = true;
-
-                  final calendarsAsync = ref.read(calendarsStreamProvider);
-                  calendarsAsync.whenData((calendars) {
-                    try {
-                      final birthdayCalendar = calendars.firstWhere((cal) => cal.name == 'Cumpleaños' || cal.name == 'Birthdays');
-                      setFieldValue('calendarId', birthdayCalendar.id);
-                    } catch (e) {
-                      if (calendars.isNotEmpty) {
-                        setFieldValue('calendarId', calendars.first.id);
-                      }
-                    }
-                  });
-                } else {
-                  setFieldValue('calendarId', null);
-                  _useCustomCalendar = false;
-                }
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: _isBirthday ? CupertinoColors.activeBlue : CupertinoColors.systemGrey5, borderRadius: BorderRadius.circular(12)),
-              child: Text('🎂', style: TextStyle(fontSize: 28, color: _isBirthday ? CupertinoColors.white : CupertinoColors.systemGrey)),
-            ),
-          ),
-        ],
+      const SizedBox(height: 16),
+      buildTextField(
+        fieldName: 'description',
+        label: l10n.description,
+        placeholder: l10n.addDetailsPlaceholder,
+        controller: _descriptionController,
+        maxLines: 3,
       ),
 
       const SizedBox(height: 24),
 
-      buildTextField(fieldName: 'title', label: l10n.title, placeholder: l10n.eventNamePlaceholder, controller: _titleController, required: true),
-
-      if (!_isBirthday) ...[const SizedBox(height: 16), buildTextField(fieldName: 'description', label: l10n.description, placeholder: l10n.addDetailsPlaceholder, controller: _descriptionController, maxLines: 3)],
-
-      if (!_isBirthday) ...[
-        const SizedBox(height: 24),
-
-        Row(
-          children: [
-            CupertinoSwitch(
-              value: _useCustomTimezone,
-              onChanged: (value) {
-                setState(() {
-                  _useCustomTimezone = value;
-                  if (!value) {
-                    _loadDefaultTimezone();
-                  }
-                });
-              },
-            ),
-            const SizedBox(width: 12),
-            Text(l10n.useCustomTimezone, style: AppStyles.bodyText.copyWith(fontSize: 16)),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        if (_useCustomTimezone) ...[
-          TimezoneHorizontalSelector(
-            initialCountry: _selectedCountry,
-            initialTimezone: _selectedTimezone,
-            initialCity: _customCity,
-            onChanged: (country, timezone, city) {
+      Row(
+        children: [
+          CupertinoSwitch(
+            value: _useCustomTimezone,
+            onChanged: (value) {
               setState(() {
-                _selectedCountry = country;
-                _selectedTimezone = timezone;
-                _customCity = city;
+                _useCustomTimezone = value;
+                if (!value) {
+                  _loadDefaultTimezone();
+                }
               });
             },
           ),
-        ] else ...[
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemGrey6,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: CupertinoColors.systemGrey5, width: 1),
-            ),
-            child: Row(
-              children: [
-                const Icon(CupertinoIcons.globe, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_defaultCity, style: AppStyles.bodyText.copyWith(fontSize: 16, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      Text(_selectedTimezone, style: AppStyles.bodyText.copyWith(fontSize: 14, color: CupertinoColors.systemGrey)),
-                    ],
-                  ),
-                ),
-                Text(
-                  TimezoneService.getCurrentOffset(_selectedTimezone),
-                  style: AppStyles.bodyText.copyWith(fontSize: 14, color: CupertinoColors.systemGrey, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
+          const SizedBox(width: 12),
+          Text(
+            l10n.useCustomTimezone,
+            style: AppStyles.bodyText.copyWith(fontSize: 16),
           ),
         ],
+      ),
+      const SizedBox(height: 16),
+
+      if (_useCustomTimezone) ...[
+        TimezoneHorizontalSelector(
+          initialCountry: _selectedCountry,
+          initialTimezone: _selectedTimezone,
+          initialCity: _customCity,
+          onChanged: (country, timezone, city) {
+            setState(() {
+              _selectedCountry = country;
+              _selectedTimezone = timezone;
+              _customCity = city;
+            });
+          },
+        ),
+      ] else ...[
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: CupertinoColors.systemGrey6,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: CupertinoColors.systemGrey5, width: 1),
+          ),
+          child: Row(
+            children: [
+              const Icon(CupertinoIcons.globe, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _defaultCity,
+                      style: AppStyles.bodyText.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _selectedTimezone,
+                      style: AppStyles.bodyText.copyWith(
+                        fontSize: 14,
+                        color: CupertinoColors.systemGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                TimezoneService.getCurrentOffset(_selectedTimezone),
+                style: AppStyles.bodyText.copyWith(
+                  fontSize: 14,
+                  color: CupertinoColors.systemGrey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
 
       const SizedBox(height: 24),
@@ -371,44 +341,51 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!_isBirthday) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(CupertinoIcons.calendar, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.startDate,
+                      style: AppStyles.bodyText.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+
+                CupertinoButton(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  minimumSize: Size.zero,
+                  onPressed: () {
+                    final state = _startDateKey.currentState as dynamic;
+                    state?.scrollToToday();
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(CupertinoIcons.calendar, size: 20),
-                      const SizedBox(width: 8),
-                      Text(l10n.startDate, style: AppStyles.bodyText.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
+                      const Icon(Icons.today, size: 16),
+                      const SizedBox(width: 4),
+                      Text(l10n.today, style: const TextStyle(fontSize: 14)),
                     ],
                   ),
-
-                  CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    minimumSize: Size.zero,
-                    onPressed: () {
-                      final state = _startDateKey.currentState as dynamic;
-                      state?.scrollToToday();
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.today, size: 16),
-                        SizedBox(width: 4),
-                        Text(l10n.today, style: TextStyle(fontSize: 14)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             CustomDateTimeWidget(
               key: _startDateKey,
               initialDateTime: _selectedDate,
               timezone: _selectedTimezone,
               locale: 'es',
-              showTimePicker: !_isBirthday,
+              showTimePicker: true,
               showTodayButton: false,
               onDateTimeChanged: (selection) {
                 setState(() {
@@ -420,254 +397,27 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
         ),
       ),
 
-      if (_isRecurringEvent) ...[const SizedBox(height: 24), _buildPatternsSection()],
+      const SizedBox(height: 24),
+      _buildCalendarSection(),
 
-      if (!_isBirthday) ...[const SizedBox(height: 24), _buildCalendarSection()],
-
-      if (getFieldError('title') != null) _buildErrorText(getFieldError('title')!),
-      if (getFieldError('patterns') != null) _buildErrorText(getFieldError('patterns')!),
+      if (getFieldError('title') != null)
+        _buildErrorText(getFieldError('title')!),
     ];
-  }
-
-  Widget _buildErrorText(String error) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Text(error, style: const TextStyle(fontSize: 14, color: CupertinoColors.systemRed)),
-    );
-  }
-
-  Widget _buildPatternsSection() {
-    final l10n = context.l10n;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(l10n.recurrencePatterns, style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 16),
-          child: CupertinoButton(
-            key: const Key('add_pattern_button'),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            color: AppStyles.primaryColor,
-            borderRadius: BorderRadius.circular(12),
-            onPressed: _addPattern,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(CupertinoIcons.add, color: CupertinoColors.white, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  _patterns.isEmpty ? l10n.addFirstPattern : l10n.addAnotherPattern,
-                  style: const TextStyle(color: CupertinoColors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        if (_patterns.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemGrey6.resolveFrom(context),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: CupertinoColors.systemGrey4.resolveFrom(context), width: 1),
-            ),
-            child: Column(
-              children: [
-                Icon(CupertinoIcons.calendar_badge_plus, size: 32, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.noRecurrencePatterns,
-                  style: TextStyle(color: CupertinoColors.secondaryLabel.resolveFrom(context), fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.tapAddPatternToStart,
-                  style: TextStyle(color: CupertinoColors.tertiaryLabel.resolveFrom(context), fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          )
-        else
-          ...List.generate(_patterns.length, (index) {
-            final pattern = _patterns[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: CupertinoColors.systemBackground.resolveFrom(context),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: CupertinoColors.systemGrey4.resolveFrom(context), width: 1),
-                boxShadow: [BoxShadow(color: CupertinoColors.systemGrey.resolveFrom(context).withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: AppStyles.colorWithOpacity(AppStyles.primaryColor, 0.1), borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(CupertinoIcons.repeat, color: AppStyles.primaryColor, size: 16),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(_formatPatternDisplay(pattern), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                  ),
-                  CupertinoButton(
-                    key: Key('remove_pattern_${pattern.dayOfWeek}_${pattern.time}'),
-                    padding: EdgeInsets.zero,
-                    onPressed: () {
-                      _removePattern(index);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(color: AppStyles.colorWithOpacity(AppStyles.errorColor, 0.1), borderRadius: BorderRadius.circular(6)),
-                      child: const Icon(CupertinoIcons.delete, color: AppStyles.errorColor, size: 16),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-      ],
-    );
-  }
-
-  void _addPattern() {
-    _showPatternPicker();
-  }
-
-  void _removePattern(int index) {
-    final currentPatterns = List<RecurrencePattern>.from(_patterns);
-    currentPatterns.removeAt(index);
-    setFieldValue('patterns', currentPatterns);
-  }
-
-  void _showPatternPicker() {
-    final l10n = context.l10n;
-
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (BuildContext context) {
-        int selectedDay = 0;
-        TimeOfDay selectedTime = const TimeOfDay(hour: 18, minute: 0);
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              height: 450,
-              color: CupertinoColors.systemBackground.resolveFrom(context),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: CupertinoColors.separator.resolveFrom(context))),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CupertinoButton(
-                          key: const Key('pattern_picker_cancel_button'),
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(l10n.cancel),
-                        ),
-                        Text(l10n.addFirstPattern, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                        CupertinoButton(
-                          key: const Key('pattern_picker_add_button'),
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            final timeString = "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00";
-
-                            final newPattern = RecurrencePattern(eventId: widget.eventToEdit?.id ?? -1, dayOfWeek: selectedDay, time: timeString);
-
-                            final currentPatterns = List<RecurrencePattern>.from(_patterns);
-                            currentPatterns.add(newPattern);
-                            setFieldValue('patterns', currentPatterns);
-
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(l10n.add),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(l10n.selectDayOfWeek, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                        ),
-                        Expanded(
-                          child: CupertinoPicker(
-                            itemExtent: 40,
-                            scrollController: FixedExtentScrollController(),
-                            onSelectedItemChanged: (index) {
-                              setModalState(() {
-                                selectedDay = index;
-                              });
-                            },
-                            children: [Text(l10n.monday), Text(l10n.tuesday), Text(l10n.wednesday), Text(l10n.thursday), Text(l10n.friday), Text(l10n.saturday), Text(l10n.sunday)],
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 80,
-                          child: RecurrenceTimeSelector(
-                            initialTime: selectedTime,
-                            onSelected: (time) {
-                              setModalState(() {
-                                selectedTime = time;
-                              });
-                            },
-                            minuteInterval: 5,
-                            label: l10n.selectTime,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  String _formatPatternDisplay(RecurrencePattern pattern) {
-    final l10n = context.l10n;
-    final dayNames = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
-
-    final dayName = pattern.isValidDayOfWeek ? dayNames[pattern.dayOfWeek] : l10n.unknownError;
-    return '$dayName @ ${pattern.time}';
   }
 
   Widget _buildCalendarSection() {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
+    final l10n = context.l10n;
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildCalendarWidget(calendarsAsync)]);
-  }
-
-  Widget _buildCalendarWidget(AsyncValue<List<dynamic>> calendarsAsync) {
     if (calendarsAsync.isLoading) {
       return const CupertinoActivityIndicator();
     }
 
     if (calendarsAsync.hasError) {
-      return Text(l10n.errorLoadingCalendarsDetail(calendarsAsync.error.toString()), style: const TextStyle(color: CupertinoColors.systemRed));
+      return Text(
+        l10n.errorLoadingCalendarsDetail(calendarsAsync.error.toString()),
+        style: const TextStyle(color: CupertinoColors.systemRed),
+      );
     }
 
     if (!calendarsAsync.hasValue) {
@@ -683,28 +433,29 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!_isBirthday) ...[
-          Row(
-            children: [
-              CupertinoSwitch(
-                value: _useCustomCalendar,
-                onChanged: (value) {
-                  setState(() {
-                    _useCustomCalendar = value;
-                    if (!value) {
-                      setFieldValue('calendarId', null);
-                    }
-                  });
-                },
-              ),
-              const SizedBox(width: 12),
-              Text(l10n.associateWithCalendar, style: AppStyles.bodyText.copyWith(fontSize: 16)),
-            ],
-          ),
-          const SizedBox(height: 16),
-        ],
+        Row(
+          children: [
+            CupertinoSwitch(
+              value: _useCustomCalendar,
+              onChanged: (value) {
+                setState(() {
+                  _useCustomCalendar = value;
+                  if (!value) {
+                    setFieldValue('calendarId', null);
+                  }
+                });
+              },
+            ),
+            const SizedBox(width: 12),
+            Text(
+              l10n.associateWithCalendar,
+              style: AppStyles.bodyText.copyWith(fontSize: 16),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
 
-        if (_useCustomCalendar || _isBirthday) ...[
+        if (_useCustomCalendar) ...[
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -715,7 +466,7 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                   onSelected: (calendarId) {
                     setFieldValue('calendarId', calendarId);
                   },
-                  isDisabled: _isBirthday,
+                  isDisabled: false,
                 ),
               ),
 
@@ -728,7 +479,7 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
                     onPressed: () async {
-                      await context.push('/communities/create');
+                      await context.push('/calendars/create');
 
                       ref.invalidate(calendarsStreamProvider);
                     },
@@ -739,7 +490,11 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: CupertinoColors.systemGrey4),
                       ),
-                      child: const Icon(CupertinoIcons.add_circled, size: 24, color: CupertinoColors.activeBlue),
+                      child: const Icon(
+                        CupertinoIcons.add_circled,
+                        size: 24,
+                        color: CupertinoColors.activeBlue,
+                      ),
                     ),
                   ),
                 ),
@@ -748,6 +503,19 @@ class CreateEditEventScreenState extends BaseFormScreenState<CreateEditEventScre
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildErrorText(String error) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Text(
+        error,
+        style: const TextStyle(
+          color: CupertinoColors.systemRed,
+          fontSize: 14,
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/app_settings.dart';
+import '../../models/ui/app_settings.dart';
 import '../../repositories/settings_repository.dart';
 
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
@@ -11,7 +11,10 @@ final settingsProvider = FutureProvider<AppSettings>((ref) async {
   return await repository.loadSettings();
 });
 
-final settingsNotifierProvider = NotifierProvider<SettingsNotifier, AsyncValue<AppSettings>>(SettingsNotifier.new);
+final settingsNotifierProvider =
+    NotifierProvider<SettingsNotifier, AsyncValue<AppSettings>>(
+      SettingsNotifier.new,
+    );
 
 class SettingsNotifier extends Notifier<AsyncValue<AppSettings>> {
   late final SettingsRepository _repository;

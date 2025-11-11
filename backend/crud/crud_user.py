@@ -7,7 +7,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models import Contact, User
+from models import User
 from schemas import UserBase, UserCreate
 
 
@@ -28,7 +28,20 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         """
         return db.query(User).filter(User.auth_provider == auth_provider, User.auth_id == auth_id).first()
 
-    def get_with_contact(self, db: Session, user_id: int) -> Optional[tuple[User, Optional[Contact]]]:
+    def get_by_phone(self, db: Session, *, phone: str) -> Optional[User]:
+        """
+        Get user by phone number.
+
+        Args:
+            db: Database session
+            phone: Phone number (should be in international format)
+
+        Returns:
+            User instance or None
+        """
+        return db.query(User).filter(User.phone == phone).first()
+
+    def get_with_contact(self, db: Session, user_id: int) -> Optional[tuple[User]]:
         """
         Get user with their contact information in a single query.
 
@@ -37,13 +50,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             user_id: User ID
 
         Returns:
-            Tuple of (User, Contact) or None if user not found
+            Tuple of (User) or None if user not found
         """
-        result = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id).filter(User.id == user_id).first()
+        result = db.query(User).filter(User.id == user_id).first()
 
         return result
 
-    def get_multi_with_contacts(self, db: Session, *, skip: int = 0, limit: int = 100, user_ids: Optional[List[int]] = None) -> List[tuple[User, Optional[Contact]]]:
+    def get_multi_with_contacts(self, db: Session, *, skip: int = 0, limit: int = 100, user_ids: Optional[List[int]] = None) -> List[tuple[User]]:
         """
         Get multiple users with their contact information (batch query).
 
@@ -56,9 +69,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             user_ids: Optional list of specific user IDs to fetch
 
         Returns:
-            List of (User, Contact) tuples
+            List of (User) tuples
         """
-        query = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id)
+        query = db.query(User)
 
         if user_ids:
             query = query.filter(User.id.in_(user_ids))
@@ -67,7 +80,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
     def get_display_name(self, db: Session, user_id: int) -> str:
         """
-        Get user's display name (username or contact name or fallback).
+        Get user's display name (instagram_username or contact name or fallback).
 
         Args:
             db: Database session
@@ -82,9 +95,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         user, contact = result
 
-        # Priority: username > contact_name > fallback
-        if user.username:
-            return user.username
+        # Priority: instagram_username > contact_name > fallback
+        if user.instagram_username:
+            return user.instagram_username
         if contact and contact.name:
             return contact.name
 
@@ -104,26 +117,17 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         """
         return db.query(User).filter(User.is_public == True).offset(skip).limit(limit).all()
 
-    def get_multi_with_optional_enrichment(
-        self,
-        db: Session,
-        *,
-        public: Optional[bool] = None,
-        enriched: bool = False,
-        search: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 50,
-        order_by: str = "id",
-        order_dir: str = "asc"
-    ) -> List:
+    def get_multi_with_optional_enrichment(self, db: Session, *, public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List:
         """
-        Get users with optional public filter and optional contact enrichment.
+        Get users with optional public filter and optional enrichment.
+
+        UPDATED: Now uses new User fields (display_name, instagram_username) instead of Contact legacy.
 
         Args:
             db: Database session
-            public: Filter by public status (True=has username, False=no username, None=all)
-            enriched: Return enriched data with contact information
-            search: Case-insensitive search in username and contact name
+            public: Filter by public status (True=public users, False=private users, None=all)
+            enriched: Return enriched data (now just returns user fields, kept for compatibility)
+            search: Case-insensitive search in display_name and instagram_username
             skip: Number of records to skip
             limit: Maximum number of records
             order_by: Column name to order by
@@ -139,22 +143,20 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         # Apply search filter if provided
         if search:
             search_term = f"%{search}%"
-            # Join with Contact to search in both username and contact name
-            query = query.outerjoin(Contact, User.contact_id == Contact.id)
+            # Search in display_name, instagram_username, and legacy fields
             query = query.filter(
                 or_(
-                    User.username.ilike(search_term),
-                    Contact.name.ilike(search_term)
+                    User.display_name.ilike(search_term),
+                    User.instagram_username.ilike(search_term),
+                    # Legacy fields for backward compatibility
+                    User.instagram_username.ilike(search_term),
+                    User.name.ilike(search_term),
                 )
             )
 
         if public is not None:
-            if public:
-                # Public users have a username
-                query = query.filter(User.username.isnot(None))
-            else:
-                # Private users don't have a username
-                query = query.filter(User.username.is_(None))
+            # Use is_public field instead of checking instagram_username
+            query = query.filter(User.is_public == public)
 
         # Apply ordering and pagination
         order_col = getattr(User, order_by) if order_by and hasattr(User, order_by) else User.id
@@ -167,66 +169,46 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         users = query.all()
 
-        # If enriched, add contact information
+        # If enriched, return dicts with all user data
         if enriched:
-            # Use JOIN to get contact data efficiently
-            results = db.query(User, Contact).outerjoin(Contact, User.contact_id == Contact.id)
-
-            # Apply search filter if provided
-            if search:
-                search_term = f"%{search}%"
-                results = results.filter(
-                    or_(
-                        User.username.ilike(search_term),
-                        Contact.name.ilike(search_term)
-                    )
-                )
-
-            if public is not None:
-                if public:
-                    results = results.filter(User.username.isnot(None))
-                else:
-                    results = results.filter(User.username.is_(None))
-
-            # Apply ordering and pagination consistently on enriched path
-            order_col = getattr(User, order_by) if order_by and hasattr(User, order_by) else User.id
-            if order_dir and order_dir.lower() == "desc":
-                results = results.order_by(order_col.desc())
-            else:
-                results = results.order_by(order_col.asc())
-
-            results = results.offset(max(0, skip)).limit(max(1, min(200, limit))).all()
-
             enriched_users = []
-            for user, contact in results:
-                contact_name = contact.name if contact else None
-                contact_phone = contact.phone if contact else None
+            for user in users:
+                # Use new fields, with fallback to legacy
+                display_name = user.display_name or user.name or f"Usuario #{user.id}"
+                instagram_username = user.instagram_username
+                profile_picture_url = user.profile_picture_url
 
-                # Build display name
-                username = user.username
-                if username and contact_name:
-                    display_name = f"{username} ({contact_name})"
-                elif username:
-                    display_name = username
-                elif contact_name:
-                    display_name = contact_name
-                else:
-                    display_name = f"Usuario #{user.id}"
+                # For backward compatibility, also include legacy contact fields
+                # (will be None for new users)
+                contact_name = None
+                contact_phone = None
+                if user.contact_id:
+                    contact = db.query(Contact).filter(Contact.id == user.contact_id).first()
+                    if contact:
+                        contact_name = contact.name
+                        contact_phone = contact.phone
 
-                enriched_users.append({
-                    "id": user.id,
-                    "username": user.username,
-                    "auth_provider": user.auth_provider,
-                    "auth_id": user.auth_id,
-                    "profile_picture_url": user.profile_picture_url,
-                    "contact_id": user.contact_id,
-                    "contact_name": contact_name,
-                    "contact_phone": contact_phone,
-                    "display_name": display_name,
-                    "last_login": user.last_login,
-                    "created_at": user.created_at,
-                    "updated_at": user.updated_at,
-                })
+                enriched_users.append(
+                    {
+                        "id": user.id,
+                        # New fields
+                        "display_name": display_name,
+                        "instagram_username": instagram_username,
+                        "profile_picture_url": profile_picture_url,
+                        "phone": user.phone,
+                        # Standard fields
+                        "auth_provider": user.auth_provider,
+                        "auth_id": user.auth_id,
+                        "is_public": user.is_public,
+                        "is_admin": user.is_admin,
+                        "contact_id": user.contact_id,
+                        "contact_name": contact_name,
+                        "contact_phone": contact_phone,
+                        "last_login": user.last_login,
+                        "created_at": user.created_at,
+                        "updated_at": user.updated_at,
+                    }
+                )
             return enriched_users
 
         return users
@@ -242,7 +224,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         Returns:
             Dictionary with statistics or None if user doesn't exist or isn't public:
             - user_id: User ID
-            - username: Username
+            - instagram_username: Instagram username
             - total_subscribers: Number of subscribers
             - total_events: Total number of events created
             - events_stats: List of event statistics (event_id, event_name, event_start_date, total_joined)
@@ -256,12 +238,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         # Count total subscribers (users with "subscribed" interaction to any event from this user)
         from sqlalchemy import func
-        total_subscribers = db.query(func.count(func.distinct(EventInteraction.user_id))).join(
-            Event, EventInteraction.event_id == Event.id
-        ).filter(
-            Event.owner_id == user_id,
-            EventInteraction.interaction_type == "subscribed"
-        ).scalar()
+
+        total_subscribers = db.query(func.count(func.distinct(EventInteraction.user_id))).join(Event, EventInteraction.event_id == Event.id).filter(Event.owner_id == user_id, EventInteraction.interaction_type == "subscribed").scalar()
 
         # Get all events created by this user
         events = db.query(Event).filter(Event.owner_id == user_id).all()
@@ -270,25 +248,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         # Get stats for each event (number of "joined" users)
         events_stats = []
         for event in events:
-            total_joined = db.query(EventInteraction).filter(
-                EventInteraction.event_id == event.id,
-                EventInteraction.interaction_type == "joined"
-            ).count()
+            total_joined = db.query(EventInteraction).filter(EventInteraction.event_id == event.id, EventInteraction.interaction_type == "joined").count()
 
-            events_stats.append({
-                "event_id": event.id,
-                "event_name": event.name,
-                "event_start_date": event.start_date,
-                "total_joined": total_joined
-            })
+            events_stats.append({"event_id": event.id, "event_name": event.name, "event_start_date": event.start_date, "total_joined": total_joined})
 
-        return {
-            "user_id": user_id,
-            "username": db_user.username,
-            "total_subscribers": total_subscribers,
-            "total_events": total_events,
-            "events_stats": events_stats
-        }
+        return {"user_id": user_id, "instagram_username": db_user.instagram_username, "total_subscribers": total_subscribers, "total_events": total_events, "events_stats": events_stats}
 
 
 # Singleton instance

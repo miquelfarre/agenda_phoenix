@@ -879,6 +879,34 @@
   "groupInvitations": "Invitaciones de Grupos",
   "groupMembers": "Miembros del Grupo",
   "groupName": "Nombre del Grupo",
+  "groupNamePlaceholder": "Ingresa el nombre del grupo",
+  "groupDescriptionPlaceholder": "Ingresa la descripción del grupo (opcional)",
+  "deleteGroupConfirmation": "¿Estás seguro de que quieres eliminar este grupo? Esta acción no se puede deshacer.",
+  "saveChanges": "Guardar Cambios",
+  "addMembers": "Añadir Miembros",
+  "manageMembers": "Administrar Miembros",
+  "searchContacts": "Buscar contactos...",
+  "selectedCount": "{count} seleccionado(s)",
+  "@selectedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clearSelection": "Limpiar",
+  "membersAdded": "{count} miembro(s) añadido(s)",
+  "@membersAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "addSelectedMembers": "Añadir {count} Miembro(s)",
+  "@addSelectedMembers": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noContactsToAdd": "No hay contactos disponibles para añadir",
+  "noContactsFoundWithSearch": "No se encontraron contactos con tu búsqueda",
   "groupUpdated": "Grupo actualizado exitosamente",
   "groupsWillAppearHere": "Tus grupos aparecerán aquí.",
   "hourLabel": "Hora",
@@ -943,6 +971,24 @@
   "july": "Julio",
   "june": "Junio",
   "leaveGroup": "Salir del Grupo",
+  "confirmLeaveGroup": "¿Estás seguro de que quieres salir de {groupName}?",
+  "@confirmLeaveGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "leftGroup": "Saliste de {groupName}",
+  "@leftGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "groupNotFound": "Grupo no encontrado",
+  "noMembers": "No hay miembros en este grupo",
+  "creator": "Creador",
+  "remove": "Eliminar",
+  "confirm": "Confirmar",
+  "leave": "Salir",
   "loginWithPhone": "Iniciar sesión con teléfono",
   "makeAdmin": "Hacer Administrador",
   "march": "Marzo",
@@ -1401,8 +1447,8 @@
   "noCurrentUserToUpdate": "No hay usuario actual para actualizar",
   "failedToUpdateProfile": "Error al actualizar perfil",
   "failedToUpdateFCMToken": "Error al actualizar token FCM",
-  "firebaseUserHasNoPhoneNumber": "El usuario de Firebase no tiene número de teléfono",
-  
+  "authUserHasNoPhoneNumber": "El usuario autenticado no tiene número de teléfono",
+
   "@_PUBLIC_USER_EVENTS_SCREEN": {
     "description": "Texto específico para la pantalla de eventos de usuario público"
   },
@@ -1462,9 +1508,33 @@
   "@publicCalendars": {
     "description": "Calendarios disponibles públicamente"
   },
+  "createNew": "Crear Nuevo",
+  "@createNew": {
+    "description": "Título del menú de creación"
+  },
   "createCalendar": "Crear Calendario",
   "@createCalendar": {
     "description": "Botón para crear un nuevo calendario"
+  },
+  "createBirthday": "Crear Cumpleaños",
+  "@createBirthday": {
+    "description": "Botón para crear un cumpleaños"
+  },
+  "personName": "Nombre de la persona",
+  "@personName": {
+    "description": "Placeholder para el nombre de la persona en cumpleaños"
+  },
+  "recurringEventDescription": "Crea eventos que se repiten automáticamente",
+  "@recurringEventDescription": {
+    "description": "Descripción para la opción de evento recurrente"
+  },
+  "birthdayEventDescription": "Añade cumpleaños de tus contactos",
+  "@birthdayEventDescription": {
+    "description": "Descripción para la opción de cumpleaños"
+  },
+  "calendarDescription": "Organiza eventos en calendarios personalizados",
+  "@calendarDescription": {
+    "description": "Descripción para la opción de calendario"
   },
   "editCalendar": "Editar Calendario",
   "@editCalendar": {
@@ -1788,6 +1858,138 @@
   "noItemsAvailable": "No hay elementos disponibles",
   "@noItemsAvailable": {
     "description": "Mensaje cuando no hay elementos disponibles en un selector"
+  },
+  "searchByNameOrCode": "Buscar por nombre o #código",
+  "@searchByNameOrCode": {
+    "description": "Placeholder del buscador de calendarios"
+  },
+  "enterCodePrecededByHash": "Introduce el código de 8 caracteres precedido de #",
+  "@enterCodePrecededByHash": {
+    "description": "Texto de ayuda para búsqueda por código"
+  },
+  "noCalendarsSearchByCode": "No tienes calendarios. Busca por #código para suscribirte.",
+  "@noCalendarsSearchByCode": {
+    "description": "Mensaje cuando no hay calendarios"
+  },
+  "calendarNotFoundByHash": "No se encontró ningún calendario con ese código",
+  "@calendarNotFoundByHash": {
+    "description": "Mensaje cuando no se encuentra calendario por hash"
+  },
+  "subscribe": "Suscribirse",
+  "@subscribe": {
+    "description": "Botón para suscribirse"
+  },
+  "unsubscribe": "Desuscribirse",
+  "@unsubscribe": {
+    "description": "Botón para desuscribirse"
+  },
+  "leaveCalendar": "Abandonar calendario",
+  "@leaveCalendar": {
+    "description": "Acción para abandonar un calendario"
+  },
+  "confirmLeaveCalendar": "¿Estás seguro de que quieres abandonar este calendario?",
+  "@confirmLeaveCalendar": {
+    "description": "Confirmación para abandonar calendario"
+  },
+  "calendarLeft": "Has abandonado el calendario",
+  "@calendarLeft": {
+    "description": "Mensaje de confirmación al abandonar calendario"
+  },
+  "errorLeavingCalendar": "Error al abandonar el calendario",
+  "@errorLeavingCalendar": {
+    "description": "Error al abandonar calendario"
+  },
+  "privateCalendar": "Calendario privado",
+  "@privateCalendar": {
+    "description": "Etiqueta para calendario privado"
+  },
+  "publicCalendar": "Calendario público",
+  "@publicCalendar": {
+    "description": "Etiqueta para calendario público"
+  },
+  "owner": "Propietario",
+  "@owner": {
+    "description": "Rol de propietario"
+  },
+  "admin": "Administrador",
+  "@admin": {
+    "description": "Rol de administrador"
+  },
+  "member": "Miembro",
+  "@member": {
+    "description": "Rol de miembro"
+  },
+  "subscriber": "Suscriptor",
+  "@subscriber": {
+    "description": "Rol de suscriptor"
+  },
+  "calendarInformation": "Información del calendario",
+  "@calendarInformation": {
+    "description": "Encabezado para la sección de información del calendario"
+  },
+  "visibility": "Visibilidad",
+  "@visibility": {
+    "description": "Encabezado para la sección de configuración de visibilidad"
+  },
+  "discoverableCalendar": "Calendario descubrible",
+  "@discoverableCalendar": {
+    "description": "Etiqueta para el interruptor de calendario descubrible"
+  },
+  "appearsInSearch": "Aparece en búsquedas públicas",
+  "@appearsInSearch": {
+    "description": "Subtítulo cuando el calendario es descubrible"
+  },
+  "onlyViaShareLink": "Solo accesible mediante enlace compartido",
+  "@onlyViaShareLink": {
+    "description": "Subtítulo cuando el calendario no es descubrible"
+  },
+  "chooseWhatHappensToEvents": "Elige qué sucede con los eventos del calendario",
+  "@chooseWhatHappensToEvents": {
+    "description": "Descripción para la sección de eliminar calendario"
+  },
+  "deleteApiKey": "Eliminar API Key",
+  "@deleteApiKey": {
+    "description": "Título del diálogo para eliminar API key"
+  },
+  "voiceAssistant": "Asistente de Voz",
+  "@voiceAssistant": {
+    "description": "Título del asistente de voz"
+  },
+  "voiceAiCommands": "Comandos de Voz IA",
+  "@voiceAiCommands": {
+    "description": "Título de la sección de comandos de voz"
+  },
+  "leaveCalendar": "Abandonar calendario",
+  "@leaveCalendar": {
+    "description": "Acción para abandonar un calendario"
+  },
+  "leave": "Abandonar",
+  "@leave": {
+    "description": "Botón para abandonar"
+  },
+  "completeInformation": "Completar información",
+  "@completeInformation": {
+    "description": "Título para completar información"
+  },
+  "stop": "Detener",
+  "@stop": {
+    "description": "Botón para detener"
+  },
+  "cancelAndEditManually": "Cancelar y editar manualmente",
+  "@cancelAndEditManually": {
+    "description": "Botón para cancelar y editar manualmente"
+  },
+  "noAdditionalParameters": "Sin parámetros adicionales",
+  "@noAdditionalParameters": {
+    "description": "Texto cuando no hay parámetros adicionales"
+  },
+  "configureGeminiDescription": "Configura Google Gemini para usar comandos de voz y crear eventos hablando",
+  "@configureGeminiDescription": {
+    "description": "Descripción de la sección de configuración de Google Gemini en ajustes"
+  },
+  "configureAi": "Configurar IA",
+  "@configureAi": {
+    "description": "Botón para configurar la inteligencia artificial"
   }
 }
 

@@ -382,8 +382,36 @@
   "editGroup": "Edit Group",
   "deleteGroup": "Delete Group",
   "groupName": "Group Name",
+  "groupNamePlaceholder": "Enter group name",
   "groupDescription": "Group Description",
+  "groupDescriptionPlaceholder": "Enter group description (optional)",
+  "deleteGroupConfirmation": "Are you sure you want to delete this group? This action cannot be undone.",
+  "saveChanges": "Save Changes",
   "inviteToGroup": "Invite to Group",
+  "addMembers": "Add Members",
+  "manageMembers": "Manage Members",
+  "searchContacts": "Search contacts...",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "clearSelection": "Clear",
+  "membersAdded": "{count} member(s) added",
+  "@membersAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "addSelectedMembers": "Add {count} Member(s)",
+  "@addSelectedMembers": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noContactsToAdd": "No contacts available to add",
+  "noContactsFoundWithSearch": "No contacts match your search",
   "groupCreated": "Group created successfully",
   "groupUpdated": "Group updated successfully",
   "groupDeleted": "Group deleted successfully",
@@ -434,6 +462,24 @@
   },
   "joinGroup": "Join Group",
   "leaveGroup": "Leave Group",
+  "confirmLeaveGroup": "Are you sure you want to leave {groupName}?",
+  "@confirmLeaveGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "leftGroup": "You left {groupName}",
+  "@leftGroup": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "groupNotFound": "Group not found",
+  "noMembers": "No members in this group",
+  "creator": "Creator",
+  "remove": "Remove",
+  "confirm": "Confirm",
+  "leave": "Leave",
   "groupInvitations": "Group Invitations",
   
   "@_USERS": {
@@ -1649,9 +1695,33 @@
   "@publicCalendars": {
     "description": "Publicly available calendars"
   },
+  "createNew": "Create New",
+  "@createNew": {
+    "description": "Title of creation menu"
+  },
   "createCalendar": "Create Calendar",
   "@createCalendar": {
     "description": "Button to create a new calendar"
+  },
+  "createBirthday": "Create Birthday",
+  "@createBirthday": {
+    "description": "Button to create a birthday"
+  },
+  "personName": "Person's name",
+  "@personName": {
+    "description": "Placeholder for person's name in birthday"
+  },
+  "recurringEventDescription": "Create events that repeat automatically",
+  "@recurringEventDescription": {
+    "description": "Description for recurring event option"
+  },
+  "birthdayEventDescription": "Add birthdays of your contacts",
+  "@birthdayEventDescription": {
+    "description": "Description for birthday option"
+  },
+  "calendarDescription": "Organize events in custom calendars",
+  "@calendarDescription": {
+    "description": "Description for calendar option"
   },
   "editCalendar": "Edit Calendar",
   "@editCalendar": {
@@ -2038,5 +2108,137 @@
   "noItemsAvailable": "No items available",
   "@noItemsAvailable": {
     "description": "Message when no items are available in a selector"
+  },
+  "searchByNameOrCode": "Search by name or #code",
+  "@searchByNameOrCode": {
+    "description": "Calendar search placeholder"
+  },
+  "enterCodePrecededByHash": "Enter the 8-character code preceded by #",
+  "@enterCodePrecededByHash": {
+    "description": "Help text for code search"
+  },
+  "noCalendarsSearchByCode": "You have no calendars. Search by #code to subscribe.",
+  "@noCalendarsSearchByCode": {
+    "description": "Message when no calendars exist"
+  },
+  "calendarNotFoundByHash": "No calendar found with that code",
+  "@calendarNotFoundByHash": {
+    "description": "Message when calendar not found by hash"
+  },
+  "subscribe": "Subscribe",
+  "@subscribe": {
+    "description": "Subscribe button"
+  },
+  "unsubscribe": "Unsubscribe",
+  "@unsubscribe": {
+    "description": "Unsubscribe button"
+  },
+  "leaveCalendar": "Leave calendar",
+  "@leaveCalendar": {
+    "description": "Action to leave a calendar"
+  },
+  "confirmLeaveCalendar": "Are you sure you want to leave this calendar?",
+  "@confirmLeaveCalendar": {
+    "description": "Confirmation to leave calendar"
+  },
+  "calendarLeft": "You have left the calendar",
+  "@calendarLeft": {
+    "description": "Confirmation message when leaving calendar"
+  },
+  "errorLeavingCalendar": "Error leaving calendar",
+  "@errorLeavingCalendar": {
+    "description": "Error when leaving calendar"
+  },
+  "privateCalendar": "Private calendar",
+  "@privateCalendar": {
+    "description": "Label for private calendar"
+  },
+  "publicCalendar": "Public calendar",
+  "@publicCalendar": {
+    "description": "Label for public calendar"
+  },
+  "owner": "Owner",
+  "@owner": {
+    "description": "Owner role"
+  },
+  "admin": "Admin",
+  "@admin": {
+    "description": "Admin role"
+  },
+  "member": "Member",
+  "@member": {
+    "description": "Member role"
+  },
+  "subscriber": "Subscriber",
+  "@subscriber": {
+    "description": "Subscriber role"
+  },
+  "calendarInformation": "Calendar Information",
+  "@calendarInformation": {
+    "description": "Header for calendar information section"
+  },
+  "visibility": "Visibility",
+  "@visibility": {
+    "description": "Header for visibility settings section"
+  },
+  "discoverableCalendar": "Discoverable Calendar",
+  "@discoverableCalendar": {
+    "description": "Label for discoverable calendar switch"
+  },
+  "appearsInSearch": "Appears in public search",
+  "@appearsInSearch": {
+    "description": "Subtitle when calendar is discoverable"
+  },
+  "onlyViaShareLink": "Only accessible via share link",
+  "@onlyViaShareLink": {
+    "description": "Subtitle when calendar is not discoverable"
+  },
+  "chooseWhatHappensToEvents": "Choose what happens to calendar events",
+  "@chooseWhatHappensToEvents": {
+    "description": "Description for delete calendar section"
+  },
+  "deleteApiKey": "Delete API Key",
+  "@deleteApiKey": {
+    "description": "Title of dialog to delete API key"
+  },
+  "voiceAssistant": "Voice Assistant",
+  "@voiceAssistant": {
+    "description": "Voice assistant title"
+  },
+  "voiceAiCommands": "Voice AI Commands",
+  "@voiceAiCommands": {
+    "description": "Voice commands section title"
+  },
+  "leaveCalendar": "Leave calendar",
+  "@leaveCalendar": {
+    "description": "Action to leave a calendar"
+  },
+  "leave": "Leave",
+  "@leave": {
+    "description": "Leave button"
+  },
+  "completeInformation": "Complete information",
+  "@completeInformation": {
+    "description": "Title to complete information"
+  },
+  "stop": "Stop",
+  "@stop": {
+    "description": "Stop button"
+  },
+  "cancelAndEditManually": "Cancel and edit manually",
+  "@cancelAndEditManually": {
+    "description": "Button to cancel and edit manually"
+  },
+  "noAdditionalParameters": "No additional parameters",
+  "@noAdditionalParameters": {
+    "description": "Text when there are no additional parameters"
+  },
+  "configureGeminiDescription": "Configure Google Gemini to use voice commands and create events by speaking",
+  "@configureGeminiDescription": {
+    "description": "Description of the Google Gemini configuration section in settings"
+  },
+  "configureAi": "Configure AI",
+  "@configureAi": {
+    "description": "Button to configure artificial intelligence"
   }
 }

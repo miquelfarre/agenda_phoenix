@@ -40,12 +40,18 @@ abstract class BaseService with ErrorHandlingMixin {
 
   dynamic getDefaultApiService();
 
-  Future<T> executeWhenInitialized<T>(String operationName, Future<T> Function() operation) async {
+  Future<T> executeWhenInitialized<T>(
+    String operationName,
+    Future<T> Function() operation,
+  ) async {
     requireInitialized();
     return await withErrorHandling(operationName, operation);
   }
 
-  T executeSyncWhenInitialized<T>(String operationName, T Function() operation) {
+  T executeSyncWhenInitialized<T>(
+    String operationName,
+    T Function() operation,
+  ) {
     requireInitialized();
     return withErrorHandlingSync(operationName, operation);
   }
