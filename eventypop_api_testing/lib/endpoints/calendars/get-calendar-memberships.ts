@@ -4,7 +4,7 @@ export const getCalendarMemberships: Endpoint = {
   id: 'get-calendar-memberships',
   name: 'Get Calendar Memberships',
   method: 'GET',
-  path: '/api/v1/calendar-memberships',
+  path: '/api/v1/calendar_memberships',
   category: 'calendars',
   userType: 'both',
   description: 'Get all calendar memberships',

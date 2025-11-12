@@ -4,7 +4,7 @@ export const deleteCalendarMembership: Endpoint = {
   id: 'delete-calendar-membership',
   name: 'Delete Calendar Membership',
   method: 'DELETE',
-  path: '/api/v1/calendar-memberships/:membership_id',
+  path: '/api/v1/calendar_memberships/:membership_id',
   category: 'calendars',
   userType: 'both',
   description: 'Remove a calendar membership',

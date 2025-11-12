@@ -367,7 +367,6 @@ class Event(Base):
     parent_recurring_event = relationship("RecurringEventConfig", foreign_keys=[parent_recurring_event_id])
     interactions = relationship("EventInteraction", back_populates="event", cascade="all, delete-orphan")
     recurring_config = relationship("RecurringEventConfig", foreign_keys="RecurringEventConfig.event_id", back_populates="event", uselist=False, cascade="all, delete-orphan")
-    bans = relationship("EventBan", back_populates="event", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Event(id={self.id}, name='{self.name}', owner_id={self.owner_id})>"
@@ -519,42 +518,7 @@ class RecurringEventConfig(Base):
         }
 
 
-class EventBan(Base):
-    """
-    EventBan model - Track users banned from specific events.
-    """
-
-    __tablename__ = "event_bans"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    event_id = Column(Integer, ForeignKey("events.id"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    banned_by = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    reason = Column(Text, nullable=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
-    # Unique constraint: one ban per user per event
-    __table_args__ = (UniqueConstraint("event_id", "user_id", name="uq_event_user_ban"),)
-
-    # Relationships
-    event = relationship("Event", back_populates="bans")
-    banned_user = relationship("User", foreign_keys=[user_id])
-    banner = relationship("User", foreign_keys=[banned_by])
-
-    def __repr__(self):
-        return f"<EventBan(id={self.id}, event_id={self.event_id}, user_id={self.user_id})>"
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "event_id": self.event_id,
-            "user_id": self.user_id,
-            "banned_by": self.banned_by,
-            "reason": self.reason,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
+    
 
 
 class UserBlock(Base):

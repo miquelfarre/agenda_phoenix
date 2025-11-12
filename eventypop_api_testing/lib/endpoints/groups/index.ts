@@ -5,9 +5,6 @@ import { getGroups } from './get-groups';
 import { createGroup } from './create-group';
 import { updateGroup } from './update-group';
 import { deleteGroup } from './delete-group';
-import { addGroupMember } from './add-group-member';
-import { removeGroupMember } from './remove-group-member';
-import { leaveGroup } from './leave-group';
 import { getGroupMemberships } from './get-group-memberships';
 import { createGroupMembership } from './create-group-membership';
 import { updateGroupMembership } from './update-group-membership';
@@ -19,9 +16,6 @@ export const GROUP_ENDPOINTS: Endpoint[] = [
   createGroup,
   updateGroup,
   deleteGroup,
-  addGroupMember,
-  removeGroupMember,
-  leaveGroup,
   getGroupMemberships,
   createGroupMembership,
   updateGroupMembership,

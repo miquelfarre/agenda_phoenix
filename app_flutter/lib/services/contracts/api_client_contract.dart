@@ -36,6 +36,11 @@ abstract class IApiClient {
   // ============================================================================
   Future<Map<String, dynamic>> subscribeToUser(int targetUserId);
 
+  Future<Map<String, dynamic>> unsubscribeFromUser(
+    int userId,
+    int targetUserId,
+  );
+
   Future<List<Map<String, dynamic>>> fetchUserSubscriptions(
     int userId, {
     int? currentUserId,
@@ -87,19 +92,6 @@ abstract class IApiClient {
   // ============================================================================
   // Event Interactions
   // ============================================================================
-  Future<List<Map<String, dynamic>>> fetchEventInteractions(
-    int eventId, {
-    int? currentUserId,
-  });
-
-  Future<List<Map<String, dynamic>>> fetchEventInteractionsEnriched(
-    int eventId, {
-    int? currentUserId,
-  });
-
-  Future<List<Map<String, dynamic>>> fetchUserInteractions({
-    int? currentUserId,
-  });
 
   Future<List<Map<String, dynamic>>> fetchInteractions({
     int? eventId,
@@ -126,10 +118,7 @@ abstract class IApiClient {
   // ============================================================================
   // Recurring Event Configurations
   // ============================================================================
-  Future<List<Map<String, dynamic>>> fetchRecurringConfigs({
-    int? eventId,
-    int? currentUserId,
-  });
+  // (removed unused methods)
 
   // ============================================================================
   // Calendars
@@ -152,17 +141,16 @@ abstract class IApiClient {
 
   Future<void> deleteCalendar(int calendarId, {int? currentUserId});
 
+  // Public calendar sharing helpers
+  Future<Map<String, dynamic>?> searchCalendarByHash(String shareHash);
+  Future<Map<String, dynamic>> subscribeByShareHash(String shareHash);
+  Future<void> unsubscribeByShareHash(String shareHash);
+
   // ============================================================================
   // Calendar Memberships
   // ============================================================================
   Future<List<Map<String, dynamic>>> fetchCalendarMemberships(
     int calendarId, {
-    int? currentUserId,
-  });
-
-  Future<List<Map<String, dynamic>>> fetchAllCalendarMemberships({
-    int? calendarId,
-    int? userId,
     int? currentUserId,
   });
 
@@ -224,11 +212,4 @@ abstract class IApiClient {
 
   Future<void> deleteUserBlock(int blockId, {required int currentUserId});
 
-  // ============================================================================
-  // Event Bans
-  // ============================================================================
-  Future<List<Map<String, dynamic>>> fetchEventBans({
-    int? eventId,
-    int? userId,
-  });
 }

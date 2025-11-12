@@ -27,13 +27,7 @@ async def get_user_blocks(blocker_user_id: Optional[int] = None, blocked_user_id
     return user_block.get_multi_filtered(db, blocker_user_id=blocker_user_id, blocked_user_id=blocked_user_id, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
 
-@router.get("/{block_id}", response_model=UserBlockResponse)
-async def get_user_block(block_id: int, db: Session = Depends(get_db)):
-    """Get a single user block by ID"""
-    block = user_block.get(db, id=block_id)
-    if not block:
-        raise HTTPException(status_code=404, detail="User block not found")
-    return block
+# Removed unused GET /user_blocks/{block_id}
 
 
 @router.post("", response_model=UserBlockResponse, status_code=201)

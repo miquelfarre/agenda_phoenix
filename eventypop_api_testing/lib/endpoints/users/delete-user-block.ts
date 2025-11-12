@@ -4,7 +4,7 @@ export const deleteUserBlock: Endpoint = {
   id: 'delete-user-block',
   name: 'Unblock User',
   method: 'DELETE',
-  path: '/api/v1/user-blocks/:block_id',
+  path: '/api/v1/user_blocks/:block_id',
   category: 'users',
   userType: 'both',
   description: 'Unblock a user',

@@ -4,9 +4,9 @@ This script will:
 1. Drop all tables
 2. Create all tables from SQLAlchemy models
 3. Insert sample data with 100 users and complex scenarios
-4. Create test users in Supabase Auth
+4. Create test users in Supabase Auth (skipped by default here)
 
-Pure SQLAlchemy - NO RAW SQL!
+Pure SQLAlchemy for core schema. Realtime/auth setup is optional and stubbed.
 """
 
 import logging
@@ -16,18 +16,137 @@ from pathlib import Path
 # Add backend directory to path
 sys.path.append(str(Path(__file__).parent))
 
-from init_db import (
-    drop_all_tables,
-    create_all_tables,
-    create_calendar_subscription_triggers,
-    grant_supabase_permissions,
-    create_database_views,
-    setup_realtime,
-    setup_realtime_tenant,
-    create_supabase_auth_users
-)
-from database import SessionLocal
+from database import Base, engine, SessionLocal
 from sqlalchemy import text
+import logging
+
+# --- Minimal local implementations to avoid dependency on init_db.py ---
+
+def drop_all_tables():
+    """Drop all SQLAlchemy-managed tables (does not touch external Supabase tables)."""
+    logging.getLogger(__name__).info("🗑️  Dropping all SQLAlchemy tables...")
+    Base.metadata.drop_all(bind=engine)
+    logging.getLogger(__name__).info("✅ Tables dropped")
+
+
+def create_all_tables():
+    """Create all SQLAlchemy-managed tables."""
+    logging.getLogger(__name__).info("🏗️  Creating tables from models...")
+    Base.metadata.create_all(bind=engine)
+    logging.getLogger(__name__).info("✅ Tables created")
+
+
+def grant_supabase_permissions():
+    """No-op placeholder for permissions handled elsewhere."""
+    logging.getLogger(__name__).info("🔐 Skipping explicit Supabase permissions (handled by SQL scripts)")
+
+
+def create_database_views():
+    """Create database views used by the app (idempotent)."""
+    logger = logging.getLogger(__name__)
+    logger.info("👁️  Creating database views...")
+    try:
+        with engine.connect() as conn:
+            conn.execute(
+                text(
+                    """
+                CREATE OR REPLACE VIEW user_subscriptions_with_stats AS
+                SELECT DISTINCT
+                    ei.user_id AS subscriber_id,
+                    u.id AS subscribed_to_id,
+                    u.display_name,
+                    u.phone,
+                    u.instagram_username,
+                    u.profile_picture_url,
+                    u.auth_provider,
+                    u.auth_id,
+                    u.is_public,
+                    u.is_admin,
+                    u.last_login AS last_seen,
+                    u.created_at,
+                    u.updated_at,
+                    0 AS new_events_count,
+                    0 AS total_events_count,
+                    0 AS subscribers_count
+                FROM event_interactions ei
+                JOIN events e ON e.id = ei.event_id
+                JOIN users u ON u.id = e.owner_id
+                WHERE ei.interaction_type = 'subscribed'
+                AND u.is_public = TRUE
+            """
+                )
+            )
+            conn.commit()
+        logger.info("✅ Database views created successfully")
+    except Exception as e:
+        logger.warning(f"⚠️  Could not create database views: {e}")
+
+
+def setup_realtime():
+    """Optional: Realtime setup is skipped in this simplified initializer."""
+    logging.getLogger(__name__).info("🔄 Skipping Realtime setup in v2 initializer")
+
+
+def setup_realtime_tenant():
+    """Optional: Realtime tenant setup is skipped."""
+    logging.getLogger(__name__).info("🔧 Skipping Realtime tenant setup in v2 initializer")
+
+
+def create_calendar_subscription_triggers():
+    """Optional: Create triggers for calendar subscription counts (idempotent)."""
+    logger = logging.getLogger(__name__)
+    logger.info("⚙️  Creating calendar subscription triggers...")
+    try:
+        with engine.connect() as conn:
+            conn.execute(
+                text(
+                    """
+                CREATE OR REPLACE FUNCTION update_calendar_subscriber_count()
+                RETURNS TRIGGER AS $$
+                BEGIN
+                    IF TG_OP = 'INSERT' THEN
+                        UPDATE calendars
+                        SET subscriber_count = subscriber_count + 1
+                        WHERE id = NEW.calendar_id;
+                        RETURN NEW;
+                    ELSIF TG_OP = 'DELETE' THEN
+                        UPDATE calendars
+                        SET subscriber_count = GREATEST(subscriber_count - 1, 0)
+                        WHERE id = OLD.calendar_id;
+                        RETURN OLD;
+                    ELSIF TG_OP = 'UPDATE' THEN
+                        IF OLD.calendar_id != NEW.calendar_id THEN
+                            UPDATE calendars
+                            SET subscriber_count = GREATEST(subscriber_count - 1, 0)
+                            WHERE id = OLD.calendar_id;
+                            UPDATE calendars
+                            SET subscriber_count = subscriber_count + 1
+                            WHERE id = NEW.calendar_id;
+                        END IF;
+                        RETURN NEW;
+                    END IF;
+                    RETURN NULL;
+                END;
+                $$ LANGUAGE plpgsql;
+
+                DROP TRIGGER IF EXISTS calendar_subscription_count_trigger ON calendar_subscriptions;
+                CREATE TRIGGER calendar_subscription_count_trigger
+                AFTER INSERT OR DELETE OR UPDATE ON calendar_subscriptions
+                FOR EACH ROW
+                EXECUTE FUNCTION update_calendar_subscriber_count();
+            """
+                )
+            )
+            conn.execute(text("ALTER TABLE calendar_subscriptions REPLICA IDENTITY FULL;"))
+            conn.commit()
+        logger.info("✅ Calendar subscription triggers ready")
+    except Exception as e:
+        logger.warning(f"⚠️  Could not create calendar subscription triggers: {e}")
+
+
+def create_supabase_auth_users():
+    """Optional: Skip creating Supabase Auth users here (handled elsewhere)."""
+    logging.getLogger(__name__).info("👤 Skipping Supabase Auth user creation in v2 initializer")
 from init_db_2_data import (
     users_private,
     users_public,
@@ -64,7 +183,6 @@ def reset_sequences(db):
         'groups',
         'group_memberships',
         'recurring_event_configs',
-        'event_bans',
         'user_blocks',
         'event_cancellations',
         'event_cancellation_views',
@@ -148,10 +266,10 @@ def insert_sample_data_v2():
         )
         logger.info(f"  ✓ Created {len(subscriptions_data)} subscriptions")
 
-        # 10. Create blocks and bans
-        logger.info("🚫 Creating blocks and bans...")
+        # 10. Create blocks (bans removed)
+        logger.info("🚫 Creating user blocks...")
         blocks_data = blocks_bans.create_blocks_and_bans(db, private_users_data, private_events_data)
-        logger.info(f"  ✓ Created {len(blocks_data['blocks'])} blocks and {len(blocks_data['bans'])} bans")
+        logger.info(f"  ✓ Created {len(blocks_data['blocks'])} blocks")
 
         db.commit()
 
@@ -167,7 +285,7 @@ def insert_sample_data_v2():
         - {len(calendars_data['all_calendars'])} calendars
         - {len(private_events_data['all_private_events']) + len(public_events_data['all_public_events']) + len(recurring_events_data['all_recurring_events'])} events
         - {len(invitations_data) + len(subscriptions_data)} interactions
-        - {len(blocks_data['blocks'])} blocks, {len(blocks_data['bans'])} bans
+        - {len(blocks_data['blocks'])} blocks
 
         🎯 Default user: USER_ID=1 (Sonia Martínez, +34600000001)
         """)

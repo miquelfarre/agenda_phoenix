@@ -542,7 +542,7 @@ class EventRepository implements IEventRepository {
   @override
   Future<void> updatePersonalNote(int eventId, String? note) async {
     await _apiClient.patch(
-      '/api/v1/events/$eventId/interaction',
+      '/events/$eventId/interaction',
       body: {'note': note},
     );
     // After updating, refresh the local cache

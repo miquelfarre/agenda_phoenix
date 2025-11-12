@@ -23,7 +23,7 @@ class SettingsService with SingletonMixin, ErrorHandlingMixin {
 
         final api = testApiService ?? ApiClientFactory.instance;
         await api.put(
-          '/api/v1/users/$userId',
+          '/users/$userId',
           body: {
             'default_country_code': settings.defaultCountryCode,
             'default_timezone': settings.defaultTimezone,
@@ -43,7 +43,7 @@ class SettingsService with SingletonMixin, ErrorHandlingMixin {
         final userId = ValidationUtils.requireCurrentUser();
 
         final api = testApiService ?? ApiClientFactory.instance;
-        final userData = await api.get('/api/v1/users/$userId');
+  final userData = await api.get('/users/$userId');
 
         return AppSettings(
           defaultCountryCode: userData['default_country_code'] ?? 'ES',

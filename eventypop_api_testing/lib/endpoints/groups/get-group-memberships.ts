@@ -4,7 +4,7 @@ export const getGroupMemberships: Endpoint = {
   id: 'get-group-memberships',
   name: 'Get Group Memberships',
   method: 'GET',
-  path: '/api/v1/group-memberships',
+  path: '/api/v1/group_memberships',
   category: 'groups',
   userType: 'both',
   description: 'Get all group memberships',

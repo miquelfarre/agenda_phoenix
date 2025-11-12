@@ -12,10 +12,10 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session, noload
 
 from auth import get_current_user_id, get_current_user_id_optional
-from crud import calendar_membership, event, event_cancellation, event_interaction, user
+from crud import calendar_membership, event, event_interaction, user
 from dependencies import check_event_permission, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
 from models import EventInteraction, User, UserBlock
-from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventInteractionUpdate, EventResponse, EventUpdate
+from schemas import AvailableInviteeResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventResponse, EventUpdate
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
 logger = logging.getLogger(__name__)
@@ -394,52 +394,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
     return EventResponse(**response_data)
 
 
-@router.get("/{event_id}/interactions", response_model=List[EventInteractionResponse])
-async def get_event_interactions(event_id: int, db: Session = Depends(get_db)):
-    """Get all interactions for a specific event"""
-    if not event.exists_event(db, event_id=event_id):
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    return event_interaction.get_by_event(db, event_id=event_id)
-
-
-@router.get("/{event_id}/interactions-enriched", response_model=List[EventInteractionEnrichedResponse])
-async def get_event_interactions_enriched(event_id: int, db: Session = Depends(get_db)):
-    """Get all interactions for a specific event with enriched user information"""
-    if not event.exists_event(db, event_id=event_id):
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    # Use CRUD to get enriched interactions (single JOIN query)
-    results = event_interaction.get_enriched_by_event(db, event_id=event_id)
-
-    # Build enriched responses
-    enriched = []
-    for interaction, user in results:
-        if not user:
-            continue
-
-        enriched.append(
-            {
-                "id": interaction.id,
-                "event_id": interaction.event_id,
-                "user_id": interaction.user_id,
-                "user_display_name": user.display_name,
-                "user_instagram_username": user.instagram_username,
-                "interaction_type": interaction.interaction_type,
-                "status": interaction.status,
-                "role": interaction.role,
-                "personal_note": interaction.personal_note,
-                "cancellation_note": interaction.cancellation_note,
-                "invited_by_user_id": interaction.invited_by_user_id,
-                "invited_via_group_id": interaction.invited_via_group_id,
-                "read_at": interaction.read_at,
-                "is_new": interaction.is_new,
-                "created_at": interaction.created_at,
-                "updated_at": interaction.updated_at,
-            }
-        )
-
-    return enriched
+# Removed unused event interactions list endpoints (/{event_id}/interactions and /{event_id}/interactions-enriched)
 
 
 @router.get("/{event_id}/available-invitees", response_model=List[AvailableInviteeResponse])
@@ -693,31 +648,4 @@ async def invite_user_to_event(event_id: int, invite_data: dict, current_user_id
     return db_interaction
 
 
-@router.get("/cancellations", response_model=List[EventCancellationResponse])
-async def get_event_cancellations(current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Get all event cancellations that the authenticated user hasn't viewed yet.
-
-    Requires JWT authentication - provide token in Authorization header.
-
-    Returns cancellations for events where the user had an interaction
-    and hasn't viewed the cancellation message yet.
-    """
-    return event_cancellation.get_unviewed_by_user(db, user_id=current_user_id)
-
-
-@router.post("/cancellations/{cancellation_id}/view")
-async def mark_cancellation_as_viewed(cancellation_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Mark an event cancellation as viewed by the authenticated user.
-
-    Requires JWT authentication - provide token in Authorization header.
-
-    After viewing, the cancellation will no longer appear in the user's list.
-    """
-    view_id, error = event_cancellation.mark_as_viewed(db, cancellation_id=cancellation_id, user_id=current_user_id)
-
-    if error:
-        raise HTTPException(status_code=404, detail=error)
-
-    return {"message": "Cancellation marked as viewed", "id": view_id}
+# Removed unused event cancellations endpoints (/events/cancellations and /events/cancellations/{id}/view)

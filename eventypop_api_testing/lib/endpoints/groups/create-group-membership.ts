@@ -4,7 +4,7 @@ export const createGroupMembership: Endpoint = {
   id: 'create-group-membership',
   name: 'Create Group Membership',
   method: 'POST',
-  path: '/api/v1/group-memberships',
+  path: '/api/v1/group_memberships',
   category: 'groups',
   userType: 'both',
   description: 'Create a new group membership',

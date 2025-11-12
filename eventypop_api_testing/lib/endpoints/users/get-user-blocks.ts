@@ -4,7 +4,7 @@ export const getUserBlocks: Endpoint = {
   id: 'get-user-blocks',
   name: 'Get User Blocks',
   method: 'GET',
-  path: '/api/v1/user-blocks',
+  path: '/api/v1/user_blocks',
   category: 'users',
   userType: 'both',
   description: 'Get all user blocks',

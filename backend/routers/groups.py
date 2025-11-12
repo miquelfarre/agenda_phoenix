@@ -13,7 +13,7 @@ from auth import get_current_user_id
 from crud import group
 from dependencies import check_group_permission, get_db
 from models import Group
-from schemas import GroupBase, GroupCreate, GroupMembershipCreate, GroupResponse
+from schemas import GroupBase, GroupCreate, GroupResponse
 
 router = APIRouter(prefix="/api/v1/groups", tags=["groups"])
 
@@ -84,13 +84,7 @@ async def get_groups(current_user_id: int = Depends(get_current_user_id), owner_
     return [_enrich_group_with_members(db, g) for g in groups]
 
 
-@router.get("/{group_id}", response_model=GroupResponse)
-async def get_group(group_id: int, db: Session = Depends(get_db)):
-    """Get a single group by ID"""
-    db_group = group.get(db, id=group_id)
-    if not db_group:
-        raise HTTPException(status_code=404, detail="Group not found")
-    return _enrich_group_with_members(db, db_group)
+# Removed unused GET /groups/{group_id} endpoint
 
 
 @router.post("", response_model=GroupResponse, status_code=201)
@@ -146,116 +140,10 @@ async def delete_group(group_id: int, current_user_id: int = Depends(get_current
     return {"message": "Group deleted successfully", "id": group_id}
 
 
-@router.post("/{group_id}/members", response_model=GroupResponse, status_code=201)
-async def add_group_member(group_id: int, member_data: dict, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):  # {"user_id": int, "role": "member" | "admin"}
-    """
-    Add a member to a group.
-
-    Requires JWT authentication - provide token in Authorization header.
-    Only the group owner or admins can add members.
-
-    Args:
-        member_data: {"user_id": int, "role": "member" | "admin" (optional, defaults to "member")}
-    """
-    from crud.crud_group_membership import group_membership
-    from crud.crud_user import user
-
-    # Check permissions (owner or admin)
-    check_group_permission(group_id, current_user_id, db)
-
-    # Check group exists
-    db_group = group.get(db, id=group_id)
-    if not db_group:
-        raise HTTPException(status_code=404, detail="Group not found")
-
-    # Get user_id and role from request
-    user_id = member_data.get("user_id")
-    role = member_data.get("role", "member")
-
-    if not user_id:
-        raise HTTPException(status_code=422, detail="user_id is required")
-
-    # Validate role
-    if role not in ["member", "admin"]:
-        raise HTTPException(status_code=422, detail="role must be 'member' or 'admin'")
-
-    # Check user exists
-    db_user = user.get(db, id=user_id)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Check if already a member
-    existing = group_membership.get_multi(db, filters={"group_id": group_id, "user_id": user_id})
-    if existing:
-        raise HTTPException(status_code=400, detail="User is already a member of this group")
-
-    # Create membership
-    membership_data = GroupMembershipCreate(group_id=group_id, user_id=user_id, role=role)
-    group_membership.create(db, obj_in=membership_data)
-
-    # Return updated group with members
-    return _enrich_group_with_members(db, db_group)
+# Removed unused POST /groups/{group_id}/members endpoint
 
 
-@router.delete("/{group_id}/members/{user_id}", response_model=GroupResponse)
-async def remove_group_member(group_id: int, user_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Remove a member from a group.
-
-    Requires JWT authentication - provide token in Authorization header.
-    Only the group owner or admins can remove members.
-    """
-    from crud.crud_group_membership import group_membership
-
-    # Check permissions (owner or admin)
-    check_group_permission(group_id, current_user_id, db)
-
-    # Check group exists
-    db_group = group.get(db, id=group_id)
-    if not db_group:
-        raise HTTPException(status_code=404, detail="Group not found")
-
-    # Check if user is the owner (can't remove owner)
-    if user_id == db_group.owner_id:
-        raise HTTPException(status_code=400, detail="Cannot remove group owner")
-
-    # Find and delete membership
-    memberships = group_membership.get_multi(db, filters={"group_id": group_id, "user_id": user_id})
-    if not memberships:
-        raise HTTPException(status_code=404, detail="User is not a member of this group")
-
-    # Delete the membership
-    group_membership.delete(db, id=memberships[0].id)
-
-    # Return updated group with members
-    return _enrich_group_with_members(db, db_group)
+# Removed unused DELETE /groups/{group_id}/members/{user_id} endpoint
 
 
-@router.delete("/{group_id}/leave", response_model=dict)
-async def leave_group(group_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Leave a group (remove yourself as a member).
-
-    Requires JWT authentication - provide token in Authorization header.
-    The group owner cannot leave their own group - they must delete it instead.
-    """
-    from crud.crud_group_membership import group_membership
-
-    # Check group exists
-    db_group = group.get(db, id=group_id)
-    if not db_group:
-        raise HTTPException(status_code=404, detail="Group not found")
-
-    # Check if user is the owner (can't leave own group)
-    if current_user_id == db_group.owner_id:
-        raise HTTPException(status_code=400, detail="Group owner cannot leave their own group. Delete the group instead.")
-
-    # Find and delete membership
-    memberships = group_membership.get_multi(db, filters={"group_id": group_id, "user_id": current_user_id})
-    if not memberships:
-        raise HTTPException(status_code=404, detail="You are not a member of this group")
-
-    # Delete the membership
-    group_membership.delete(db, id=memberships[0].id)
-
-    return {"message": "Successfully left the group", "group_id": group_id}
+# Removed unused DELETE /groups/{group_id}/leave endpoint

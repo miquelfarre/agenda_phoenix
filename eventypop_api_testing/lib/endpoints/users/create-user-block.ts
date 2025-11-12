@@ -4,7 +4,7 @@ export const createUserBlock: Endpoint = {
   id: 'create-user-block',
   name: 'Block User',
   method: 'POST',
-  path: '/api/v1/user-blocks',
+  path: '/api/v1/user_blocks',
   category: 'users',
   userType: 'both',
   description: 'Block a user',

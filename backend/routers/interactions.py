@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from auth import get_current_user_id
 from crud import event, event_interaction, user
-from dependencies import check_user_not_public, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade, is_event_owner_or_admin
+from dependencies import check_user_not_public, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
 from models import EventInteraction
 from schemas import EventInteractionBase, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventInteractionWithEventResponse
 
@@ -34,13 +34,7 @@ async def get_interactions(
     return event_interaction.get_multi_with_optional_enrichment(db, event_id=event_id, user_id=user_id, interaction_type=interaction_type, status=status, enriched=enriched, skip=offset, limit=limit, order_by=order_by or "created_at", order_dir=order_dir)
 
 
-@router.get("/{interaction_id}", response_model=EventInteractionResponse)
-async def get_interaction(interaction_id: int, db: Session = Depends(get_db)):
-    """Get a single interaction by ID"""
-    db_interaction = event_interaction.get(db, id=interaction_id)
-    if not db_interaction:
-        raise HTTPException(status_code=404, detail="Interaction not found")
-    return db_interaction
+# Removed unused GET /interactions/{interaction_id}
 
 
 @router.post("", response_model=EventInteractionResponse, status_code=201)
@@ -176,27 +170,7 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     return db_interaction
 
 
-@router.delete("/{interaction_id}")
-async def delete_interaction(interaction_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Delete an interaction.
-
-    Requires JWT authentication - provide token in Authorization header.
-    Either the event owner/admin OR the user of the interaction can delete it.
-    """
-    db_interaction = event_interaction.get(db, id=interaction_id)
-    if not db_interaction:
-        raise HTTPException(status_code=404, detail="Interaction not found")
-
-    # Check if user is event owner/admin OR the interaction user
-    is_event_admin = is_event_owner_or_admin(db_interaction.event_id, current_user_id, db)
-    is_self = db_interaction.user_id == current_user_id
-
-    if not (is_event_admin or is_self):
-        raise HTTPException(status_code=403, detail="You don't have permission to delete this interaction. Only the event owner/admin or the user themselves can do this.")
-
-    event_interaction.delete(db, id=interaction_id)
-    return {"message": "Interaction deleted successfully", "id": interaction_id}
+# Removed unused DELETE /interactions/{interaction_id}
 
 
 @router.post("/{interaction_id}/mark-read", response_model=EventInteractionResponse)

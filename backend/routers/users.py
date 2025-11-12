@@ -17,7 +17,7 @@ from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import get_db
 import models
 from models import EventInteraction
-from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserPublicStats, UserResponse, UserSubscriptionResponse
+from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserResponse, UserSubscriptionResponse
 from utils import round_to_5min
 
 logger = logging.getLogger(__name__)
@@ -38,32 +38,7 @@ async def get_users(public: Optional[bool] = None, search: Optional[str] = None,
     return result
 
 
-@router.get("/me", response_model=Union[UserResponse, UserEnrichedResponse])
-async def get_current_user(current_user_id: int = Depends(get_current_user_id), enriched: bool = False, db: Session = Depends(get_db)):
-    """Get the current authenticated user's information.
-
-    Requires JWT authentication - provide token in Authorization header."""
-    db_user = user.get(db, id=current_user_id)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if enriched:
-        return UserEnrichedResponse(
-            id=db_user.id,
-            display_name=db_user.display_name,
-            instagram_username=db_user.instagram_username,
-            profile_picture_url=db_user.profile_picture_url,
-            phone=db_user.phone,
-            auth_provider=db_user.auth_provider,
-            auth_id=db_user.auth_id,
-            is_public=db_user.is_public,
-            is_admin=db_user.is_admin,
-            last_login=db_user.last_login,
-            created_at=db_user.created_at,
-            updated_at=db_user.updated_at,
-        )
-
-    return db_user
+# Removed unused GET /users/me endpoint
 
 
 @router.get("/{user_id}", response_model=Union[UserResponse, UserEnrichedResponse])
@@ -92,41 +67,10 @@ async def get_user(user_id: int, enriched: bool = False, db: Session = Depends(g
     return db_user
 
 
-@router.get("/{user_id}/stats", response_model=UserPublicStats)
-async def get_user_stats(user_id: int, db: Session = Depends(get_db)):
-    """
-    Get statistics for a public user.
-
-    Returns:
-    - Total number of subscribers
-    - Total number of events created
-    - Stats for each event (event_id, event_name, event_start_date, total_joined)
-
-    Only available for public users. Returns 403 for private users.
-    """
-    stats = user.get_public_user_stats(db, user_id=user_id)
-
-    if not stats:
-        # User doesn't exist or is not public
-        db_user = user.get(db, id=user_id)
-        if not db_user:
-            raise HTTPException(status_code=404, detail="User not found")
-        else:
-            raise HTTPException(status_code=403, detail="Statistics are only available for public users")
-
-    return UserPublicStats(**stats)
+# Removed unused GET /users/{user_id}/stats endpoint
 
 
-@router.post("", response_model=UserResponse, status_code=201)
-async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
-    """Create a new user"""
-    # Check if auth_id already exists for this provider
-    existing = user.get_by_auth(db, auth_provider=user_data.auth_provider, auth_id=user_data.auth_id)
-    if existing:
-        raise HTTPException(status_code=400, detail="User already exists for this auth provider")
-
-    db_user = user.create(db, obj_in=user_data)
-    return db_user
+# Removed unused POST /users endpoint
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -150,25 +94,7 @@ async def update_user(user_id: int, user_data: UserCreate, current_user_id: int 
     return updated_user
 
 
-@router.delete("/{user_id}")
-async def delete_user(user_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Delete a user.
-
-    Requires JWT authentication - provide token in Authorization header.
-    Only the user themselves can delete their account.
-    """
-    # Check if user exists first
-    db_user = user.get(db, id=user_id)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Check if user is deleting their own account
-    if user_id != current_user_id:
-        raise HTTPException(status_code=403, detail="You don't have permission to delete this user. You can only delete your own account.")
-
-    user.delete(db, id=user_id)
-    return {"message": "User deleted successfully", "id": user_id}
+# Removed unused DELETE /users/{user_id} endpoint
 
 
 @router.get("/{user_id}/events", response_model=List[EventResponse])
@@ -516,34 +442,7 @@ async def get_user_events(
     return result
 
 
-@router.get("/{user_id}/accessible-calendar-ids", response_model=List[int])
-async def get_accessible_calendar_ids(user_id: int, db: Session = Depends(get_db)):
-    """
-    Get all calendar IDs accessible to a user.
-
-    Returns IDs of calendars that the user can see events from:
-    - Calendars owned by the user
-    - Calendars where user is a member (via CalendarMembership with status='accepted')
-    - Public calendars user is subscribed to (via CalendarSubscription with status='active')
-
-    This is useful for filtering events and for realtime subscriptions.
-    """
-    from crud import calendar
-
-    # Get calendars owned by user
-    owned_calendars = calendar.get_by_owner(db, owner_id=user_id)
-    owned_calendar_ids = [cal.id for cal in owned_calendars]
-
-    # Get calendars where user is a member (accepted memberships)
-    member_calendar_ids = calendar_membership.get_calendar_ids_by_user(db, user_id=user_id, status="accepted")
-
-    # Get subscribed public calendars (active subscriptions)
-    subscribed_calendar_ids = calendar_subscription.get_calendar_ids_by_user(db, user_id=user_id, status="active")
-
-    # Combine all IDs (use set to avoid duplicates)
-    all_calendar_ids = list(set(owned_calendar_ids + member_calendar_ids + subscribed_calendar_ids))
-
-    return sorted(all_calendar_ids)
+# Removed unused GET /users/{user_id}/accessible-calendar-ids endpoint
 
 
 @router.post("/{target_user_id}/subscribe", status_code=201)

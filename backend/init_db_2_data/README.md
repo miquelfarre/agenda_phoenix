@@ -181,22 +181,18 @@ Suscripciones a eventos públicos:
 # Total: 3000+ interactions de tipo "subscribed"
 ```
 
-### 12. `blocks_bans.py` (PENDIENTE)
-Bloqueos y bans:
+### 12. `blocks_bans.py` (ACTUALIZADO)
+Bloqueos (bans eliminados del proyecto):
 
 ```python
-from models import UserBlock, EventBan
+from models import UserBlock
 
 # UserBlocks:
 # - Sonia bloquea a usuario ID 50 (ex-pareja)
 # - Sonia bloquea a usuario ID 75 (spam)
 # - Usuario ID 63 bloquea a Sonia
 
-# EventBans:
-# - Evento "Fiesta Carlos": Carlos banea a ID 82
-#   Motivo: "Comportamiento inapropiado"
-
-# Total: 5-10 bloqueos y bans
+# Total: 5-10 bloqueos
 ```
 
 ### 13. `init_db_2.py` (ARCHIVO PRINCIPAL - PENDIENTE)
@@ -338,7 +334,7 @@ python init_db_2.py
 ✅ Contactos registrados y NO registrados
 ✅ Grupos con roles (owner, admin, member)
 ✅ Bloqueos bidireccionales
-✅ Event bans con motivo
+❌ Event bans (eliminado)
 
 ---
 

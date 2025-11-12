@@ -28,13 +28,7 @@ async def get_group_memberships(group_id: Optional[int] = None, user_id: Optiona
     return group_membership.get_multi_filtered(db, group_id=group_id, user_id=user_id, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
 
-@router.get("/{membership_id}", response_model=GroupMembershipResponse)
-async def get_group_membership(membership_id: int, db: Session = Depends(get_db)):
-    """Get a single group membership by ID"""
-    db_membership = group_membership.get(db, id=membership_id)
-    if not db_membership:
-        raise HTTPException(status_code=404, detail="Group membership not found")
-    return db_membership
+# Removed unused GET /group_memberships/{membership_id}
 
 
 @router.post("", response_model=GroupMembershipResponse, status_code=201)

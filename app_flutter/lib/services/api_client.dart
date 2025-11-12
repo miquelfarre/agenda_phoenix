@@ -324,6 +324,7 @@ class ApiClient implements IApiClient {
     return result as Map<String, dynamic>;
   }
 
+  @override
   Future<Map<String, dynamic>> unsubscribeFromUser(
     int userId,
     int targetUserId,
@@ -358,40 +359,7 @@ class ApiClient implements IApiClient {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchEventInteractions(
-    int eventId, {
-    int? currentUserId,
-  }) async {
-    final result = await get(
-      '/api/v1/events/$eventId/interactions',
-      queryParams: {},
-    );
-    return List<Map<String, dynamic>>.from(result);
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> fetchEventInteractionsEnriched(
-    int eventId, {
-    int? currentUserId,
-  }) async {
-    final result = await get(
-      '/api/v1/events/$eventId/interactions-enriched',
-      queryParams: {},
-    );
-    return List<Map<String, dynamic>>.from(result);
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> fetchUserInteractions({
-    int? currentUserId,
-  }) async {
-    final userId = currentUserId ?? ConfigService.instance.currentUserId;
-    final result = await get(
-      '/interactions',
-      queryParams: {'user_id': userId.toString(), 'limit': '1000'},
-    );
-    return List<Map<String, dynamic>>.from(result);
-  }
+  // (removed unused interaction list helpers)
 
   @override
   Future<List<Map<String, dynamic>>> fetchAvailableInvitees(
@@ -556,6 +524,7 @@ class ApiClient implements IApiClient {
   }
 
   // Search public calendar by share_hash (direct lookup)
+  @override
   Future<Map<String, dynamic>?> searchCalendarByHash(String shareHash) async {
     try {
       final result = await get('/calendars/share/$shareHash');
@@ -567,31 +536,19 @@ class ApiClient implements IApiClient {
   }
 
   // Subscribe to a public calendar using share_hash
+  @override
   Future<Map<String, dynamic>> subscribeByShareHash(String shareHash) async {
     final result = await post('/calendars/$shareHash/subscribe', body: {});
     return result as Map<String, dynamic>;
   }
 
   // Unsubscribe from a public calendar using share_hash
+  @override
   Future<void> unsubscribeByShareHash(String shareHash) async {
     await delete('/calendars/$shareHash/subscribe');
   }
 
-  @override
-  Future<List<Map<String, dynamic>>> fetchAllCalendarMemberships({
-    int? calendarId,
-    int? userId,
-    int? currentUserId,
-  }) async {
-    final result = await get(
-      '/calendar_memberships',
-      queryParams: {
-        if (calendarId != null) 'calendar_id': calendarId,
-        if (userId != null) 'user_id': userId,
-      },
-    );
-    return List<Map<String, dynamic>>.from(result);
-  }
+  // (removed unused calendar memberships aggregator)
 
 
 
@@ -679,17 +636,7 @@ class ApiClient implements IApiClient {
     await delete('/group_memberships/$membershipId');
   }
 
-  @override
-  Future<List<Map<String, dynamic>>> fetchRecurringConfigs({
-    int? eventId,
-    int? currentUserId,
-  }) async {
-    final result = await get(
-      '/recurring_configs',
-      queryParams: {if (eventId != null) 'event_id': eventId},
-    );
-    return List<Map<String, dynamic>>.from(result);
-  }
+  // (removed unused recurring configs fetcher)
 
 
 
@@ -727,20 +674,7 @@ class ApiClient implements IApiClient {
     await delete('/user_blocks/$blockId');
   }
 
-  @override
-  Future<List<Map<String, dynamic>>> fetchEventBans({
-    int? eventId,
-    int? userId,
-  }) async {
-    final result = await get(
-      '/event_bans',
-      queryParams: {
-        if (eventId != null) 'event_id': eventId,
-        if (userId != null) 'user_id': userId,
-      },
-    );
-    return List<Map<String, dynamic>>.from(result);
-  }
+  
 
 
 

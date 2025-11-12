@@ -4,7 +4,7 @@ export const updateGroupMembership: Endpoint = {
   id: 'update-group-membership',
   name: 'Update Group Membership',
   method: 'PUT',
-  path: '/api/v1/group-memberships/:membership_id',
+  path: '/api/v1/group_memberships/:membership_id',
   category: 'groups',
   userType: 'both',
   description: 'Update a group membership role',

@@ -4,7 +4,7 @@ Calendars Router
 Handles all calendar-related endpoints.
 """
 
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -45,23 +45,6 @@ async def get_calendars(current_user_id: int = Depends(get_current_user_id), lim
     return calendar.get_all_user_calendars(db, user_id=current_user_id, skip=offset, limit=limit)
 
 
-@router.get("/public", response_model=List[CalendarResponse])
-async def get_public_calendars(category: Optional[str] = None, search: Optional[str] = None, limit: int = 50, offset: int = 0, db: Session = Depends(get_db)):
-    """
-    Get discoverable public calendars.
-
-    Args:
-        category: Filter by category (e.g., 'holidays', 'sports', 'music')
-        search: Search in calendar name or description
-        limit: Maximum number of results (1-200)
-        offset: Number of records to skip
-    """
-    # Validate and limit pagination
-    limit = max(1, min(200, limit))
-    offset = max(0, offset)
-
-    return calendar_subscription.get_public_calendars(db, category=category, search=search, skip=offset, limit=limit)
-
 
 @router.get("/share/{share_hash}", response_model=CalendarResponse)
 async def get_calendar_by_share_hash(share_hash: str, db: Session = Depends(get_db)):
@@ -79,13 +62,7 @@ async def get_calendar_by_share_hash(share_hash: str, db: Session = Depends(get_
     return db_calendar
 
 
-@router.get("/{calendar_id}", response_model=CalendarResponse)
-async def get_calendar(calendar_id: int, db: Session = Depends(get_db)):
-    """Get a single calendar by ID"""
-    db_calendar = calendar.get(db, id=calendar_id)
-    if not db_calendar:
-        raise HTTPException(status_code=404, detail="Calendar not found")
-    return db_calendar
+# Removed unused GET /public and GET /{calendar_id} endpoints (not used by Flutter)
 
 
 @router.post("", response_model=CalendarResponse, status_code=201)

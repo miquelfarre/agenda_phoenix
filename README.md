@@ -81,7 +81,6 @@ agenda_phoenix/
 
 ### Backend
 - **Modular Router System** - 12 routers, 83 endpoints
-- **3-Level Ban System** - Event, User, and App bans
 - **Recurring Events** - With hierarchical invitations
 - **Conflict Detection** - Automatic event conflict checking
 
@@ -136,7 +135,6 @@ See [API Endpoints](docs/backend/api-endpoints.md) for complete list.
 ## 🔗 Related Links
 
 - [Backend Router System](docs/backend/router-system.md)
-- [3-Level Ban System](docs/backend/ban-system.md)
 - [CLI Guide](docs/cli/cli-guide.md)
 - [Development Rules](docs/development-rules.md)
 

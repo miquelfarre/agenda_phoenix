@@ -28,8 +28,6 @@ export const ENDPOINT_CATEGORIES = [
   { id: 'groups', name: 'Groups', icon: '👥' },
   { id: 'contacts', name: 'Contacts', icon: '📇' },
   { id: 'interactions', name: 'Interactions', icon: '🔔' },
-  { id: 'bans', name: 'Event Bans', icon: '🚫' },
-  { id: 'recurring', name: 'Recurring Configs', icon: '🔁' },
 ];
 
 // Import all endpoints from category modules
@@ -39,8 +37,6 @@ import { CALENDAR_ENDPOINTS } from './calendars';
 import { GROUP_ENDPOINTS } from './groups';
 import { CONTACT_ENDPOINTS } from './contacts';
 import { INTERACTION_ENDPOINTS } from './interactions';
-import { BAN_ENDPOINTS } from './bans';
-import { RECURRING_ENDPOINTS } from './recurring';
 
 // Combine all endpoints
 export const ENDPOINTS: Endpoint[] = [
@@ -50,6 +46,4 @@ export const ENDPOINTS: Endpoint[] = [
   ...GROUP_ENDPOINTS,
   ...CONTACT_ENDPOINTS,
   ...INTERACTION_ENDPOINTS,
-  ...BAN_ENDPOINTS,
-  ...RECURRING_ENDPOINTS,
 ];

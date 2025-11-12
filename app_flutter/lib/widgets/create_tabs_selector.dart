@@ -83,7 +83,7 @@ class CreateOptionsSelector extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppStyles.primaryColor.withOpacity(0.1),
+                color: AppStyles.primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

@@ -477,7 +477,7 @@ class GroupMembershipResponse(GroupMembershipBase):
 
 class RecurringEventConfigBase(BaseModel):
     recurrence_type: str = "weekly"  # 'daily', 'weekly', 'monthly', 'yearly'
-    schedule: Optional[List[Dict[str, str]]] = None  # Type-specific configuration
+    schedule: Optional[List[RecurrencePattern]] = None  # Weekly patterns with dayOfWeek and time
     recurrence_end_date: Optional[datetime] = None  # NULL = perpetual/infinite
 
 
@@ -494,30 +494,7 @@ class RecurringEventConfigResponse(RecurringEventConfigBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ============================================================================
-# EVENT BAN SCHEMAS
-# ============================================================================
-
-
-class EventBanBase(BaseModel):
-    reason: Optional[str] = None
-
-
-class EventBanCreate(EventBanBase):
-    event_id: int
-    user_id: int
-    banned_by: int
-
-
-class EventBanResponse(EventBanBase):
-    id: int
-    event_id: int
-    user_id: int
-    banned_by: int
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
+ 
 
 
 # ============================================================================

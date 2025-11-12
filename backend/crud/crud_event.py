@@ -183,8 +183,32 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         db.commit()
         db.refresh(db_event)
 
-        # If this is a recurring event with patterns, generate child events
+        # If this is a recurring event with patterns, save config and generate child events
         if patterns and len(patterns) > 0 and db_event.event_type == "recurring":
+            # Save patterns to recurring_event_configs for future editing
+            from models import RecurringEventConfig
+
+            # Convert patterns to dict format for JSON storage
+            patterns_dict = []
+            for p in patterns:
+                if isinstance(p, dict):
+                    patterns_dict.append(p)
+                else:
+                    # It's a RecurrencePattern object
+                    patterns_dict.append({
+                        "dayOfWeek": p.dayOfWeek,
+                        "time": p.time
+                    })
+
+            config = RecurringEventConfig(
+                event_id=db_event.id,
+                recurrence_type="weekly",
+                schedule=patterns_dict
+            )
+            db.add(config)
+            db.commit()
+
+            # Generate child events
             self._generate_recurring_events(db, db_event, patterns)
 
         return db_event, None, None
