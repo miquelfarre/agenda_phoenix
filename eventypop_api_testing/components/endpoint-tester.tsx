@@ -291,7 +291,17 @@ export default function EndpointTester({ endpoint, currentUser }: EndpointTester
 
                 {/* Data */}
                 <div>
-                  <div className="text-sm font-semibold text-slate-700 mb-2">Response Body</div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-semibold text-slate-700">Response Body</div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(JSON.stringify(response.data, null, 2));
+                      }}
+                      className="px-3 py-1 text-xs bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors"
+                    >
+                      📋 Copy JSON
+                    </button>
+                  </div>
                   <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg text-xs overflow-x-auto">
                     {JSON.stringify(response.data, null, 2)}
                   </pre>
