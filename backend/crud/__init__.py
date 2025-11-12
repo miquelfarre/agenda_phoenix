@@ -4,7 +4,7 @@ CRUD operations module
 Exposes singleton instances of CRUD classes for each model.
 Import from here to use in routers:
 
-    from crud import user, event, calendar, contact, event_interaction, user_block, event_ban, group
+    from crud import user, event, calendar, contact, event_interaction, user_block, group
 
 Usage example:
     from crud import user
@@ -17,7 +17,6 @@ Usage example:
 
 from crud.crud_calendar import calendar, calendar_membership
 from crud.crud_event import event
-from crud.crud_event_ban import event_ban
 from crud.crud_event_cancellation import event_cancellation
 from crud.crud_group import group
 from crud.crud_group_membership import group_membership
@@ -35,7 +34,6 @@ __all__ = [
     "user_contact",
     "event_interaction",
     "user_block",
-    "event_ban",
     "group",
     "group_membership",
     "recurring_config",
