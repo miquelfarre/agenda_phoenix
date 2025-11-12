@@ -171,7 +171,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         event_data = obj_in.model_dump()
 
         # Extract patterns before creating event (they're not part of Event model)
-        patterns = event_data.pop('patterns', None)
+        patterns = event_data.pop("patterns", None)
 
         # Ensure dates are timezone-aware
         if event_data["start_date"].tzinfo is None:
@@ -195,16 +195,9 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
                     patterns_dict.append(p)
                 else:
                     # It's a RecurrencePattern object
-                    patterns_dict.append({
-                        "dayOfWeek": p.dayOfWeek,
-                        "time": p.time
-                    })
+                    patterns_dict.append({"dayOfWeek": p.dayOfWeek, "time": p.time})
 
-            config = RecurringEventConfig(
-                event_id=db_event.id,
-                recurrence_type="weekly",
-                schedule=patterns_dict
-            )
+            config = RecurringEventConfig(event_id=db_event.id, recurrence_type="weekly", schedule=patterns_dict)
             db.add(config)
             db.commit()
 
@@ -428,12 +421,12 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         week_start = base_date - timedelta(days=days_since_monday)
 
         for pattern_data in patterns:
-            day_of_week = pattern_data.get('dayOfWeek', 0) if isinstance(pattern_data, dict) else pattern_data.dayOfWeek
-            time_str = pattern_data.get('time', '18:00:00') if isinstance(pattern_data, dict) else pattern_data.time
+            day_of_week = pattern_data.get("dayOfWeek", 0) if isinstance(pattern_data, dict) else pattern_data.dayOfWeek
+            time_str = pattern_data.get("time", "18:00:00") if isinstance(pattern_data, dict) else pattern_data.time
 
             # Parse time (format: HH:MM:SS)
             try:
-                hour, minute, second = map(int, time_str.split(':'))
+                hour, minute, second = map(int, time_str.split(":"))
             except:
                 hour, minute, second = 18, 0, 0  # Default to 18:00:00
 
@@ -443,12 +436,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
                 event_date = week_start + timedelta(weeks=week_offset, days=day_of_week)
 
                 # Set the specific time
-                event_datetime = event_date.replace(
-                    hour=hour,
-                    minute=minute,
-                    second=second,
-                    microsecond=0
-                )
+                event_datetime = event_date.replace(hour=hour, minute=minute, second=second, microsecond=0)
 
                 # Ensure timezone-aware
                 if event_datetime.tzinfo is None:

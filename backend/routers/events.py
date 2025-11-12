@@ -318,16 +318,7 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
     # Otherwise, show all attendees
     if current_user_id is not None:
         # Check if current user has an accepted invitation
-        current_user_invitation = (
-            db.query(EventInteraction)
-            .filter(
-                EventInteraction.event_id == event_id,
-                EventInteraction.user_id == current_user_id,
-                EventInteraction.interaction_type == "invited",
-                EventInteraction.status == "accepted"
-            )
-            .first()
-        )
+        current_user_invitation = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "accepted").first()
 
         # If user was invited and accepted, filter attendees by invitation relationship
         if current_user_invitation and current_user_invitation.invited_by_user_id:
@@ -343,19 +334,11 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                     EventInteraction.event_id == event_id,
                     or_(
                         # The inviter (any interaction type, accepted status)
-                        and_(
-                            EventInteraction.user_id == inviter_id,
-                            EventInteraction.status == "accepted"
-                        ),
+                        and_(EventInteraction.user_id == inviter_id, EventInteraction.status == "accepted"),
                         # Other users invited by same inviter who accepted
-                        and_(
-                            EventInteraction.invited_by_user_id == inviter_id,
-                            EventInteraction.interaction_type == "invited",
-                            EventInteraction.status == "accepted",
-                            EventInteraction.user_id != current_user_id  # Exclude current user
-                        )
+                        and_(EventInteraction.invited_by_user_id == inviter_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "accepted", EventInteraction.user_id != current_user_id),  # Exclude current user
                     ),
-                    User.is_public == False  # Exclude public users
+                    User.is_public == False,  # Exclude public users
                 )
                 .all()
             )
@@ -366,12 +349,9 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                 .join(User, EventInteraction.user_id == User.id)
                 .filter(
                     EventInteraction.event_id == event_id,
-                    or_(
-                        EventInteraction.status == "accepted",
-                        and_(EventInteraction.status == "rejected", EventInteraction.is_attending == True)
-                    ),
+                    or_(EventInteraction.status == "accepted", and_(EventInteraction.status == "rejected", EventInteraction.is_attending == True)),
                     User.is_public == False,  # Exclude public users
-                    EventInteraction.user_id != current_user_id  # Exclude current user
+                    EventInteraction.user_id != current_user_id,  # Exclude current user
                 )
                 .all()
             )
@@ -410,10 +390,7 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     # Build available invitees list
     available = []
     for user_obj in results:
-        available.append({
-            "id": user_obj.id,
-            "display_name": user_obj.display_name
-        })
+        available.append({"id": user_obj.id, "display_name": user_obj.display_name})
 
     return available
 

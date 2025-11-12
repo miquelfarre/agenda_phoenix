@@ -49,9 +49,7 @@ async def sync_contacts(
         registered_user_id = registered_user.id if registered_user else None
 
         # Check if contact already exists for this owner
-        existing_contact = user_contact.get_by_phone(
-            db, owner_id=current_user_id, phone_number=contact_data.phone_number
-        )
+        existing_contact = user_contact.get_by_phone(db, owner_id=current_user_id, phone_number=contact_data.phone_number)
 
         if existing_contact:
             # Update existing contact
@@ -109,9 +107,7 @@ async def get_my_contacts(
         limit: Maximum number of contacts to return
         skip: Number of contacts to skip
     """
-    contacts = user_contact.get_by_owner(
-        db, owner_id=current_user_id, only_registered=only_registered, skip=skip, limit=limit
-    )
+    contacts = user_contact.get_by_owner(db, owner_id=current_user_id, only_registered=only_registered, skip=skip, limit=limit)
 
     result = []
     for contact in contacts:

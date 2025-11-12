@@ -15,30 +15,9 @@ from schemas import UserCreate, EventCreate, EventInteractionCreate
 def test_users(test_db):
     """Create test users with new fields (no legacy Contact)"""
     # Create users directly with new fields (display_name, phone, instagram_username)
-    user1_data = UserCreate(
-        display_name="Owner User",
-        phone="+1234567890",
-        instagram_username="owner",
-        auth_provider="test",
-        auth_id="test_owner_123",
-        is_public=False
-    )
-    user2_data = UserCreate(
-        display_name="Invitee One",
-        phone="+1234567891",
-        instagram_username="invitee1",
-        auth_provider="test",
-        auth_id="test_invitee1_456",
-        is_public=False
-    )
-    user3_data = UserCreate(
-        display_name="Invitee Two",
-        phone="+1234567892",
-        instagram_username="invitee2",
-        auth_provider="test",
-        auth_id="test_invitee2_789",
-        is_public=False
-    )
+    user1_data = UserCreate(display_name="Owner User", phone="+1234567890", instagram_username="owner", auth_provider="test", auth_id="test_owner_123", is_public=False)
+    user2_data = UserCreate(display_name="Invitee One", phone="+1234567891", instagram_username="invitee1", auth_provider="test", auth_id="test_invitee1_456", is_public=False)
+    user3_data = UserCreate(display_name="Invitee Two", phone="+1234567892", instagram_username="invitee2", auth_provider="test", auth_id="test_invitee2_789", is_public=False)
 
     user1 = user_crud.create(test_db, obj_in=user1_data)
     user2 = user_crud.create(test_db, obj_in=user2_data)
@@ -322,59 +301,25 @@ def test_get_event_attendees_filtered_by_invitation_relationship(client, test_db
     owner, invitee1, invitee2 = test_users
 
     # Create additional user to act as independent subscriber
-    user4_data = UserCreate(
-        display_name="Independent User",
-        phone="+1234567893",
-        instagram_username="independent",
-        auth_provider="test",
-        auth_id="test_independent_999",
-        is_public=False
-    )
+    user4_data = UserCreate(display_name="Independent User", phone="+1234567893", instagram_username="independent", auth_provider="test", auth_id="test_independent_999", is_public=False)
     independent_user = user_crud.create(test_db, obj_in=user4_data)
 
     # Create event
-    event_data = EventCreate(
-        name="Event with Invitation Groups",
-        description="Testing attendee filtering by invitation relationship",
-        start_date=datetime.now() + timedelta(days=1),
-        owner_id=owner.id
-    )
+    event_data = EventCreate(name="Event with Invitation Groups", description="Testing attendee filtering by invitation relationship", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
     event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
     assert event is not None and error is None
 
     # Owner has a "joined" interaction (as event owner)
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=owner.id,
-        event_id=event.id,
-        interaction_type="joined",
-        status="accepted"
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=owner.id, event_id=event.id, interaction_type="joined", status="accepted"))
 
     # Owner invites invitee1 (accepts)
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee1.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="accepted",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee1.id, event_id=event.id, interaction_type="invited", status="accepted", invited_by_user_id=owner.id))
 
     # Owner invites invitee2 (accepts)
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee2.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="accepted",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee2.id, event_id=event.id, interaction_type="invited", status="accepted", invited_by_user_id=owner.id))
 
     # Independent user subscribes (not invited by anyone)
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=independent_user.id,
-        event_id=event.id,
-        interaction_type="subscribed",
-        status="accepted"
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=independent_user.id, event_id=event.id, interaction_type="subscribed", status="accepted"))
 
     test_db.commit()
 
@@ -420,58 +365,25 @@ def test_get_event_attendees_all_when_not_invited(client, test_db, test_users):
     owner, invitee1, invitee2 = test_users
 
     # Create independent user
-    user4_data = UserCreate(
-        display_name="Independent User",
-        phone="+1234567893",
-        instagram_username="independent",
-        auth_provider="test",
-        auth_id="test_independent_998",
-        is_public=False
-    )
+    user4_data = UserCreate(display_name="Independent User", phone="+1234567893", instagram_username="independent", auth_provider="test", auth_id="test_independent_998", is_public=False)
     independent_user = user_crud.create(test_db, obj_in=user4_data)
 
     # Create event
-    event_data = EventCreate(
-        name="Event with Mixed Attendees",
-        description="Testing attendee filtering when user subscribed (not invited)",
-        start_date=datetime.now() + timedelta(days=1),
-        owner_id=owner.id
-    )
+    event_data = EventCreate(name="Event with Mixed Attendees", description="Testing attendee filtering when user subscribed (not invited)", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
     event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
     assert event is not None and error is None
 
     # Owner has joined interaction
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=owner.id,
-        event_id=event.id,
-        interaction_type="joined",
-        status="accepted"
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=owner.id, event_id=event.id, interaction_type="joined", status="accepted"))
 
     # invitee1 subscribes (NOT invited)
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee1.id,
-        event_id=event.id,
-        interaction_type="subscribed",
-        status="accepted"
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee1.id, event_id=event.id, interaction_type="subscribed", status="accepted"))
 
     # invitee2 is invited by owner and accepts
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee2.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="accepted",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee2.id, event_id=event.id, interaction_type="invited", status="accepted", invited_by_user_id=owner.id))
 
     # Independent user subscribes
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=independent_user.id,
-        event_id=event.id,
-        interaction_type="subscribed",
-        status="accepted"
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=independent_user.id, event_id=event.id, interaction_type="subscribed", status="accepted"))
 
     test_db.commit()
 
@@ -510,40 +422,18 @@ def test_get_event_attendees_excludes_rejected(client, test_db, test_users):
     owner, invitee1, invitee2 = test_users
 
     # Create event
-    event_data = EventCreate(
-        name="Event with Rejected Invitation",
-        description="Testing that rejected invitations are excluded",
-        start_date=datetime.now() + timedelta(days=1),
-        owner_id=owner.id
-    )
+    event_data = EventCreate(name="Event with Rejected Invitation", description="Testing that rejected invitations are excluded", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
     event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
     assert event is not None and error is None
 
     # Owner joined
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=owner.id,
-        event_id=event.id,
-        interaction_type="joined",
-        status="accepted"
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=owner.id, event_id=event.id, interaction_type="joined", status="accepted"))
 
     # Owner invites invitee1 (accepts)
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee1.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="accepted",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee1.id, event_id=event.id, interaction_type="invited", status="accepted", invited_by_user_id=owner.id))
 
     # Owner invites invitee2 (REJECTS)
-    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
-        user_id=invitee2.id,
-        event_id=event.id,
-        interaction_type="invited",
-        status="rejected",
-        invited_by_user_id=owner.id
-    ))
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee2.id, event_id=event.id, interaction_type="invited", status="rejected", invited_by_user_id=owner.id))
 
     test_db.commit()
 

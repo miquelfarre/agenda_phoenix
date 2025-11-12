@@ -27,7 +27,6 @@ class UserBase(BaseModel):
     is_admin: bool = False
 
 
-
 class UserCreate(UserBase):
     pass
 
@@ -94,36 +93,38 @@ class UserPublicStats(BaseModel):
 
 class RecurrencePattern(BaseModel):
     """Pattern for recurring events"""
+
     eventId: Optional[int] = None  # -1 or None for new events
     dayOfWeek: int  # 0=Monday, 6=Sunday
     time: str  # HH:MM:SS format (seconds always :00, minutes in 5-minute intervals)
 
-    @field_validator('dayOfWeek')
+    @field_validator("dayOfWeek")
     @classmethod
     def validate_day_of_week(cls, v: int) -> int:
         if not 0 <= v <= 6:
-            raise ValueError('dayOfWeek must be between 0 (Monday) and 6 (Sunday)')
+            raise ValueError("dayOfWeek must be between 0 (Monday) and 6 (Sunday)")
         return v
 
-    @field_validator('time')
+    @field_validator("time")
     @classmethod
     def validate_time_format(cls, v: str) -> str:
         import re
+
         # Match HH:MM:SS format
-        pattern = r'^([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$'
+        pattern = r"^([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$"
         if not re.match(pattern, v):
-            raise ValueError('time must be in HH:MM:SS format')
+            raise ValueError("time must be in HH:MM:SS format")
 
         # Extract components
-        _, minute, second = v.split(':')
+        _, minute, second = v.split(":")
 
         # Validate seconds are always 00
-        if second != '00':
-            raise ValueError('seconds must always be 00')
+        if second != "00":
+            raise ValueError("seconds must always be 00")
 
         # Validate minutes are in 5-minute intervals
         if not validate_5min_interval(int(minute)):
-            raise ValueError('minutes must be in 5-minute intervals (0, 5, 10, ..., 55)')
+            raise ValueError("minutes must be in 5-minute intervals (0, 5, 10, ..., 55)")
 
         return v
 
@@ -492,9 +493,6 @@ class RecurringEventConfigResponse(RecurringEventConfigBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
-
- 
 
 
 # ============================================================================

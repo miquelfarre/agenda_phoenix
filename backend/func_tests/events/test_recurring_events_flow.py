@@ -2,6 +2,7 @@
 Test del flujo completo de eventos recurrentes
 Prueba: crear, leer recurring_configs, actualizar patterns, eliminar
 """
+
 from datetime import datetime, timezone
 
 
@@ -19,14 +20,7 @@ def test_recurring_event_complete_flow(client, test_db):
     # === PASO 0: Crear usuario de prueba ===
     from models import User
 
-    test_user = User(
-        id=1,
-        auth_provider="phone",
-        auth_id="+34600000001",
-        display_name="Test User",
-        phone="+34600000001",
-        is_public=False
-    )
+    test_user = User(id=1, auth_provider="phone", auth_id="+34600000001", display_name="Test User", phone="+34600000001", is_public=False)
     test_db.add(test_user)
     test_db.commit()
     test_db.refresh(test_user)
@@ -42,7 +36,7 @@ def test_recurring_event_complete_flow(client, test_db):
             {"dayOfWeek": 1, "time": "18:00:00"},  # Lunes 18:00
             {"dayOfWeek": 3, "time": "19:00:00"},  # Miércoles 19:00
             {"dayOfWeek": 5, "time": "18:30:00"},  # Viernes 18:30
-        ]
+        ],
     }
 
     response = client.post("/api/v1/events", json=event_data)
@@ -58,9 +52,7 @@ def test_recurring_event_complete_flow(client, test_db):
     # === PASO 2: Verificar eventos hijos generados (vía query directo) ===
     from models import Event
 
-    child_events_db = test_db.query(Event).filter(
-        Event.parent_recurring_event_id == parent_event_id
-    ).all()
+    child_events_db = test_db.query(Event).filter(Event.parent_recurring_event_id == parent_event_id).all()
 
     print(f"\n✅ PASO 2: Eventos hijos generados: {len(child_events_db)}")
     print(f"   - Se esperan ~156 eventos (52 semanas × 3 días/semana)")
@@ -78,9 +70,7 @@ def test_recurring_event_complete_flow(client, test_db):
     # === PASO 3: Verificar si se guardó en recurring_event_configs ===
     from models import RecurringEventConfig
 
-    db_config = test_db.query(RecurringEventConfig).filter(
-        RecurringEventConfig.event_id == parent_event_id
-    ).first()
+    db_config = test_db.query(RecurringEventConfig).filter(RecurringEventConfig.event_id == parent_event_id).first()
 
     if db_config:
         print(f"\n✅ PASO 3: recurring_event_config EXISTE en BD")
@@ -114,15 +104,11 @@ def test_recurring_event_complete_flow(client, test_db):
             "schedule": [
                 {"dayOfWeek": 1, "time": "19:00:00"},  # Cambio: 18:00 -> 19:00
                 {"dayOfWeek": 3, "time": "20:00:00"},  # Cambio: 19:00 -> 20:00
-            ]
+            ],
         }
 
         # Necesitamos auth para PUT
-        response = client.put(
-            f"/api/v1/recurring_configs/{config_id}",
-            json=update_data,
-            headers={"X-Test-User-Id": "1"}
-        )
+        response = client.put(f"/api/v1/recurring_configs/{config_id}", json=update_data, headers={"X-Test-User-Id": "1"})
 
         if response.status_code == 200:
             print(f"\n✅ PASO 5: PUT /recurring_configs funciona")
@@ -135,10 +121,7 @@ def test_recurring_event_complete_flow(client, test_db):
         print(f"\n⏭️  PASO 5: Saltado (no hay config que actualizar)")
 
     # === PASO 6: Eliminar evento padre ===
-    response = client.delete(
-        f"/api/v1/events/{parent_event_id}",
-        headers={"X-Test-User-Id": "1"}
-    )
+    response = client.delete(f"/api/v1/events/{parent_event_id}", headers={"X-Test-User-Id": "1"})
     assert response.status_code == 200
 
     print(f"\n✅ PASO 6: Evento padre eliminado")
@@ -151,14 +134,14 @@ def test_recurring_event_complete_flow(client, test_db):
     assert len(remaining_children) == 0, "Los eventos hijos deberían haberse eliminado"
 
     # === RESUMEN ===
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("RESUMEN DEL TEST:")
-    print("="*80)
+    print("=" * 80)
     print(f"✅ Crear evento recurrente: OK")
     print(f"✅ Generar eventos hijos: OK ({len(child_events)} eventos)")
     print(f"{'✅' if config_exists else '❌'} Guardar en recurring_event_configs: {'OK' if config_exists else 'NO IMPLEMENTADO'}")
     print(f"✅ Eliminar evento padre + hijos: OK")
-    print("="*80)
+    print("=" * 80)
 
     if not config_exists:
         print("\n⚠️  ADVERTENCIA: Los patterns NO se están guardando en BD")
@@ -174,14 +157,7 @@ def test_update_event_with_new_patterns(client, test_db):
     # Crear usuario de prueba
     from models import User
 
-    test_user = User(
-        id=1,
-        auth_provider="phone",
-        auth_id="+34600000001",
-        display_name="Test User",
-        phone="+34600000001",
-        is_public=False
-    )
+    test_user = User(id=1, auth_provider="phone", auth_id="+34600000001", display_name="Test User", phone="+34600000001", is_public=False)
     test_db.add(test_user)
     test_db.commit()
 
@@ -194,7 +170,7 @@ def test_update_event_with_new_patterns(client, test_db):
         "owner_id": 1,
         "patterns": [
             {"dayOfWeek": 1, "time": "18:00:00"},
-        ]
+        ],
     }
 
     response = client.post("/api/v1/events", json=event_data)
@@ -209,14 +185,10 @@ def test_update_event_with_new_patterns(client, test_db):
         "patterns": [
             {"dayOfWeek": 2, "time": "19:00:00"},  # Cambio de día y hora
             {"dayOfWeek": 4, "time": "20:00:00"},  # Nuevo día
-        ]
+        ],
     }
 
-    response = client.put(
-        f"/api/v1/events/{parent_event_id}",
-        json=update_data,
-        headers={"X-Test-User-Id": "1"}
-    )
+    response = client.put(f"/api/v1/events/{parent_event_id}", json=update_data, headers={"X-Test-User-Id": "1"})
 
     print(f"\nPUT /events/{parent_event_id} con nuevos patterns:")
     print(f"   - Status: {response.status_code}")

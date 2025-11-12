@@ -45,7 +45,6 @@ async def get_calendars(current_user_id: int = Depends(get_current_user_id), lim
     return calendar.get_all_user_calendars(db, user_id=current_user_id, skip=offset, limit=limit)
 
 
-
 @router.get("/share/{share_hash}", response_model=CalendarResponse)
 async def get_calendar_by_share_hash(share_hash: str, db: Session = Depends(get_db)):
     """

@@ -22,11 +22,25 @@ import logging
 
 # --- Minimal local implementations to avoid dependency on init_db.py ---
 
+
 def drop_all_tables():
     """Drop all SQLAlchemy-managed tables (does not touch external Supabase tables)."""
-    logging.getLogger(__name__).info("🗑️  Dropping all SQLAlchemy tables...")
+    logger = logging.getLogger(__name__)
+    logger.info("🗑️  Dropping all SQLAlchemy tables...")
+
+    # First drop DB views that may depend on our tables (to avoid dependency errors)
+    try:
+        with engine.connect() as conn:
+            # Known app views that reference core tables
+            conn.execute(text("DROP VIEW IF EXISTS user_subscriptions_with_stats CASCADE"))
+            conn.commit()
+            logger.info("  ✓ Dropped dependent views (if existed)")
+    except Exception as e:
+        logger.warning(f"  ⚠ Could not drop views (continuing): {e}")
+
+    # Now drop tables managed by SQLAlchemy
     Base.metadata.drop_all(bind=engine)
-    logging.getLogger(__name__).info("✅ Tables dropped")
+    logger.info("✅ Tables dropped")
 
 
 def create_all_tables():
@@ -147,19 +161,9 @@ def create_calendar_subscription_triggers():
 def create_supabase_auth_users():
     """Optional: Skip creating Supabase Auth users here (handled elsewhere)."""
     logging.getLogger(__name__).info("👤 Skipping Supabase Auth user creation in v2 initializer")
-from init_db_2_data import (
-    users_private,
-    users_public,
-    contacts,
-    groups,
-    calendars,
-    events_private,
-    events_public,
-    events_recurring,
-    interactions_invitations,
-    interactions_subscriptions,
-    blocks_bans
-)
+
+
+from init_db_2_data import users_private, users_public, contacts, groups, calendars, events_private, events_public, events_recurring, interactions_invitations, interactions_subscriptions, blocks_bans
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -173,21 +177,7 @@ def reset_sequences(db):
     """
     logger.info("🔄 Resetting autoincrement sequences...")
 
-    tables_with_sequences = [
-        'users',
-        'events',
-        'event_interactions',
-        'calendars',
-        'calendar_memberships',
-        'calendar_subscriptions',
-        'groups',
-        'group_memberships',
-        'recurring_event_configs',
-        'user_blocks',
-        'event_cancellations',
-        'event_cancellation_views',
-        'user_contacts'
-    ]
+    tables_with_sequences = ["users", "events", "event_interactions", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "recurring_event_configs", "user_blocks", "event_cancellations", "event_cancellation_views", "user_contacts"]
 
     for table in tables_with_sequences:
         try:
@@ -254,16 +244,12 @@ def insert_sample_data_v2():
 
         # 8. Create invitations
         logger.info("✉️  Creating invitations...")
-        invitations_data = interactions_invitations.create_invitations(
-            db, private_users_data, private_events_data, public_events_data, recurring_events_data
-        )
+        invitations_data = interactions_invitations.create_invitations(db, private_users_data, private_events_data, public_events_data, recurring_events_data)
         logger.info(f"  ✓ Created {len(invitations_data)} invitations")
 
         # 9. Create subscriptions
         logger.info("🔔 Creating subscriptions...")
-        subscriptions_data = interactions_subscriptions.create_subscriptions(
-            db, private_users_data, public_events_data
-        )
+        subscriptions_data = interactions_subscriptions.create_subscriptions(db, private_users_data, public_events_data)
         logger.info(f"  ✓ Created {len(subscriptions_data)} subscriptions")
 
         # 10. Create blocks (bans removed)
@@ -277,7 +263,8 @@ def insert_sample_data_v2():
         reset_sequences(db)
 
         logger.info("✅ Sample data v2 inserted successfully!")
-        logger.info(f"""
+        logger.info(
+            f"""
         📊 Dataset Summary:
         - 100 users (85 private + 15 public)
         - {len(contacts_data)} contacts
@@ -288,11 +275,13 @@ def insert_sample_data_v2():
         - {len(blocks_data['blocks'])} blocks
 
         🎯 Default user: USER_ID=1 (Sonia Martínez, +34600000001)
-        """)
+        """
+        )
 
     except Exception as e:
         logger.error(f"❌ Error inserting sample data: {e}")
         import traceback
+
         traceback.print_exc()
         db.rollback()
         raise

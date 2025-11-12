@@ -518,9 +518,6 @@ class RecurringEventConfig(Base):
         }
 
 
-    
-
-
 class UserBlock(Base):
     """
     UserBlock model - Track users blocking other users.

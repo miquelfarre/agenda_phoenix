@@ -281,11 +281,13 @@ async def get_user_events(
             if event_id not in attendees_map:
                 attendees_map[event_id] = []
 
-            attendees_map[event_id].append({
-                "id": user_obj.id,
-                "display_name": user_obj.display_name,
-                "profile_picture_url": user_obj.profile_picture_url,
-            })
+            attendees_map[event_id].append(
+                {
+                    "id": user_obj.id,
+                    "display_name": user_obj.display_name,
+                    "profile_picture_url": user_obj.profile_picture_url,
+                }
+            )
 
     # ============================================================
     # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
@@ -399,7 +401,7 @@ async def get_user_events(
         if interaction_data is None:
             # Check if this event comes from a calendar or subscribed calendar
             source_type = event_sources.get(ev.id)
-            if source_type in ['calendar', 'subscribed_calendar']:
+            if source_type in ["calendar", "subscribed_calendar"]:
                 # Create synthetic interaction to indicate the source
                 interaction_data = {
                     "interaction_type": source_type,

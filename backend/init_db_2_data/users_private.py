@@ -4,10 +4,7 @@ Private Users (ID 1-85)
 """
 
 from models import User
-from .helpers import (
-    NOMBRES_HOMBRES, NOMBRES_MUJERES, APELLIDOS,
-    generate_phone_number, generate_instagram_username
-)
+from .helpers import NOMBRES_HOMBRES, NOMBRES_MUJERES, APELLIDOS, generate_phone_number, generate_instagram_username
 import random
 
 
@@ -18,101 +15,55 @@ def create_private_users(db):
     # ===== FAMILIA DE SONIA (ID 1-10) =====
 
     # ID 1: SONIA - Usuario principal (DEFAULT USER)
-    sonia = User(
-        id=1,
-        display_name="Sonia Martínez",
-        phone=generate_phone_number(1),
-        instagram_username=None,
-        auth_provider="supabase",
-        auth_id="sonia_auth_001",
-        is_public=False,
-        is_admin=False
-    )
+    sonia = User(id=1, display_name="Sonia Martínez", phone=generate_phone_number(1), instagram_username=None, auth_provider="supabase", auth_id="sonia_auth_001", is_public=False, is_admin=False)
     users.append(sonia)
 
     # ID 2: Miquel - Pareja de Sonia
-    miquel = User(
-        id=2,
-        display_name="Miquel Farré",
-        phone=generate_phone_number(2),
-        instagram_username=None,
-        auth_provider="supabase",
-        auth_id="miquel_auth_002",
-        is_public=False,
-        is_admin=False
-    )
+    miquel = User(id=2, display_name="Miquel Farré", phone=generate_phone_number(2), instagram_username=None, auth_provider="supabase", auth_id="miquel_auth_002", is_public=False, is_admin=False)
     users.append(miquel)
 
     # ID 3: Ada - Hermana de Sonia
-    ada = User(
-        id=3,
-        display_name="Ada Martínez",
-        phone=generate_phone_number(3),
-        instagram_username=None,
-        auth_provider="supabase",
-        auth_id="ada_auth_003",
-        is_public=False,
-        is_admin=False
-    )
+    ada = User(id=3, display_name="Ada Martínez", phone=generate_phone_number(3), instagram_username=None, auth_provider="supabase", auth_id="ada_auth_003", is_public=False, is_admin=False)
     users.append(ada)
 
     # ID 4: Sara - Prima de Sonia
-    sara = User(
-        id=4,
-        display_name="Sara García",
-        phone=generate_phone_number(4),
-        instagram_username=None,
-        auth_provider="supabase",
-        auth_id="sara_auth_004",
-        is_public=False,
-        is_admin=False
-    )
+    sara = User(id=4, display_name="Sara García", phone=generate_phone_number(4), instagram_username=None, auth_provider="supabase", auth_id="sara_auth_004", is_public=False, is_admin=False)
     users.append(sara)
 
     # ID 5-10: Resto de familia (padres, tíos, primos)
-    familia_nombres = [
-        ("Pere Martínez", "padre"),
-        ("Rosa López", "madre"),
-        ("Jordi Martínez", "tio"),
-        ("Carme Fernández", "tia"),
-        ("Marc García", "primo"),
-        ("Laura García", "prima")
-    ]
+    familia_nombres = [("Pere Martínez", "padre"), ("Rosa López", "madre"), ("Jordi Martínez", "tio"), ("Carme Fernández", "tia"), ("Marc García", "primo"), ("Laura García", "prima")]
 
     for idx, (nombre, relacion) in enumerate(familia_nombres, start=5):
-        user = User(
-            id=idx,
-            display_name=nombre,
-            phone=generate_phone_number(idx),
-            instagram_username=None,
-            auth_provider="supabase",
-            auth_id=f"familia_{idx}_auth",
-            is_public=False,
-            is_admin=False
-        )
+        user = User(id=idx, display_name=nombre, phone=generate_phone_number(idx), instagram_username=None, auth_provider="supabase", auth_id=f"familia_{idx}_auth", is_public=False, is_admin=False)
         users.append(user)
 
     # ===== AMIGOS CERCANOS (ID 11-30) =====
 
     amigos_nombres = [
-        "Carlos Ruiz", "Paula Sánchez", "David Torres", "Elena Romero",
-        "Jorge Álvarez", "Marta Díaz", "Alberto Moreno", "Cristina Jiménez",
-        "Sergio Hernández", "Ana Gómez", "Pablo Muñoz", "Raquel Martín",
-        "Diego Suárez", "Patricia Castro", "Javier Ortiz", "Monica Silva",
-        "Rafael Mendez", "Sandra Vazquez", "Luis Ramos", "Beatriz Reyes"
+        "Carlos Ruiz",
+        "Paula Sánchez",
+        "David Torres",
+        "Elena Romero",
+        "Jorge Álvarez",
+        "Marta Díaz",
+        "Alberto Moreno",
+        "Cristina Jiménez",
+        "Sergio Hernández",
+        "Ana Gómez",
+        "Pablo Muñoz",
+        "Raquel Martín",
+        "Diego Suárez",
+        "Patricia Castro",
+        "Javier Ortiz",
+        "Monica Silva",
+        "Rafael Mendez",
+        "Sandra Vazquez",
+        "Luis Ramos",
+        "Beatriz Reyes",
     ]
 
     for idx, nombre in enumerate(amigos_nombres, start=11):
-        user = User(
-            id=idx,
-            display_name=nombre,
-            phone=generate_phone_number(idx),
-            instagram_username=None,
-            auth_provider="supabase",
-            auth_id=f"amigo_{idx}_auth",
-            is_public=False,
-            is_admin=False
-        )
+        user = User(id=idx, display_name=nombre, phone=generate_phone_number(idx), instagram_username=None, auth_provider="supabase", auth_id=f"amigo_{idx}_auth", is_public=False, is_admin=False)
         users.append(user)
 
     # ===== CONOCIDOS Y CONTACTOS (ID 31-60) =====
@@ -127,16 +78,7 @@ def create_private_users(db):
         apellido2 = random.choice(APELLIDOS)
         nombre_completo = f"{nombre} {apellido1}"
 
-        user = User(
-            id=idx,
-            display_name=nombre_completo,
-            phone=generate_phone_number(idx),
-            instagram_username=None,
-            auth_provider="supabase",
-            auth_id=f"conocido_{idx}_auth",
-            is_public=False,
-            is_admin=False
-        )
+        user = User(id=idx, display_name=nombre_completo, phone=generate_phone_number(idx), instagram_username=None, auth_provider="supabase", auth_id=f"conocido_{idx}_auth", is_public=False, is_admin=False)
         users.append(user)
 
     # ===== USUARIOS NUEVOS/INACTIVOS (ID 61-85) =====
@@ -148,26 +90,11 @@ def create_private_users(db):
         apellido = random.choice(APELLIDOS)
         nombre_completo = f"{nombre} {apellido}"
 
-        user = User(
-            id=idx,
-            display_name=nombre_completo,
-            phone=generate_phone_number(idx),
-            instagram_username=None,
-            auth_provider="supabase",
-            auth_id=f"nuevo_{idx}_auth",
-            is_public=False,
-            is_admin=False
-        )
+        user = User(id=idx, display_name=nombre_completo, phone=generate_phone_number(idx), instagram_username=None, auth_provider="supabase", auth_id=f"nuevo_{idx}_auth", is_public=False, is_admin=False)
         users.append(user)
 
     # Add all users to database
     db.add_all(users)
     db.flush()
 
-    return {
-        'sonia': sonia,
-        'miquel': miquel,
-        'ada': ada,
-        'sara': sara,
-        'all_users': users
-    }
+    return {"sonia": sonia, "miquel": miquel, "ada": ada, "sara": sara, "all_users": users}
