@@ -65,9 +65,14 @@ export const ENDPOINTS: Endpoint[] = [
       { name: 'user_id', type: 'number', required: true, description: 'User ID', example: 1 },
     ],
     bodyParams: [
-      { name: 'display_name', type: 'string', required: false, description: 'Display name' },
-      { name: 'bio', type: 'string', required: false, description: 'User bio' },
+      { name: 'display_name', type: 'string', required: true, description: 'Display name' },
+      { name: 'phone', type: 'string', required: false, description: 'Phone number' },
+      { name: 'instagram_username', type: 'string', required: false, description: 'Instagram username' },
       { name: 'profile_picture_url', type: 'string', required: false, description: 'Profile picture URL' },
+      { name: 'auth_provider', type: 'string', required: true, description: 'Auth provider' },
+      { name: 'auth_id', type: 'string', required: true, description: 'Auth ID' },
+      { name: 'is_public', type: 'boolean', required: true, description: 'Is public user' },
+      { name: 'is_admin', type: 'boolean', required: false, description: 'Is admin' },
     ],
   },
 
