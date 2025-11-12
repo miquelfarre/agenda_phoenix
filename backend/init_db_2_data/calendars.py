@@ -97,15 +97,16 @@ def create_calendars(db, private_users, public_users):
             status="accepted"
         ))
 
-    # === CALENDARIOS PÚBLICOS CON SHARE_HASH ===
+    # === CALENDARIOS PÚBLICOS CON SHARE_HASH (de usuarios PRIVADOS) ===
+    # Los usuarios PRIVADOS pueden crear calendarios públicos con share_hash para compartirlos
+    # Los usuarios PÚBLICOS no necesitan calendarios con share_hash (la gente se suscribe directamente al usuario)
 
-    # ID 86: FC Barcelona
-    fcbarcelona = public_users['fcbarcelona']
+    # Calendar de Sara (usuario privado) - Curador de eventos de Barça
     cal_fcb = Calendar(
         id=10,
         name="FC Barcelona - Temporada 2025/26",
-        description="Todos los partidos del Barça",
-        owner_id=fcbarcelona.id,
+        description="Todos los partidos del Barça curados por fan",
+        owner_id=sara.id,  # Sara (usuario privado ID 4)
         is_public=True,
         share_hash="fcb25_26",
         subscriber_count=10000
@@ -113,18 +114,17 @@ def create_calendars(db, private_users, public_users):
     calendars.append(cal_fcb)
     memberships.append(CalendarMembership(
         calendar_id=cal_fcb.id,
-        user_id=fcbarcelona.id,
+        user_id=sara.id,
         role="owner",
         status="accepted"
     ))
 
-    # ID 97: Primavera Sound
-    primaverasound = public_users['primaverasound']
+    # Calendar de Miquel (usuario privado) - Fan de música
     cal_ps = Calendar(
         id=11,
         name="Conciertos Primavera Sound 2025",
         description="Lineup completo del festival",
-        owner_id=primaverasound.id,
+        owner_id=miquel.id,  # Miquel (usuario privado ID 2)
         is_public=True,
         share_hash="ps2025xx",
         subscriber_count=2000
@@ -132,18 +132,17 @@ def create_calendars(db, private_users, public_users):
     calendars.append(cal_ps)
     memberships.append(CalendarMembership(
         calendar_id=cal_ps.id,
-        user_id=primaverasound.id,
+        user_id=miquel.id,
         role="owner",
         status="accepted"
     ))
 
-    # ID 91: Festival Mercè
-    festivalmerce = public_users['festivalmerce']
+    # Calendar de Ada (usuario privado) - Festivos de Barcelona
     cal_merce = Calendar(
         id=12,
         name="Festivos Barcelona 2025-2026",
         description="Todos los festivos y celebraciones de Barcelona",
-        owner_id=festivalmerce.id,
+        owner_id=ada.id,  # Ada (usuario privado ID 3)
         is_public=True,
         share_hash="bcn2025f",
         subscriber_count=500
@@ -151,18 +150,18 @@ def create_calendars(db, private_users, public_users):
     calendars.append(cal_merce)
     memberships.append(CalendarMembership(
         calendar_id=cal_merce.id,
-        user_id=festivalmerce.id,
+        user_id=ada.id,
         role="owner",
         status="accepted"
     ))
 
-    # ID 88: FitZone Gym
-    fitzonegym = public_users['fitzonegym']
+    # Calendar de usuario privado ID 11 (primer amigo cercano) - Clases gym
+    user_11 = all_users[10]  # ID 11
     cal_fitzone = Calendar(
         id=13,
         name="Clases FitZone",
         description="Todas las clases del gimnasio",
-        owner_id=fitzonegym.id,
+        owner_id=user_11.id,  # Usuario privado ID 11
         is_public=True,
         share_hash="fitzone2",
         subscriber_count=300
@@ -170,18 +169,18 @@ def create_calendars(db, private_users, public_users):
     calendars.append(cal_fitzone)
     memberships.append(CalendarMembership(
         calendar_id=cal_fitzone.id,
-        user_id=fitzonegym.id,
+        user_id=user_11.id,
         role="owner",
         status="accepted"
     ))
 
-    # ID 92: Green Point Yoga
-    greenpointbcn = public_users['greenpointbcn']
+    # Calendar de usuario privado ID 12 - Clases de yoga
+    user_12 = all_users[11]  # ID 12
     cal_yoga = Calendar(
         id=14,
         name="Clases de Yoga",
         description="Horario de clases de yoga y meditación",
-        owner_id=greenpointbcn.id,
+        owner_id=user_12.id,  # Usuario privado ID 12
         is_public=True,
         share_hash="yogabcn1",
         subscriber_count=200
@@ -189,7 +188,7 @@ def create_calendars(db, private_users, public_users):
     calendars.append(cal_yoga)
     memberships.append(CalendarMembership(
         calendar_id=cal_yoga.id,
-        user_id=greenpointbcn.id,
+        user_id=user_12.id,
         role="owner",
         status="accepted"
     ))

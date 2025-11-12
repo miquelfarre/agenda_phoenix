@@ -56,7 +56,8 @@ def test_event_with_invitations(test_db, test_users):
 
     # Create event
     event_data = EventCreate(name="Test Event", description="Event with invitations", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
-    event = event_crud.create(test_db, obj_in=event_data)
+    event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
+    assert event is not None and error is None
 
     # Create invitations
     # Invitee 1 - pending
@@ -154,7 +155,8 @@ def test_get_event_attendees_populated(client, test_db, test_users):
 
     # Create event
     event_data = EventCreate(name="Event with Attendees", description="Some accept, some reject", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
-    event = event_crud.create(test_db, obj_in=event_data)
+    event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
+    assert event is not None and error is None
 
     # Invitee 1 - accepts
     interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee1.id, event_id=event.id, interaction_type="invited", status="accepted", invited_by_user_id=owner.id))
@@ -195,7 +197,8 @@ def test_get_event_inviter_object_complete(client, test_db, test_users):
 
     # Create event
     event_data = EventCreate(name="Event to test inviter", description="Testing inviter object", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
-    event = event_crud.create(test_db, obj_in=event_data)
+    event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
+    assert event is not None and error is None
 
     # Owner invites invitee1
     interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee1.id, event_id=event.id, interaction_type="invited", status="pending", invited_by_user_id=owner.id))
@@ -232,7 +235,8 @@ def test_get_event_unauthenticated_no_interactions(client, test_db, test_users):
 
     # Create public event
     event_data = EventCreate(name="Public Event", description="Should not show interactions to unauthenticated users", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id)
-    event = event_crud.create(test_db, obj_in=event_data)
+    event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
+    assert event is not None and error is None
     test_db.commit()
 
     # Clear auth context (unauthenticated)
@@ -275,7 +279,8 @@ def test_get_event_admin_sees_all_interactions(client, test_db, test_users):
 
     # Create event in the calendar (owned by owner, not invitee1)
     event_data = EventCreate(name="Calendar Event", description="Event in shared calendar", start_date=datetime.now() + timedelta(days=1), owner_id=owner.id, calendar_id=db_calendar.id)
-    event = event_crud.create(test_db, obj_in=event_data)
+    event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
+    assert event is not None and error is None
 
     # Create interactions - invite invitee2
     interaction_crud.create(test_db, obj_in=EventInteractionCreate(user_id=invitee2.id, event_id=event.id, interaction_type="invited", status="pending", invited_by_user_id=owner.id))
@@ -334,7 +339,8 @@ def test_get_event_attendees_filtered_by_invitation_relationship(client, test_db
         start_date=datetime.now() + timedelta(days=1),
         owner_id=owner.id
     )
-    event = event_crud.create(test_db, obj_in=event_data)
+    event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
+    assert event is not None and error is None
 
     # Owner has a "joined" interaction (as event owner)
     interaction_crud.create(test_db, obj_in=EventInteractionCreate(
@@ -431,7 +437,8 @@ def test_get_event_attendees_all_when_not_invited(client, test_db, test_users):
         start_date=datetime.now() + timedelta(days=1),
         owner_id=owner.id
     )
-    event = event_crud.create(test_db, obj_in=event_data)
+    event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
+    assert event is not None and error is None
 
     # Owner has joined interaction
     interaction_crud.create(test_db, obj_in=EventInteractionCreate(
@@ -509,7 +516,8 @@ def test_get_event_attendees_excludes_rejected(client, test_db, test_users):
         start_date=datetime.now() + timedelta(days=1),
         owner_id=owner.id
     )
-    event = event_crud.create(test_db, obj_in=event_data)
+    event, error, error_detail = event_crud.create_with_validation(test_db, obj_in=event_data)
+    assert event is not None and error is None
 
     # Owner joined
     interaction_crud.create(test_db, obj_in=EventInteractionCreate(

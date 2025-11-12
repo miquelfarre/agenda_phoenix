@@ -209,7 +209,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                 if not interaction_user:
                     continue
 
-                # Use new fields with fallback to legacy
                 user_display_name = interaction_user.display_name
                 user_instagram_username = interaction_user.instagram_username
                 user_profile_picture_url = interaction_user.profile_picture_url

@@ -170,15 +170,23 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         # Prepare event data
         event_data = obj_in.model_dump()
 
+        # Extract patterns before creating event (they're not part of Event model)
+        patterns = event_data.pop('patterns', None)
+
         # Ensure dates are timezone-aware
         if event_data["start_date"].tzinfo is None:
             event_data["start_date"] = event_data["start_date"].replace(tzinfo=timezone.utc)
 
-        # Create event directly from dict
+        # Create parent event directly from dict
         db_event = Event(**event_data)
         db.add(db_event)
         db.commit()
         db.refresh(db_event)
+
+        # If this is a recurring event with patterns, generate child events
+        if patterns and len(patterns) > 0 and db_event.event_type == "recurring":
+            self._generate_recurring_events(db, db_event, patterns)
+
         return db_event, None, None
 
     def update_with_validation(self, db: Session, *, event_id: int, obj_in) -> Tuple[Optional[Event], Optional[str]]:
@@ -373,6 +381,74 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         now = datetime.now(timezone.utc)
 
         return db.query(Event).filter(Event.owner_id == owner_id, Event.start_date >= now).order_by(Event.start_date.asc()).limit(limit).all()
+
+    def _generate_recurring_events(self, db: Session, parent_event: Event, patterns: List[dict]) -> None:
+        """
+        Generate child events for a recurring event based on patterns.
+
+        Args:
+            db: Database session
+            parent_event: The parent recurring event
+            patterns: List of recurrence patterns with dayOfWeek and time
+        """
+        from datetime import timedelta
+
+        # Generate events for the next 52 weeks (1 year)
+        weeks_to_generate = 52
+
+        # Start from the parent event's start date
+        base_date = parent_event.start_date
+
+        # Get the current week's Monday (ISO weekday: Monday=1, Sunday=7)
+        days_since_monday = (base_date.weekday()) % 7
+        week_start = base_date - timedelta(days=days_since_monday)
+
+        for pattern_data in patterns:
+            day_of_week = pattern_data.get('dayOfWeek', 0) if isinstance(pattern_data, dict) else pattern_data.dayOfWeek
+            time_str = pattern_data.get('time', '18:00:00') if isinstance(pattern_data, dict) else pattern_data.time
+
+            # Parse time (format: HH:MM:SS)
+            try:
+                hour, minute, second = map(int, time_str.split(':'))
+            except:
+                hour, minute, second = 18, 0, 0  # Default to 18:00:00
+
+            # Generate events for each week
+            for week_offset in range(weeks_to_generate):
+                # Calculate the date for this pattern in this week
+                event_date = week_start + timedelta(weeks=week_offset, days=day_of_week)
+
+                # Set the specific time
+                event_datetime = event_date.replace(
+                    hour=hour,
+                    minute=minute,
+                    second=second,
+                    microsecond=0
+                )
+
+                # Ensure timezone-aware
+                if event_datetime.tzinfo is None:
+                    event_datetime = event_datetime.replace(tzinfo=timezone.utc)
+
+                # Skip if the event is in the past
+                if event_datetime < datetime.now(timezone.utc):
+                    continue
+
+                # Create child event
+                child_event = Event(
+                    name=parent_event.name,
+                    description=parent_event.description,
+                    start_date=event_datetime,
+                    event_type="regular",  # Child events are regular
+                    owner_id=parent_event.owner_id,
+                    calendar_id=parent_event.calendar_id,
+                    parent_recurring_event_id=parent_event.id,
+                )
+
+                db.add(child_event)
+
+        # Commit all child events
+        db.commit()
 
 
 # Singleton instance

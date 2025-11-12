@@ -27,6 +27,7 @@ from init_db import (
     create_supabase_auth_users
 )
 from database import SessionLocal
+from sqlalchemy import text
 from init_db_2_data import (
     users_private,
     users_public,
@@ -44,6 +45,47 @@ from init_db_2_data import (
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def reset_sequences(db):
+    """
+    Reset all autoincrement sequences to max(id)+1 for each table.
+    This is necessary after inserting data with explicit IDs.
+    """
+    logger.info("🔄 Resetting autoincrement sequences...")
+
+    tables_with_sequences = [
+        'users',
+        'events',
+        'event_interactions',
+        'calendars',
+        'calendar_memberships',
+        'calendar_subscriptions',
+        'groups',
+        'group_memberships',
+        'recurring_event_configs',
+        'event_bans',
+        'user_blocks',
+        'event_cancellations',
+        'event_cancellation_views',
+        'user_contacts'
+    ]
+
+    for table in tables_with_sequences:
+        try:
+            # Get the current max ID
+            result = db.execute(text(f"SELECT MAX(id) FROM {table}"))
+            max_id = result.scalar()
+
+            if max_id is not None:
+                # Reset the sequence to max_id + 1
+                db.execute(text(f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), {max_id}, true)"))
+                logger.info(f"  ✓ Reset {table} sequence to {max_id + 1}")
+        except Exception as e:
+            logger.warning(f"  ⚠ Could not reset sequence for {table}: {e}")
+
+    db.commit()
+    logger.info("✅ Sequences reset complete")
 
 
 def insert_sample_data_v2():
@@ -112,6 +154,10 @@ def insert_sample_data_v2():
         logger.info(f"  ✓ Created {len(blocks_data['blocks'])} blocks and {len(blocks_data['bans'])} bans")
 
         db.commit()
+
+        # Reset autoincrement sequences after inserting data with explicit IDs
+        reset_sequences(db)
+
         logger.info("✅ Sample data v2 inserted successfully!")
         logger.info(f"""
         📊 Dataset Summary:

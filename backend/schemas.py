@@ -7,30 +7,8 @@ All request/response models defined here.
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict
-
-# ============================================================================
-# CONTACT SCHEMAS (LEGACY - DEPRECATED)
-# ============================================================================
-
-
-class ContactBase(BaseModel):
-    name: str
-    phone: str
-
-
-class ContactCreate(ContactBase):
-    owner_id: Optional[int] = None
-
-
-class ContactResponse(ContactBase):
-    id: int
-    owner_id: Optional[int]
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
+from pydantic import BaseModel, ConfigDict, field_validator
+from utils import validate_5min_interval
 
 # ============================================================================
 # USER SCHEMAS
@@ -114,6 +92,42 @@ class UserPublicStats(BaseModel):
 # ============================================================================
 
 
+class RecurrencePattern(BaseModel):
+    """Pattern for recurring events"""
+    eventId: Optional[int] = None  # -1 or None for new events
+    dayOfWeek: int  # 0=Monday, 6=Sunday
+    time: str  # HH:MM:SS format (seconds always :00, minutes in 5-minute intervals)
+
+    @field_validator('dayOfWeek')
+    @classmethod
+    def validate_day_of_week(cls, v: int) -> int:
+        if not 0 <= v <= 6:
+            raise ValueError('dayOfWeek must be between 0 (Monday) and 6 (Sunday)')
+        return v
+
+    @field_validator('time')
+    @classmethod
+    def validate_time_format(cls, v: str) -> str:
+        import re
+        # Match HH:MM:SS format
+        pattern = r'^([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$'
+        if not re.match(pattern, v):
+            raise ValueError('time must be in HH:MM:SS format')
+
+        # Extract components
+        _, minute, second = v.split(':')
+
+        # Validate seconds are always 00
+        if second != '00':
+            raise ValueError('seconds must always be 00')
+
+        # Validate minutes are in 5-minute intervals
+        if not validate_5min_interval(int(minute)):
+            raise ValueError('minutes must be in 5-minute intervals (0, 5, 10, ..., 55)')
+
+        return v
+
+
 class EventBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -125,6 +139,7 @@ class EventCreate(EventBase):
     owner_id: int
     calendar_id: Optional[int] = None
     parent_recurring_event_id: Optional[int] = None
+    patterns: Optional[List[RecurrencePattern]] = None  # For recurring events
 
 
 class EventUpdate(BaseModel):

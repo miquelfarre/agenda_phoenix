@@ -18,6 +18,7 @@ from dependencies import get_db
 import models
 from models import EventInteraction
 from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserPublicStats, UserResponse, UserSubscriptionResponse
+from utils import round_to_5min
 
 logger = logging.getLogger(__name__)
 
@@ -450,13 +451,6 @@ async def get_user_events(
     # ============================================================
     # 6. BUILD RESPONSE (round times, convert to dict)
     # ============================================================
-    def round_to_5min(dt):
-        """Round datetime to nearest 5-minute interval"""
-        if not dt:
-            return None
-        minute = (dt.minute // 5) * 5
-        return dt.replace(minute=minute, second=0, microsecond=0)
-
     result = []
     for ev in visible_events:
         rounded_start = round_to_5min(ev.start_date)

@@ -94,6 +94,9 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         Automatically creates a calendar_membership for the owner as admin.
         Generates share_hash for public calendars.
 
+        IMPORTANT: Only private users (is_public=False) can create calendars.
+        Public users should NOT create calendars - users subscribe directly to them.
+
         Returns:
             (Calendar, None) if successful
             (None, error_message) if validation fails
@@ -102,10 +105,14 @@ class CRUDCalendar(CRUDBase[Calendar, CalendarCreate, CalendarBase]):
         import secrets
         import string
 
-        # Optimized: only check if user exists (don't load full object)
-        user_exists = db.query(User.id).filter(User.id == obj_in.owner_id).first() is not None
-        if not user_exists:
+        # Check if user exists and is a private user
+        user = db.query(User.id, User.is_public).filter(User.id == obj_in.owner_id).first()
+        if not user:
             return None, "User not found"
+
+        # Public users cannot create calendars
+        if user.is_public:
+            return None, "Public users cannot create calendars. Users subscribe directly to public users."
 
         # Generate share_hash for public calendars
         if obj_in.is_public:

@@ -152,8 +152,8 @@ class Calendar(Base):
     end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # Optional: for temporal calendars
 
     # Public calendar fields
-    is_public = Column(Boolean, default=False, nullable=False, index=True)  # If True, calendar is discoverable
-    is_discoverable = Column(Boolean, default=True, nullable=False)  # If False, public but not in search results
+    is_public = Column(Boolean, default=False, nullable=False, index=True)  # If True, calendar is public with share_hash
+    is_discoverable = Column(Boolean, default=True, nullable=False)  # If False, public but only accessible via direct link (draft mode)
     description = Column(Text, nullable=True)  # Description for search/discovery
     category = Column(String(100), nullable=True, index=True)  # "holidays", "sports", "cultural", etc.
     share_hash = Column(String(8), unique=True, nullable=True, index=True)  # Unique 8-char hash for sharing public calendars
