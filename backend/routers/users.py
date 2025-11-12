@@ -26,22 +26,14 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 @router.get("")
-async def get_users(public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, exclude_user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
-    """Get all users, optionally filtered by public status, with optional search by instagram_username/contact name, optionally enriched with contact info, optionally excluding a specific user ID"""
-    result = user.get_multi_with_optional_enrichment(db, public=public, enriched=enriched, search=search, skip=offset, limit=limit, order_by=order_by or "id", order_dir=order_dir)
+async def get_users(public: Optional[bool] = None, search: Optional[str] = None, exclude_user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: Optional[str] = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
+    """Get all users, optionally filtered by public status, with optional search by instagram_username"""
+    result = user.get_multi(db, public=public, search=search, skip=offset, limit=limit, order_by=order_by or "id", order_dir=order_dir)
 
     # Filter out excluded user if specified
     if exclude_user_id is not None:
-        if isinstance(result, list) and len(result) > 0:
-            if isinstance(result[0], dict):
-                # Enriched results are dicts
-                result = [r for r in result if r.get("id") != exclude_user_id]
-            else:
-                # Non-enriched results are ORM objects
-                result = [r for r in result if r.id != exclude_user_id]
+        result = [r for r in result if r.id != exclude_user_id]
 
-    # When enriched=True, result is list of dicts; when False, result is list of User ORM objects
-    # Return as-is and let FastAPI serialize appropriately
     return result
 
 

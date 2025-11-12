@@ -13,7 +13,6 @@ abstract class IApiClient {
   // ============================================================================
   Future<List<Map<String, dynamic>>> fetchUsers({
     bool? isPublic,
-    bool? enriched,
     int? limit,
     int? offset,
     String? search,

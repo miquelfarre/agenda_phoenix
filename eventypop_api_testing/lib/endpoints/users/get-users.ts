@@ -10,8 +10,7 @@ export const getUsers: Endpoint = {
   description: 'Get all users with optional filters',
   queryParams: [
     { name: 'public', type: 'boolean', required: false, description: 'Filter by public/private users', default: null },
-    { name: 'enriched', type: 'boolean', required: false, description: 'Include contact information', default: false },
-    { name: 'search', type: 'string', required: false, description: 'Search by instagram_username or contact name', default: null },
+    { name: 'search', type: 'string', required: false, description: 'Search by display_name or instagram_username', default: null },
     { name: 'exclude_user_id', type: 'number', required: false, description: 'Exclude specific user ID', default: null },
     { name: 'limit', type: 'number', required: false, description: 'Max number of results', default: 50 },
     { name: 'offset', type: 'number', required: false, description: 'Pagination offset', default: 0 },

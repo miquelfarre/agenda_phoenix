@@ -117,16 +117,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         """
         return db.query(User).filter(User.is_public == True).offset(skip).limit(limit).all()
 
-    def get_multi_with_optional_enrichment(self, db: Session, *, public: Optional[bool] = None, enriched: bool = False, search: Optional[str] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List:
+    def get_multi(self, db: Session, *, public: Optional[bool] = None, search: Optional[str] = None, skip: int = 0, limit: int = 50, order_by: str = "id", order_dir: str = "asc") -> List[User]:
         """
-        Get users with optional public filter and optional enrichment.
-
-        UPDATED: Now uses new User fields (display_name, instagram_username) instead of Contact legacy.
+        Get users with optional filters.
 
         Args:
             db: Database session
             public: Filter by public status (True=public users, False=private users, None=all)
-            enriched: Return enriched data (now just returns user fields, kept for compatibility)
             search: Case-insensitive search in display_name and instagram_username
             skip: Number of records to skip
             limit: Maximum number of records
@@ -134,7 +131,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             order_dir: Order direction (asc/desc)
 
         Returns:
-            List of User objects or enriched dicts
+            List of User objects
         """
         from sqlalchemy import or_
 
@@ -143,7 +140,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         # Apply search filter if provided
         if search:
             search_term = f"%{search}%"
-            # Search in display_name and instagram_username
             query = query.filter(
                 or_(
                     User.display_name.ilike(search_term),
@@ -152,7 +148,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
             )
 
         if public is not None:
-            # Use is_public field instead of checking instagram_username
             query = query.filter(User.is_public == public)
 
         # Apply ordering and pagination
@@ -164,31 +159,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
 
         query = query.offset(max(0, skip)).limit(max(1, min(200, limit)))
 
-        users = query.all()
-
-        # If enriched, return dicts with all user data
-        if enriched:
-            enriched_users = []
-            for user in users:
-                enriched_users.append(
-                    {
-                        "id": user.id,
-                        "display_name": user.display_name,
-                        "instagram_username": user.instagram_username,
-                        "profile_picture_url": user.profile_picture_url,
-                        "phone": user.phone,
-                        "auth_provider": user.auth_provider,
-                        "auth_id": user.auth_id,
-                        "is_public": user.is_public,
-                        "is_admin": user.is_admin,
-                        "last_login": user.last_login,
-                        "created_at": user.created_at,
-                        "updated_at": user.updated_at,
-                    }
-                )
-            return enriched_users
-
-        return users
+        return query.all()
 
     def get_public_user_stats(self, db: Session, *, user_id: int) -> Optional[dict]:
         """

@@ -272,7 +272,6 @@ class ApiClient implements IApiClient {
   @override
   Future<List<Map<String, dynamic>>> fetchUsers({
     bool? isPublic,
-    bool? enriched,
     int? limit,
     int? offset,
     String? search,
@@ -281,7 +280,6 @@ class ApiClient implements IApiClient {
       '/users',
       queryParams: {
         if (isPublic != null) 'public': isPublic,
-        if (enriched != null) 'enriched': enriched,
         if (limit != null) 'limit': limit,
         if (offset != null) 'offset': offset,
         if (search != null) 'search': search,
