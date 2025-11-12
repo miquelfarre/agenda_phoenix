@@ -377,6 +377,45 @@ start_flutter() {
     fi
 }
 
+# Start web services (Next.js projects)
+start_web_services() {
+    local service="${1:-all}"
+
+    info "Starting web services..."
+
+    case "$service" in
+        backoffice)
+            info "Starting EventyPop Backoffice (port 3001)..."
+            docker compose up -d backoffice
+            success "✓ Backoffice available at http://localhost:3001"
+            ;;
+        api_testing)
+            info "Starting EventyPop API Testing (port 3002)..."
+            docker compose up -d api_testing
+            success "✓ API Testing available at http://localhost:3002"
+            ;;
+        frontend)
+            info "Starting EventyPop Frontend (port 3003)..."
+            docker compose up -d frontend
+            success "✓ Frontend available at http://localhost:3003"
+            ;;
+        all)
+            info "Starting all web services..."
+            docker compose up -d backoffice api_testing frontend
+            success "✓ Backoffice available at http://localhost:3001"
+            success "✓ API Testing available at http://localhost:3002"
+            success "✓ Frontend available at http://localhost:3003"
+            ;;
+    esac
+}
+
+# Stop web services
+stop_web_services() {
+    info "Stopping web services..."
+    docker compose stop backoffice api_testing frontend
+    success "Web services stopped"
+}
+
 # Stop backend containers
 stop_backend() {
     info "Stopping backend containers..."
@@ -415,32 +454,47 @@ usage() {
     cat <<EOF
 Usage: ./start.sh [mode] [options]
 
-Script to start Agenda Phoenix backend and iOS app with persistent containers.
+Script to start Agenda Phoenix backend, iOS app, and web services.
 
 Modes:
     backend       Start only backend containers (persistent)
     ios           Start only iOS Flutter app (requires backend running)
     both          Start backend and iOS app (default)
+
+    web           Start all web services (backoffice, api_testing, frontend)
+    backoffice    Start only EventyPop Backoffice (port 3001)
+    api_testing   Start only EventyPop API Testing (port 3002)
+    frontend      Start only EventyPop Frontend (port 3003)
+
     stop          Stop backend containers
+    web_stop      Stop web services
     status        Check status of backend
 
 Options:
   -h, --help     Show this help
   -u, --user-id  USER_ID (default: 1)
-  -s, --script   Database script (default: init_db.py)
+  -s, --script   Database script (default: init_db_2.py)
 
 Environment variables:
   USER_ID        User ID to use (default: 1)
-  DB_SCRIPT      Database script to run (default: init_db.py)
+  DB_SCRIPT      Database script to run (default: init_db_2.py)
 
 Examples:
     ./start.sh                    # Start backend and iOS app (default)
     ./start.sh backend            # Start only backend (persistent)
     ./start.sh ios                # Start only iOS app
+    ./start.sh web                # Start all web services
+    ./start.sh backoffice         # Start only backoffice
     ./start.sh stop               # Stop backend containers
+    ./start.sh web_stop           # Stop web services
     ./start.sh status             # Check status of backend
     ./start.sh -u 42              # USER_ID=42
     ./start.sh backend -s custom_db.py   # Custom database script
+
+Web Services URLs:
+    Backoffice:   http://localhost:3001  (Admin panel with Shadcn/ui)
+    API Testing:  http://localhost:3002  (API testing tool)
+    Frontend:     http://localhost:3003  (Public web app with Shadcn/ui)
 
 EOF
 }
@@ -449,7 +503,7 @@ EOF
 MODE=""
 while [[ $# -gt 0 ]]; do
     case $1 in
-        backend|ios|both|stop|status)
+        backend|ios|both|stop|status|web|backoffice|api_testing|frontend|web_stop)
             if [[ -z "$MODE" ]]; then
                 MODE="$1"
                 shift
@@ -524,8 +578,27 @@ main() {
             start_ios_simulator "$device_udid"
             start_flutter "$device_udid"
             ;;
+        web)
+            info "🌐 Starting all web services..."
+            start_web_services "all"
+            ;;
+        backoffice)
+            info "🌐 Starting EventyPop Backoffice..."
+            start_web_services "backoffice"
+            ;;
+        api_testing)
+            info "🌐 Starting EventyPop API Testing..."
+            start_web_services "api_testing"
+            ;;
+        frontend)
+            info "🌐 Starting EventyPop Frontend..."
+            start_web_services "frontend"
+            ;;
         stop)
             stop_backend
+            ;;
+        web_stop)
+            stop_web_services
             ;;
         status)
             check_backend_status
