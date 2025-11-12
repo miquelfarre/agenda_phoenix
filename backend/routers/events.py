@@ -4,33 +4,77 @@ Events Router
 Handles all event-related endpoints.
 """
 
+import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, noload
 
 from auth import get_current_user_id, get_current_user_id_optional
-from crud import event, event_cancellation, event_interaction, user
+from crud import calendar_membership, event, event_cancellation, event_interaction, user
 from dependencies import check_event_permission, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
-from models import EventInteraction, UserBlock
+from models import EventInteraction, User, UserBlock
 from schemas import AvailableInviteeResponse, EventCancellationResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionEnrichedResponse, EventInteractionResponse, EventInteractionUpdate, EventResponse, EventUpdate
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("", response_model=List[EventResponse])
 async def get_events(owner_id: Optional[int] = None, calendar_id: Optional[int] = None, current_user_id: Optional[int] = Depends(get_current_user_id_optional), limit: int = 50, offset: int = 0, order_by: Optional[str] = "start_date", order_dir: str = "asc", db: Session = Depends(get_db)):
-    """Get all events, optionally filtered by owner_id or calendar_id.
+    """Get events accessible to the authenticated user.
 
-    Authentication is optional - provide JWT token in Authorization header for authenticated access."""
+    Authentication is optional - provide JWT token in Authorization header for authenticated access.
+
+    If authenticated, returns events the user has access to:
+    - Events the user created (owner)
+    - Events the user was invited to (with accepted invitations)
+    - Events the user subscribed to
+    - Events in calendars where user is owner/admin with accepted status
+
+    If not authenticated, returns empty list (use public event discovery endpoints instead).
+
+    Optional filters by owner_id or calendar_id can further narrow results."""
     # Validate and limit pagination
     limit = max(1, min(200, limit))
     offset = max(0, offset)
 
-    events = event.get_multi_filtered(db, owner_id=owner_id, calendar_id=calendar_id, skip=offset, limit=limit, order_by=order_by or "start_date", order_dir=order_dir)
+    # If user is authenticated, filter by accessible events
+    if current_user_id is not None:
+        # Get all event IDs accessible to this user
+        accessible_event_ids = event.get_user_accessible_event_ids(db, user_id=current_user_id)
 
-    return events
+        if not accessible_event_ids:
+            return []
+
+        # Build query for accessible events
+        query = db.query(event.model).options(noload(event.model.interactions)).filter(event.model.id.in_(accessible_event_ids))
+
+        # Apply optional filters
+        if owner_id is not None:
+            query = query.filter(event.model.owner_id == owner_id)
+        if calendar_id is not None:
+            query = query.filter(event.model.calendar_id == calendar_id)
+
+        # Apply ordering
+        if order_by and hasattr(event.model, order_by):
+            order_col = getattr(event.model, order_by)
+        else:
+            order_col = event.model.id
+
+        if order_dir.lower() == "desc":
+            query = query.order_by(order_col.desc())
+        else:
+            query = query.order_by(order_col.asc())
+
+        # Apply pagination
+        events = query.offset(offset).limit(limit).all()
+        return events
+
+    # If not authenticated, return empty list
+    # (public events should be accessed via public discovery endpoints)
+    return []
 
 
 @router.get("/{event_id}", response_model=EventResponse)
@@ -70,9 +114,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
     owner_name = owner.display_name
     owner_profile_picture_url = owner.profile_picture_url
 
-    import logging
-
-    logger = logging.getLogger(__name__)
     logger.info(f"[GET /events/{event_id}] OWNER INFO: user_id={owner.id}, is_public={owner.is_public}, owner_name={owner_name}")
 
     # Build response dict from event
@@ -134,8 +175,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
 
         # Check if user is admin of the calendar containing this event
         if db_event.calendar_id:
-            from crud import calendar_membership
-
             membership = calendar_membership.get_membership(db, calendar_id=db_event.calendar_id, user_id=current_user_id)
             if membership and membership.role in ["admin"] and membership.status == "accepted":
                 is_admin = True
@@ -279,8 +318,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
     # - Other users invited by the same inviter who accepted
     # Otherwise, show all attendees
     if current_user_id is not None:
-        from models import User
-
         # Check if current user has an accepted invitation
         current_user_invitation = (
             db.query(EventInteraction)

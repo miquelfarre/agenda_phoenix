@@ -56,7 +56,7 @@ class APIClient {
     // Add request interceptor to include user ID
     this.client.interceptors.request.use((config) => {
       if (this.currentUser) {
-        config.headers['X-User-ID'] = this.currentUser.id.toString();
+        config.headers['X-Test-User-Id'] = this.currentUser.id.toString();
       }
       return config;
     });
