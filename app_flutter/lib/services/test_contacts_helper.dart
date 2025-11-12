@@ -47,7 +47,9 @@ class TestContactsHelper {
           ..phones = [Phone(contactData['phone']!)];
 
         await newContact.insert();
-        print('✅ Added contact: ${contactData['name']} (${contactData['phone']})');
+        print(
+          '✅ Added contact: ${contactData['name']} (${contactData['phone']})',
+        );
         added++;
       } catch (e) {
         print('❌ Error adding contact ${contactData['name']}: $e');

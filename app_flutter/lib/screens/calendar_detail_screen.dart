@@ -93,9 +93,8 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
 
       if (mounted) {
         setState(() {
-          _ownerName = owner?.displayName ??
-                       owner?.instagramUsername ??
-                       'Usuario';
+          _ownerName =
+              owner?.displayName ?? owner?.instagramUsername ?? 'Usuario';
         });
       }
     } catch (e) {
@@ -166,7 +165,9 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     setState(() => _isProcessingLeave = true);
 
     try {
-      print('🔴 [DEBUG] ${_isOwner ? "Deleting" : "Leaving"} calendar ${calendar.id}');
+      print(
+        '🔴 [DEBUG] ${_isOwner ? "Deleting" : "Leaving"} calendar ${calendar.id}',
+      );
 
       await CalendarOperations.deleteOrLeaveCalendar(
         calendar: calendar,

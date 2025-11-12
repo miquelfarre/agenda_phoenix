@@ -289,8 +289,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             ],
 
             if ((_detailedEvent ?? currentEvent).owner?.isPublic == true &&
-                (_detailedEvent ?? currentEvent).ownerName !=
-                    null) ...[
+                (_detailedEvent ?? currentEvent).ownerName != null) ...[
               const SizedBox(height: 32),
               Consumer(
                 builder: (context, ref, child) {
@@ -316,8 +315,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (event.owner?.isPublic == true &&
-              event.ownerName != null) ...[
+          if (event.owner?.isPublic == true && event.ownerName != null) ...[
             _buildOrganizerRow(),
             const SizedBox(height: 8),
           ],
@@ -767,7 +765,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       editScreen = CreateEditEventScreen(eventToEdit: currentEvent);
     }
 
-    final updatedEvent = await Navigator.of(context).pushScreen(context, editScreen);
+    final updatedEvent = await Navigator.of(
+      context,
+    ).pushScreen(context, editScreen);
 
     if (updatedEvent != null) {
       // Realtime handles refresh automatically via EventRepository

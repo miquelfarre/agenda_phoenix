@@ -23,7 +23,9 @@ class PermissionsService {
 
   /// Check if all critical permissions are granted
   Future<bool> hasAllCriticalPermissions() async {
-    final contactsStatus = await FlutterContacts.requestPermission(readonly: true);
+    final contactsStatus = await FlutterContacts.requestPermission(
+      readonly: true,
+    );
     final microphoneStatus = await Permission.microphone.status;
     final speechStatus = await Permission.speech.status;
 

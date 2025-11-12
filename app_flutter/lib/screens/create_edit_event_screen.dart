@@ -25,10 +25,7 @@ import 'create_edit_birthday_event_screen.dart';
 class CreateEditEventScreen extends BaseFormScreen {
   final Event? eventToEdit;
 
-  const CreateEditEventScreen({
-    super.key,
-    this.eventToEdit,
-  });
+  const CreateEditEventScreen({super.key, this.eventToEdit});
 
   @override
   CreateEditEventScreenState createState() => CreateEditEventScreenState();
@@ -36,7 +33,6 @@ class CreateEditEventScreen extends BaseFormScreen {
 
 class CreateEditEventScreenState
     extends BaseFormScreenState<CreateEditEventScreen> {
-
   bool get _isEditMode => widget.eventToEdit != null;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -115,14 +111,12 @@ class CreateEditEventScreenState
   }
 
   @override
-  String get screenTitle => _isEditMode
-      ? context.l10n.editEvent
-      : context.l10n.createEvent;
+  String get screenTitle =>
+      _isEditMode ? context.l10n.editEvent : context.l10n.createEvent;
 
   @override
-  String get submitButtonText => _isEditMode
-      ? context.l10n.save
-      : context.l10n.createEvent;
+  String get submitButtonText =>
+      _isEditMode ? context.l10n.save : context.l10n.createEvent;
 
   @override
   bool get showSaveInNavBar => false;
@@ -215,16 +209,11 @@ class CreateEditEventScreenState
     final l10n = context.l10n;
     return [
       if (!_isEditMode) ...[
-        CreateOptionsSelector(
-          onOptionSelected: _onOptionSelected,
-        ),
+        CreateOptionsSelector(onOptionSelected: _onOptionSelected),
         const SizedBox(height: 32),
         Text(
           l10n.createEvent,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
       ],
@@ -511,10 +500,7 @@ class CreateEditEventScreenState
       padding: const EdgeInsets.only(top: 16),
       child: Text(
         error,
-        style: const TextStyle(
-          color: CupertinoColors.systemRed,
-          fontSize: 14,
-        ),
+        style: const TextStyle(color: CupertinoColors.systemRed, fontSize: 14),
       ),
     );
   }

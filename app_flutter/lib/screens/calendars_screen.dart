@@ -157,10 +157,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       );
     }
 
-    return AdaptivePageScaffold(
-      title: l10n.calendars,
-      body: body,
-    );
+    return AdaptivePageScaffold(title: l10n.calendars, body: body);
   }
 
   Widget _buildCalendarsView() {

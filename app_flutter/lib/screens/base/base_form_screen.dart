@@ -172,9 +172,7 @@ abstract class BaseFormScreenState<W extends BaseFormScreen>
   CupertinoNavigationBar buildNavigationBar() {
     return CupertinoNavigationBar(
       leading: showCancelButton
-          ? CupertinoNavigationBarBackButton(
-              onPressed: handleCancel,
-            )
+          ? CupertinoNavigationBarBackButton(onPressed: handleCancel)
           : null,
       middle: Text(screenTitle),
       trailing: showSaveInNavBar

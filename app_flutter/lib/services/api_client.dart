@@ -297,7 +297,6 @@ class ApiClient implements IApiClient {
     return result as Map<String, dynamic>;
   }
 
-
   @override
   Future<List<Map<String, dynamic>>> fetchUserEvents(
     int userId, {
@@ -306,7 +305,6 @@ class ApiClient implements IApiClient {
     final result = await get('/users/$userId/events', queryParams: {});
     return List<Map<String, dynamic>>.from(result);
   }
-
 
   @override
   Future<Map<String, dynamic>> updateUser(
@@ -360,7 +358,6 @@ class ApiClient implements IApiClient {
 
   @override
   // (removed unused interaction list helpers)
-
   @override
   Future<List<Map<String, dynamic>>> fetchAvailableInvitees(
     int eventId, {
@@ -373,7 +370,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-
   @override
   Future<Map<String, dynamic>> createEvent(
     Map<String, dynamic> data, {
@@ -382,7 +378,6 @@ class ApiClient implements IApiClient {
     final result = await post('/events', body: data);
     return result as Map<String, dynamic>;
   }
-
 
   @override
   Future<Map<String, dynamic>> updateEvent(
@@ -431,7 +426,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-
   @override
   Future<Map<String, dynamic>> createInteraction(
     Map<String, dynamic> data, {
@@ -450,7 +444,6 @@ class ApiClient implements IApiClient {
     final result = await patch('/interactions/$interactionId', body: data);
     return result as Map<String, dynamic>;
   }
-
 
   @override
   Future<void> markInteractionRead(
@@ -471,7 +464,6 @@ class ApiClient implements IApiClient {
     );
     return List<Map<String, dynamic>>.from(result);
   }
-
 
   @override
   Future<List<Map<String, dynamic>>> fetchCalendarMemberships(
@@ -550,9 +542,6 @@ class ApiClient implements IApiClient {
 
   // (removed unused calendar memberships aggregator)
 
-
-
-
   @override
   Future<void> deleteCalendarMembership(
     int membershipId, {
@@ -572,7 +561,6 @@ class ApiClient implements IApiClient {
     );
     return List<Map<String, dynamic>>.from(result);
   }
-
 
   @override
   Future<Map<String, dynamic>> createGroup(
@@ -613,7 +601,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-
   @override
   Future<Map<String, dynamic>> createGroupMembership(
     Map<String, dynamic> data,
@@ -638,10 +625,6 @@ class ApiClient implements IApiClient {
 
   // (removed unused recurring configs fetcher)
 
-
-
-
-
   @override
   Future<List<Map<String, dynamic>>> fetchUserBlocks({
     int? blockerUserId,
@@ -656,7 +639,6 @@ class ApiClient implements IApiClient {
     );
     return List<Map<String, dynamic>>.from(result);
   }
-
 
   @override
   Future<Map<String, dynamic>> createUserBlock(
@@ -673,12 +655,6 @@ class ApiClient implements IApiClient {
   }) async {
     await delete('/user_blocks/$blockId');
   }
-
-  
-
-
-
-
 
   // ============================================================================
   // UserContacts API

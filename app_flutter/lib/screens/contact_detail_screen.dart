@@ -231,7 +231,8 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    if (widget.contact.instagramUsername?.isNotEmpty == true) ...[
+                    if (widget.contact.instagramUsername?.isNotEmpty ==
+                        true) ...[
                       const SizedBox(height: 4),
                       Text(
                         '@${widget.contact.instagramUsername}',

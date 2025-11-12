@@ -22,10 +22,7 @@ import '../core/providers/settings_provider.dart';
 class CreateEditRecurringEventScreen extends BaseFormScreen {
   final Event? eventToEdit;
 
-  const CreateEditRecurringEventScreen({
-    super.key,
-    this.eventToEdit,
-  });
+  const CreateEditRecurringEventScreen({super.key, this.eventToEdit});
 
   @override
   CreateEditRecurringEventScreenState createState() =>
@@ -34,7 +31,6 @@ class CreateEditRecurringEventScreen extends BaseFormScreen {
 
 class CreateEditRecurringEventScreenState
     extends BaseFormScreenState<CreateEditRecurringEventScreen> {
-
   bool get _isEditMode => widget.eventToEdit != null;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -114,14 +110,12 @@ class CreateEditRecurringEventScreenState
   }
 
   @override
-  String get screenTitle => _isEditMode
-      ? context.l10n.editEvent
-      : context.l10n.createRecurringEvent;
+  String get screenTitle =>
+      _isEditMode ? context.l10n.editEvent : context.l10n.createRecurringEvent;
 
   @override
-  String get submitButtonText => _isEditMode
-      ? context.l10n.save
-      : context.l10n.createRecurringEvent;
+  String get submitButtonText =>
+      _isEditMode ? context.l10n.save : context.l10n.createRecurringEvent;
 
   @override
   bool get showSaveInNavBar => false;
@@ -197,7 +191,6 @@ class CreateEditRecurringEventScreenState
       Navigator.of(context).pop();
     }
   }
-
 
   @override
   List<Widget> buildFormFields() {
@@ -393,10 +386,9 @@ class CreateEditRecurringEventScreenState
       children: [
         Text(
           l10n.recurrencePatterns,
-          style: CupertinoTheme.of(context)
-              .textTheme
-              .textStyle
-              .copyWith(fontWeight: FontWeight.w600),
+          style: CupertinoTheme.of(
+            context,
+          ).textTheme.textStyle.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
 
@@ -710,8 +702,7 @@ class CreateEditRecurringEventScreenState
     final time = pattern['time'] as String? ?? '00:00:00';
     final isValidDayOfWeek = dayOfWeek >= 0 && dayOfWeek < 7;
 
-    final dayName =
-        isValidDayOfWeek ? dayNames[dayOfWeek] : l10n.unknownError;
+    final dayName = isValidDayOfWeek ? dayNames[dayOfWeek] : l10n.unknownError;
     return '$dayName @ $time';
   }
 
@@ -821,10 +812,7 @@ class CreateEditRecurringEventScreenState
       padding: const EdgeInsets.only(top: 16),
       child: Text(
         error,
-        style: const TextStyle(
-          color: CupertinoColors.systemRed,
-          fontSize: 14,
-        ),
+        style: const TextStyle(color: CupertinoColors.systemRed, fontSize: 14),
       ),
     );
   }

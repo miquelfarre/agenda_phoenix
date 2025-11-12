@@ -12,10 +12,7 @@ import '../core/providers/settings_provider.dart';
 class CreateEditBirthdayEventScreen extends BaseFormScreen {
   final Event? eventToEdit;
 
-  const CreateEditBirthdayEventScreen({
-    super.key,
-    this.eventToEdit,
-  });
+  const CreateEditBirthdayEventScreen({super.key, this.eventToEdit});
 
   @override
   CreateEditBirthdayEventScreenState createState() =>
@@ -24,7 +21,6 @@ class CreateEditBirthdayEventScreen extends BaseFormScreen {
 
 class CreateEditBirthdayEventScreenState
     extends BaseFormScreenState<CreateEditBirthdayEventScreen> {
-
   bool get _isEditMode => widget.eventToEdit != null;
   final _titleController = TextEditingController();
 
@@ -39,11 +35,7 @@ class CreateEditBirthdayEventScreenState
   int? get _selectedCalendarId => getFieldValue<int?>('calendarId');
 
   static DateTime _getDateOnly(DateTime dateTime) {
-    return DateTime(
-      dateTime.year,
-      dateTime.month,
-      dateTime.day,
-    );
+    return DateTime(dateTime.year, dateTime.month, dateTime.day);
   }
 
   @override
@@ -99,14 +91,12 @@ class CreateEditBirthdayEventScreenState
   }
 
   @override
-  String get screenTitle => _isEditMode
-      ? context.l10n.editEvent
-      : context.l10n.createBirthday;
+  String get screenTitle =>
+      _isEditMode ? context.l10n.editEvent : context.l10n.createBirthday;
 
   @override
-  String get submitButtonText => _isEditMode
-      ? context.l10n.save
-      : context.l10n.createBirthday;
+  String get submitButtonText =>
+      _isEditMode ? context.l10n.save : context.l10n.createBirthday;
 
   @override
   bool get showSaveInNavBar => false;
@@ -177,7 +167,6 @@ class CreateEditBirthdayEventScreenState
     }
   }
 
-
   @override
   List<Widget> buildFormFields() {
     final l10n = context.l10n;
@@ -211,7 +200,10 @@ class CreateEditBirthdayEventScreenState
               showTodayButton: false,
               onDateTimeChanged: (selection) {
                 setState(() {
-                  setFieldValue('startDate', _getDateOnly(selection.selectedDate));
+                  setFieldValue(
+                    'startDate',
+                    _getDateOnly(selection.selectedDate),
+                  );
                 });
               },
             ),
@@ -229,10 +221,7 @@ class CreateEditBirthdayEventScreenState
       padding: const EdgeInsets.only(top: 16),
       child: Text(
         error,
-        style: const TextStyle(
-          color: CupertinoColors.systemRed,
-          fontSize: 14,
-        ),
+        style: const TextStyle(color: CupertinoColors.systemRed, fontSize: 14),
       ),
     );
   }

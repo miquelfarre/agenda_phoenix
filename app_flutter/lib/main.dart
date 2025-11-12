@@ -54,8 +54,8 @@ void main() async {
     if (kDebugMode) {
       print('🔐 Requesting critical permissions...');
     }
-    final allPermissionsGranted =
-        await PermissionsService.instance.requestAllCriticalPermissions();
+    final allPermissionsGranted = await PermissionsService.instance
+        .requestAllCriticalPermissions();
     if (kDebugMode) {
       print('🔐 Permissions result: $allPermissionsGranted');
     }

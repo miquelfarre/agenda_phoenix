@@ -2,19 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
-enum CreateOptionType {
-  recurring,
-  birthday,
-  calendar,
-}
+enum CreateOptionType { recurring, birthday, calendar }
 
 class CreateOptionsSelector extends StatelessWidget {
   final Function(CreateOptionType) onOptionSelected;
 
-  const CreateOptionsSelector({
-    super.key,
-    required this.onOptionSelected,
-  });
+  const CreateOptionsSelector({super.key, required this.onOptionSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -78,51 +71,49 @@ class CreateOptionsSelector extends StatelessWidget {
             color: CupertinoColors.systemGrey6.resolveFrom(context),
             borderRadius: BorderRadius.circular(12),
           ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppStyles.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppStyles.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 24, color: AppStyles.primaryColor),
               ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: AppStyles.primaryColor,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: CupertinoColors.label.resolveFrom(context),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: CupertinoColors.label.resolveFrom(context),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: CupertinoColors.secondaryLabel.resolveFrom(
+                          context,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Icon(
-              CupertinoIcons.chevron_right,
-              size: 20,
-              color: CupertinoColors.systemGrey.resolveFrom(context),
-            ),
-          ],
-        ),
+              Icon(
+                CupertinoIcons.chevron_right,
+                size: 20,
+                color: CupertinoColors.systemGrey.resolveFrom(context),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -211,5 +211,4 @@ abstract class IApiClient {
   Future<Map<String, dynamic>> createUserBlock(Map<String, dynamic> data);
 
   Future<void> deleteUserBlock(int blockId, {required int currentUserId});
-
 }

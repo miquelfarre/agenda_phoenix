@@ -275,11 +275,7 @@ class GroupHive extends HiveObject {
           );
         } else {
           admins.add(
-            User(
-              id: adminId,
-              displayName: 'Usuario $adminId',
-              isPublic: false,
-            ),
+            User(id: adminId, displayName: 'Usuario $adminId', isPublic: false),
           );
         }
       }

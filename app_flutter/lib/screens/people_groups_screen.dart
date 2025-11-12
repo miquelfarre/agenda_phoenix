@@ -121,7 +121,11 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
       final contacts = <User>[];
       for (final contactData in contactsData) {
         if (contactData['registered_user'] != null) {
-          contacts.add(User.fromJson(contactData['registered_user'] as Map<String, dynamic>));
+          contacts.add(
+            User.fromJson(
+              contactData['registered_user'] as Map<String, dynamic>,
+            ),
+          );
         }
       }
 

@@ -68,7 +68,8 @@ class User {
     final String authId = json['auth_id'] as String? ?? '';
 
     // Get displayName from backend (required field)
-    final String displayName = json['display_name'] as String? ?? 'Usuario #${json['id']}';
+    final String displayName =
+        json['display_name'] as String? ?? 'Usuario #${json['id']}';
 
     return User(
       id: json['id'] as int,
