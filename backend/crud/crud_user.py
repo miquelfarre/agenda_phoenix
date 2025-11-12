@@ -143,14 +143,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         # Apply search filter if provided
         if search:
             search_term = f"%{search}%"
-            # Search in display_name, instagram_username, and legacy fields
+            # Search in display_name and instagram_username
             query = query.filter(
                 or_(
                     User.display_name.ilike(search_term),
                     User.instagram_username.ilike(search_term),
-                    # Legacy fields for backward compatibility
-                    User.instagram_username.ilike(search_term),
-                    User.name.ilike(search_term),
                 )
             )
 
@@ -173,37 +170,17 @@ class CRUDUser(CRUDBase[User, UserCreate, UserBase]):
         if enriched:
             enriched_users = []
             for user in users:
-                # Use new fields, with fallback to legacy
-                display_name = user.display_name or user.name or f"Usuario #{user.id}"
-                instagram_username = user.instagram_username
-                profile_picture_url = user.profile_picture_url
-
-                # For backward compatibility, also include legacy contact fields
-                # (will be None for new users)
-                contact_name = None
-                contact_phone = None
-                if user.contact_id:
-                    contact = db.query(Contact).filter(Contact.id == user.contact_id).first()
-                    if contact:
-                        contact_name = contact.name
-                        contact_phone = contact.phone
-
                 enriched_users.append(
                     {
                         "id": user.id,
-                        # New fields
-                        "display_name": display_name,
-                        "instagram_username": instagram_username,
-                        "profile_picture_url": profile_picture_url,
+                        "display_name": user.display_name,
+                        "instagram_username": user.instagram_username,
+                        "profile_picture_url": user.profile_picture_url,
                         "phone": user.phone,
-                        # Standard fields
                         "auth_provider": user.auth_provider,
                         "auth_id": user.auth_id,
                         "is_public": user.is_public,
                         "is_admin": user.is_admin,
-                        "contact_id": user.contact_id,
-                        "contact_name": contact_name,
-                        "contact_phone": contact_phone,
                         "last_login": user.last_login,
                         "created_at": user.created_at,
                         "updated_at": user.updated_at,

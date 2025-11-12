@@ -16,12 +16,12 @@ def create_public_users(db):
         user = User(
             id=idx,
             display_name=org_data["name"],
-            phone=generate_phone_number(idx),
+            phone=None,  # Public users don't have phone
             instagram_username=org_data["instagram"],
-            auth_provider="supabase",
+            auth_provider="instagram_login",
             auth_id=f"public_{org_data['instagram']}_auth",
             is_public=True,  # Public user
-            is_admin=False
+            is_admin=False  # Public users can't be admin
         )
         users.append(user)
 

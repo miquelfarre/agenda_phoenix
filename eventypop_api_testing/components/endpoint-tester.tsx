@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Endpoint, EndpointParam } from "@/lib/endpoints";
 import { apiClient, TestUser } from "@/lib/api-client";
 
@@ -30,6 +30,68 @@ export default function EndpointTester({ endpoint, currentUser }: EndpointTester
   });
   const [response, setResponse] = useState<Response | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Initialize params with defaults when endpoint changes
+  useEffect(() => {
+    if (!endpoint) return;
+
+    const pathParams: Record<string, any> = {};
+    const queryParams: Record<string, any> = {};
+    const bodyParams: Record<string, any> = {};
+
+    // Initialize path params with defaults
+    endpoint.pathParams?.forEach(param => {
+      if (param.default !== undefined) {
+        pathParams[param.name] = param.default;
+      } else if (param.name === 'user_id' && currentUser) {
+        pathParams[param.name] = currentUser.id;
+      }
+    });
+
+    // Initialize query params with defaults
+    endpoint.queryParams?.forEach(param => {
+      if (param.default !== undefined && param.default !== null) {
+        queryParams[param.name] = param.default;
+      }
+    });
+
+    // Initialize body params with defaults
+    endpoint.bodyParams?.forEach(param => {
+      if (param.default !== undefined) {
+        bodyParams[param.name] = param.default;
+      }
+    });
+
+    setRequestData({ pathParams, queryParams, bodyParams });
+  }, [endpoint, currentUser]);
+
+  // Auto-complete user_id fields when currentUser changes
+  useEffect(() => {
+    if (!currentUser || !endpoint) return;
+
+    setRequestData(prev => {
+      const updatedPathParams = { ...prev.pathParams };
+      const updatedBodyParams = { ...prev.bodyParams };
+
+      endpoint.pathParams?.forEach(param => {
+        if (param.name === 'user_id') {
+          updatedPathParams[param.name] = currentUser.id;
+        }
+      });
+
+      endpoint.bodyParams?.forEach(param => {
+        if (param.name === 'user_id') {
+          updatedBodyParams[param.name] = currentUser.id;
+        }
+      });
+
+      return {
+        ...prev,
+        pathParams: updatedPathParams,
+        bodyParams: updatedBodyParams,
+      };
+    });
+  }, [currentUser, endpoint]);
 
   const updateParam = (type: keyof RequestData, name: string, value: any) => {
     setRequestData((prev) => ({
@@ -120,13 +182,25 @@ export default function EndpointTester({ endpoint, currentUser }: EndpointTester
   const renderParamInput = (param: EndpointParam, type: keyof RequestData) => {
     const value = requestData[type][param.name] || '';
 
+    const placeholderText = param.default !== undefined && param.default !== null
+      ? `Default: ${param.default}`
+      : (param.example ? String(param.example) : '');
+
+    const borderColor = param.required
+      ? 'border-red-300 focus:ring-red-500'
+      : 'border-slate-300 focus:ring-blue-500';
+
     return (
       <div key={param.name} className="space-y-2">
         <label className="block">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium text-slate-700">{param.name}</span>
-            {param.required && (
-              <span className="text-xs text-red-500">*required</span>
+            <span className={`text-sm font-medium ${param.required ? 'text-slate-900' : 'text-slate-600'}`}>
+              {param.name}
+            </span>
+            {param.required ? (
+              <span className="px-2 py-0.5 text-xs font-semibold text-red-700 bg-red-100 rounded">REQUIRED</span>
+            ) : (
+              <span className="px-2 py-0.5 text-xs font-medium text-slate-600 bg-slate-100 rounded">optional</span>
             )}
             <span className="text-xs text-slate-500">({param.type})</span>
           </div>
@@ -137,15 +211,15 @@ export default function EndpointTester({ endpoint, currentUser }: EndpointTester
             <textarea
               value={value}
               onChange={(e) => updateParam(type, param.name, e.target.value)}
-              placeholder={param.example ? JSON.stringify(param.example) : '[]'}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={placeholderText || '[]'}
+              className={`w-full px-3 py-2 border ${borderColor} rounded-lg text-sm font-mono focus:outline-none focus:ring-2`}
               rows={2}
             />
           ) : param.type === 'boolean' ? (
             <select
               value={value}
               onChange={(e) => updateParam(type, param.name, e.target.value === 'true')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border ${borderColor} rounded-lg text-sm focus:outline-none focus:ring-2`}
             >
               <option value="">Select...</option>
               <option value="true">true</option>
@@ -156,8 +230,8 @@ export default function EndpointTester({ endpoint, currentUser }: EndpointTester
               type={param.type === 'number' ? 'number' : 'text'}
               value={value}
               onChange={(e) => updateParam(type, param.name, e.target.value)}
-              placeholder={param.example ? String(param.example) : ''}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={placeholderText}
+              className={`w-full px-3 py-2 border ${borderColor} rounded-lg text-sm focus:outline-none focus:ring-2`}
             />
           )}
         </label>
