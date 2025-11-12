@@ -297,11 +297,6 @@ class ApiClient implements IApiClient {
     return result as Map<String, dynamic>;
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchUserStats(int userId) async {
-    final result = await get('/users/$userId/stats');
-    return result as Map<String, dynamic>;
-  }
 
   @override
   Future<List<Map<String, dynamic>>> fetchUserEvents(
@@ -312,11 +307,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> createUser(Map<String, dynamic> data) async {
-    final result = await post('/users', body: data);
-    return result as Map<String, dynamic>;
-  }
 
   @override
   Future<Map<String, dynamic>> updateUser(
@@ -329,16 +319,8 @@ class ApiClient implements IApiClient {
   }
 
   @override
-  Future<void> deleteUser(int userId, {required int currentUserId}) async {
-    await delete('/users/$userId');
-  }
-
-  @override
-  Future<Map<String, dynamic>> subscribeToUser(
-    int userId,
-    int targetUserId,
-  ) async {
-    final result = await post('/users/$userId/subscribe/$targetUserId');
+  Future<Map<String, dynamic>> subscribeToUser(int targetUserId) async {
+    final result = await post('/users/$targetUserId/subscribe');
     return result as Map<String, dynamic>;
   }
 
@@ -423,13 +405,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<List<Map<String, dynamic>>> fetchEventCancellations({
-    int? currentUserId,
-  }) async {
-    final result = await get('/events/cancellations', queryParams: {});
-    return List<Map<String, dynamic>>.from(result);
-  }
 
   @override
   Future<Map<String, dynamic>> createEvent(
@@ -440,13 +415,6 @@ class ApiClient implements IApiClient {
     return result as Map<String, dynamic>;
   }
 
-  @override
-  Future<void> markCancellationViewed(
-    int cancellationId, {
-    int? currentUserId,
-  }) async {
-    await post('/events/cancellations/$cancellationId/view');
-  }
 
   @override
   Future<Map<String, dynamic>> updateEvent(
@@ -495,14 +463,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchInteraction(
-    int interactionId, {
-    int? currentUserId,
-  }) async {
-    final result = await get('/interactions/$interactionId', queryParams: {});
-    return result as Map<String, dynamic>;
-  }
 
   @override
   Future<Map<String, dynamic>> createInteraction(
@@ -523,13 +483,6 @@ class ApiClient implements IApiClient {
     return result as Map<String, dynamic>;
   }
 
-  @override
-  Future<void> deleteInteraction(
-    int interactionId, {
-    int? currentUserId,
-  }) async {
-    await delete('/interactions/$interactionId');
-  }
 
   @override
   Future<void> markInteractionRead(
@@ -551,14 +504,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchCalendar(
-    int calendarId, {
-    int? currentUserId,
-  }) async {
-    final result = await get('/calendars/$calendarId', queryParams: {});
-    return result as Map<String, dynamic>;
-  }
 
   @override
   Future<List<Map<String, dynamic>>> fetchCalendarMemberships(
@@ -648,36 +593,8 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchCalendarMembership(
-    int membershipId, {
-    int? currentUserId,
-  }) async {
-    final result = await get(
-      '/calendar_memberships/$membershipId',
-      queryParams: {},
-    );
-    return result as Map<String, dynamic>;
-  }
 
-  @override
-  Future<Map<String, dynamic>> createCalendarMembership(
-    Map<String, dynamic> data, {
-    int? currentUserId,
-  }) async {
-    final result = await post('/calendar_memberships', body: data);
-    return result as Map<String, dynamic>;
-  }
 
-  @override
-  Future<Map<String, dynamic>> updateCalendarMembership(
-    int membershipId,
-    Map<String, dynamic> data, {
-    int? currentUserId,
-  }) async {
-    final result = await put('/calendar_memberships/$membershipId', body: data);
-    return result as Map<String, dynamic>;
-  }
 
   @override
   Future<void> deleteCalendarMembership(
@@ -699,14 +616,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchGroup(
-    int groupId, {
-    int? currentUserId,
-  }) async {
-    final result = await get('/groups/$groupId', queryParams: {});
-    return result as Map<String, dynamic>;
-  }
 
   @override
   Future<Map<String, dynamic>> createGroup(
@@ -747,11 +656,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchGroupMembership(int membershipId) async {
-    final result = await get('/group_memberships/$membershipId');
-    return result as Map<String, dynamic>;
-  }
 
   @override
   Future<Map<String, dynamic>> createGroupMembership(
@@ -787,38 +691,9 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchRecurringConfig(
-    int configId, {
-    int? currentUserId,
-  }) async {
-    final result = await get('/recurring_configs/$configId', queryParams: {});
-    return result as Map<String, dynamic>;
-  }
 
-  @override
-  Future<Map<String, dynamic>> createRecurringConfig(
-    Map<String, dynamic> data, {
-    int? currentUserId,
-  }) async {
-    final result = await post('/recurring_configs', body: data);
-    return result as Map<String, dynamic>;
-  }
 
-  @override
-  Future<Map<String, dynamic>> updateRecurringConfig(
-    int configId,
-    Map<String, dynamic> data, {
-    int? currentUserId,
-  }) async {
-    final result = await put('/recurring_configs/$configId', body: data);
-    return result as Map<String, dynamic>;
-  }
 
-  @override
-  Future<void> deleteRecurringConfig(int configId, {int? currentUserId}) async {
-    await delete('/recurring_configs/$configId');
-  }
 
   @override
   Future<List<Map<String, dynamic>>> fetchUserBlocks({
@@ -835,11 +710,6 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchUserBlock(int blockId) async {
-    final result = await get('/user_blocks/$blockId');
-    return result as Map<String, dynamic>;
-  }
 
   @override
   Future<Map<String, dynamic>> createUserBlock(
@@ -872,45 +742,9 @@ class ApiClient implements IApiClient {
     return List<Map<String, dynamic>>.from(result);
   }
 
-  @override
-  Future<Map<String, dynamic>> fetchEventBan(int banId) async {
-    final result = await get('/event_bans/$banId');
-    return result as Map<String, dynamic>;
-  }
 
-  @override
-  Future<Map<String, dynamic>> createEventBan(Map<String, dynamic> data) async {
-    final result = await post('/event_bans', body: data);
-    return result as Map<String, dynamic>;
-  }
 
-  @override
-  Future<void> deleteEventBan(int banId) async {
-    await delete('/event_bans/$banId');
-  }
 
-  @override
-  Future<List<Map<String, dynamic>>> fetchAppBans() async {
-    final result = await get('/app_bans');
-    return List<Map<String, dynamic>>.from(result);
-  }
-
-  @override
-  Future<Map<String, dynamic>> fetchAppBan(int banId) async {
-    final result = await get('/app_bans/$banId');
-    return result as Map<String, dynamic>;
-  }
-
-  @override
-  Future<Map<String, dynamic>> createAppBan(Map<String, dynamic> data) async {
-    final result = await post('/app_bans', body: data);
-    return result as Map<String, dynamic>;
-  }
-
-  @override
-  Future<void> deleteAppBan(int banId) async {
-    await delete('/app_bans/$banId');
-  }
 
   // ============================================================================
   // UserContacts API

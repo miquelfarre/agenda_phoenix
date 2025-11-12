@@ -161,10 +161,7 @@ class SubscriptionRepository implements ISubscriptionRepository {
   @override
   Future<void> createSubscription({required int targetUserId}) async {
     try {
-      await _apiClient.subscribeToUser(
-        ConfigService.instance.currentUserId,
-        targetUserId,
-      );
+      await _apiClient.subscribeToUser(targetUserId);
       await _fetchAndSync();
     } catch (e, _) {
       rethrow;
