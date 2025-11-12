@@ -22,7 +22,7 @@ def create_private_users(db):
         id=1,
         display_name="Sonia Martínez",
         phone=generate_phone_number(1),
-        instagram_username="sonia_martinez",
+        instagram_username=None,
         auth_provider="supabase",
         auth_id="sonia_auth_001",
         is_public=False,
@@ -35,7 +35,7 @@ def create_private_users(db):
         id=2,
         display_name="Miquel Farré",
         phone=generate_phone_number(2),
-        instagram_username="miquel_farre",
+        instagram_username=None,
         auth_provider="supabase",
         auth_id="miquel_auth_002",
         is_public=False,
@@ -48,7 +48,7 @@ def create_private_users(db):
         id=3,
         display_name="Ada Martínez",
         phone=generate_phone_number(3),
-        instagram_username="ada_martinez",
+        instagram_username=None,
         auth_provider="supabase",
         auth_id="ada_auth_003",
         is_public=False,
@@ -61,7 +61,7 @@ def create_private_users(db):
         id=4,
         display_name="Sara García",
         phone=generate_phone_number(4),
-        instagram_username="sara_garcia",
+        instagram_username=None,
         auth_provider="supabase",
         auth_id="sara_auth_004",
         is_public=False,
@@ -80,12 +80,11 @@ def create_private_users(db):
     ]
 
     for idx, (nombre, relacion) in enumerate(familia_nombres, start=5):
-        instagram = generate_instagram_username(nombre, idx)
         user = User(
             id=idx,
             display_name=nombre,
             phone=generate_phone_number(idx),
-            instagram_username=instagram,
+            instagram_username=None,
             auth_provider="supabase",
             auth_id=f"familia_{idx}_auth",
             is_public=False,
@@ -104,12 +103,11 @@ def create_private_users(db):
     ]
 
     for idx, nombre in enumerate(amigos_nombres, start=11):
-        instagram = generate_instagram_username(nombre, idx)
         user = User(
             id=idx,
             display_name=nombre,
             phone=generate_phone_number(idx),
-            instagram_username=instagram,
+            instagram_username=None,
             auth_provider="supabase",
             auth_id=f"amigo_{idx}_auth",
             is_public=False,
@@ -129,12 +127,11 @@ def create_private_users(db):
         apellido2 = random.choice(APELLIDOS)
         nombre_completo = f"{nombre} {apellido1}"
 
-        instagram = generate_instagram_username(nombre_completo, idx)
         user = User(
             id=idx,
             display_name=nombre_completo,
             phone=generate_phone_number(idx),
-            instagram_username=instagram,
+            instagram_username=None,
             auth_provider="supabase",
             auth_id=f"conocido_{idx}_auth",
             is_public=False,
@@ -151,12 +148,11 @@ def create_private_users(db):
         apellido = random.choice(APELLIDOS)
         nombre_completo = f"{nombre} {apellido}"
 
-        instagram = generate_instagram_username(nombre_completo, idx)
         user = User(
             id=idx,
             display_name=nombre_completo,
             phone=generate_phone_number(idx),
-            instagram_username=instagram,
+            instagram_username=None,
             auth_provider="supabase",
             auth_id=f"nuevo_{idx}_auth",
             is_public=False,

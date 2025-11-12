@@ -152,12 +152,9 @@ def create_recurring_events(db, private_users, public_users):
     )
     configs.append(config_b_sara)
 
-    # Add and flush events first, then configs (due to foreign key constraints)
     db.add_all(events)
-    db.flush()  # Flush events so they exist before configs reference them
-
+    db.flush()
     db.add_all(configs)
-    db.flush()  # Flush configs
 
     return {
         'event_sincro': event_sincro,
