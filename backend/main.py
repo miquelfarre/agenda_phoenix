@@ -12,7 +12,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from init_db import init_database
+from init_db_2 import init_database
 
 # Import all routers
 from routers import calendar_memberships, calendars, event_bans, events, group_memberships, groups, interactions, recurring_configs, user_blocks, user_contacts, users

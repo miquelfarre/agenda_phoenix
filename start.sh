@@ -3,13 +3,13 @@ set -euo pipefail
 
 # start.sh - Script for backend and iOS startup with persistent containers
 # Adapted for Agenda Phoenix v2.0.0
-# Defaults: USER_ID=1 (Sonia), Platform=iOS, DB Script=init_db.py
+# Defaults: USER_ID=1 (Sonia), Platform=iOS, DB Script=init_db_2.py (100 users)
 # Features: Auto-cleans Hive database on each start
 
 VERSION="2.0.0"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 USER_ID=${USER_ID:-1}
-DB_SCRIPT=${DB_SCRIPT:-init_db.py}
+DB_SCRIPT=${DB_SCRIPT:-init_db_2.py}
 MODE=${1:-both}  # Can be: backend, ios, both, stop, status
 
 # Paths for PID and logs
