@@ -183,7 +183,6 @@ def test_get_event_attendees_populated(client, test_db, test_users):
     attendee = data["attendees"][0]
     assert attendee["id"] == invitee1.id
     assert attendee["display_name"] == "Invitee One"
-    assert attendee["instagram_username"] == "invitee1"
     assert "profile_picture_url" in attendee
     assert attendee["phone"] == "+1234567891"
 

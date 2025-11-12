@@ -365,7 +365,6 @@ async def get_user_events(
             attendees_map[event_id].append({
                 "id": user_obj.id,
                 "display_name": user_obj.display_name,
-                "instagram_username": user_obj.instagram_username,
                 "profile_picture_url": user_obj.profile_picture_url,
             })
 

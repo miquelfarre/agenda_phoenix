@@ -385,7 +385,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                     {
                         "id": user_obj.id,
                         "display_name": user_obj.display_name,
-                        "instagram_username": user_obj.instagram_username,
                         "profile_picture_url": user_obj.profile_picture_url,
                         "phone": user_obj.phone,
                     }
@@ -459,7 +458,6 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     for user_obj in results:
         available.append({
             "id": user_obj.id,
-            "instagram_username": user_obj.instagram_username,
             "display_name": user_obj.display_name
         })
 
