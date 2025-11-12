@@ -273,15 +273,72 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
     # Get accepted users (attendees) - available for all authenticated users
     # Include users who accepted OR rejected but are attending (for public events)
     # Exclude public users (they don't attend their own events)
+    #
+    # SMART FILTERING: If current user was invited and accepted, show only "related attendees":
+    # - The inviter
+    # - Other users invited by the same inviter who accepted
+    # Otherwise, show all attendees
     if current_user_id is not None:
         from models import User
 
-        accepted_interactions = (
+        # Check if current user has an accepted invitation
+        current_user_invitation = (
             db.query(EventInteraction)
-            .join(User, EventInteraction.user_id == User.id)
-            .filter(EventInteraction.event_id == event_id, or_(EventInteraction.status == "accepted", and_(EventInteraction.status == "rejected", EventInteraction.is_attending == True)), User.is_public == False)  # Exclude public users
-            .all()
+            .filter(
+                EventInteraction.event_id == event_id,
+                EventInteraction.user_id == current_user_id,
+                EventInteraction.interaction_type == "invited",
+                EventInteraction.status == "accepted"
+            )
+            .first()
         )
+
+        # If user was invited and accepted, filter attendees by invitation relationship
+        if current_user_invitation and current_user_invitation.invited_by_user_id:
+            inviter_id = current_user_invitation.invited_by_user_id
+
+            # Get attendees who are:
+            # 1. The inviter themselves, OR
+            # 2. Other users invited by the same inviter who accepted
+            accepted_interactions = (
+                db.query(EventInteraction)
+                .join(User, EventInteraction.user_id == User.id)
+                .filter(
+                    EventInteraction.event_id == event_id,
+                    or_(
+                        # The inviter (any interaction type, accepted status)
+                        and_(
+                            EventInteraction.user_id == inviter_id,
+                            EventInteraction.status == "accepted"
+                        ),
+                        # Other users invited by same inviter who accepted
+                        and_(
+                            EventInteraction.invited_by_user_id == inviter_id,
+                            EventInteraction.interaction_type == "invited",
+                            EventInteraction.status == "accepted",
+                            EventInteraction.user_id != current_user_id  # Exclude current user
+                        )
+                    ),
+                    User.is_public == False  # Exclude public users
+                )
+                .all()
+            )
+        else:
+            # User was NOT invited (or is subscribed/joined), show all attendees
+            accepted_interactions = (
+                db.query(EventInteraction)
+                .join(User, EventInteraction.user_id == User.id)
+                .filter(
+                    EventInteraction.event_id == event_id,
+                    or_(
+                        EventInteraction.status == "accepted",
+                        and_(EventInteraction.status == "rejected", EventInteraction.is_attending == True)
+                    ),
+                    User.is_public == False,  # Exclude public users
+                    EventInteraction.user_id != current_user_id  # Exclude current user
+                )
+                .all()
+            )
 
         attendees = []
         for interaction in accepted_interactions:

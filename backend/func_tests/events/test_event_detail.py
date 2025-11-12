@@ -303,3 +303,256 @@ def test_get_event_admin_sees_all_interactions(client, test_db, test_users):
 
     # Should also have invitation_stats
     assert "invitation_stats" in data
+
+
+def test_get_event_attendees_filtered_by_invitation_relationship(client, test_db, test_users):
+    """
+    Test new smart filtering: When user was invited and accepted,
+    should only see attendees related by the same inviter.
+
+    Scenario:
+    - Owner creates event
+    - Owner invites: invitee1 (accepts), invitee2 (accepts)
+    - invitee1 views event -> should see: owner + invitee2 (both related via owner's invitation)
+    """
+    owner, invitee1, invitee2 = test_users
+
+    # Create additional user to act as independent subscriber
+    user4_data = UserCreate(
+        display_name="Independent User",
+        phone="+1234567893",
+        instagram_username="independent",
+        auth_provider="test",
+        auth_id="test_independent_999",
+        is_public=False
+    )
+    independent_user = user_crud.create(test_db, obj_in=user4_data)
+
+    # Create event
+    event_data = EventCreate(
+        name="Event with Invitation Groups",
+        description="Testing attendee filtering by invitation relationship",
+        start_date=datetime.now() + timedelta(days=1),
+        owner_id=owner.id
+    )
+    event = event_crud.create(test_db, obj_in=event_data)
+
+    # Owner has a "joined" interaction (as event owner)
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=owner.id,
+        event_id=event.id,
+        interaction_type="joined",
+        status="accepted"
+    ))
+
+    # Owner invites invitee1 (accepts)
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=invitee1.id,
+        event_id=event.id,
+        interaction_type="invited",
+        status="accepted",
+        invited_by_user_id=owner.id
+    ))
+
+    # Owner invites invitee2 (accepts)
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=invitee2.id,
+        event_id=event.id,
+        interaction_type="invited",
+        status="accepted",
+        invited_by_user_id=owner.id
+    ))
+
+    # Independent user subscribes (not invited by anyone)
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=independent_user.id,
+        event_id=event.id,
+        interaction_type="subscribed",
+        status="accepted"
+    ))
+
+    test_db.commit()
+
+    # Get event as invitee1 (who was invited by owner and accepted)
+    client._auth_context["user_id"] = invitee1.id
+
+    response = client.get(f"/api/v1/events/{event.id}")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Should have attendees field
+    assert "attendees" in data
+    assert data["attendees"] is not None
+
+    # SMART FILTERING: Should only see attendees related by invitation:
+    # - owner (the inviter)
+    # - invitee2 (invited by same person - owner)
+    # Should NOT see:
+    # - independent_user (not related by invitation)
+    # - invitee1 itself
+    attendee_ids = [a["id"] for a in data["attendees"]]
+
+    assert owner.id in attendee_ids, "Should see the inviter (owner)"
+    assert invitee2.id in attendee_ids, "Should see other invitee who accepted (invitee2)"
+    assert independent_user.id not in attendee_ids, "Should NOT see independent subscriber"
+    assert invitee1.id not in attendee_ids, "Should NOT see self"
+    assert len(data["attendees"]) == 2, "Should see exactly 2 attendees (owner + invitee2)"
+
+
+def test_get_event_attendees_all_when_not_invited(client, test_db, test_users):
+    """
+    Test that when user was NOT invited (subscribed/joined/owner),
+    they see ALL attendees (original behavior).
+
+    Scenario:
+    - Owner creates event
+    - invitee1 subscribes (not invited)
+    - invitee2 is invited and accepts
+    - independent user subscribes
+    - invitee1 views event -> should see ALL attendees
+    """
+    owner, invitee1, invitee2 = test_users
+
+    # Create independent user
+    user4_data = UserCreate(
+        display_name="Independent User",
+        phone="+1234567893",
+        instagram_username="independent",
+        auth_provider="test",
+        auth_id="test_independent_998",
+        is_public=False
+    )
+    independent_user = user_crud.create(test_db, obj_in=user4_data)
+
+    # Create event
+    event_data = EventCreate(
+        name="Event with Mixed Attendees",
+        description="Testing attendee filtering when user subscribed (not invited)",
+        start_date=datetime.now() + timedelta(days=1),
+        owner_id=owner.id
+    )
+    event = event_crud.create(test_db, obj_in=event_data)
+
+    # Owner has joined interaction
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=owner.id,
+        event_id=event.id,
+        interaction_type="joined",
+        status="accepted"
+    ))
+
+    # invitee1 subscribes (NOT invited)
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=invitee1.id,
+        event_id=event.id,
+        interaction_type="subscribed",
+        status="accepted"
+    ))
+
+    # invitee2 is invited by owner and accepts
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=invitee2.id,
+        event_id=event.id,
+        interaction_type="invited",
+        status="accepted",
+        invited_by_user_id=owner.id
+    ))
+
+    # Independent user subscribes
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=independent_user.id,
+        event_id=event.id,
+        interaction_type="subscribed",
+        status="accepted"
+    ))
+
+    test_db.commit()
+
+    # Get event as invitee1 (who subscribed, was NOT invited)
+    client._auth_context["user_id"] = invitee1.id
+
+    response = client.get(f"/api/v1/events/{event.id}")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Should have attendees field
+    assert "attendees" in data
+    assert data["attendees"] is not None
+
+    # NO FILTERING: Should see ALL attendees since invitee1 was not invited
+    attendee_ids = [a["id"] for a in data["attendees"]]
+
+    assert owner.id in attendee_ids, "Should see owner"
+    assert invitee2.id in attendee_ids, "Should see invited user"
+    assert independent_user.id in attendee_ids, "Should see independent subscriber"
+    # invitee1 should not see themselves
+    assert invitee1.id not in attendee_ids
+    assert len(data["attendees"]) == 3, "Should see 3 attendees (owner + invitee2 + independent)"
+
+
+def test_get_event_attendees_excludes_rejected(client, test_db, test_users):
+    """
+    Test that rejected invitations don't appear in attendees,
+    even when using smart filtering.
+
+    Scenario:
+    - Owner invites: invitee1 (accepts), invitee2 (rejects)
+    - invitee1 views event -> should only see owner (not invitee2)
+    """
+    owner, invitee1, invitee2 = test_users
+
+    # Create event
+    event_data = EventCreate(
+        name="Event with Rejected Invitation",
+        description="Testing that rejected invitations are excluded",
+        start_date=datetime.now() + timedelta(days=1),
+        owner_id=owner.id
+    )
+    event = event_crud.create(test_db, obj_in=event_data)
+
+    # Owner joined
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=owner.id,
+        event_id=event.id,
+        interaction_type="joined",
+        status="accepted"
+    ))
+
+    # Owner invites invitee1 (accepts)
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=invitee1.id,
+        event_id=event.id,
+        interaction_type="invited",
+        status="accepted",
+        invited_by_user_id=owner.id
+    ))
+
+    # Owner invites invitee2 (REJECTS)
+    interaction_crud.create(test_db, obj_in=EventInteractionCreate(
+        user_id=invitee2.id,
+        event_id=event.id,
+        interaction_type="invited",
+        status="rejected",
+        invited_by_user_id=owner.id
+    ))
+
+    test_db.commit()
+
+    # Get event as invitee1
+    client._auth_context["user_id"] = invitee1.id
+
+    response = client.get(f"/api/v1/events/{event.id}")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Should have attendees field
+    assert "attendees" in data
+    attendee_ids = [a["id"] for a in data["attendees"]]
+
+    # Should see owner, but NOT invitee2 (who rejected)
+    assert owner.id in attendee_ids
+    assert invitee2.id not in attendee_ids, "Should NOT see user who rejected invitation"
+    assert len(data["attendees"]) == 1, "Should only see owner"
