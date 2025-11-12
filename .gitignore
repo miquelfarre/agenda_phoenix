@@ -52,6 +52,17 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Next.js
+eventypop_backoffice/.next/
+eventypop_backoffice/out/
+eventypop_api_testing/.next/
+eventypop_api_testing/out/
+eventypop_frontend/.next/
+eventypop_frontend/out/
+**/next-env.d.ts
+**/.next/
+**/out/
+
 # Flutter/Dart
 app_flutter/.dart_tool/
 app_flutter/.flutter-plugins
