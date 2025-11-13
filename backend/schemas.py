@@ -5,9 +5,9 @@ All request/response models defined here.
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from utils import validate_5min_interval
 
 # ============================================================================
@@ -134,13 +134,43 @@ class EventBase(BaseModel):
     description: Optional[str] = None
     start_date: datetime
     event_type: str = "regular"  # 'regular' or 'recurring'
+    recurrence_end_date: Optional[datetime] = None  # For recurring events: end date of recurrence
 
 
 class EventCreate(EventBase):
+    """Schema for creating regular (non-recurring) events"""
+
     owner_id: int
     calendar_id: Optional[int] = None
     parent_recurring_event_id: Optional[int] = None
-    patterns: Optional[List[RecurrencePattern]] = None  # For recurring events
+    event_type: Literal["regular"] = "regular"  # Only regular events
+
+
+class RecurringEventCreate(BaseModel):
+    """Schema for creating recurring events with strict validation"""
+
+    name: str
+    description: Optional[str] = None
+    start_date: datetime
+    owner_id: int
+    calendar_id: Optional[int] = None
+    event_type: Literal["recurring"] = "recurring"  # Forced to recurring
+    patterns: List[RecurrencePattern]  # REQUIRED for recurring events
+    recurrence_end_date: Optional[datetime] = None  # Optional end date
+
+    @field_validator("patterns")
+    @classmethod
+    def validate_patterns(cls, v: List[RecurrencePattern]) -> List[RecurrencePattern]:
+        if not v or len(v) == 0:
+            raise ValueError("Recurring events must have at least one recurrence pattern")
+        return v
+
+    @model_validator(mode="after")
+    def validate_end_date(self):
+        """Validate that recurrence_end_date is after start_date if provided"""
+        if self.recurrence_end_date and self.recurrence_end_date <= self.start_date:
+            raise ValueError("recurrence_end_date must be after start_date")
+        return self
 
 
 class EventUpdate(BaseModel):
@@ -151,6 +181,7 @@ class EventUpdate(BaseModel):
     start_date: Optional[datetime] = None
     event_type: Optional[str] = None
     calendar_id: Optional[int] = None
+    recurrence_end_date: Optional[datetime] = None
 
 
 class UpcomingEventSummary(BaseModel):
@@ -465,30 +496,6 @@ class GroupMembershipResponse(GroupMembershipBase):
     group_id: int
     user_id: int
     role: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# ============================================================================
-# RECURRING EVENT CONFIG SCHEMAS
-# ============================================================================
-
-
-class RecurringEventConfigBase(BaseModel):
-    recurrence_type: str = "weekly"  # 'daily', 'weekly', 'monthly', 'yearly'
-    schedule: Optional[List[RecurrencePattern]] = None  # Weekly patterns with dayOfWeek and time
-    recurrence_end_date: Optional[datetime] = None  # NULL = perpetual/infinite
-
-
-class RecurringEventConfigCreate(RecurringEventConfigBase):
-    event_id: int
-
-
-class RecurringEventConfigResponse(RecurringEventConfigBase):
-    id: int
-    event_id: int
     created_at: datetime
     updated_at: datetime
 

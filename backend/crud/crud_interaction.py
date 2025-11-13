@@ -8,7 +8,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from crud.base import CRUDBase
-from models import Event, EventInteraction, RecurringEventConfig, User
+from models import Event, EventInteraction, User
 from schemas import EventInteractionCreate, EventInteractionUpdate
 
 
@@ -271,16 +271,15 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
 
         # OPTIMIZATION: Apply hierarchical filtering in SQL instead of Python
         if user_id and interaction_type == "invited" and status == "pending":
-            # Subquery to get config IDs of base recurring events where THIS USER has a pending invitation
-            pending_recurring_config_subquery = (
-                select(RecurringEventConfig.id)
-                .join(Event, RecurringEventConfig.event_id == Event.id)
+            # Subquery to get IDs of parent recurring events where THIS USER has a pending invitation
+            pending_parent_events_subquery = (
+                select(Event.id)
                 .join(EventInteraction, EventInteraction.event_id == Event.id)
                 .where(Event.event_type == "recurring", EventInteraction.user_id == user_id, EventInteraction.interaction_type == "invited", EventInteraction.status == "pending")
             )
 
-            # Filter: Include all non-instances OR instances where parent config is NOT in pending list
-            query = query.filter(or_(Event.parent_recurring_event_id.is_(None), ~Event.parent_recurring_event_id.in_(pending_recurring_config_subquery)))
+            # Filter: Include all non-child events OR child events where parent is NOT in pending list
+            query = query.filter(or_(Event.parent_recurring_event_id.is_(None), ~Event.parent_recurring_event_id.in_(pending_parent_events_subquery)))
 
         # Apply ordering
         order_col = getattr(EventInteraction, order_by) if order_by and hasattr(EventInteraction, order_by) else EventInteraction.created_at

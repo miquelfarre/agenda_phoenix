@@ -35,6 +35,7 @@ class Event {
   final int ownerId;
   final int? calendarId;
   final int? parentRecurringEventId;
+  final DateTime? recurrenceEndDate;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -59,6 +60,7 @@ class Event {
     required this.ownerId,
     this.calendarId,
     this.parentRecurringEventId,
+    this.recurrenceEndDate,
     this.createdAt,
     this.updatedAt,
     this.ownerName,
@@ -126,6 +128,9 @@ class Event {
       ownerId: json['owner_id'] as int,
       calendarId: json['calendar_id'] as int?,
       parentRecurringEventId: json['parent_recurring_event_id'] as int?,
+      recurrenceEndDate: json['recurrence_end_date'] != null
+          ? DateTime.parse(json['recurrence_end_date'] as String)
+          : null,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -154,6 +159,8 @@ class Event {
       if (calendarId != null) 'calendar_id': calendarId,
       if (parentRecurringEventId != null)
         'parent_recurring_event_id': parentRecurringEventId,
+      if (recurrenceEndDate != null)
+        'recurrence_end_date': recurrenceEndDate!.toIso8601String(),
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
@@ -168,6 +175,7 @@ class Event {
     int? ownerId,
     int? calendarId,
     int? parentRecurringEventId,
+    DateTime? recurrenceEndDate,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? ownerName,
@@ -191,6 +199,7 @@ class Event {
       calendarId: calendarId ?? this.calendarId,
       parentRecurringEventId:
           parentRecurringEventId ?? this.parentRecurringEventId,
+      recurrenceEndDate: recurrenceEndDate ?? this.recurrenceEndDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       ownerName: ownerName ?? this.ownerName,

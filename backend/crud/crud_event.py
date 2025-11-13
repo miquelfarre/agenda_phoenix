@@ -183,24 +183,8 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         db.commit()
         db.refresh(db_event)
 
-        # If this is a recurring event with patterns, save config and generate child events
+        # If this is a recurring event with patterns, generate child events
         if patterns and len(patterns) > 0 and db_event.event_type == "recurring":
-            # Save patterns to recurring_event_configs for future editing
-            from models import RecurringEventConfig
-
-            # Convert patterns to dict format for JSON storage
-            patterns_dict = []
-            for p in patterns:
-                if isinstance(p, dict):
-                    patterns_dict.append(p)
-                else:
-                    # It's a RecurrencePattern object
-                    patterns_dict.append({"dayOfWeek": p.dayOfWeek, "time": p.time})
-
-            config = RecurringEventConfig(event_id=db_event.id, recurrence_type="weekly", schedule=patterns_dict)
-            db.add(config)
-            db.commit()
-
             # Generate child events
             self._generate_recurring_events(db, db_event, patterns)
 
@@ -410,11 +394,19 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
         """
         from datetime import timedelta
 
-        # Generate events for the next 52 weeks (1 year)
-        weeks_to_generate = 52
-
         # Start from the parent event's start date
         base_date = parent_event.start_date
+
+        # Determine how many weeks to generate
+        # If recurrence_end_date is set, calculate weeks until then
+        # Otherwise, default to 52 weeks (1 year)
+        if parent_event.recurrence_end_date:
+            # Calculate weeks from start to end
+            time_diff = parent_event.recurrence_end_date - base_date
+            weeks_to_generate = max(1, int(time_diff.total_seconds() / (7 * 24 * 3600)) + 1)
+        else:
+            # Default to 52 weeks if no end date
+            weeks_to_generate = 52
 
         # Get the current week's Monday (ISO weekday: Monday=1, Sunday=7)
         days_since_monday = (base_date.weekday()) % 7
@@ -445,6 +437,15 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
                 # Skip if the event is in the past
                 if event_datetime < datetime.now(timezone.utc):
                     continue
+
+                # Skip if the event is after the recurrence end date
+                if parent_event.recurrence_end_date:
+                    end_date_aware = parent_event.recurrence_end_date
+                    # Ensure timezone-aware comparison
+                    if end_date_aware.tzinfo is None:
+                        end_date_aware = end_date_aware.replace(tzinfo=timezone.utc)
+                    if event_datetime > end_date_aware:
+                        continue
 
                 # Create child event
                 child_event = Event(

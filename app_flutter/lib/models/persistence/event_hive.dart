@@ -29,6 +29,9 @@ class EventHive extends HiveObject {
   @HiveField(8)
   int? parentRecurringEventId;
 
+  @HiveField(14)
+  DateTime? recurrenceEndDate;
+
   @HiveField(9)
   DateTime? createdAt;
 
@@ -53,6 +56,7 @@ class EventHive extends HiveObject {
     required this.ownerId,
     this.calendarId,
     this.parentRecurringEventId,
+    this.recurrenceEndDate,
     this.createdAt,
     this.updatedAt,
     this.ownerName,
@@ -70,6 +74,7 @@ class EventHive extends HiveObject {
       ownerId: event.ownerId,
       calendarId: event.calendarId,
       parentRecurringEventId: event.parentRecurringEventId,
+      recurrenceEndDate: event.recurrenceEndDate,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
       ownerName: event.ownerName,
@@ -88,6 +93,7 @@ class EventHive extends HiveObject {
       ownerId: ownerId,
       calendarId: calendarId,
       parentRecurringEventId: parentRecurringEventId,
+      recurrenceEndDate: recurrenceEndDate,
       createdAt: createdAt,
       updatedAt: updatedAt,
       ownerName: ownerName,

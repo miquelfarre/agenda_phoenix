@@ -11,6 +11,7 @@ import '../widgets/adaptive_scaffold.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
 import 'package:eventypop/ui/helpers/platform/platform_navigation.dart';
 import 'event_detail_screen.dart';
+import 'event_series_detail_screen.dart';
 import 'create_edit_event_screen.dart';
 
 import '../services/config_service.dart';
@@ -163,8 +164,24 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     print('🔍 [DEBUG] Total events received from backend: ${events.length}');
 
-    final eventItems = <EventWithInteraction>[];
+    // First, separate parent recurring events from child instances
+    final parentEvents = <Event>[];
+    final childInstances = <Event>[];
+
     for (final event in events) {
+      if (event.parentRecurringEventId != null) {
+        // This is a child instance
+        childInstances.add(event);
+      } else {
+        // This is either a regular event or a parent recurring event
+        parentEvents.add(event);
+      }
+    }
+
+    print('🔍 [DEBUG] Recurring events: filtering out ${childInstances.length} child instances');
+
+    final eventItems = <EventWithInteraction>[];
+    for (final event in parentEvents) {
       final eventOwnerId = event.ownerId;
       final isOwner = eventOwnerId == userId;
 
@@ -649,6 +666,36 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   void _navigateToEventDetail(Event event) async {
+    // Check if this is a parent recurring event with instances
+    if (event.isRecurring) {
+      // Get all events from the stream to find instances
+      final allEventsAsync = ref.read(eventsStreamProvider);
+      final allEvents = allEventsAsync.when(
+        data: (events) => events,
+        loading: () => <Event>[],
+        error: (error, stack) => <Event>[],
+      );
+
+      // Find all instances of this recurring event
+      final instances = allEvents
+          .where((e) => e.parentRecurringEventId == event.id)
+          .toList();
+
+      if (instances.isNotEmpty) {
+        // Navigate to series screen
+        await Navigator.of(context).push(
+          CupertinoPageRoute(
+            builder: (context) => EventSeriesDetailScreen(
+              events: [event, ...instances],
+              seriesName: event.name,
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    // Default: navigate to event detail
     await Navigator.of(context).push(
       PlatformNavigation.platformPageRoute(
         builder: (context) => EventDetailScreen(event: event),

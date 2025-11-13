@@ -28,15 +28,19 @@ def drop_all_tables():
     logger = logging.getLogger(__name__)
     logger.info("🗑️  Dropping all SQLAlchemy tables...")
 
-    # First drop DB views that may depend on our tables (to avoid dependency errors)
+    # First drop legacy tables and views that may depend on our tables (to avoid dependency errors)
     try:
         with engine.connect() as conn:
+            # Drop legacy tables (from old code) before dropping current tables
+            conn.execute(text("DROP TABLE IF EXISTS recurring_event_configs CASCADE"))
+            logger.info("  ✓ Dropped legacy table: recurring_event_configs")
+
             # Known app views that reference core tables
             conn.execute(text("DROP VIEW IF EXISTS user_subscriptions_with_stats CASCADE"))
             conn.commit()
             logger.info("  ✓ Dropped dependent views (if existed)")
     except Exception as e:
-        logger.warning(f"  ⚠ Could not drop views (continuing): {e}")
+        logger.warning(f"  ⚠ Could not drop legacy objects (continuing): {e}")
 
     # Now drop tables managed by SQLAlchemy
     Base.metadata.drop_all(bind=engine)
@@ -163,7 +167,7 @@ def create_supabase_auth_users():
     logging.getLogger(__name__).info("👤 Skipping Supabase Auth user creation in v2 initializer")
 
 
-from init_db_2_data import users_private, users_public, contacts, groups, calendars, events_private, events_public, events_recurring, interactions_invitations, interactions_subscriptions, blocks_bans
+from init_db_2_data import users_private, users_public, contacts, groups, calendars, events_private, events_public, interactions_invitations, interactions_subscriptions, blocks_bans
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -177,7 +181,7 @@ def reset_sequences(db):
     """
     logger.info("🔄 Resetting autoincrement sequences...")
 
-    tables_with_sequences = ["users", "events", "event_interactions", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "recurring_event_configs", "user_blocks", "event_cancellations", "event_cancellation_views", "user_contacts"]
+    tables_with_sequences = ["users", "events", "event_interactions", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "user_blocks", "event_cancellations", "event_cancellation_views", "user_contacts"]
 
     for table in tables_with_sequences:
         try:
@@ -237,14 +241,9 @@ def insert_sample_data_v2():
         public_events_data = events_public.create_public_events(db, public_users_data)
         logger.info(f"  ✓ Created {len(public_events_data['all_public_events'])} public events")
 
-        # 7. Create recurring events
-        logger.info("🔄 Creating recurring events...")
-        recurring_events_data = events_recurring.create_recurring_events(db, private_users_data, public_users_data)
-        logger.info(f"  ✓ Created {len(recurring_events_data['all_recurring_events'])} recurring events")
-
-        # 8. Create invitations
+        # 7. Create invitations
         logger.info("✉️  Creating invitations...")
-        invitations_data = interactions_invitations.create_invitations(db, private_users_data, private_events_data, public_events_data, recurring_events_data)
+        invitations_data = interactions_invitations.create_invitations(db, private_users_data, private_events_data, public_events_data, {})
         logger.info(f"  ✓ Created {len(invitations_data)} invitations")
 
         # 9. Create subscriptions
@@ -270,7 +269,7 @@ def insert_sample_data_v2():
         - {len(contacts_data)} contacts
         - {len(groups_data['all_groups'])} groups
         - {len(calendars_data['all_calendars'])} calendars
-        - {len(private_events_data['all_private_events']) + len(public_events_data['all_public_events']) + len(recurring_events_data['all_recurring_events'])} events
+        - {len(private_events_data['all_private_events']) + len(public_events_data['all_public_events'])} events
         - {len(invitations_data) + len(subscriptions_data)} interactions
         - {len(blocks_data['blocks'])} blocks
 

@@ -357,16 +357,16 @@ class Event(Base):
     event_type = Column(String(50), nullable=False, default="regular")  # 'regular' or 'recurring'
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=True, index=True)
-    parent_recurring_event_id = Column(Integer, ForeignKey("recurring_event_configs.id", use_alter=True, name="fk_event_parent_recurring"), nullable=True, index=True)  # Evento recurrente padre
+    parent_recurring_event_id = Column(Integer, ForeignKey("events.id"), nullable=True, index=True)  # For child events: points to the parent recurring event
+    recurrence_end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # For recurring events: end date of recurrence (NULL = infinite)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
     owner = relationship("User", foreign_keys=[owner_id], back_populates="events")
     calendar = relationship("Calendar", foreign_keys=[calendar_id], back_populates="events")
-    parent_recurring_event = relationship("RecurringEventConfig", foreign_keys=[parent_recurring_event_id])
+    parent_recurring_event = relationship("Event", foreign_keys=[parent_recurring_event_id], remote_side="Event.id")
     interactions = relationship("EventInteraction", back_populates="event", cascade="all, delete-orphan")
-    recurring_config = relationship("RecurringEventConfig", foreign_keys="RecurringEventConfig.event_id", back_populates="event", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Event(id={self.id}, name='{self.name}', owner_id={self.owner_id})>"
@@ -381,6 +381,7 @@ class Event(Base):
             "owner_id": self.owner_id,
             "calendar_id": self.calendar_id,
             "parent_recurring_event_id": self.parent_recurring_event_id,
+            "recurrence_end_date": self.recurrence_end_date.isoformat() if self.recurrence_end_date else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -470,49 +471,6 @@ class EventInteraction(Base):
             "cancellation_note": self.cancellation_note,
             "read_at": self.read_at.isoformat() if self.read_at else None,
             "is_new": self.is_new,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
-
-
-class RecurringEventConfig(Base):
-    """
-    RecurringEventConfig model - Configuration for recurring events.
-
-    Supports multiple recurrence types:
-    - 'daily': Repeats every day or every X days
-    - 'weekly': Repeats on specific days of the week (e.g., Mon, Wed, Fri)
-    - 'monthly': Repeats on specific days of the month (e.g., 1st, 15th, last day)
-    - 'yearly': Repeats on a specific date each year (e.g., birthdays, holidays)
-
-    Perpetual events:
-    - If recurrence_end_date is NULL, the event repeats indefinitely
-    - Common for birthdays, annual holidays, etc.
-    """
-
-    __tablename__ = "recurring_event_configs"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    event_id = Column(Integer, ForeignKey("events.id"), nullable=False, unique=True, index=True)
-    recurrence_type = Column(String(20), nullable=False, default="weekly")  # 'daily', 'weekly', 'monthly', 'yearly'
-    schedule = Column(JSON, nullable=True)  # Type-specific configuration (format varies by recurrence_type)
-    recurrence_end_date = Column(TIMESTAMP(timezone=True), nullable=True)  # NULL = perpetual/infinite recurrence
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
-    # Relationships
-    event = relationship("Event", foreign_keys=[event_id], back_populates="recurring_config")
-
-    def __repr__(self):
-        return f"<RecurringEventConfig(id={self.id}, event_id={self.event_id}, type={self.recurrence_type})>"
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "event_id": self.event_id,
-            "recurrence_type": self.recurrence_type,
-            "schedule": self.schedule,
-            "recurrence_end_date": self.recurrence_end_date.isoformat() if self.recurrence_end_date else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

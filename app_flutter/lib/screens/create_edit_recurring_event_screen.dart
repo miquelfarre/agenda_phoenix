@@ -10,6 +10,7 @@ import '../widgets/custom_datetime_widget.dart';
 import '../widgets/calendar_horizontal_selector.dart';
 import '../widgets/timezone_horizontal_selector.dart';
 import '../widgets/recurrence_time_selector.dart';
+import '../widgets/recurrence_patterns_horizontal_list.dart';
 import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import '../models/ui/country.dart';
 import '../services/country_service.dart';
@@ -36,6 +37,7 @@ class CreateEditRecurringEventScreenState
   final _descriptionController = TextEditingController();
 
   final _startDateKey = GlobalKey();
+  final _endDateKey = GlobalKey();
 
   Country? _selectedCountry;
   String _selectedTimezone = 'Europe/Madrid';
@@ -44,10 +46,13 @@ class CreateEditRecurringEventScreenState
   bool _useCustomTimezone = false;
 
   bool _useCustomCalendar = false;
+  bool _hasEndDate = false;
 
   DateTime get _selectedDate =>
       getFieldValue<DateTime>('startDate') ??
       _normalizeToFiveMinutes(DateTime.now());
+
+  DateTime? get _selectedEndDate => getFieldValue<DateTime?>('endDate');
 
   int? get _selectedCalendarId => getFieldValue<int?>('calendarId');
 
@@ -95,6 +100,12 @@ class CreateEditRecurringEventScreenState
       setFieldValue('startDate', _normalizeToFiveMinutes(event.startDate));
       setFieldValue('patterns', event.recurrencePatterns.toList());
       setFieldValue('calendarId', event.calendarId);
+
+      // Initialize recurrence end date if exists
+      if (event.recurrenceEndDate != null) {
+        _hasEndDate = true;
+        setFieldValue('endDate', event.recurrenceEndDate);
+      }
     } else {
       setFieldValue('startDate', _normalizeToFiveMinutes(DateTime.now()));
       setFieldValue('patterns', <Map<String, dynamic>>[]);
@@ -141,21 +152,15 @@ class CreateEditRecurringEventScreenState
   Future<bool> submitForm() async {
     try {
       final eventData = <String, dynamic>{
-        'id': widget.eventToEdit?.id ?? -1,
-        'title': _titleController.text.trim(),
+        'name': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
         'start_date': _selectedDate.toIso8601String(),
         'owner_id': ConfigService.instance.currentUserId,
-        'is_recurring': true,
-        'event_type': 'parent',
-        'location': 'Madrid',
-        'recurrence_pattern': null,
-        'is_birthday': false,
+        'event_type': 'recurring',
         'calendar_id': _selectedCalendarId,
-        'timezone': _selectedTimezone,
-        'city': _useCustomTimezone ? _customCity : _defaultCity,
-        'country_code': _selectedCountry?.code ?? 'ES',
         'patterns': _patterns,
+        if (_hasEndDate && _selectedEndDate != null)
+          'recurrence_end_date': _selectedEndDate!.toIso8601String(),
       };
 
       if (_isEditMode) {
@@ -366,7 +371,14 @@ class CreateEditRecurringEventScreenState
       ),
 
       const SizedBox(height: 24),
-      _buildPatternsSection(),
+      _buildEndDateSection(),
+
+      const SizedBox(height: 24),
+      RecurrencePatternsHorizontalList(
+        patterns: _patterns,
+        onAddPattern: _addPattern,
+        onRemovePattern: _removePattern,
+      ),
 
       const SizedBox(height: 24),
       _buildCalendarSection(),
@@ -378,170 +390,105 @@ class CreateEditRecurringEventScreenState
     ];
   }
 
-  Widget _buildPatternsSection() {
+  Widget _buildEndDateSection() {
     final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.recurrencePatterns,
-          style: CupertinoTheme.of(
-            context,
-          ).textTheme.textStyle.copyWith(fontWeight: FontWeight.w600),
+        Row(
+          children: [
+            CupertinoSwitch(
+              value: _hasEndDate,
+              onChanged: (value) {
+                setState(() {
+                  _hasEndDate = value;
+                  if (!value) {
+                    setFieldValue('endDate', null);
+                  } else {
+                    // Set default end date to 1 year from start
+                    final defaultEndDate = _selectedDate.add(const Duration(days: 365));
+                    setFieldValue('endDate', defaultEndDate);
+                  }
+                });
+              },
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Tiene fecha fin',
+              style: AppStyles.bodyText.copyWith(fontSize: 16),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
 
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 16),
-          child: CupertinoButton(
-            key: const Key('add_pattern_button'),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            color: AppStyles.primaryColor,
-            borderRadius: BorderRadius.circular(12),
-            onPressed: _addPattern,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+        if (_hasEndDate) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: CupertinoColors.systemGrey6,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: CupertinoColors.systemGrey5, width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  CupertinoIcons.add,
-                  color: CupertinoColors.white,
-                  size: 18,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(CupertinoIcons.calendar, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.endDate ?? 'Fecha fin',
+                          style: AppStyles.bodyText.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    CupertinoButton(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      minimumSize: Size.zero,
+                      onPressed: () {
+                        final state = _endDateKey.currentState as dynamic;
+                        state?.scrollToToday();
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.today, size: 16),
+                          const SizedBox(width: 4),
+                          Text(l10n.today, style: const TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  _patterns.isEmpty
-                      ? l10n.addFirstPattern
-                      : l10n.addAnotherPattern,
-                  style: const TextStyle(
-                    color: CupertinoColors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                const SizedBox(height: 12),
+                CustomDateTimeWidget(
+                  key: _endDateKey,
+                  initialDateTime: _selectedEndDate ?? _selectedDate.add(const Duration(days: 365)),
+                  timezone: _selectedTimezone,
+                  locale: 'es',
+                  showTimePicker: true,
+                  showTodayButton: false,
+                  onDateTimeChanged: (selection) {
+                    setState(() {
+                      setFieldValue('endDate', selection.selectedDate);
+                    });
+                  },
                 ),
               ],
             ),
           ),
-        ),
-
-        if (_patterns.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemGrey6.resolveFrom(context),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: CupertinoColors.systemGrey4.resolveFrom(context),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  CupertinoIcons.calendar_badge_plus,
-                  size: 32,
-                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.noRecurrencePatterns,
-                  style: TextStyle(
-                    color: CupertinoColors.secondaryLabel.resolveFrom(context),
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.tapAddPatternToStart,
-                  style: TextStyle(
-                    color: CupertinoColors.tertiaryLabel.resolveFrom(context),
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          )
-        else
-          ...List.generate(_patterns.length, (index) {
-            final pattern = _patterns[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: CupertinoColors.systemBackground.resolveFrom(context),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: CupertinoColors.systemGrey4.resolveFrom(context),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: CupertinoColors.systemGrey
-                        .resolveFrom(context)
-                        .withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppStyles.colorWithOpacity(
-                        AppStyles.primaryColor,
-                        0.1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      CupertinoIcons.repeat,
-                      color: AppStyles.primaryColor,
-                      size: 16,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _formatPatternDisplay(pattern),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  CupertinoButton(
-                    key: Key(
-                      'remove_pattern_${pattern['dayOfWeek']}_${pattern['time']}',
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: () {
-                      _removePattern(index);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppStyles.colorWithOpacity(
-                          AppStyles.errorColor,
-                          0.1,
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.delete,
-                        color: AppStyles.errorColor,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+        ],
       ],
     );
   }
@@ -684,26 +631,6 @@ class CreateEditRecurringEventScreenState
         );
       },
     );
-  }
-
-  String _formatPatternDisplay(Map<String, dynamic> pattern) {
-    final l10n = context.l10n;
-    final dayNames = [
-      l10n.monday,
-      l10n.tuesday,
-      l10n.wednesday,
-      l10n.thursday,
-      l10n.friday,
-      l10n.saturday,
-      l10n.sunday,
-    ];
-
-    final dayOfWeek = pattern['dayOfWeek'] as int? ?? 0;
-    final time = pattern['time'] as String? ?? '00:00:00';
-    final isValidDayOfWeek = dayOfWeek >= 0 && dayOfWeek < 7;
-
-    final dayName = isValidDayOfWeek ? dayNames[dayOfWeek] : l10n.unknownError;
-    return '$dayName @ $time';
   }
 
   Widget _buildCalendarSection() {

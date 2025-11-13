@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:eventypop/ui/helpers/platform/platform_widgets.dart';
+import 'package:eventypop/ui/helpers/platform/dialog_helpers.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -280,12 +281,21 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               ),
             ],
 
-            if (isEventOwner) ...[
-              const SizedBox(height: 24),
-              _buildCancellationNotificationSection(),
+            // Handle deletion/leaving actions
+            const SizedBox(height: 24),
+            if ((_detailedEvent ?? currentEvent).isRecurring ||
+                (_detailedEvent ?? currentEvent).parentRecurringEventId != null) ...[
+              // Recurring event actions
+              if (isEventOwner)
+                _buildRecurringEventActionsOwner()
+              else
+                _buildRecurringEventActionsMember(),
             ] else ...[
-              const SizedBox(height: 24),
-              _buildRemoveFromListButton(),
+              // Normal event actions
+              if (isEventOwner)
+                _buildCancellationNotificationSection()
+              else
+                _buildRemoveFromListButton(),
             ],
 
             if ((_detailedEvent ?? currentEvent).owner?.isPublic == true &&
@@ -799,6 +809,98 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
   }
 
+  Future<void> _deleteEventInstance(Event event, {bool shouldNavigate = false}) async {
+    final l10n = context.l10n;
+    if (event.id == null) return;
+
+    final confirmed = await PlatformDialogHelpers.showPlatformConfirmDialog(
+      context,
+      title: 'Delete this occurrence',
+      message: 'Are you sure you want to delete only this occurrence of the recurring event?',
+      confirmText: l10n.delete,
+      cancelText: l10n.cancel,
+      isDestructive: true,
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final canEdit = EventPermissions.canEdit(event: event);
+
+      if (canEdit) {
+        await ref.read(eventServiceProvider).deleteEvent(event.id!);
+      } else {
+        await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
+      }
+
+      if (shouldNavigate && mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        _showEphemeralMessage(
+          'Error deleting occurrence',
+          color: AppStyles.errorColor,
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteEventSeries(Event event, {bool shouldNavigate = false}) async {
+    final l10n = context.l10n;
+    if (event.id == null) return;
+
+    // Determine the parent event ID
+    final parentEventId = event.parentRecurringEventId ?? event.id;
+
+    // Show warning snackbar first
+    PlatformDialogHelpers.showInfo(
+      context,
+      '⚠️ You are about to delete the entire recurring series and all its occurrences',
+    );
+
+    // Wait a moment for the user to read the warning
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    // Check if widget is still mounted after delay
+    if (!mounted) return;
+
+    // Show confirmation dialog
+    final confirmed = await PlatformDialogHelpers.showPlatformConfirmDialog(
+      context,
+      title: 'Delete entire series',
+      message: 'Are you sure you want to delete the entire recurring event series? This will delete all occurrences.',
+      confirmText: l10n.delete,
+      cancelText: l10n.cancel,
+      isDestructive: true,
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final canEdit = EventPermissions.canEdit(event: event);
+
+      if (canEdit) {
+        // Delete the parent event - backend should cascade delete all instances
+        await ref.read(eventServiceProvider).deleteEvent(parentEventId!);
+      } else {
+        // Leave the parent event - should leave all instances
+        await ref.read(eventRepositoryProvider).leaveEvent(parentEventId!);
+      }
+
+      if (shouldNavigate && mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        _showEphemeralMessage(
+          'Error deleting series',
+          color: AppStyles.errorColor,
+        );
+      }
+    }
+  }
+
   Future<void> _leaveEvent(Event event, {bool shouldNavigate = false}) async {
     final l10n = context.l10n;
 
@@ -1027,6 +1129,78 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     );
   }
 
+  Widget _buildRecurringEventActionsOwner() {
+    final event = _detailedEvent ?? currentEvent;
+    final isInstance = event.parentRecurringEventId != null;
+
+    return Column(
+      children: [
+        // Show cancellation notification section first
+        _buildCancellationNotificationSection(),
+
+        // If this is an instance (child event), show option to delete just this occurrence
+        if (isInstance) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: AdaptiveButton(
+              config: AdaptiveButtonConfigExtended.destructive(),
+              text: 'Delete this occurrence',
+              icon: CupertinoIcons.trash,
+              onPressed: () => _deleteEventInstance(event, shouldNavigate: true),
+            ),
+          ),
+        ],
+
+        // Always show option to delete entire series
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: AdaptiveButton(
+            config: AdaptiveButtonConfigExtended.destructive(),
+            text: 'Delete entire series',
+            icon: CupertinoIcons.trash_fill,
+            onPressed: () => _deleteEventSeries(event, shouldNavigate: true),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecurringEventActionsMember() {
+    final event = _detailedEvent ?? currentEvent;
+    final isInstance = event.parentRecurringEventId != null;
+
+    return Column(
+      children: [
+        // If this is an instance (child event), show option to leave just this occurrence
+        if (isInstance) ...[
+          SizedBox(
+            width: double.infinity,
+            child: AdaptiveButton(
+              config: AdaptiveButtonConfigExtended.destructive(),
+              text: 'Leave this occurrence',
+              icon: CupertinoIcons.minus_circle,
+              onPressed: () => _deleteEventInstance(event, shouldNavigate: true),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Always show option to leave entire series
+        SizedBox(
+          width: double.infinity,
+          child: AdaptiveButton(
+            config: AdaptiveButtonConfigExtended.destructive(),
+            text: 'Leave entire series',
+            icon: CupertinoIcons.minus_circle_fill,
+            onPressed: () => _deleteEventSeries(event, shouldNavigate: true),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _showEphemeralMessage(
     String message, {
     Color? color,
@@ -1068,6 +1242,13 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             locale,
           ),
         ),
+        if (event.recurrenceEndDate != null) ...[
+          const SizedBox(height: 8),
+          _buildInfoRow(
+            'Ends on',
+            _formatDateTime(event.recurrenceEndDate!),
+          ),
+        ],
       ],
     );
   }

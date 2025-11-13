@@ -67,64 +67,11 @@ def test_recurring_event_complete_flow(client, test_db):
 
     child_events = [{"id": c.id, "start_date": c.start_date.isoformat(), "parent_recurring_event_id": c.parent_recurring_event_id} for c in child_events_db]
 
-    # === PASO 3: Verificar si se guardó en recurring_event_configs ===
-    from models import RecurringEventConfig
-
-    db_config = test_db.query(RecurringEventConfig).filter(RecurringEventConfig.event_id == parent_event_id).first()
-
-    if db_config:
-        print(f"\n✅ PASO 3: recurring_event_config EXISTE en BD")
-        print(f"   - id: {db_config.id}")
-        print(f"   - event_id: {db_config.event_id}")
-        print(f"   - recurrence_type: {db_config.recurrence_type}")
-        print(f"   - schedule: {db_config.schedule}")
-        config_exists = True
-        config_id = db_config.id
-    else:
-        print(f"\n❌ PASO 3: recurring_event_config NO EXISTE en BD")
-        print(f"   - Los patterns NO se guardaron")
-        config_exists = False
-        config_id = None
-
-    # === PASO 4: Intentar obtener via GET /recurring_configs ===
-    response = client.get(f"/api/v1/recurring_configs?event_id={parent_event_id}")
-
-    if response.status_code == 200:
-        configs = response.json()
-        print(f"\n✅ PASO 4: GET /recurring_configs funciona ({len(configs)} configs)")
-        if configs:
-            print(f"   - Config: {configs[0]}")
-    else:
-        print(f"\n❌ PASO 4: GET /recurring_configs falló (status={response.status_code})")
-
-    # === PASO 5: Intentar actualizar patterns (si existe config) ===
-    if config_exists and config_id:
-        update_data = {
-            "recurrence_type": "weekly",
-            "schedule": [
-                {"dayOfWeek": 1, "time": "19:00:00"},  # Cambio: 18:00 -> 19:00
-                {"dayOfWeek": 3, "time": "20:00:00"},  # Cambio: 19:00 -> 20:00
-            ],
-        }
-
-        # Necesitamos auth para PUT
-        response = client.put(f"/api/v1/recurring_configs/{config_id}", json=update_data, headers={"X-Test-User-Id": "1"})
-
-        if response.status_code == 200:
-            print(f"\n✅ PASO 5: PUT /recurring_configs funciona")
-            updated_config = response.json()
-            print(f"   - Actualizado: {updated_config}")
-        else:
-            print(f"\n❌ PASO 5: PUT /recurring_configs falló (status={response.status_code})")
-            print(f"   - Error: {response.json()}")
-    else:
-        print(f"\n⏭️  PASO 5: Saltado (no hay config que actualizar)")
-
-    # === PASO 6: Eliminar evento padre ===
+    # === PASO 3: Eliminar evento padre ===
     response = client.delete(f"/api/v1/events/{parent_event_id}", headers={"X-Test-User-Id": "1"})
     assert response.status_code == 200
 
-    print(f"\n✅ PASO 6: Evento padre eliminado")
+    print(f"\n✅ PASO 3: Evento padre eliminado")
 
     # Verificar que los hijos también se eliminaron
     response = client.get(f"/api/v1/events?parent_recurring_event_id={parent_event_id}&limit=200")
@@ -139,14 +86,8 @@ def test_recurring_event_complete_flow(client, test_db):
     print("=" * 80)
     print(f"✅ Crear evento recurrente: OK")
     print(f"✅ Generar eventos hijos: OK ({len(child_events)} eventos)")
-    print(f"{'✅' if config_exists else '❌'} Guardar en recurring_event_configs: {'OK' if config_exists else 'NO IMPLEMENTADO'}")
     print(f"✅ Eliminar evento padre + hijos: OK")
     print("=" * 80)
-
-    if not config_exists:
-        print("\n⚠️  ADVERTENCIA: Los patterns NO se están guardando en BD")
-        print("   Esto significa que NO puedes editar patterns después de crear el evento")
-        print("   Solo puedes eliminar y recrear el evento completo")
 
 
 def test_update_event_with_new_patterns(client, test_db):
@@ -208,3 +149,108 @@ def test_update_event_with_new_patterns(client, test_db):
     print(f"   - Eventos hijos después de update: {len(child_events)}")
     if child_events:
         print(f"   - Primer hijo: {child_events[0]['start_date']}")
+
+
+def test_recurring_event_with_end_date(client, test_db):
+    """
+    Test: Crear evento recurrente con fecha fin
+    Verifica que solo se generan eventos hasta recurrence_end_date
+    """
+
+    # === PASO 0: Crear usuario de prueba ===
+    from models import User
+    from datetime import timedelta
+
+    test_user = User(id=1, auth_provider="phone", auth_id="+34600000001", display_name="Test User", phone="+34600000001", is_public=False)
+    test_db.add(test_user)
+    test_db.commit()
+    test_db.refresh(test_user)
+
+    # === PASO 1: Crear evento recurrente con fecha fin (4 semanas) ===
+    start_date = datetime.now(timezone.utc)
+    end_date = start_date + timedelta(weeks=4)  # Solo 4 semanas
+
+    event_data = {
+        "name": "Entrenamiento Temporal",
+        "description": "Entrenamiento que termina en 4 semanas",
+        "start_date": start_date.isoformat(),
+        "event_type": "recurring",
+        "owner_id": 1,
+        "recurrence_end_date": end_date.isoformat(),
+        "patterns": [
+            {"dayOfWeek": 1, "time": "18:00:00"},  # Lunes 18:00
+            {"dayOfWeek": 3, "time": "19:00:00"},  # Miércoles 19:00
+        ],
+    }
+
+    response = client.post("/api/v1/events", json=event_data)
+    assert response.status_code == 201
+
+    parent_event = response.json()
+    parent_event_id = parent_event["id"]
+
+    print(f"\n✅ PASO 1: Evento recurrente con fecha fin creado (id={parent_event_id})")
+    print(f"   - start_date: {start_date.isoformat()}")
+    print(f"   - recurrence_end_date: {end_date.isoformat()}")
+    print(f"   - duración: 4 semanas")
+
+    # === PASO 2: Verificar que se generaron los eventos correctos ===
+    from models import Event
+
+    child_events_db = test_db.query(Event).filter(Event.parent_recurring_event_id == parent_event_id).all()
+
+    print(f"\n✅ PASO 2: Eventos hijos generados: {len(child_events_db)}")
+    print(f"   - Se esperan ~8 eventos (4 semanas × 2 días/semana)")
+
+    # Verificar que hay aproximadamente 8 eventos (puede variar según el día de inicio)
+    assert len(child_events_db) <= 10, "No deberían generarse más de 10 eventos para 4 semanas con 2 patterns"
+    assert len(child_events_db) >= 6, "Deberían generarse al menos 6 eventos para 4 semanas con 2 patterns"
+
+    # === PASO 3: Verificar que ningún evento excede la fecha fin ===
+    for child in child_events_db:
+        # Make timezone aware for comparison
+        child_start = child.start_date
+        if child_start.tzinfo is None:
+            child_start = child_start.replace(tzinfo=timezone.utc)
+        assert child_start <= end_date, f"Evento {child.id} excede la fecha fin: {child_start} > {end_date}"
+        print(f"   - Hijo: {child.start_date.isoformat()} ✓")
+
+    print(f"\n✅ PASO 3: Todos los eventos están dentro del rango de fechas")
+
+    # === PASO 4: Crear evento sin fecha fin y comparar ===
+    event_data_no_end = {
+        "name": "Entrenamiento Infinito",
+        "description": "Entrenamiento sin fecha fin",
+        "start_date": start_date.isoformat(),
+        "event_type": "recurring",
+        "owner_id": 1,
+        "patterns": [
+            {"dayOfWeek": 1, "time": "18:00:00"},
+            {"dayOfWeek": 3, "time": "19:00:00"},
+        ],
+    }
+
+    response = client.post("/api/v1/events", json=event_data_no_end)
+    assert response.status_code == 201
+
+    parent_event_no_end = response.json()
+    parent_event_no_end_id = parent_event_no_end["id"]
+
+    child_events_no_end_db = test_db.query(Event).filter(Event.parent_recurring_event_id == parent_event_no_end_id).all()
+
+    print(f"\n✅ PASO 4: Comparación con evento sin fecha fin")
+    print(f"   - Con fecha fin (4 semanas): {len(child_events_db)} eventos")
+    print(f"   - Sin fecha fin (52 semanas): {len(child_events_no_end_db)} eventos")
+
+    # El evento sin fecha fin debería tener muchos más eventos
+    assert len(child_events_no_end_db) > len(child_events_db) * 10, "El evento sin fecha fin debería tener muchos más eventos"
+
+    # === RESUMEN ===
+    print("\n" + "=" * 80)
+    print("RESUMEN DEL TEST:")
+    print("=" * 80)
+    print(f"✅ Crear evento recurrente con fecha fin: OK")
+    print(f"✅ Limitar eventos hasta fecha fin: OK ({len(child_events_db)} eventos)")
+    print(f"✅ Ningún evento excede fecha fin: OK")
+    print(f"✅ Diferencia con evento sin fecha fin: OK")
+    print("=" * 80)

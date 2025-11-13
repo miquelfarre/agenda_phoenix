@@ -12,7 +12,6 @@ from . import groups
 from . import calendars
 from . import events_private
 from . import events_public
-from . import events_recurring
 from . import interactions_invitations
 from . import interactions_subscriptions
 from . import blocks_bans
@@ -26,7 +25,6 @@ __all__ = [
     "calendars",
     "events_private",
     "events_public",
-    "events_recurring",
     "interactions_invitations",
     "interactions_subscriptions",
     "blocks_bans",

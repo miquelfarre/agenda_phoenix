@@ -117,20 +117,12 @@ class CreateEditBirthdayEventScreenState
   Future<bool> submitForm() async {
     try {
       final eventData = <String, dynamic>{
-        'id': widget.eventToEdit?.id ?? -1,
-        'title': _titleController.text.trim(),
+        'name': _titleController.text.trim(),
         'description': '',
         'start_date': _selectedDate.toIso8601String(),
         'owner_id': ConfigService.instance.currentUserId,
-        'is_recurring': false,
-        'event_type': 'standalone',
-        'location': 'Madrid',
-        'recurrence_pattern': null,
-        'is_birthday': true,
+        'event_type': 'regular',
         'calendar_id': _selectedCalendarId,
-        'timezone': _selectedTimezone,
-        'city': _defaultCity,
-        'country_code': 'ES',
       };
 
       if (_isEditMode) {

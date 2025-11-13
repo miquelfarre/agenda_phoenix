@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from auth import get_current_user_id, get_current_user_id_optional
-from crud import calendar_membership, event, event_interaction, recurring_config, user, user_block
+from crud import calendar_membership, event, event_interaction, user, user_block
 from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import get_db
 import models
@@ -290,15 +290,10 @@ async def get_user_events(
             )
 
     # ============================================================
-    # 4. FETCH ALL RECURRING CONFIGS AND INVITATIONS (batch queries)
+    # 4. FETCH INVITATIONS FOR RECURRING EVENTS (batch query)
     # ============================================================
     # Get all recurring event IDs in one go
     recurring_event_ids = [e.id for e in events if e.event_type == "recurring"]
-
-    # Fetch all recurring configs at once
-    recurring_configs = {}  # event_id -> config_id
-    if recurring_event_ids:
-        recurring_configs = recurring_config.get_configs_by_event_ids(db, event_ids=recurring_event_ids)
 
     # Fetch all invitations for this user at once
     invitations = {}  # event_id -> status
@@ -310,27 +305,23 @@ async def get_user_events(
     # ============================================================
     events_to_hide = set()
 
-    # Build parent->instances map
-    instance_map = {}  # config_id -> [instance_event_ids]
+    # Build parent->instances map (parent_event_id -> [child_event_ids])
+    instance_map = {}  # parent_event_id -> [instance_event_ids]
     for ev in events:
         if ev.parent_recurring_event_id:
-            parent_config_id = ev.parent_recurring_event_id
-            if parent_config_id not in instance_map:
-                instance_map[parent_config_id] = []
-            instance_map[parent_config_id].append(ev.id)
+            parent_event_id = ev.parent_recurring_event_id
+            if parent_event_id not in instance_map:
+                instance_map[parent_event_id] = []
+            instance_map[parent_event_id].append(ev.id)
 
     # Determine what to hide based on user permissions
     for ev in events:
         if ev.event_type != "recurring":
             continue
 
-        base_id = ev.id
-        config_id = recurring_configs.get(base_id)
-        if not config_id:
-            continue
-
-        source = event_sources.get(base_id, "owned")
-        invitation_status = invitations.get(base_id)
+        parent_event_id = ev.id
+        source = event_sources.get(parent_event_id, "owned")
+        invitation_status = invitations.get(parent_event_id)
 
         # Determine user's access level
         is_owner = source == "owned"
@@ -338,17 +329,17 @@ async def get_user_events(
         has_accepted_invite = invitation_status == "accepted"
         has_pending_invite = invitation_status == "pending"
 
-        instance_ids = instance_map.get(config_id, [])
+        instance_ids = instance_map.get(parent_event_id, [])
 
         if is_owner or has_calendar_access or has_accepted_invite:
-            # User has full access -> hide base, show instances
-            events_to_hide.add(base_id)
+            # User has full access -> hide parent, show instances
+            events_to_hide.add(parent_event_id)
             # Propagate source to instances
             for inst_id in instance_ids:
                 if inst_id in event_sources:
                     event_sources[inst_id] = source
         elif has_pending_invite:
-            # User has pending invite -> show base, hide instances
+            # User has pending invite -> show parent, hide instances
             events_to_hide.update(instance_ids)
 
     # Filter out hidden events

@@ -9,8 +9,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from init_db_2 import init_database
 
@@ -50,6 +52,28 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app with lifespan
 app = FastAPI(title="Agenda Phoenix API", version="2.0.0", description="Calendar and Event Management API with modular router structure", lifespan=lifespan)
+
+
+# Exception handler for validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Log validation errors with request body for debugging"""
+    # Try to read the body
+    try:
+        body = await request.body()
+        body_str = body.decode('utf-8')
+        logger.error(f"❌ [VALIDATION ERROR] Path: {request.url.path}")
+        logger.error(f"❌ [VALIDATION ERROR] Raw body: {body_str}")
+        logger.error(f"❌ [VALIDATION ERROR] Errors: {exc.errors()}")
+    except Exception as e:
+        logger.error(f"❌ [VALIDATION ERROR] Could not read body: {e}")
+        logger.error(f"❌ [VALIDATION ERROR] Errors: {exc.errors()}")
+
+    # Return the standard FastAPI validation error response
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors()},
+    )
 
 
 # CORS Configuration

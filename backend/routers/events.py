@@ -5,9 +5,9 @@ Handles all event-related endpoints.
 """
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session, noload
 
@@ -15,7 +15,7 @@ from auth import get_current_user_id, get_current_user_id_optional
 from crud import calendar_membership, event, event_interaction, user
 from dependencies import check_event_permission, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
 from models import EventInteraction, User, UserBlock
-from schemas import AvailableInviteeResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventResponse, EventUpdate
+from schemas import AvailableInviteeResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventResponse, EventUpdate, RecurringEventCreate
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
 logger = logging.getLogger(__name__)
@@ -396,8 +396,26 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=EventResponse, status_code=201)
-async def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
-    """Create a new event"""
+async def create_event(request: Request, event_data: Union[EventCreate, RecurringEventCreate], db: Session = Depends(get_db)):
+    """Create a new event (regular or recurring)
+
+    Use EventCreate for regular events.
+    Use RecurringEventCreate for recurring events (requires patterns).
+    """
+    # Log raw body for debugging
+    try:
+        body = await request.body()
+        logger.info(f"🔍 [CREATE EVENT] Raw body: {body.decode('utf-8')}")
+    except Exception as e:
+        logger.error(f"❌ [CREATE EVENT] Error reading body: {e}")
+
+    logger.info(f"🔍 [CREATE EVENT] Received data: {event_data.model_dump()}")
+    logger.info(f"🔍 [CREATE EVENT] name={event_data.name}, owner_id={event_data.owner_id}, calendar_id={event_data.calendar_id}")
+    logger.info(f"🔍 [CREATE EVENT] start_date={event_data.start_date}, event_type={event_data.event_type}")
+
+    if isinstance(event_data, RecurringEventCreate):
+        logger.info(f"🔍 [CREATE EVENT] Recurring event with {len(event_data.patterns)} patterns, end_date={event_data.recurrence_end_date}")
+
     # Create with validation (all checks in CRUD layer)
     db_event, error, error_detail = event.create_with_validation(db, obj_in=event_data)
 

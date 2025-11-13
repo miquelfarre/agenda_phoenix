@@ -137,20 +137,12 @@ class CreateEditEventScreenState
   Future<bool> submitForm() async {
     try {
       final eventData = <String, dynamic>{
-        'id': widget.eventToEdit?.id ?? -1,
-        'title': _titleController.text.trim(),
+        'name': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
         'start_date': _selectedDate.toIso8601String(),
         'owner_id': ConfigService.instance.currentUserId,
-        'is_recurring': false,
-        'event_type': 'standalone',
-        'location': 'Madrid',
-        'recurrence_pattern': null,
-        'is_birthday': false,
+        'event_type': 'regular',
         'calendar_id': _selectedCalendarId,
-        'timezone': _selectedTimezone,
-        'city': _useCustomTimezone ? _customCity : _defaultCity,
-        'country_code': _selectedCountry?.code ?? 'ES',
       };
 
       if (_isEditMode) {
