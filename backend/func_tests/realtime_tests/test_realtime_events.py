@@ -100,6 +100,7 @@ class TestEventRealtimeFlow:
             "name": "Realtime Test Event",
             "description": "Testing end-to-end flow",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": user_id,
         }
@@ -145,6 +146,7 @@ class TestEventRealtimeFlow:
             "name": "Event to Delete",
             "description": "Will be deleted",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": user_id,
         }
@@ -202,6 +204,7 @@ class TestEventRealtimeFlow:
             "name": "Original Name",
             "description": "Original description",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": user_id,
         }
@@ -256,6 +259,7 @@ class TestEventRealtimeFlow:
             "name": "Event to Leave",
             "description": "Testing leave flow",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }
@@ -342,6 +346,7 @@ class TestEventRealtimeFlow:
             "name": "Event to Reject",
             "description": "Testing rejection flow",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }
@@ -414,6 +419,7 @@ class TestEventInteractionRealtimeFlow:
         event_data = {
             "name": "Event to Accept",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }

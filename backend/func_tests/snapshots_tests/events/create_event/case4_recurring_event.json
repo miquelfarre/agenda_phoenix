@@ -17,6 +17,7 @@
       "name": "Sincro semanal",
       "description": "Reunión de sincronización todos los lunes",
       "start_date": "2025-11-17T10:00:00",
+      "timezone": "Europe/Madrid",
       "event_type": "recurring",
       "owner_id": 1
     }
@@ -30,6 +31,7 @@
       "name": "Sincro semanal",
       "description": "Reunión de sincronización todos los lunes",
       "start_date": "{{TIMESTAMP}}",
+      "timezone": "Europe/Madrid",
       "event_type": "recurring",
       "id": "{{ID}}",
       "owner_id": "{{ID}}",

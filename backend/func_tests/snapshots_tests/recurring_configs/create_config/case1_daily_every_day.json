@@ -1,6 +1,6 @@
 {
   "name": "Daily recurrence - every day",
-  "description": "Evento que se repite todos los d\u00edas",
+  "description": "Evento que se repite todos los días",
   "setup": {
     "users": [
       {
@@ -15,6 +15,7 @@
         "name": "Rutina diaria",
         "description": "Ejercicio matutino",
         "start_date": "2025-11-01T07:00:00",
+        "timezone": "Europe/Madrid",
         "event_type": "recurring",
         "owner_id": 1
       }

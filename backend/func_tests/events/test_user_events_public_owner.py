@@ -50,6 +50,7 @@ def test_user_events_includes_public_owner_in_attendees(client):
         "name": "Wine Tasting Event",
         "description": "Special wine tasting with pairing",
         "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
+        "timezone": "Europe/Madrid",
         "owner_id": public_user["id"],
     }
     client._auth_context["user_id"] = public_user["id"]
@@ -154,6 +155,7 @@ def test_user_events_preserves_owner_info_across_updates(client):
         "name": "Spinning Class",
         "description": "High intensity spinning",
         "start_date": (datetime.now() + timedelta(days=2)).isoformat(),
+        "timezone": "Europe/Madrid",
         "owner_id": public_user["id"],
     }
     client._auth_context["user_id"] = public_user["id"]

@@ -17,6 +17,7 @@
       "name": "Cena con amigos",
       "description": "Cena en casa de Sonia",
       "start_date": "2025-11-15T20:00:00",
+      "timezone": "Europe/Madrid",
       "event_type": "regular",
       "owner_id": 1
     }
@@ -28,6 +29,7 @@
       "name": "Cena con amigos",
       "description": "Cena en casa de Sonia",
       "start_date": "2025-11-15T20:00:00",
+      "timezone": "Europe/Madrid",
       "event_type": "regular",
       "owner_id": 1,
       "created_at": "{{any_datetime}}",
@@ -40,6 +42,7 @@
       "name": "Cena con amigos",
       "description": "Cena en casa de Sonia",
       "start_date": "{{TIMESTAMP}}",
+      "timezone": "Europe/Madrid",
       "event_type": "regular",
       "id": "{{ID}}",
       "owner_id": "{{ID}}",

@@ -93,6 +93,8 @@ class CreateEditEventScreenState
       _descriptionController.text = event.description ?? '';
       setFieldValue('startDate', _normalizeToFiveMinutes(event.startDate));
       setFieldValue('calendarId', event.calendarId);
+      _selectedTimezone = event.timezone;
+      _useCustomTimezone = event.timezone != 'Europe/Madrid';
 
       if (event.calendarId != null) {
         _useCustomCalendar = true;
@@ -140,6 +142,7 @@ class CreateEditEventScreenState
         'name': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
         'start_date': _selectedDate.toIso8601String(),
+        'timezone': _selectedTimezone,
         'owner_id': ConfigService.instance.currentUserId,
         'event_type': 'regular',
         'calendar_id': _selectedCalendarId,

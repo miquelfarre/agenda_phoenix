@@ -13,6 +13,7 @@ from auth import get_current_user_id
 from crud import user_block
 from dependencies import get_db
 from schemas import UserBlockCreate, UserBlockResponse
+from utils import validate_pagination, handle_crud_error
 
 router = APIRouter(prefix="/api/v1/user_blocks", tags=["user_blocks"])
 
@@ -21,8 +22,7 @@ router = APIRouter(prefix="/api/v1/user_blocks", tags=["user_blocks"])
 async def get_user_blocks(blocker_user_id: Optional[int] = None, blocked_user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all user blocks, optionally filtered by blocker or blocked user, with pagination and ordering"""
     # Validate and limit pagination
-    limit = max(1, min(200, limit))
-    offset = max(0, offset)
+    limit, offset = validate_pagination(limit, offset)
 
     return user_block.get_multi_filtered(db, blocker_user_id=blocker_user_id, blocked_user_id=blocked_user_id, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
@@ -37,11 +37,7 @@ async def create_user_block(block_data: UserBlockCreate, db: Session = Depends(g
     db_block, error = user_block.create_with_validation(db, obj_in=block_data)
 
     if error:
-        # Map error messages to appropriate status codes
-        if "not found" in error.lower():
-            raise HTTPException(status_code=404, detail=error)
-        else:
-            raise HTTPException(status_code=400, detail=error)
+        handle_crud_error(error)
 
     return db_block
 

@@ -14,6 +14,7 @@ from crud import group_membership
 from dependencies import check_user_not_public, get_db
 from models import Group, GroupMembership
 from schemas import GroupMembershipCreate, GroupMembershipResponse, GroupMembershipUpdate
+from utils import validate_pagination, handle_crud_error
 
 router = APIRouter(prefix="/api/v1/group_memberships", tags=["group_memberships"])
 
@@ -21,9 +22,8 @@ router = APIRouter(prefix="/api/v1/group_memberships", tags=["group_memberships"
 @router.get("", response_model=List[GroupMembershipResponse])
 async def get_group_memberships(group_id: Optional[int] = None, user_id: Optional[int] = None, limit: int = 50, offset: int = 0, order_by: str = "id", order_dir: str = "asc", db: Session = Depends(get_db)):
     """Get all group memberships, optionally filtered by group_id and/or user_id, with pagination and ordering"""
-    # Validate and limit pagination
-    limit = max(1, min(200, limit))
-    offset = max(0, offset)
+    # Validate pagination
+    limit, offset = validate_pagination(limit, offset)
 
     return group_membership.get_multi_filtered(db, group_id=group_id, user_id=user_id, skip=offset, limit=limit, order_by=order_by, order_dir=order_dir)
 
@@ -41,11 +41,7 @@ async def create_group_membership(membership_data: GroupMembershipCreate, db: Se
     db_membership, error = group_membership.create_with_validation(db, obj_in=membership_data)
 
     if error:
-        # Map error messages to appropriate status codes
-        if "not found" in error.lower():
-            raise HTTPException(status_code=404, detail=error)
-        else:
-            raise HTTPException(status_code=400, detail=error)
+        handle_crud_error(error)
 
     return db_membership
 
@@ -95,58 +91,27 @@ async def delete_group_membership(membership_id: int, current_user_id: int = Dep
     Requires JWT authentication - provide token in Authorization header.
     Either the group creator, admins, OR the user themselves can delete the membership.
     """
-    print(f"\n{'='*80}")
-    print(f"[DELETE GROUP MEMBERSHIP] Starting deletion process")
-    print(f"  membership_id: {membership_id}")
-    print(f"  current_user_id: {current_user_id}")
-
     db_membership = group_membership.get(db, id=membership_id)
     if not db_membership:
-        print(f"  ❌ ERROR: Membership {membership_id} not found")
-        print(f"{'='*80}\n")
         raise HTTPException(status_code=404, detail="Group membership not found")
-
-    print(f"  ✓ Membership found:")
-    print(f"    - group_id: {db_membership.group_id}")
-    print(f"    - user_id: {db_membership.user_id}")
-    print(f"    - role: {db_membership.role}")
 
     # Get group to check creator
     group = db.query(Group).filter(Group.id == db_membership.group_id).first()
     if not group:
-        print(f"  ❌ ERROR: Group {db_membership.group_id} not found")
-        print(f"{'='*80}\n")
         raise HTTPException(status_code=404, detail="Group not found")
-
-    print(f"  ✓ Group found:")
-    print(f"    - group name: {group.name}")
-    print(f"    - owner_id: {group.owner_id}")
 
     # Check if user is group owner
     is_creator = group.owner_id == current_user_id
-    print(f"  → is_creator: {is_creator} (owner_id={group.owner_id} == current_user_id={current_user_id})")
 
     # Check if user is admin
     admin_membership = db.query(GroupMembership).filter(GroupMembership.group_id == db_membership.group_id, GroupMembership.user_id == current_user_id, GroupMembership.role == "admin").first()
     is_admin = admin_membership is not None
-    print(f"  → is_admin: {is_admin} (admin_membership={'found' if admin_membership else 'NOT found'})")
 
     # Check if user is the member themselves
     is_self = db_membership.user_id == current_user_id
-    print(f"  → is_self: {is_self} (membership.user_id={db_membership.user_id} == current_user_id={current_user_id})")
-
-    print(f"  → Permission check: is_creator={is_creator} OR is_admin={is_admin} OR is_self={is_self}")
 
     if not (is_creator or is_admin or is_self):
-        print(f"  ❌ PERMISSION DENIED!")
-        print(f"     - User {current_user_id} cannot delete membership {membership_id}")
-        print(f"     - Membership belongs to user {db_membership.user_id}")
-        print(f"     - Group owner is {group.owner_id}")
-        print(f"{'='*80}\n")
         raise HTTPException(status_code=403, detail="You don't have permission to delete this membership. Only the group creator, admins, or the member themselves can do this.")
 
-    print(f"  ✅ PERMISSION GRANTED - Proceeding with deletion")
     group_membership.delete(db, id=membership_id)
-    print(f"  ✅ Membership {membership_id} deleted successfully")
-    print(f"{'='*80}\n")
     return {"message": "Group membership deleted successfully", "id": membership_id}

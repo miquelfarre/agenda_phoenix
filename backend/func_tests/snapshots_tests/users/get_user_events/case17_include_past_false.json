@@ -13,18 +13,21 @@
         "id": 1,
         "name": "Past Event",
         "start_date": "2024-01-01T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 2,
         "name": "Recent Past",
         "start_date": "2025-12-01T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 3,
         "name": "Future Event",
         "start_date": "2026-01-01T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       }
     ]
@@ -41,6 +44,7 @@
         "name": "Recent Past",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
@@ -66,6 +70,7 @@
         "name": "Future Event",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",

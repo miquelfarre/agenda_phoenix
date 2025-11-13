@@ -31,6 +31,7 @@ class Event {
   final String name;
   final String? description;
   final DateTime startDate;
+  final String timezone;
   final String eventType;
   final int ownerId;
   final int? calendarId;
@@ -56,6 +57,7 @@ class Event {
     required this.name,
     this.description,
     required this.startDate,
+    this.timezone = 'Europe/Madrid',
     this.eventType = 'regular',
     required this.ownerId,
     this.calendarId,
@@ -124,6 +126,7 @@ class Event {
       name: json['name'] as String,
       description: json['description'] as String?,
       startDate: DateTime.parse(json['start_date'] as String),
+      timezone: json['timezone'] as String? ?? 'Europe/Madrid',
       eventType: json['event_type'] as String? ?? 'regular',
       ownerId: json['owner_id'] as int,
       calendarId: json['calendar_id'] as int?,
@@ -154,6 +157,7 @@ class Event {
       'name': name,
       if (description != null) 'description': description,
       'start_date': startDate.toIso8601String(),
+      'timezone': timezone,
       'event_type': eventType,
       'owner_id': ownerId,
       if (calendarId != null) 'calendar_id': calendarId,
@@ -171,6 +175,7 @@ class Event {
     String? name,
     String? description,
     DateTime? startDate,
+    String? timezone,
     String? eventType,
     int? ownerId,
     int? calendarId,
@@ -194,6 +199,7 @@ class Event {
       name: name ?? this.name,
       description: description ?? this.description,
       startDate: startDate ?? this.startDate,
+      timezone: timezone ?? this.timezone,
       eventType: eventType ?? this.eventType,
       ownerId: ownerId ?? this.ownerId,
       calendarId: calendarId ?? this.calendarId,

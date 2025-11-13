@@ -4,21 +4,20 @@ Events Router
 Handles all event-related endpoints.
 """
 
-import logging
 from typing import List, Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session, noload
 
 from auth import get_current_user_id, get_current_user_id_optional
 from crud import calendar_membership, event, event_interaction, user
 from dependencies import check_event_permission, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
-from models import EventInteraction, User, UserBlock
-from schemas import AvailableInviteeResponse, EventCreate, EventDeleteRequest, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventResponse, EventUpdate, RecurringEventCreate
+from models import Event, EventInteraction, User, UserBlock
+from schemas import AvailableInviteeResponse, EventCreate, EventDeleteRequest, EventResponse, EventUpdate, RecurringEventCreate
+from utils import validate_pagination, handle_crud_error
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
-logger = logging.getLogger(__name__)
 
 
 @router.get("", response_model=List[EventResponse])
@@ -36,9 +35,8 @@ async def get_events(owner_id: Optional[int] = None, calendar_id: Optional[int] 
     If not authenticated, returns empty list (use public event discovery endpoints instead).
 
     Optional filters by owner_id or calendar_id can further narrow results."""
-    # Validate and limit pagination
-    limit = max(1, min(200, limit))
-    offset = max(0, offset)
+    # Validate pagination
+    limit, offset = validate_pagination(limit, offset)
 
     # If user is authenticated, filter by accessible events
     if current_user_id is not None:
@@ -114,8 +112,6 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
     owner_name = owner.display_name
     owner_profile_picture_url = owner.profile_picture_url
 
-    logger.info(f"[GET /events/{event_id}] OWNER INFO: user_id={owner.id}, is_public={owner.is_public}, owner_name={owner_name}")
-
     # Build response dict from event
     response_data = {
         "id": db_event.id,
@@ -163,23 +159,15 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
         response_data["owner_upcoming_events"] = upcoming_events_data
 
     # If current_user_id is provided and user is owner or admin, add invitation stats
-    print(f"🔍 DEBUG BACKEND PRE-CHECK: current_user_id = {current_user_id}, type = {type(current_user_id)}")
-    print(f"🔍 DEBUG BACKEND PRE-CHECK: current_user_id is not None = {current_user_id is not None}")
     if current_user_id is not None:
         is_owner = db_event.owner_id == current_user_id
         is_admin = False
-        print(f"🔍 DEBUG BACKEND: GET /events/{event_id}")
-        print(f"🔍 DEBUG BACKEND: current_user_id = {current_user_id}")
-        print(f"🔍 DEBUG BACKEND: db_event.owner_id = {db_event.owner_id}")
-        print(f"🔍 DEBUG BACKEND: is_owner = {is_owner}")
 
         # Check if user is admin of the calendar containing this event
         if db_event.calendar_id:
             membership = calendar_membership.get_membership(db, calendar_id=db_event.calendar_id, user_id=current_user_id)
             if membership and membership.role in ["admin"] and membership.status == "accepted":
                 is_admin = True
-
-        print(f"🔍 DEBUG BACKEND: is_admin = {is_admin}")
 
         # Check if user is an accepted participant who can invite others
         user_interaction_for_permission = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id).first()
@@ -192,12 +180,8 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
             if user_interaction_for_permission.interaction_type in ["subscribed", "joined"] and user_interaction_for_permission.status == "accepted":
                 can_invite = True
 
-        print(f"🔍 DEBUG BACKEND: can_invite = {can_invite}")
-        print(f"🔍 DEBUG BACKEND: Will enter owner/admin/participant block = {can_invite}")
-
         # If user is owner, admin, or accepted participant, get invitation stats
         if can_invite:
-            print(f"🔍 DEBUG BACKEND: Entering OWNER/ADMIN/PARTICIPANT block (can_invite={can_invite})")
             stats = event_interaction.get_invitation_stats(db, event_id=event_id)
             response_data["invitation_stats"] = stats
 
@@ -260,19 +244,8 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
 
         # If user is not owner/admin but is authenticated, add their own interaction
         elif current_user_id is not None:
-            print(f"🔍 DEBUG BACKEND: Entering REGULAR USER block")
-            print(f"🔍 DEBUG BACKEND: current_user_id = {current_user_id}, event_id = {event_id}")
             # Get current user's interaction only
             user_interaction = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id).first()
-
-            print(f"🔍 DEBUG BACKEND: user_interaction found = {user_interaction is not None}")
-            if user_interaction:
-                print(f"🔍 DEBUG BACKEND: interaction.id = {user_interaction.id}")
-                print(f"🔍 DEBUG BACKEND: interaction.interaction_type = {user_interaction.interaction_type}")
-                print(f"🔍 DEBUG BACKEND: interaction.status = {user_interaction.status}")
-                print(f"🔍 DEBUG BACKEND: interaction.invited_by_user_id = {user_interaction.invited_by_user_id}")
-            else:
-                print(f"🔍 DEBUG BACKEND: No interaction found for user {current_user_id} and event {event_id}")
 
             if user_interaction:
                 inviter = None
@@ -390,46 +363,29 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     # Build available invitees list
     available = []
     for user_obj in results:
-        available.append({"id": user_obj.id, "display_name": user_obj.display_name})
+        available.append({"id": user_obj.id, "instagram_username": user_obj.instagram_username, "display_name": user_obj.display_name})
 
     return available
 
 
 @router.post("", response_model=EventResponse, status_code=201)
-async def create_event(request: Request, event_data: Union[EventCreate, RecurringEventCreate], db: Session = Depends(get_db)):
+async def create_event(event_data: Union[EventCreate, RecurringEventCreate], db: Session = Depends(get_db)):
     """Create a new event (regular or recurring)
 
     Use EventCreate for regular events.
     Use RecurringEventCreate for recurring events (requires patterns).
     """
-    # Log raw body for debugging
-    try:
-        body = await request.body()
-        logger.info(f"🔍 [CREATE EVENT] Raw body: {body.decode('utf-8')}")
-    except Exception as e:
-        logger.error(f"❌ [CREATE EVENT] Error reading body: {e}")
-
-    logger.info(f"🔍 [CREATE EVENT] Received data: {event_data.model_dump()}")
-    logger.info(f"🔍 [CREATE EVENT] name={event_data.name}, owner_id={event_data.owner_id}, calendar_id={event_data.calendar_id}")
-    logger.info(f"🔍 [CREATE EVENT] start_date={event_data.start_date}, event_type={event_data.event_type}")
-
-    if isinstance(event_data, RecurringEventCreate):
-        logger.info(f"🔍 [CREATE EVENT] Recurring event with {len(event_data.patterns)} patterns, end_date={event_data.recurrence_end_date}")
-
     # Create with validation (all checks in CRUD layer)
     db_event, error, error_detail = event.create_with_validation(db, obj_in=event_data)
 
     if error:
-        # Map error messages to appropriate status codes
-        if "not found" in error.lower():
-            raise HTTPException(status_code=404, detail=error)
-        elif "banned" in error.lower():
-            # Use detailed error info if available
-            raise HTTPException(status_code=403, detail=error_detail if error_detail else error)
-        else:
-            raise HTTPException(status_code=400, detail=error)
+        handle_crud_error(error, error_detail)
 
-    return db_event
+    # Reload without relationships to avoid serialization issues
+    db.expire_all()
+    db_event_clean = db.query(Event).options(noload(Event.interactions)).filter(Event.id == db_event.id).first()
+
+    return db_event_clean
 
 
 @router.put("/{event_id}", response_model=EventResponse)
@@ -447,13 +403,13 @@ async def update_event(event_id: int, event_data: EventUpdate, current_user_id: 
     db_event, error = event.update_with_validation(db, event_id=event_id, obj_in=event_data)
 
     if error:
-        # Map error messages to appropriate status codes
-        if "not found" in error.lower():
-            raise HTTPException(status_code=404, detail=error)
-        else:
-            raise HTTPException(status_code=400, detail=error)
+        handle_crud_error(error)
 
-    return db_event
+    # Reload without relationships to avoid serialization issues
+    db.expire_all()
+    db_event_clean = db.query(Event).options(noload(Event.interactions)).filter(Event.id == event_id).first()
+
+    return db_event_clean
 
 
 @router.delete("/{event_id}")
@@ -484,163 +440,9 @@ async def delete_event(event_id: int, current_user_id: int = Depends(get_current
     deleted_count, error = event.delete_with_cancellations(db, event_id=event_id, cancelled_by_user_id=cancelled_by, cancellation_message=cancellation_msg)
 
     if error:
-        raise HTTPException(status_code=404, detail=error)
+        handle_crud_error(error)
 
     return {"message": f"Event deleted successfully ({'with ' + str(deleted_count - 1) + ' instances' if deleted_count > 1 else 'single event'})", "id": event_id, "deleted_count": deleted_count}
-
-
-@router.get("/{event_id}/interaction", response_model=EventInteractionResponse)
-async def get_current_user_interaction(event_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Get the current user's interaction with this event.
-
-    Requires JWT authentication - provide token in Authorization header.
-    Returns 404 if no interaction exists.
-    """
-    db_interaction = event_interaction.get_interaction(db, event_id=event_id, user_id=current_user_id)
-    if not db_interaction:
-        raise HTTPException(status_code=404, detail="Interaction not found")
-
-    return db_interaction
-
-
-@router.patch("/{event_id}/interaction", response_model=EventInteractionResponse)
-async def update_current_user_interaction(event_id: int, interaction: EventInteractionUpdate, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Update or create the current user's interaction with this event.
-
-    Requires JWT authentication - provide token in Authorization header.
-    Creates a new interaction if one doesn't exist.
-
-    Special cascade behavior for recurring events:
-    - If rejecting a base recurring event invitation (event_type='recurring' and status='rejected'),
-      automatically reject all pending invitations to instance events of that recurring event
-    """
-    # Check if event exists
-    db_event = event.get(db, id=event_id)
-    if not db_event:
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    # Check if user is banned
-    # Get or create interaction
-    db_interaction = event_interaction.get_interaction(db, event_id=event_id, user_id=current_user_id)
-
-    if not db_interaction:
-        # Create new interaction with provided fields
-        interaction_data = EventInteractionCreate(
-            event_id=event_id, user_id=current_user_id, interaction_type=interaction.interaction_type or "subscribed", status=interaction.status or "pending", role=interaction.role, personal_note=interaction.personal_note, cancellation_note=interaction.cancellation_note
-        )
-        db_interaction = event_interaction.create(db, obj_in=interaction_data)
-    else:
-        # Update existing interaction (only fields that are explicitly provided)
-        for key, value in interaction.model_dump(exclude_unset=True).items():
-            if value is not None:
-                setattr(db_interaction, key, value)
-
-        db.commit()
-        db.refresh(db_interaction)
-
-    # Handle cascade rejection logic for recurring events
-    handle_recurring_event_rejection_cascade(db, db_interaction, db_event)
-
-    return db_interaction
-
-
-@router.delete("/{event_id}/interaction")
-async def delete_current_user_interaction(event_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Delete the current user's interaction with this event.
-
-    Requires JWT authentication - provide token in Authorization header.
-    Returns 404 if no interaction exists.
-    """
-    db_interaction = event_interaction.get_interaction(db, event_id=event_id, user_id=current_user_id)
-    if not db_interaction:
-        raise HTTPException(status_code=404, detail="Interaction not found")
-
-    event_interaction.delete(db, id=db_interaction.id)
-
-    return {"message": "Interaction deleted successfully", "id": db_interaction.id}
-
-
-@router.post("/{event_id}/interaction/invite", response_model=EventInteractionResponse, status_code=201)
-async def invite_user_to_event(event_id: int, invite_data: dict, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """
-    Invite a user to an event by creating an 'invited' interaction.
-
-    Requires JWT authentication - provide token in Authorization header.
-    Body should contain 'invited_user_id' and optionally 'invitation_message'.
-
-    The inviter (current user) must be:
-    - Event owner, OR
-    - Event admin, OR
-    - Accepted participant (subscribed/joined)
-
-    Returns 409 if the user already has an interaction with this event.
-    """
-    # Check if event exists
-    db_event = event.get(db, id=event_id)
-    if not db_event:
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    # Extract invited_user_id from request
-    invited_user_id = invite_data.get("invited_user_id")
-    invitation_message = invite_data.get("invitation_message")
-
-    if not invited_user_id:
-        raise HTTPException(status_code=400, detail="invited_user_id is required")
-
-    # Check if invited user exists
-    invited_user = user.get(db, id=invited_user_id)
-    if not invited_user:
-        raise HTTPException(status_code=404, detail="Invited user not found")
-
-    # Public users cannot be invited to events
-    if invited_user.is_public:
-        raise HTTPException(status_code=403, detail="Public users cannot be invited to events. Only private users can receive invitations.")
-
-    # Check if inviter (current user) is public
-    inviter_user = user.get(db, id=current_user_id)
-    if inviter_user and inviter_user.is_public:
-        raise HTTPException(status_code=403, detail="Public users cannot invite others to events. Only private users can invite.")
-
-    # Check if invited user is banned
-    # Check if there's a block between inviter and invitee
-    check_users_not_blocked(current_user_id, invited_user_id, db)
-
-    # Check if there's a block between event owner and invitee
-    check_users_not_blocked(db_event.owner_id, invited_user_id, db)
-
-    # Check if inviter has permission to invite
-    is_owner = db_event.owner_id == current_user_id
-
-    if not is_owner:
-        # Check if inviter is an admin or accepted participant of this event
-        inviter_interaction = event_interaction.get_interaction(db, event_id=event_id, user_id=current_user_id)
-
-        has_permission = False
-        if inviter_interaction:
-            # Inviter is admin with accepted status
-            if inviter_interaction.role == "admin" and inviter_interaction.status == "accepted":
-                has_permission = True
-            # Inviter is a subscribed or joined participant with accepted status
-            elif inviter_interaction.interaction_type in ["subscribed", "joined"] and inviter_interaction.status == "accepted":
-                has_permission = True
-
-        if not has_permission:
-            raise HTTPException(status_code=403, detail="User does not have permission to invite others to this event. Must be event owner, admin, or accepted participant.")
-
-    # Check if interaction already exists
-    existing_interaction = event_interaction.get_interaction(db, event_id=event_id, user_id=invited_user_id)
-    if existing_interaction:
-        raise HTTPException(status_code=409, detail="User already has an interaction with this event")
-
-    # Create the invitation
-    interaction_data = EventInteractionCreate(event_id=event_id, user_id=invited_user_id, interaction_type="invited", status="pending", note=invitation_message)
-
-    db_interaction = event_interaction.create(db, obj_in=interaction_data)
-
-    return db_interaction
 
 
 # Removed unused event cancellations endpoints (/events/cancellations and /events/cancellations/{id}/view)

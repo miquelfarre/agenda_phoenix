@@ -1,6 +1,6 @@
 {
   "name": "Weekly recurrence - Mon, Wed, Fri",
-  "description": "Evento que se repite lunes, mi\u00e9rcoles y viernes",
+  "description": "Evento que se repite lunes, miércoles y viernes",
   "setup": {
     "users": [
       {
@@ -15,6 +15,7 @@
         "name": "Clases de yoga",
         "description": "Yoga 3 veces por semana",
         "start_date": "2025-11-03T19:00:00",
+        "timezone": "Europe/Madrid",
         "event_type": "recurring",
         "owner_id": 1
       }

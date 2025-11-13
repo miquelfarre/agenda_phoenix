@@ -13,30 +13,35 @@
         "id": 1,
         "name": "Yesterday",
         "start_date": "2026-01-14T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 2,
         "name": "Today",
         "start_date": "2026-01-15T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 3,
         "name": "In 3 days",
         "start_date": "2026-01-18T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 4,
         "name": "In 6 days",
         "start_date": "2026-01-21T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 5,
         "name": "In 8 days",
         "start_date": "2026-01-23T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       }
     ]

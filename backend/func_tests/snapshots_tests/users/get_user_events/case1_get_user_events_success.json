@@ -19,6 +19,7 @@
         "id": 100,
         "name": "Evento propio de Sonia",
         "start_date": "2025-11-15T20:00:00",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "owner_id": 1
       },
@@ -26,6 +27,7 @@
         "id": 101,
         "name": "Evento de Miquel",
         "start_date": "2025-11-16T10:00:00",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "owner_id": 2
       }
@@ -53,6 +55,7 @@
         "name": "Evento propio de Sonia",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
@@ -78,6 +81,7 @@
         "name": "Evento de Miquel",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",

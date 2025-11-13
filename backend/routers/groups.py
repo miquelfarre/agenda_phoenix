@@ -14,6 +14,7 @@ from crud import group
 from dependencies import check_group_permission, get_db
 from models import Group
 from schemas import GroupBase, GroupCreate, GroupResponse
+from utils import validate_pagination, handle_crud_error
 
 router = APIRouter(prefix="/api/v1/groups", tags=["groups"])
 
@@ -52,8 +53,7 @@ async def get_groups(current_user_id: int = Depends(get_current_user_id), owner_
     from crud.crud_group_membership import group_membership
 
     # Validate and limit pagination
-    limit = max(1, min(200, limit))
-    offset = max(0, offset)
+    limit, offset = validate_pagination(limit, offset)
 
     # Get all groups where user is a member (owner, admin, or member)
     memberships = group_membership.get_by_user(db, user_id=current_user_id)

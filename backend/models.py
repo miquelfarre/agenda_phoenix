@@ -354,6 +354,7 @@ class Event(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     start_date = Column(TIMESTAMP(timezone=True), nullable=False)
+    timezone = Column(String(100), nullable=False, default="Europe/Madrid")  # IANA timezone (e.g., 'Europe/Madrid', 'America/New_York')
     event_type = Column(String(50), nullable=False, default="regular")  # 'regular' or 'recurring'
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     calendar_id = Column(Integer, ForeignKey("calendars.id"), nullable=True, index=True)
@@ -377,6 +378,7 @@ class Event(Base):
             "name": self.name,
             "description": self.description,
             "start_date": self.start_date.isoformat() if self.start_date else None,
+            "timezone": self.timezone,
             "event_type": self.event_type,
             "owner_id": self.owner_id,
             "calendar_id": self.calendar_id,

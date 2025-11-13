@@ -19,6 +19,7 @@
         "id": 1,
         "name": "Evento de Sonia",
         "start_date": "2025-11-15T20:00:00",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "owner_id": 1
       },
@@ -26,6 +27,7 @@
         "id": 2,
         "name": "Evento de Miquel",
         "start_date": "2025-11-16T10:00:00",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "owner_id": 2
       }
@@ -45,6 +47,7 @@
         "name": "Evento de Sonia",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",

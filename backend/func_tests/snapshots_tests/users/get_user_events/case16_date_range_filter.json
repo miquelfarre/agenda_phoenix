@@ -13,24 +13,28 @@
         "id": 1,
         "name": "Before Range",
         "start_date": "2025-11-01T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 2,
         "name": "In Range 1",
         "start_date": "2025-12-01T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 3,
         "name": "In Range 2",
         "start_date": "2025-12-15T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 4,
         "name": "After Range",
         "start_date": "2026-01-15T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       }
     ]

@@ -22,6 +22,7 @@ from schemas import (
     CalendarSubscriptionCreate,
     CalendarSubscriptionResponse,
 )
+from utils import validate_pagination, handle_crud_error
 
 router = APIRouter(prefix="/api/v1/calendars", tags=["calendars"])
 
@@ -38,9 +39,8 @@ async def get_calendars(current_user_id: int = Depends(get_current_user_id), lim
     - Calendars where the user is a member (excluding calendars from public users)
     - Public calendars the user is subscribed to (excluding calendars from public users)
     """
-    # Validate and limit pagination
-    limit = max(1, min(200, limit))
-    offset = max(0, offset)
+    # Validate pagination
+    limit, offset = validate_pagination(limit, offset)
 
     return calendar.get_all_user_calendars(db, user_id=current_user_id, skip=offset, limit=limit)
 
@@ -160,11 +160,7 @@ async def add_calendar_member(calendar_id: int, membership_data: CalendarMembers
     db_membership, error = calendar_membership.create_with_validation(db, obj_in=membership_data)
 
     if error:
-        # Map error messages to appropriate status codes
-        if "not found" in error.lower():
-            raise HTTPException(status_code=404, detail=error)
-        else:
-            raise HTTPException(status_code=400, detail=error)
+        handle_crud_error(error)
 
     return db_membership
 
@@ -196,13 +192,7 @@ async def subscribe_to_calendar(share_hash: str, current_user_id: int = Depends(
     db_subscription, error = calendar_subscription.create_with_validation(db, obj_in=subscription_data)
 
     if error:
-        # Map error messages to appropriate status codes
-        if "not found" in error.lower():
-            raise HTTPException(status_code=404, detail=error)
-        elif "already subscribed" in error.lower():
-            raise HTTPException(status_code=409, detail=error)
-        else:
-            raise HTTPException(status_code=400, detail=error)
+        handle_crud_error(error)
 
     return db_subscription
 

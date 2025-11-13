@@ -133,6 +133,7 @@ class EventBase(BaseModel):
     name: str
     description: Optional[str] = None
     start_date: datetime
+    timezone: str = "Europe/Madrid"  # IANA timezone (e.g., 'Europe/Madrid', 'America/New_York')
     event_type: str = "regular"  # 'regular' or 'recurring'
     recurrence_end_date: Optional[datetime] = None  # For recurring events: end date of recurrence
 
@@ -152,6 +153,7 @@ class RecurringEventCreate(BaseModel):
     name: str
     description: Optional[str] = None
     start_date: datetime
+    timezone: str = "Europe/Madrid"  # IANA timezone (e.g., 'Europe/Madrid', 'America/New_York')
     owner_id: int
     calendar_id: Optional[int] = None
     event_type: Literal["recurring"] = "recurring"  # Forced to recurring
@@ -179,6 +181,7 @@ class EventUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     start_date: Optional[datetime] = None
+    timezone: Optional[str] = None
     event_type: Optional[str] = None
     calendar_id: Optional[int] = None
     recurrence_end_date: Optional[datetime] = None

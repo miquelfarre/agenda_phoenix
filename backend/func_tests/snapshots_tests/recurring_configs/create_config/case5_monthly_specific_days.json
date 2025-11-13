@@ -1,6 +1,6 @@
 {
   "name": "Monthly recurrence - 1st and 15th",
-  "description": "Evento que se repite el d\u00eda 1 y 15 de cada mes",
+  "description": "Evento que se repite el día 1 y 15 de cada mes",
   "setup": {
     "users": [
       {
@@ -12,9 +12,10 @@
     "events": [
       {
         "id": 100,
-        "name": "Pago de n\u00f3mina",
+        "name": "Pago de nómina",
         "description": "Procesar pagos quincenales",
         "start_date": "2025-11-01T09:00:00",
+        "timezone": "Europe/Madrid",
         "event_type": "recurring",
         "owner_id": 1
       }

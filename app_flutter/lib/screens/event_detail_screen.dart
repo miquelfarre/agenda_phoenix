@@ -339,6 +339,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           _buildEventBadges(),
           const SizedBox(height: 8),
           _buildInfoRow(l10n.eventDate, _formatDateTime(event.date)),
+          const SizedBox(height: 8),
+          _buildInfoRow('Timezone', event.timezone),
 
           if (!isEventOwner &&
               _interaction != null &&

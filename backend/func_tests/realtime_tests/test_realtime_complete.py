@@ -99,6 +99,7 @@ class TestEventsRealtimeINSERT:
         event_data = {
             "name": "INSERT Test Event",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": user_id,
         }
@@ -132,6 +133,7 @@ class TestEventsRealtimeUPDATE:
         event_data = {
             "name": "Original Name",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": user_id,
         }
@@ -171,6 +173,7 @@ class TestEventsRealtimeDELETE:
         event_data = {
             "name": "Event to Delete",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": user_id,
         }
@@ -213,6 +216,7 @@ class TestEventInteractionsRealtimeINSERT:
         event_data = {
             "name": "Event for Invitation",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }
@@ -257,6 +261,7 @@ class TestEventInteractionsRealtimeUPDATE:
         event_data = {
             "name": "Event to Accept",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }
@@ -306,6 +311,7 @@ class TestEventInteractionsRealtimeUPDATE:
         event_data = {
             "name": "Event to Reject",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }
@@ -350,6 +356,7 @@ class TestEventInteractionsRealtimeUPDATE:
         event_data = {
             "name": "Event to Mark Viewed",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }
@@ -393,6 +400,7 @@ class TestEventInteractionsRealtimeUPDATE:
         event_data = {
             "name": "Event with Note",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }
@@ -441,6 +449,7 @@ class TestEventInteractionsRealtimeDELETE:
         event_data = {
             "name": "Event to Leave",
             "start_date": "2025-12-01T10:00:00Z",
+            "timezone": "Europe/Madrid",
             "event_type": "regular",
             "owner_id": owner_id,
         }

@@ -78,6 +78,7 @@ def test_realtime_new_invitation_triggers_update():
         "name": "Event for invitation test",
         "description": "Testing new invitation",
         "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
+        "timezone": "Europe/Madrid",
         "owner_id": user1["id"],
     }
 
@@ -160,6 +161,7 @@ def test_realtime_accept_invitation_updates_interactions():
         "name": "Event for accept test",
         "description": "Testing accept invitation",
         "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
+        "timezone": "Europe/Madrid",
         "owner_id": user1["id"],
     }
     event = api_request("POST", "/events", user_id=user1["id"], json=event_data).json()
@@ -229,6 +231,7 @@ def test_realtime_reject_invitation_updates_interactions():
         "name": "Event for reject test",
         "description": "Testing reject invitation",
         "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
+        "timezone": "Europe/Madrid",
         "owner_id": user1["id"],
     }
     event = api_request("POST", "/events", user_id=user1["id"], json=event_data).json()
@@ -293,6 +296,7 @@ def test_realtime_leave_event_removes_from_interactions():
         "name": "Event for leave test",
         "description": "Testing leave event",
         "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
+        "timezone": "Europe/Madrid",
         "owner_id": user1["id"],
     }
     event = api_request("POST", "/events", user_id=user1["id"], json=event_data).json()
@@ -358,6 +362,7 @@ def test_realtime_update_note_reflects_in_interactions():
         "name": "Event for note test",
         "description": "Testing note update",
         "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
+        "timezone": "Europe/Madrid",
         "owner_id": user1["id"],
     }
     event = api_request("POST", "/events", user_id=user1["id"], json=event_data).json()
@@ -417,6 +422,7 @@ def test_realtime_mark_read_updates_read_at():
         "name": "Event for read test",
         "description": "Testing mark as read",
         "start_date": (datetime.now() + timedelta(days=1)).isoformat(),
+        "timezone": "Europe/Madrid",
         "owner_id": user1["id"],
     }
     event = api_request("POST", "/events", user_id=user1["id"], json=event_data).json()

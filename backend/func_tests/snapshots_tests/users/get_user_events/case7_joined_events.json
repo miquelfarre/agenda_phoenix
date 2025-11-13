@@ -18,12 +18,14 @@
         "id": 1,
         "name": "Alice Event",
         "start_date": "2025-12-01T18:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 1
       },
       {
         "id": 2,
         "name": "Bob Event",
         "start_date": "2025-12-02T10:00:00",
+        "timezone": "Europe/Madrid",
         "owner_id": 2
       }
     ],
@@ -49,6 +51,7 @@
         "name": "Alice Event",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",
@@ -74,6 +77,7 @@
         "name": "Bob Event",
         "description": null,
         "start_date": "{{TIMESTAMP}}",
+        "timezone": "Europe/Madrid",
         "event_type": "regular",
         "id": "{{ID}}",
         "owner_id": "{{ID}}",

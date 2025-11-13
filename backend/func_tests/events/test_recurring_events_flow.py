@@ -30,6 +30,7 @@ def test_recurring_event_complete_flow(client, test_db):
         "name": "Entrenamiento Semanal",
         "description": "Entrenamiento de fútbol",
         "start_date": datetime.now(timezone.utc).isoformat(),
+        "timezone": "Europe/Madrid",
         "event_type": "recurring",
         "owner_id": 1,
         "patterns": [
@@ -107,6 +108,7 @@ def test_update_event_with_new_patterns(client, test_db):
         "name": "Test Pattern Update",
         "description": "Testing",
         "start_date": datetime.now(timezone.utc).isoformat(),
+        "timezone": "Europe/Madrid",
         "event_type": "recurring",
         "owner_id": 1,
         "patterns": [
@@ -174,6 +176,7 @@ def test_recurring_event_with_end_date(client, test_db):
         "name": "Entrenamiento Temporal",
         "description": "Entrenamiento que termina en 4 semanas",
         "start_date": start_date.isoformat(),
+        "timezone": "Europe/Madrid",
         "event_type": "recurring",
         "owner_id": 1,
         "recurrence_end_date": end_date.isoformat(),
@@ -222,6 +225,7 @@ def test_recurring_event_with_end_date(client, test_db):
         "name": "Entrenamiento Infinito",
         "description": "Entrenamiento sin fecha fin",
         "start_date": start_date.isoformat(),
+        "timezone": "Europe/Madrid",
         "event_type": "recurring",
         "owner_id": 1,
         "patterns": [
