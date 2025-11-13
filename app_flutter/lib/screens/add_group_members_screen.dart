@@ -103,11 +103,15 @@ class _AddGroupMembersScreenState extends ConsumerState<AddGroupMembersScreen> {
       }
 
       if (mounted) {
-        context.pop(true); // Return true to indicate success
-        PlatformWidgets.showSnackBar(
-          message: '${_selectedUserIds.length} ${l10n.membersAdded}',
-          isError: false,
-        );
+        // Wait a bit for the stream to propagate to other screens
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          context.pop(true); // Return true to indicate success
+          PlatformWidgets.showSnackBar(
+            message: '${_selectedUserIds.length} ${l10n.membersAdded}',
+            isError: false,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

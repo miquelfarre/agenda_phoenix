@@ -261,6 +261,8 @@ IMPORTANTE: Devuelve SOLO el JSON, sin texto adicional.
       // Si no hay más sugerencias, finalizar
       if (suggestions.isEmpty) {
         await Future.delayed(const Duration(seconds: 1));
+        // Wait a bit for the stream to propagate to other screens
+        await Future.delayed(const Duration(milliseconds: 300));
         _finishWorkflow();
       }
     } catch (e) {

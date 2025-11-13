@@ -349,7 +349,11 @@ class _InviteUsersScreenState extends ConsumerState<InviteUsersScreen>
         }
 
         if (successCount > 0 && errorCount == 0) {
-          Navigator.of(context).pop();
+          // Wait a bit for the stream to propagate to other screens
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
         }
       }
     } catch (e) {

@@ -144,7 +144,7 @@ class CreateEditBirthdayEventScreenState
   }
 
   @override
-  void onFormSubmitSuccess() {
+  void onFormSubmitSuccess() async {
     final l10n = context.l10n;
     final eventName = _titleController.text.trim();
     PlatformDialogHelpers.showSnackBar(
@@ -155,7 +155,11 @@ class CreateEditBirthdayEventScreenState
     );
 
     if (mounted) {
-      Navigator.of(context).pop();
+      // Wait a bit for the stream to propagate to other screens
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 

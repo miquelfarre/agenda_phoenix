@@ -167,6 +167,9 @@ class _CreateEditCalendarScreenState
             : 'Calendario creado: "$name"',
       );
 
+      // Wait a bit for the stream to propagate to other screens
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
       context.pop();
     } catch (e) {
       if (!mounted) return;
@@ -196,6 +199,9 @@ class _CreateEditCalendarScreenState
 
       // Realtime handles refresh automatically via CalendarRepository
 
+      if (!mounted) return;
+      // Wait a bit for the stream to propagate to other screens
+      await Future.delayed(const Duration(milliseconds: 300));
       if (!mounted) return;
       context.pop();
     } catch (e) {

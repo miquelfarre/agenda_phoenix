@@ -807,7 +807,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
 
     if (shouldNavigate && mounted) {
-      Navigator.of(context).pop();
+      // Wait a bit for the stream to propagate to other screens
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -836,7 +840,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       }
 
       if (shouldNavigate && mounted) {
-        Navigator.of(context).pop();
+        // Wait a bit for the stream to propagate to other screens
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -891,7 +899,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       }
 
       if (shouldNavigate && mounted) {
-        Navigator.of(context).pop();
+        // Wait a bit for the stream to propagate to other screens
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -914,7 +926,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       await ref.read(eventRepositoryProvider).leaveEvent(event.id!);
 
       if (shouldNavigate && mounted) {
-        Navigator.of(context).pop();
+        // Wait a bit for the stream to propagate to other screens
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       if (mounted) {

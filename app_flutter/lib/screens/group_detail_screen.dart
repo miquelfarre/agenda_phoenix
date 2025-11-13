@@ -429,7 +429,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
     );
     if (result == true && mounted) {
       // Group was deleted, go back
-      context.pop();
+      // Wait a bit for the stream to propagate to other screens
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        context.pop();
+      }
     }
   }
 
@@ -634,11 +638,15 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen>
         );
 
         if (mounted) {
-          context.pop(); // Go back to groups list
-          PlatformWidgets.showSnackBar(
-            message: l10n.leftGroup(group.name),
-            isError: false,
-          );
+          // Wait a bit for the stream to propagate to other screens
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (mounted) {
+            context.pop(); // Go back to groups list
+            PlatformWidgets.showSnackBar(
+              message: l10n.leftGroup(group.name),
+              isError: false,
+            );
+          }
         }
       } catch (e) {
         if (mounted) {

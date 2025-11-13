@@ -91,14 +91,18 @@ class CreateEditGroupScreenState
   }
 
   @override
-  void onFormSubmitSuccess() {
+  void onFormSubmitSuccess() async {
     final l10n = context.l10n;
     PlatformDialogHelpers.showSnackBar(
       message: isEditMode ? l10n.groupUpdated : l10n.groupCreated,
     );
 
     if (mounted) {
-      Navigator.of(context).pop();
+      // Wait a bit for the stream to propagate to other screens
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -233,7 +237,11 @@ class CreateEditGroupScreenState
       if (mounted) {
         final l10n = context.l10n;
         PlatformDialogHelpers.showSnackBar(message: l10n.groupDeleted);
-        Navigator.of(context).pop();
+        // Wait a bit for the stream to propagate to other screens
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       if (mounted) {

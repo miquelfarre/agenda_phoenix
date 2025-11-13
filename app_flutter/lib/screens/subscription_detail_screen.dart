@@ -176,8 +176,12 @@ class _SubscriptionDetailScreenState
       print('🔴 [DEBUG] Navigating back to subscriptions screen');
 
       if (mounted) {
-        // Navigate back to subscriptions screen
-        Navigator.of(context).pop();
+        // Wait a bit for the stream to propagate to other screens
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          // Navigate back to subscriptions screen
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       print('🔴 [DEBUG] Error unsubscribing: $e');
