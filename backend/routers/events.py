@@ -118,10 +118,12 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
         "name": db_event.name,
         "description": db_event.description,
         "start_date": db_event.start_date,
+        "timezone": db_event.timezone,
         "event_type": db_event.event_type,
         "owner_id": db_event.owner_id,
         "calendar_id": db_event.calendar_id,
         "parent_recurring_event_id": db_event.parent_recurring_event_id,
+        "recurrence_end_date": db_event.recurrence_end_date,
         "created_at": db_event.created_at,
         "updated_at": db_event.updated_at,
         "owner_name": owner_name,
@@ -189,24 +191,21 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
             interactions_data = []
             interactions_enriched = event_interaction.get_enriched_by_event(db, event_id=event_id)
 
+            # OPTIMIZATION: Fetch all inviters in one query to avoid N+1
+            inviter_ids = {i.invited_by_user_id for i, _ in interactions_enriched if i.invited_by_user_id}
+            inviters_dict = {}
+            if inviter_ids:
+                inviters = db.query(User).filter(User.id.in_(inviter_ids)).all()
+                inviters_dict = {inv.id: inv for inv in inviters}
+
             for interaction, interaction_user in interactions_enriched:
                 if not interaction_user:
                     continue
 
-                user_display_name = interaction_user.display_name
-                user_instagram_username = interaction_user.instagram_username
-                user_profile_picture_url = interaction_user.profile_picture_url
-                user_phone = interaction_user.phone
-
-                # Get inviter if exists
+                # Get inviter from preloaded dict
                 inviter = None
-                inviter_display_name = None
-                inviter_instagram_username = None
                 if interaction.invited_by_user_id:
-                    inviter = user.get(db, id=interaction.invited_by_user_id)
-                    if inviter:
-                        inviter_display_name = inviter.display_name
-                        inviter_instagram_username = inviter.instagram_username
+                    inviter = inviters_dict.get(interaction.invited_by_user_id)
 
                 interactions_data.append(
                     {
@@ -223,16 +222,20 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "updated_at": interaction.updated_at.isoformat(),
                         "user": {
                             "id": interaction_user.id,
-                            "display_name": user_display_name,
-                            "instagram_username": user_instagram_username,
-                            "profile_picture_url": user_profile_picture_url,
-                            "phone_number": user_phone,
+                            "display_name": interaction_user.display_name,
+                            "instagram_username": interaction_user.instagram_username,
+                            "profile_picture_url": interaction_user.profile_picture_url,
+                            "phone": interaction_user.phone,
+                            "is_public": interaction_user.is_public,
                         },
                         "inviter": (
                             {
                                 "id": inviter.id,
-                                "display_name": inviter_display_name,
-                                "instagram_username": inviter_instagram_username,
+                                "display_name": inviter.display_name,
+                                "instagram_username": inviter.instagram_username,
+                                "profile_picture_url": inviter.profile_picture_url,
+                                "phone": inviter.phone,
+                                "is_public": inviter.is_public,
                             }
                             if inviter
                             else None
@@ -244,18 +247,16 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
 
         # If user is not owner/admin but is authenticated, add their own interaction
         elif current_user_id is not None:
-            # Get current user's interaction only
-            user_interaction = db.query(EventInteraction).filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id).first()
+            # OPTIMIZATION: LEFT JOIN inviter to avoid extra query
+            user_interaction_result = (
+                db.query(EventInteraction, User)
+                .outerjoin(User, EventInteraction.invited_by_user_id == User.id)
+                .filter(EventInteraction.event_id == event_id, EventInteraction.user_id == current_user_id)
+                .first()
+            )
 
-            if user_interaction:
-                inviter = None
-                inviter_display_name = None
-                inviter_instagram_username = None
-                if user_interaction.invited_by_user_id:
-                    inviter = user.get(db, id=user_interaction.invited_by_user_id)
-                    if inviter:
-                        inviter_display_name = inviter.display_name
-                        inviter_instagram_username = inviter.instagram_username
+            if user_interaction_result:
+                user_interaction, inviter = user_interaction_result
 
                 response_data["interactions"] = [
                     {
@@ -272,8 +273,11 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                         "inviter": (
                             {
                                 "id": inviter.id,
-                                "display_name": inviter_display_name,
-                                "instagram_username": inviter_instagram_username,
+                                "display_name": inviter.display_name,
+                                "instagram_username": inviter.instagram_username,
+                                "profile_picture_url": inviter.profile_picture_url,
+                                "phone": inviter.phone,
+                                "is_public": inviter.is_public,
                             }
                             if inviter
                             else None
@@ -300,8 +304,9 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
             # Get attendees who are:
             # 1. The inviter themselves, OR
             # 2. Other users invited by the same inviter who accepted
+            # OPTIMIZATION: Query returns (EventInteraction, User) tuples to avoid N+1
             accepted_interactions = (
-                db.query(EventInteraction)
+                db.query(EventInteraction, User)
                 .join(User, EventInteraction.user_id == User.id)
                 .filter(
                     EventInteraction.event_id == event_id,
@@ -317,8 +322,9 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
             )
         else:
             # User was NOT invited (or is subscribed/joined), show all attendees
+            # OPTIMIZATION: Query returns (EventInteraction, User) tuples to avoid N+1
             accepted_interactions = (
-                db.query(EventInteraction)
+                db.query(EventInteraction, User)
                 .join(User, EventInteraction.user_id == User.id)
                 .filter(
                     EventInteraction.event_id == event_id,
@@ -329,20 +335,68 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
                 .all()
             )
 
+        # OPTIMIZATION: Use User from query result instead of calling user.get()
         attendees = []
-        for interaction in accepted_interactions:
-            user_obj = user.get(db, id=interaction.user_id)
-            if user_obj:
-                attendees.append(
-                    {
-                        "id": user_obj.id,
-                        "display_name": user_obj.display_name,
-                        "profile_picture_url": user_obj.profile_picture_url,
-                        "phone": user_obj.phone,
-                    }
-                )
+        for interaction, user_obj in accepted_interactions:
+            attendees.append(
+                {
+                    "id": user_obj.id,
+                    "display_name": user_obj.display_name,
+                    "instagram_username": user_obj.instagram_username,
+                    "profile_picture_url": user_obj.profile_picture_url,
+                    "phone": user_obj.phone,
+                    "is_public": user_obj.is_public,
+                }
+            )
 
         response_data["attendees"] = attendees
+
+    # Add current user's interaction as "interaction" field (singular) for consistency with /users/:id/events
+    if current_user_id is not None:
+        # Try to get from interactions array first (if user is owner/admin)
+        interactions_list = response_data.get("interactions", [])
+        user_interaction_dict = None
+
+        if interactions_list:
+            # Find current user's interaction in the interactions array
+            user_interaction_dict = next(
+                (i for i in interactions_list if i.get("user_id") == current_user_id),
+                None
+            )
+
+        # If not found in array, query directly (for non-owner/admin users)
+        if not user_interaction_dict:
+            user_interaction_obj = db.query(EventInteraction).filter(
+                EventInteraction.event_id == event_id,
+                EventInteraction.user_id == current_user_id
+            ).first()
+
+            if user_interaction_obj:
+                user_interaction_dict = {
+                    "id": user_interaction_obj.id,
+                    "interaction_type": user_interaction_obj.interaction_type,
+                    "status": user_interaction_obj.status,
+                    "role": user_interaction_obj.role,
+                    "invited_by_user_id": user_interaction_obj.invited_by_user_id,
+                    "personal_note": user_interaction_obj.personal_note,
+                    "is_attending": user_interaction_obj.is_attending,
+                    "read_at": user_interaction_obj.read_at.isoformat() if user_interaction_obj.read_at else None,
+                    "is_new": False,
+                }
+
+        # Set interaction field if found
+        if user_interaction_dict:
+            response_data["interaction"] = {
+                "id": user_interaction_dict["id"],
+                "interaction_type": user_interaction_dict["interaction_type"],
+                "status": user_interaction_dict["status"],
+                "role": user_interaction_dict["role"],
+                "invited_by_user_id": user_interaction_dict.get("invited_by_user_id"),
+                "personal_note": user_interaction_dict.get("personal_note"),
+                "is_attending": user_interaction_dict.get("is_attending", False),
+                "read_at": user_interaction_dict.get("read_at"),
+                "is_new": user_interaction_dict.get("is_new", False),
+            }
 
     return EventResponse(**response_data)
 
@@ -363,7 +417,14 @@ async def get_available_invitees(event_id: int, db: Session = Depends(get_db)):
     # Build available invitees list
     available = []
     for user_obj in results:
-        available.append({"id": user_obj.id, "instagram_username": user_obj.instagram_username, "display_name": user_obj.display_name})
+        available.append({
+            "id": user_obj.id,
+            "display_name": user_obj.display_name,
+            "instagram_username": user_obj.instagram_username,
+            "profile_picture_url": user_obj.profile_picture_url,
+            "phone": user_obj.phone,
+            "is_public": user_obj.is_public,
+        })
 
     return available
 
@@ -443,6 +504,23 @@ async def delete_event(event_id: int, current_user_id: int = Depends(get_current
         handle_crud_error(error)
 
     return {"message": f"Event deleted successfully ({'with ' + str(deleted_count - 1) + ' instances' if deleted_count > 1 else 'single event'})", "id": event_id, "deleted_count": deleted_count}
+
+
+@router.delete("/{event_id}/interaction")
+async def delete_current_user_interaction(event_id: int, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    """
+    Delete the current user's interaction with this event.
+
+    Requires JWT authentication - provide token in Authorization header.
+    Returns 404 if no interaction exists.
+    """
+    db_interaction = event_interaction.get_interaction(db, event_id=event_id, user_id=current_user_id)
+    if not db_interaction:
+        raise HTTPException(status_code=404, detail="Interaction not found")
+
+    event_interaction.delete(db, id=db_interaction.id)
+
+    return {"message": "Interaction deleted successfully", "id": db_interaction.id}
 
 
 # Removed unused event cancellations endpoints (/events/cancellations and /events/cancellations/{id}/view)

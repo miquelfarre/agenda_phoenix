@@ -252,11 +252,20 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventBase]):
 
         # Create cancellation records if requested
         if cancelled_by_user_id:
-            for event in events_to_delete:
-                # Get all users with interactions to this event
-                interactions = db.query(EventInteraction).filter(EventInteraction.event_id == event.id).all()
+            # OPTIMIZATION: Batch load all interactions to avoid N+1 queries
+            event_ids = [e.id for e in events_to_delete]
+            all_interactions = db.query(EventInteraction).filter(EventInteraction.event_id.in_(event_ids)).all()
 
-                if interactions:
+            # Group interactions by event_id
+            interactions_by_event = {}
+            for interaction in all_interactions:
+                if interaction.event_id not in interactions_by_event:
+                    interactions_by_event[interaction.event_id] = []
+                interactions_by_event[interaction.event_id].append(interaction)
+
+            for event in events_to_delete:
+                # Check if this event has interactions
+                if event.id in interactions_by_event:
                     # Create cancellation record
                     cancellation = EventCancellation(event_id=event.id, event_name=event.name, cancelled_by_user_id=cancelled_by_user_id, message=cancellation_message)
                     db.add(cancellation)

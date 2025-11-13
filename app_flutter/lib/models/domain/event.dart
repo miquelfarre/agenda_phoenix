@@ -121,6 +121,13 @@ class Event {
   bool get isJoinedEvent => interactionType == 'joined';
 
   factory Event.fromJson(Map<String, dynamic> json) {
+    // Extract personal_note from interaction if available
+    String? personalNote;
+    final interactionData = json['interaction'] as Map<String, dynamic>?;
+    if (interactionData != null) {
+      personalNote = interactionData['personal_note'] as String?;
+    }
+
     return Event(
       id: json['id'] as int?,
       name: json['name'] as String,
@@ -147,7 +154,8 @@ class Event {
       calendarColor: json['calendar_color'] as String?,
       isBirthdayEvent: json['is_birthday'] as bool?,
       attendeesList: json['attendees'] as List<dynamic>?,
-      interactionData: json['interaction'] as Map<String, dynamic>?,
+      interactionData: interactionData,
+      personalNote: personalNote,
     );
   }
 

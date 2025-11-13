@@ -541,10 +541,21 @@ class EventRepository implements IEventRepository {
   /// Update personal note for an event
   @override
   Future<void> updatePersonalNote(int eventId, String? note) async {
-    await _apiClient.patch(
-      '/events/$eventId/interaction',
-      body: {'note': note},
+    // Get the event to find the interaction ID
+    final event = _cachedEvents.firstWhere(
+      (e) => e.id == eventId,
+      orElse: () => throw exceptions.ApiException('Event not found in cache'),
     );
+
+    // Get the current user's interaction ID from the event
+    final interactionId = event.interactionData?['id'] as int?;
+    if (interactionId == null) {
+      throw exceptions.ApiException('No interaction found for this event');
+    }
+
+    // Update the interaction using the correct endpoint
+    await _apiClient.patchInteraction(interactionId, {'personal_note': note});
+
     // After updating, refresh the local cache
     await _fetchAndSync();
   }
