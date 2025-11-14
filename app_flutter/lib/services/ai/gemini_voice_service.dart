@@ -16,8 +16,8 @@ class GeminiVoiceService implements BaseVoiceService {
   final SpeechToText _speechToText = SpeechToText();
   final String _geminiApiKey;
 
-  // Configuración de Gemini API (documentación oficial: https://ai.google.dev/api/generate-content)
-  // Usar v1beta con modelo gemini-2.0-flash (versión estable más reciente)
+  // Gemini API configuration (official docs: https://ai.google.dev/api/generate-content)
+  // Use v1beta with gemini-2.0-flash model (latest stable version)
   static const String _geminiApiUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
@@ -292,19 +292,19 @@ Respuesta:
   /// Graba audio desde el micrófono
   Future<String?> recordAudio({Duration? maxDuration}) async {
     try {
-      // Verificar y solicitar permisos
+      // Verify and request permissions
       final status = await Permission.microphone.request();
       if (!status.isGranted) {
-        DebugConfig.error('Permiso de micrófono denegado', tag: 'VoiceService');
-        throw Exception('Permiso de micrófono denegado');
+        DebugConfig.error('Microphone permission denied', tag: 'VoiceService');
+        throw Exception('Microphone permission denied');
       }
 
-      // Verificar si el dispositivo puede grabar
+      // Check if device can record
       if (!await _recorder.hasPermission()) {
-        throw Exception('No hay permiso para grabar');
+        throw Exception('No recording permission');
       }
 
-      // Crear directorio temporal para el audio
+      // Create temporary directory for audio
       final tempDir = await getTemporaryDirectory();
       final audioPath =
           '${tempDir.path}/voice_command_${DateTime.now().millisecondsSinceEpoch}.m4a';
@@ -320,7 +320,7 @@ Respuesta:
 
       await _recorder.start(config, path: audioPath);
 
-      // Esperar hasta que se detenga manualmente o se alcance el máximo
+      // Wait until manually stopped or maximum duration reached
       if (maxDuration != null) {
         await Future.delayed(maxDuration);
         await _recorder.stop();
@@ -370,7 +370,7 @@ Respuesta:
           '❌ Speech-to-text no disponible en este dispositivo',
           tag: 'VoiceService',
         );
-        throw Exception('Speech to text no disponible');
+        throw Exception('Speech to text not available');
       }
 
       String recognizedText = '';
@@ -405,8 +405,8 @@ Respuesta:
         }
       });
 
-      // Si se proporciona waitForStopSignal, esperar señal del usuario
-      // Si no, esperar solo el timeout
+      // If waitForStopSignal provided, wait for user signal
+      // Otherwise, just wait for timeout
       if (waitForStopSignal != null) {
         await Future.any([
           waitForStopSignal.call().then((_) {
@@ -418,7 +418,7 @@ Respuesta:
         await progressTimer;
       }
 
-      // Detener la escucha
+      // Stop listening
       await _speechToText.stop();
 
       if (secondsElapsed >= maxSeconds) {
@@ -497,15 +497,15 @@ Respuesta:
           'Error Gemini API: ${response.statusCode} - ${response.body}',
           tag: 'VoiceService',
         );
-        throw Exception('Error al llamar a Gemini API: ${response.statusCode}');
+        throw Exception('Error calling Gemini API: ${response.statusCode}');
       }
 
       final responseData = jsonDecode(response.body);
 
-      // Extraer el texto de la respuesta de Gemini
+      // Extract text from Gemini response
       final candidates = responseData['candidates'] as List?;
       if (candidates == null || candidates.isEmpty) {
-        throw Exception('No se recibió respuesta de Gemini');
+        throw Exception('No response received from Gemini');
       }
 
       final content = candidates[0]['content'];
@@ -646,7 +646,7 @@ Respuesta:
           };
 
         default:
-          throw Exception('Acción no reconocida: $action');
+          throw Exception('Unrecognized action: $action');
       }
     } catch (e) {
       DebugConfig.error('Error al ejecutar acción: $e', tag: 'VoiceService');
@@ -677,7 +677,7 @@ Respuesta:
         DebugConfig.info('⚠️ Texto vacío, abortando', tag: 'VoiceService');
         return VoiceCommandResult(
           success: false,
-          message: 'No se detectó ningún comando de voz',
+          message: 'No voice command detected',
         );
       }
 
@@ -704,7 +704,7 @@ Respuesta:
       // El botón decidirá si falta información y abrirá el diálogo conversacional
       return VoiceCommandResult(
         success: true,
-        message: 'Interpretación completada',
+        message: 'Interpretation completed',
         interpretation: interpretation,
         transcribedText: transcribedText,
         needsConfirmation: interpretation['user_confirmation_needed'] == true,
@@ -716,7 +716,7 @@ Respuesta:
       );
       return VoiceCommandResult(
         success: false,
-        message: 'Error al procesar comando: ${e.toString()}',
+        message: 'Error processing command: ${e.toString()}',
       );
     }
   }

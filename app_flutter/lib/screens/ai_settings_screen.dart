@@ -38,7 +38,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
         _hasApiKey = config.hasApiKey;
         _voiceCommandsEnabled = config.voiceCommandsEnabled;
         if (_hasApiKey) {
-          // Mostrar solo los últimos 4 caracteres
+          // Show only last 4 characters
           final apiKey = config.geminiApiKey!;
           final visiblePart = apiKey.length > 4
               ? apiKey.substring(apiKey.length - 4)
@@ -49,7 +49,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error al cargar configuración: $e';
+        _errorMessage = context.l10n.errorLoadingConfiguration(e.toString());
         _isLoading = false;
       });
     }
@@ -59,7 +59,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
     final apiKey = _apiKeyController.text.trim();
 
     if (apiKey.isEmpty) {
-      setState(() => _errorMessage = 'Por favor ingresa una API key');
+      setState(() => _errorMessage = context.l10n.pleaseEnterApiKey);
       return;
     }
 
@@ -73,8 +73,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
 
       if (!config.isValidApiKeyFormat(apiKey)) {
         setState(() {
-          _errorMessage =
-              'Formato de API key inválido. Debe ser una cadena alfanumérica de al menos 30 caracteres.';
+          _errorMessage = context.l10n.invalidApiKeyFormat;
           _isSaving = false;
         });
         return;
@@ -84,8 +83,8 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✓ API key guardada correctamente'),
+          SnackBar(
+            content: Text(context.l10n.apiKeySavedSuccessfully),
             backgroundColor: Colors.green,
           ),
         );
@@ -95,13 +94,13 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
         });
       } else {
         setState(() {
-          _errorMessage = 'Error al guardar la API key';
+          _errorMessage = context.l10n.errorSavingApiKey;
           _isSaving = false;
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error: ${e.toString()}';
+        _errorMessage = context.l10n.errorWithMessage(e.toString());
         _isSaving = false;
       });
     }
@@ -112,10 +111,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.deleteApiKey),
-        content: Text(
-          '¿Estás seguro de que quieres eliminar la API key de Gemini? '
-          'Los comandos de voz dejarán de funcionar.',
-        ),
+        content: Text(context.l10n.confirmDeleteApiKey),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -138,8 +134,8 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('API key eliminada'),
+          SnackBar(
+            content: Text(context.l10n.apiKeyDeleted),
             backgroundColor: Colors.orange,
           ),
         );
@@ -149,7 +145,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
         });
       }
     } catch (e) {
-      setState(() => _errorMessage = 'Error al eliminar: $e');
+      setState(() => _errorMessage = context.l10n.errorDeleting(e.toString()));
     }
   }
 
@@ -162,21 +158,21 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
         setState(() => _voiceCommandsEnabled = enabled);
       }
     } catch (e) {
-      setState(() => _errorMessage = 'Error: $e');
+      setState(() => _errorMessage = context.l10n.errorWithMessage(e.toString()));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const AdaptivePageScaffold(
-        title: 'Configuración de AI',
-        body: Center(child: CircularProgressIndicator()),
+      return AdaptivePageScaffold(
+        title: context.l10n.aiConfiguration,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return AdaptivePageScaffold(
-      title: 'Configuración de AI',
+      title: context.l10n.aiConfiguration,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(
@@ -213,7 +209,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                 Icon(Icons.info_outline, color: Colors.blue.shade700),
                 const SizedBox(width: 12),
                 Text(
-                  'Sobre Google Gemini',
+                  context.l10n.aboutGoogleGemini,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -223,22 +219,21 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Google Gemini API permite interpretar comandos de voz y ejecutar acciones '
-              'en tu agenda de forma inteligente.',
-              style: TextStyle(fontSize: 14),
+            Text(
+              context.l10n.geminiDescription,
+              style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Cómo obtener tu API key GRATIS:',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              context.l10n.howToGetApiKeyFree,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            _buildStep('1', 'Ve a ai.google.dev'),
-            _buildStep('2', 'Haz clic en "Get API key in Google AI Studio"'),
-            _buildStep('3', 'Inicia sesión con tu cuenta de Google'),
-            _buildStep('4', 'Haz clic en "Create API key"'),
-            _buildStep('5', 'Copia y pega la key aquí abajo'),
+            _buildStep('1', context.l10n.stepGoToWebsite),
+            _buildStep('2', context.l10n.stepClickGetApiKey),
+            _buildStep('3', context.l10n.stepSignIn),
+            _buildStep('4', context.l10n.stepClickCreate),
+            _buildStep('5', context.l10n.stepCopyPaste),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -255,10 +250,10 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      '100% GRATIS - 1500 requests/día sin tarjeta de crédito',
-                      style: TextStyle(
+                      context.l10n.geminiFreeTier,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
@@ -316,9 +311,9 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Google Gemini API Key',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  context.l10n.googleGeminiApiKey,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 if (_hasApiKey)
                   Container(
@@ -340,7 +335,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Configurada',
+                          context.l10n.configured,
                           style: TextStyle(
                             color: Colors.green.shade700,
                             fontSize: 12,
@@ -393,7 +388,7 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                   child: AdaptiveButton(
                     config: AdaptiveButtonConfig.primary(),
                     onPressed: _isSaving ? null : _saveApiKey,
-                    text: _isSaving ? 'Guardando...' : 'Guardar API Key',
+                    text: _isSaving ? context.l10n.saving : context.l10n.saveApiKey,
                     icon: Icons.save,
                   ),
                 ),
@@ -420,12 +415,12 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
       ),
       child: SwitchListTile(
-        title: const Text(
-          'Habilitar Comandos de Voz',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          context.l10n.enableVoiceCommands,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: const Text(
-          'Permite usar comandos de voz para crear eventos y gestionar tu agenda',
+        subtitle: Text(
+          context.l10n.voiceCommandsDescription,
         ),
         value: _voiceCommandsEnabled,
         onChanged: _hasApiKey ? _toggleVoiceCommands : null,

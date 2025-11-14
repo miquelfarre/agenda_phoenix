@@ -539,7 +539,7 @@ abstract class AppLocalizations {
   /// **'Loading form...'**
   String get loadingForm;
 
-  /// No description provided for @saving.
+  /// Button text while saving
   ///
   /// In en, this message translates to:
   /// **'Saving...'**
@@ -5998,6 +5998,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Configure AI'**
   String get configureAi;
+
+  /// Error when API key field is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter an API key'**
+  String get pleaseEnterApiKey;
+
+  /// Error when API key format is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid API key format. Must be an alphanumeric string of at least 30 characters.'**
+  String get invalidApiKeyFormat;
+
+  /// Success message when API key is saved
+  ///
+  /// In en, this message translates to:
+  /// **'✓ API key saved successfully'**
+  String get apiKeySavedSuccessfully;
+
+  /// Error message when saving API key fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving API key'**
+  String get errorSavingApiKey;
+
+  /// Confirmation dialog message for deleting API key
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the Gemini API key? Voice commands will stop working.'**
+  String get confirmDeleteApiKeyMessage;
+
+  /// Success message when API key is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'API key deleted'**
+  String get apiKeyDeleted;
+
+  /// Error message when deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting: {error}'**
+  String errorDeleting(String error);
+
+  /// AI configuration screen title
+  ///
+  /// In en, this message translates to:
+  /// **'AI Configuration'**
+  String get aiConfiguration;
+
+  /// Description of what Gemini API does
+  ///
+  /// In en, this message translates to:
+  /// **'Google Gemini API allows you to interpret voice commands and execute actions in your calendar intelligently.'**
+  String get geminiApiDescription;
+
+  /// Heading for instructions to get free API key
+  ///
+  /// In en, this message translates to:
+  /// **'How to get your FREE API key:'**
+  String get howToGetApiKeyFree;
+
+  /// Step 1: Go to website
+  ///
+  /// In en, this message translates to:
+  /// **'Go to ai.google.dev'**
+  String get stepGoToWebsite;
+
+  /// Step 2: Click get API key button
+  ///
+  /// In en, this message translates to:
+  /// **'Click on \"Get API key in Google AI Studio\"'**
+  String get stepClickGetApiKey;
+
+  /// Step 3: Sign in with Google
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your Google account'**
+  String get stepSignInGoogle;
+
+  /// Step 4: Click create API key
+  ///
+  /// In en, this message translates to:
+  /// **'Click on \"Create API key\"'**
+  String get stepClickCreateApiKey;
+
+  /// Step 5: Copy and paste the key
+  ///
+  /// In en, this message translates to:
+  /// **'Copy and paste the key below'**
+  String get stepCopyPasteKey;
+
+  /// Information about free API key limits
+  ///
+  /// In en, this message translates to:
+  /// **'100% FREE - 1500 requests/day without credit card'**
+  String get freeApiKeyInfo;
+
+  /// Section title for Google Gemini API Key
+  ///
+  /// In en, this message translates to:
+  /// **'Google Gemini API Key'**
+  String get googleGeminiApiKey;
+
+  /// Label for API key field
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get apiKey;
+
+  /// Button text to save API key
+  ///
+  /// In en, this message translates to:
+  /// **'Save API Key'**
+  String get saveApiKey;
+
+  /// Toggle title for enabling voice commands
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Voice Commands'**
+  String get enableVoiceCommands;
+
+  /// Description of voice commands feature
+  ///
+  /// In en, this message translates to:
+  /// **'Allows using voice commands to create events and manage your calendar'**
+  String get voiceCommandsDescription;
+
+  /// Debug message when button is pressed
+  ///
+  /// In en, this message translates to:
+  /// **'🎤 Button pressed - Starting...'**
+  String get buttonPressedStarting;
+
+  /// Error when AI service is not configured
+  ///
+  /// In en, this message translates to:
+  /// **'AI service not configured. Go to Settings to add your API key.'**
+  String get aiServiceNotConfigured;
+
+  /// Error message when command processing fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error processing command'**
+  String get errorProcessingCommand;
+
+  /// Error when command cannot be interpreted
+  ///
+  /// In en, this message translates to:
+  /// **'Could not interpret command'**
+  String get couldNotInterpretCommand;
+
+  /// Recording status text
+  ///
+  /// In en, this message translates to:
+  /// **'SPEAK NOW... (stops after 3s of silence)'**
+  String get speakNowStopsAfterSilence;
+
+  /// Voice command button label
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Command'**
+  String get voiceCommand;
+
+  /// Error with instructions to go to settings
+  ///
+  /// In en, this message translates to:
+  /// **'AI service not configured. Go to Settings → Configure AI.'**
+  String get aiServiceNotConfiguredGoToSettings;
+
+  /// Error when no voice command is detected
+  ///
+  /// In en, this message translates to:
+  /// **'No voice command detected'**
+  String get noVoiceCommandDetected;
+
+  /// Success message when interpretation is completed
+  ///
+  /// In en, this message translates to:
+  /// **'Interpretation completed'**
+  String get interpretationCompleted;
+
+  /// Title for share calendar section
+  ///
+  /// In en, this message translates to:
+  /// **'Share calendar'**
+  String get shareCalendar;
+
+  /// Description for share hash code
+  ///
+  /// In en, this message translates to:
+  /// **'Share this code so others can subscribe to your calendar'**
+  String get shareThisCodeToSubscribe;
+
+  /// Message when code is copied to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied: {code}'**
+  String codeCopiedWithValue(String code);
+
+  /// Discoverable toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Discoverable'**
+  String get discoverable;
+
+  /// Success message when calendar becomes discoverable
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar is now discoverable'**
+  String get calendarNowDiscoverable;
+
+  /// Success message when calendar becomes private (link only)
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar is now private (link only)'**
+  String get calendarNowPrivateLinkOnly;
+
+  /// Message when invitation is accepted
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation accepted: \"{title}\"'**
+  String invitationAcceptedWithTitle(String title);
+
+  /// Message when invitation is rejected
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation rejected: \"{title}\"'**
+  String invitationRejectedWithTitle(String title);
+
+  /// Success message when action is executed
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Action executed successfully'**
+  String get actionExecutedSuccessfully;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

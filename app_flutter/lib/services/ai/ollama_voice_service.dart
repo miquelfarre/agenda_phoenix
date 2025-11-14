@@ -175,8 +175,8 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
             ), // Timeout de 5 minutos para modelos pesados
             onTimeout: () {
               throw Exception(
-                'Timeout: El modelo de Ollama tardó más de 5 minutos en responder. '
-                'Considera usar un modelo más ligero.',
+                'Timeout: Ollama model took more than 5 minutes to respond. '
+                'Consider using a lighter model.',
               );
             },
           );
@@ -186,15 +186,15 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
           'Error Ollama API: ${response.statusCode} - ${response.body}',
           tag: 'VoiceService',
         );
-        throw Exception('Error al llamar a Ollama API: ${response.statusCode}');
+        throw Exception('Error calling Ollama API: ${response.statusCode}');
       }
 
-      // Parsear respuesta de Ollama
+      // Parse Ollama response
       final jsonResponse = jsonDecode(response.body);
       final textResponse = jsonResponse['response'] as String?;
 
       if (textResponse == null || textResponse.isEmpty) {
-        throw Exception('No se recibió respuesta de Ollama');
+        throw Exception('No response received from Ollama');
       }
 
       DebugConfig.info(
@@ -326,7 +326,7 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
           };
 
         default:
-          throw Exception('Acción no reconocida: $action');
+          throw Exception('Unrecognized action: $action');
       }
     } catch (e) {
       DebugConfig.error('Error al ejecutar acción: $e', tag: 'VoiceService');
@@ -356,7 +356,7 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
 
         if (!available) {
           throw Exception(
-            'Speech-to-text no está disponible en este dispositivo',
+            'Speech-to-text not available on this device',
           );
         }
       }
@@ -399,7 +399,7 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         await progressTimer;
       }
 
-      // Detener la escucha
+      // Stop listening
       await _speechToText.stop();
 
       DebugConfig.info(
@@ -408,7 +408,7 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       );
 
       if (transcribedText.isEmpty) {
-        throw Exception('No se pudo transcribir el audio');
+        throw Exception('Could not transcribe audio');
       }
 
       return transcribedText;
@@ -431,7 +431,7 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
       // 2. Interpretar con Ollama
       final interpretation = await interpretWithAI(transcribedText);
 
-      // Retornar resultado
+      // Return result
       return VoiceCommandResult(
         success: true,
         transcribedText: transcribedText,
@@ -443,7 +443,7 @@ IMPORTANTE - Diferencia entre INVITE_TO_CALENDAR e INVITE_USER:
         'Error al procesar comando de voz: $e',
         tag: 'VoiceService',
       );
-      return VoiceCommandResult(success: false, message: 'Error: $e');
+      return VoiceCommandResult(success: false, message: 'Error processing voice command: $e');
     }
   }
 }

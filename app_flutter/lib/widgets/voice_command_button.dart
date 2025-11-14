@@ -8,9 +8,10 @@ import '../services/ai/voice_conversation_context.dart';
 import '../screens/voice_command_confirmation_screen.dart';
 import '../screens/voice_conversation_screen.dart';
 import '../config/debug_config.dart';
+import '../ui/helpers/l10n/l10n_helpers.dart';
 import 'voice_recording_dialog.dart';
 
-/// Provider para el servicio de voz (Gemini u Ollama según configuración)
+/// Voice service provider (Gemini or Ollama based on configuration)
 final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
   DebugConfig.info(
     '🔄 ===== INICIALIZANDO PROVIDER DE VOZ =====',
@@ -35,7 +36,7 @@ final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
       return null;
     }
 
-    // Crear el servicio según el provider configurado
+    // Create service according to configured provider
     if (config.aiProvider == AIProvider.ollama) {
       DebugConfig.info(
         '✅ Usando Ollama (${config.ollamaModel})',
@@ -66,15 +67,15 @@ final voiceServiceProvider = FutureProvider<BaseVoiceService?>((ref) async {
   }
 });
 
-/// Botón flotante para activar comandos de voz
+/// Floating button to activate voice commands
 class VoiceCommandButton extends ConsumerStatefulWidget {
-  /// Callback cuando se ejecuta exitosamente un comando
+  /// Callback when a command is successfully executed
   final Function(dynamic result)? onCommandExecuted;
 
-  /// Color del botón
+  /// Button color
   final Color? backgroundColor;
 
-  /// Icono del botón
+  /// Button icon
   final IconData? icon;
 
   const VoiceCommandButton({
@@ -115,12 +116,12 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
       tag: 'VoiceButton',
     );
 
-    // Mostrar un diálogo visual para confirmar que el botón funciona
+    // Show a visual dialog to confirm button works
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🎤 Botón presionado - Iniciando...'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(context.l10n.buttonPressedStarting),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -147,10 +148,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
 
     if (voiceService == null) {
       DebugConfig.error('❌ Servicio de voz no disponible', tag: 'VoiceButton');
-      _showError(
-        'Servicio de IA no configurado. '
-        'Ve a Configuración para añadir tu API key.',
-      );
+      _showError(context.l10n.aiServiceNotConfigured);
       return;
     }
 
@@ -158,7 +156,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
       DebugConfig.info('🔴 Iniciando grabación...', tag: 'VoiceButton');
       setState(() => _isRecording = true);
 
-      // 1. Grabar audio y transcribir
+      // 1. Record audio and transcribe
       DebugConfig.info(
         '🎙️ Llamando a processVoiceCommand()...',
         tag: 'VoiceButton',
@@ -183,7 +181,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         return;
       }
 
-      // 2. Verificar si tenemos interpretación
+      // 2. Verify if we have interpretation
       if (result.interpretation == null) {
         DebugConfig.info(
           '⚠️ No hay interpretación para mostrar',
@@ -193,7 +191,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         return;
       }
 
-      // 3. Verificar si faltan campos obligatorios
+      // 3. Check if required fields are missing
       final action = result.interpretation!['action'] as String;
 
       final parameters =
@@ -202,7 +200,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
       final missingFields = RequiredFields.findMissing(action, parameters);
 
       if (missingFields.isNotEmpty) {
-        // Faltan campos obligatorios → Iniciar diálogo conversacional
+        // Missing required fields → Start conversational dialog
         DebugConfig.info(
           '🗣️ Iniciando diálogo conversacional para recolectar: $missingFields',
           tag: 'VoiceButton',
@@ -216,7 +214,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
           missingFields,
         );
       } else {
-        // Todos los campos están completos → Ir a confirmación final
+        // All fields complete → Go to final confirmation
         DebugConfig.info(
           '✅ Mostrando pantalla de confirmación',
           tag: 'VoiceButton',
@@ -242,7 +240,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
     }
   }
 
-  /// Inicia la pantalla conversacional para recolectar datos faltantes
+  /// Starts the conversational screen to collect missing data
   Future<void> _startConversationalDialog(
     BaseVoiceService voiceService,
     String originalCommand,
@@ -252,7 +250,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
   ) async {
     if (!mounted) return;
 
-    // Crear contexto inicial
+    // Create initial context
     var conversationContext = VoiceConversationContext(
       originalCommand: originalCommand,
       action: action,
@@ -261,7 +259,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
       missingFields: missingFields,
     );
 
-    // Abrir la pantalla conversacional
+    // Open conversational screen
     final completedContext = await Navigator.of(context)
         .push<VoiceConversationContext>(
           MaterialPageRoute(
@@ -275,14 +273,14 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
           ),
         );
 
-    // Si el usuario completó el diálogo, mostrar confirmación final
+    // If user completed the dialog, show final confirmation
     if (completedContext != null && mounted) {
-      // Crear interpretación completa para la pantalla de confirmación
+      // Create complete interpretation for confirmation screen
       final finalInterpretation = {
         'action': completedContext.action,
         'parameters': completedContext.collectedParameters,
         'confidence':
-            0.95, // Alta confianza porque el usuario lo completó manualmente
+            0.95, // High confidence because user completed it manually
         'user_confirmation_needed': false,
       };
 
@@ -331,7 +329,7 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
-          label: 'Cerrar',
+          label: context.l10n.close,
           textColor: Colors.white,
           onPressed: () {},
         ),
@@ -391,16 +389,16 @@ class _VoiceCommandButtonState extends ConsumerState<VoiceCommandButton>
 
   String _getButtonText() {
     if (_isProcessing) {
-      return 'Procesando...';
+      return context.l10n.processing;
     } else if (_isRecording) {
-      return 'HABLA AHORA... (para en 3s de silencio)';
+      return context.l10n.speakNow;
     } else {
-      return 'Comando de Voz';
+      return context.l10n.voiceCommand;
     }
   }
 }
 
-/// Versión simple del botón como FAB circular
+/// Simple version of the button as circular FAB
 class VoiceCommandFab extends ConsumerStatefulWidget {
   final Function(dynamic result)? onCommandExecuted;
   final Color? backgroundColor;
@@ -445,20 +443,18 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
     );
 
     if (voiceService == null) {
-      _showError(
-        'Servicio de IA no configurado. Ve a Configuración → Configurar IA.',
-      );
+      _showError(context.l10n.aiServiceNotConfigured);
       return;
     }
 
     try {
       setState(() => _isRecording = true);
 
-      // Mostrar diálogo de grabación con control manual
+      // Show recording dialog with manual control
       final recordingSecondsNotifier = ValueNotifier<int>(0);
       bool shouldStopRecording = false;
 
-      // Mostrar el diálogo
+      // Show the dialog
       // ignore: use_build_context_synchronously
       showDialog(
         context: context,
@@ -477,7 +473,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
         ),
       );
 
-      // Grabar con control manual
+      // Record with manual control
       final transcribedText = await voiceService.transcribeAudioOnDevice(
         onProgress: (seconds) {
           recordingSecondsNotifier.value = seconds;
@@ -491,7 +487,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
 
       recordingSecondsNotifier.dispose();
 
-      // Cerrar el diálogo si aún está abierto
+      // Close the dialog if still open
       if (mounted && Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
@@ -499,16 +495,16 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       setState(() => _isRecording = false);
 
       if (transcribedText.isEmpty) {
-        _showError('No se detectó ningún comando de voz');
+        _showError(context.l10n.noVoiceDetected);
         return;
       }
 
-      // Interpretar con IA (Gemini u Ollama)
+      // Interpret with AI (Gemini or Ollama)
       final interpretation = await voiceService.interpretWithAI(
         transcribedText,
       );
 
-      // Crear result object
+      // Create result object
       final result = VoiceCommandResult(
         success: true,
         message: 'Interpretación completada',
@@ -523,22 +519,22 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       }
 
       if (result.interpretation == null) {
-        _showError('No se pudo interpretar el comando');
+        _showError(context.l10n.couldNotInterpretCommand);
         return;
       }
 
-      // Verificar si hay múltiples acciones o una sola
+      // Check if there are multiple actions or just one
       final hasMultipleActions = result.interpretation!.containsKey('actions');
 
       if (hasMultipleActions) {
-        // Múltiples acciones - ir directamente a confirmación
+        // Multiple actions - go directly to confirmation
         final actions = result.interpretation!['actions'] as List<dynamic>;
 
         for (int i = 0; i < actions.length; i++) {
           actions[i] as Map<String, dynamic>;
         }
 
-        // Ir directamente a confirmación (no hay campos faltantes en workflows complejos)
+        // Go directly to confirmation (no missing fields in complex workflows)
 
         if (!mounted) return;
         final executionResult = await Navigator.of(context).push(
@@ -555,14 +551,14 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
           widget.onCommandExecuted!(executionResult);
         }
       } else {
-        // Una sola acción - verificar campos faltantes
+        // Single action - check missing fields
         final action = result.interpretation!['action'] as String;
         final parameters =
             result.interpretation!['parameters'] as Map<String, dynamic>;
         final missingFields = RequiredFields.findMissing(action, parameters);
 
         if (missingFields.isNotEmpty) {
-          // Faltan campos obligatorios → Iniciar pantalla conversacional
+          // Missing required fields → Start conversational screen
 
           await _startConversationalScreen(
             voiceService,
@@ -572,7 +568,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
             missingFields,
           );
         } else {
-          // Todos los campos completos → Ir a confirmación final
+          // All fields complete → Go to final confirmation
 
           if (!mounted) return;
           final executionResult = await Navigator.of(context).push(
@@ -596,7 +592,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
     }
   }
 
-  /// Inicia la pantalla conversacional para recolectar datos faltantes
+  /// Starts the conversational screen to collect missing data
   Future<void> _startConversationalScreen(
     BaseVoiceService voiceService,
     String originalCommand,
@@ -606,7 +602,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
   ) async {
     if (!mounted) return;
 
-    // Crear contexto inicial
+    // Create initial context
     var conversationContext = VoiceConversationContext(
       originalCommand: originalCommand,
       action: action,
@@ -615,7 +611,7 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       missingFields: missingFields,
     );
 
-    // Abrir la pantalla conversacional
+    // Open conversational screen
     final completedContext = await Navigator.of(context)
         .push<VoiceConversationContext>(
           MaterialPageRoute(
@@ -629,9 +625,9 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
           ),
         );
 
-    // Si el usuario completó la conversación, mostrar confirmación final
+    // If user completed the conversation, show final confirmation
     if (completedContext != null && mounted) {
-      // Crear interpretación completa para la pantalla de confirmación
+      // Create complete interpretation for confirmation screen
       final finalInterpretation = {
         'action': completedContext.action,
         'parameters': completedContext.collectedParameters,

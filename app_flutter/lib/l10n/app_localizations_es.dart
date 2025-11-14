@@ -3119,4 +3119,129 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get configureAi => 'Configurar IA';
+
+  @override
+  String get pleaseEnterApiKey => 'Por favor ingresa una API key';
+
+  @override
+  String get invalidApiKeyFormat => 'Formato de API key inválido. Debe ser una cadena alfanumérica de al menos 30 caracteres.';
+
+  @override
+  String get apiKeySavedSuccessfully => '✓ API key guardada correctamente';
+
+  @override
+  String get errorSavingApiKey => 'Error al guardar la API key';
+
+  @override
+  String get confirmDeleteApiKeyMessage => '¿Estás seguro de que quieres eliminar la API key de Gemini? Los comandos de voz dejarán de funcionar.';
+
+  @override
+  String get apiKeyDeleted => 'API key eliminada';
+
+  @override
+  String errorDeleting(String error) {
+    return 'Error al eliminar: $error';
+  }
+
+  @override
+  String get aiConfiguration => 'Configuración de AI';
+
+  @override
+  String get geminiApiDescription => 'Google Gemini API permite interpretar comandos de voz y ejecutar acciones en tu agenda de forma inteligente.';
+
+  @override
+  String get howToGetApiKeyFree => 'Cómo obtener tu API key GRATIS:';
+
+  @override
+  String get stepGoToWebsite => 'Ve a ai.google.dev';
+
+  @override
+  String get stepClickGetApiKey => 'Haz clic en \"Get API key in Google AI Studio\"';
+
+  @override
+  String get stepSignInGoogle => 'Inicia sesión con tu cuenta de Google';
+
+  @override
+  String get stepClickCreateApiKey => 'Haz clic en \"Create API key\"';
+
+  @override
+  String get stepCopyPasteKey => 'Copia y pega la key aquí abajo';
+
+  @override
+  String get freeApiKeyInfo => '100% GRATIS - 1500 requests/día sin tarjeta de crédito';
+
+  @override
+  String get googleGeminiApiKey => 'Google Gemini API Key';
+
+  @override
+  String get apiKey => 'API Key';
+
+  @override
+  String get saveApiKey => 'Guardar API Key';
+
+  @override
+  String get enableVoiceCommands => 'Habilitar Comandos de Voz';
+
+  @override
+  String get voiceCommandsDescription => 'Permite usar comandos de voz para crear eventos y gestionar tu agenda';
+
+  @override
+  String get buttonPressedStarting => '🎤 Botón presionado - Iniciando...';
+
+  @override
+  String get aiServiceNotConfigured => 'Servicio de IA no configurado. Ve a Configuración para añadir tu API key.';
+
+  @override
+  String get errorProcessingCommand => 'Error al procesar comando';
+
+  @override
+  String get couldNotInterpretCommand => 'No se pudo interpretar el comando';
+
+  @override
+  String get speakNowStopsAfterSilence => 'HABLA AHORA... (para en 3s de silencio)';
+
+  @override
+  String get voiceCommand => 'Comando de Voz';
+
+  @override
+  String get aiServiceNotConfiguredGoToSettings => 'Servicio de IA no configurado. Ve a Configuración → Configurar IA.';
+
+  @override
+  String get noVoiceCommandDetected => 'No se detectó ningún comando de voz';
+
+  @override
+  String get interpretationCompleted => 'Interpretación completada';
+
+  @override
+  String get shareCalendar => 'Compartir calendario';
+
+  @override
+  String get shareThisCodeToSubscribe => 'Comparte este código para que otros puedan suscribirse a tu calendario';
+
+  @override
+  String codeCopiedWithValue(String code) {
+    return 'Código copiado: $code';
+  }
+
+  @override
+  String get discoverable => 'Discoverable';
+
+  @override
+  String get calendarNowDiscoverable => 'Calendario ahora es discoverable';
+
+  @override
+  String get calendarNowPrivateLinkOnly => 'Calendario ahora es privado (link only)';
+
+  @override
+  String invitationAcceptedWithTitle(String title) {
+    return 'Invitación aceptada: \"$title\"';
+  }
+
+  @override
+  String invitationRejectedWithTitle(String title) {
+    return 'Invitación rechazada: \"$title\"';
+  }
+
+  @override
+  String get actionExecutedSuccessfully => '✓ Acción ejecutada exitosamente';
 }

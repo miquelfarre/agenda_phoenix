@@ -1993,6 +1993,268 @@
   "configureAi": "Configurar IA",
   "@configureAi": {
     "description": "Botón para configurar la inteligencia artificial"
+  },
+
+  "@_AI_SETTINGS": {
+    "description": "AI Settings Screen strings"
+  },
+  "pleaseEnterApiKey": "Por favor ingresa una API key",
+  "@pleaseEnterApiKey": {
+    "description": "Error when API key field is empty"
+  },
+  "invalidApiKeyFormat": "Formato de API key inválido. Debe ser una cadena alfanumérica de al menos 30 caracteres.",
+  "@invalidApiKeyFormat": {
+    "description": "Error when API key format is invalid"
+  },
+  "apiKeySavedSuccessfully": "✓ API key guardada correctamente",
+  "@apiKeySavedSuccessfully": {
+    "description": "Success message when API key is saved"
+  },
+  "errorSavingApiKey": "Error al guardar la API key",
+  "@errorSavingApiKey": {
+    "description": "Error message when saving API key fails"
+  },
+  "confirmDeleteApiKeyMessage": "¿Estás seguro de que quieres eliminar la API key de Gemini? Los comandos de voz dejarán de funcionar.",
+  "@confirmDeleteApiKeyMessage": {
+    "description": "Confirmation dialog message for deleting API key"
+  },
+  "apiKeyDeleted": "API key eliminada",
+  "@apiKeyDeleted": {
+    "description": "Success message when API key is deleted"
+  },
+  "errorDeleting": "Error al eliminar: {error}",
+  "@errorDeleting": {
+    "description": "Error message when deletion fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "aiConfiguration": "Configuración de AI",
+  "@aiConfiguration": {
+    "description": "AI configuration screen title"
+  },
+  "geminiApiDescription": "Google Gemini API permite interpretar comandos de voz y ejecutar acciones en tu agenda de forma inteligente.",
+  "@geminiApiDescription": {
+    "description": "Description of what Gemini API does"
+  },
+  "howToGetApiKeyFree": "Cómo obtener tu API key GRATIS:",
+  "@howToGetApiKeyFree": {
+    "description": "Heading for instructions to get free API key"
+  },
+  "stepGoToWebsite": "Ve a ai.google.dev",
+  "@stepGoToWebsite": {
+    "description": "Step 1: Go to website"
+  },
+  "stepClickGetApiKey": "Haz clic en \"Get API key in Google AI Studio\"",
+  "@stepClickGetApiKey": {
+    "description": "Step 2: Click get API key button"
+  },
+  "stepSignInGoogle": "Inicia sesión con tu cuenta de Google",
+  "@stepSignInGoogle": {
+    "description": "Step 3: Sign in with Google"
+  },
+  "stepClickCreateApiKey": "Haz clic en \"Create API key\"",
+  "@stepClickCreateApiKey": {
+    "description": "Step 4: Click create API key"
+  },
+  "stepCopyPasteKey": "Copia y pega la key aquí abajo",
+  "@stepCopyPasteKey": {
+    "description": "Step 5: Copy and paste the key"
+  },
+  "freeApiKeyInfo": "100% GRATIS - 1500 requests/día sin tarjeta de crédito",
+  "@freeApiKeyInfo": {
+    "description": "Information about free API key limits"
+  },
+  "googleGeminiApiKey": "Google Gemini API Key",
+  "@googleGeminiApiKey": {
+    "description": "Section title for Google Gemini API Key"
+  },
+  "apiKey": "API Key",
+  "@apiKey": {
+    "description": "Label for API key field"
+  },
+  "saving": "Guardando...",
+  "@saving": {
+    "description": "Button text while saving"
+  },
+  "saveApiKey": "Guardar API Key",
+  "@saveApiKey": {
+    "description": "Button text to save API key"
+  },
+  "enableVoiceCommands": "Habilitar Comandos de Voz",
+  "@enableVoiceCommands": {
+    "description": "Toggle title for enabling voice commands"
+  },
+  "voiceCommandsDescription": "Permite usar comandos de voz para crear eventos y gestionar tu agenda",
+  "@voiceCommandsDescription": {
+    "description": "Description of voice commands feature"
+  },
+
+  "@_VOICE_COMMAND_BUTTON": {
+    "description": "Voice Command Button widget strings"
+  },
+  "buttonPressedStarting": "🎤 Botón presionado - Iniciando...",
+  "@buttonPressedStarting": {
+    "description": "Debug message when button is pressed"
+  },
+  "aiServiceNotConfigured": "Servicio de IA no configurado. Ve a Configuración para añadir tu API key.",
+  "@aiServiceNotConfigured": {
+    "description": "Error when AI service is not configured"
+  },
+  "errorProcessingCommand": "Error al procesar comando",
+  "@errorProcessingCommand": {
+    "description": "Error message when command processing fails"
+  },
+  "couldNotInterpretCommand": "No se pudo interpretar el comando",
+  "@couldNotInterpretCommand": {
+    "description": "Error when command cannot be interpreted"
+  },
+  "speakNowStopsAfterSilence": "HABLA AHORA... (para en 3s de silencio)",
+  "@speakNowStopsAfterSilence": {
+    "description": "Recording status text"
+  },
+  "voiceCommand": "Comando de Voz",
+  "@voiceCommand": {
+    "description": "Voice command button label"
+  },
+  "aiServiceNotConfiguredGoToSettings": "Servicio de IA no configurado. Ve a Configuración → Configurar IA.",
+  "@aiServiceNotConfiguredGoToSettings": {
+    "description": "Error with instructions to go to settings"
+  },
+  "noVoiceCommandDetected": "No se detectó ningún comando de voz",
+  "@noVoiceCommandDetected": {
+    "description": "Error when no voice command is detected"
+  },
+  "interpretationCompleted": "Interpretación completada",
+  "@interpretationCompleted": {
+    "description": "Success message when interpretation is completed"
+  },
+
+  "@_CALENDAR_DETAIL": {
+    "description": "Calendar Detail Screen strings"
+  },
+  "shareCalendar": "Compartir calendario",
+  "@shareCalendar": {
+    "description": "Title for share calendar section"
+  },
+  "shareThisCodeToSubscribe": "Comparte este código para que otros puedan suscribirse a tu calendario",
+  "@shareThisCodeToSubscribe": {
+    "description": "Description for share hash code"
+  },
+  "codeCopiedWithValue": "Código copiado: {code}",
+  "@codeCopiedWithValue": {
+    "description": "Message when code is copied to clipboard",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverable": "Discoverable",
+  "@discoverable": {
+    "description": "Discoverable toggle title"
+  },
+  "calendarNowDiscoverable": "Calendario ahora es discoverable",
+  "@calendarNowDiscoverable": {
+    "description": "Success message when calendar becomes discoverable"
+  },
+  "calendarNowPrivateLinkOnly": "Calendario ahora es privado (link only)",
+  "@calendarNowPrivateLinkOnly": {
+    "description": "Success message when calendar becomes private (link only)"
+  },
+
+  "@_EVENT_CARD_ACTIONS": {
+    "description": "Event Card Actions strings"
+  },
+  "invitationAcceptedWithTitle": "Invitación aceptada: \"{title}\"",
+  "@invitationAcceptedWithTitle": {
+    "description": "Message when invitation is accepted",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationRejectedWithTitle": "Invitación rechazada: \"{title}\"",
+  "@invitationRejectedWithTitle": {
+    "description": "Message when invitation is rejected",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "@_VOICE_COMMAND_CONFIRMATION": {
+    "description": "Voice Command Confirmation Screen strings"
+  },
+  "actionExecutedSuccessfully": "✓ Acción ejecutada exitosamente",
+  "@actionExecutedSuccessfully": {
+    "description": "Success message when action is executed"
+  },
+
+  "@_MISSING_KEYS": {
+    "description": "Additional keys needed for Phase 1"
+  },
+  "errorLoadingConfiguration": "Error al cargar configuración: {error}",
+  "@errorLoadingConfiguration": {
+    "description": "Error loading configuration",
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "confirmDeleteApiKey": "¿Estás seguro de que quieres eliminar la API key de Gemini? Los comandos de voz dejarán de funcionar.",
+  "@confirmDeleteApiKey": {
+    "description": "Confirmation message for deleting API key"
+  },
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "description": "Generic error with message",
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+  "aboutGoogleGemini": "Sobre Google Gemini",
+  "@aboutGoogleGemini": {
+    "description": "About Google Gemini section title"
+  },
+  "geminiDescription": "Google Gemini API permite interpretar comandos de voz y ejecutar acciones en tu agenda de forma inteligente.",
+  "@geminiDescription": {
+    "description": "Description of Gemini API"
+  },
+  "stepSignIn": "Inicia sesión con tu cuenta de Google",
+  "@stepSignIn": {
+    "description": "Step to sign in"
+  },
+  "stepClickCreate": "Haz clic en \"Create API key\"",
+  "@stepClickCreate": {
+    "description": "Step to click create"
+  },
+  "stepCopyPaste": "Copia y pega la key aquí abajo",
+  "@stepCopyPaste": {
+    "description": "Step to copy and paste"
+  },
+  "geminiFreeTier": "100% GRATIS - 1500 requests/día sin tarjeta de crédito",
+  "@geminiFreeTier": {
+    "description": "Free tier information"
+  },
+  "configured": "Configurada",
+  "@configured": {
+    "description": "Status when API key is configured"
+  },
+  "speakNow": "HABLA AHORA... (para en 3s de silencio)",
+  "@speakNow": {
+    "description": "Recording status"
+  },
+  "noVoiceDetected": "No se detectó ningún comando de voz",
+  "@noVoiceDetected": {
+    "description": "No voice detected error"
+  },
+  "processing": "Procesando...",
+  "@processing": {
+    "description": "Processing status"
   }
 }
 
