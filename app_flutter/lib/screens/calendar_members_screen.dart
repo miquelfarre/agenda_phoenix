@@ -160,6 +160,161 @@ class _CalendarMembersScreenState extends ConsumerState<CalendarMembersScreen> {
   }
 
   void _showMemberOptions(Map<String, dynamic> member) {
-    // TODO: Show action sheet with options
+    final membershipId = member['id'] as int;
+    final role = member['role'] as String? ?? 'member';
+    final user = member['user'] as Map<String, dynamic>?;
+    final userName = user?['display_name'] ?? 'Unknown';
+
+    // Cannot manage owner
+    if (role == 'owner') {
+      return;
+    }
+
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: Text(userName),
+        actions: <CupertinoActionSheetAction>[
+          if (role == 'member')
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                _promoteToAdmin(membershipId, userName);
+              },
+              child: const Text('Promote to Admin'),
+            ),
+          if (role == 'admin')
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                _demoteToMember(membershipId, userName);
+              },
+              child: const Text('Demote to Member'),
+            ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _confirmRemoveMember(membershipId, userName);
+            },
+            isDestructiveAction: true,
+            child: const Text('Remove from Calendar'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _promoteToAdmin(int membershipId, String userName) async {
+    try {
+      final repository = ref.read(calendarRepositoryProvider);
+      await repository.updateMemberRole(membershipId, 'admin');
+
+      if (!mounted) return;
+
+      // Reload members
+      await _loadMembers();
+    } catch (e) {
+      if (!mounted) return;
+      // Show error
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text('Failed to promote $userName: ${e.toString()}'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _demoteToMember(int membershipId, String userName) async {
+    try {
+      final repository = ref.read(calendarRepositoryProvider);
+      await repository.updateMemberRole(membershipId, 'member');
+
+      if (!mounted) return;
+
+      // Reload members
+      await _loadMembers();
+    } catch (e) {
+      if (!mounted) return;
+      // Show error
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text('Failed to demote $userName: ${e.toString()}'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  void _confirmRemoveMember(int membershipId, String userName) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Remove Member'),
+        content: Text('Are you sure you want to remove $userName from this calendar?'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              _removeMember(membershipId, userName);
+            },
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _removeMember(int membershipId, String userName) async {
+    try {
+      final repository = ref.read(calendarRepositoryProvider);
+      await repository.removeMember(membershipId);
+
+      if (!mounted) return;
+
+      // Reload members
+      await _loadMembers();
+    } catch (e) {
+      if (!mounted) return;
+      // Show error
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text('Failed to remove $userName: ${e.toString()}'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
