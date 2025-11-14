@@ -550,6 +550,30 @@ class ApiClient implements IApiClient {
     await delete('/calendar_memberships/$membershipId');
   }
 
+  Future<void> patchCalendarMembership(
+    int membershipId,
+    Map<String, dynamic> updates,
+  ) async {
+    await patch('/calendar_memberships/$membershipId', body: updates);
+  }
+
+  Future<Map<String, dynamic>> addCalendarMembersBulk({
+    required int calendarId,
+    List<int> userIds = const [],
+    List<int> groupIds = const [],
+    String role = 'member',
+  }) async {
+    final result = await post(
+      '/calendars/$calendarId/memberships/bulk',
+      body: {
+        'user_ids': userIds,
+        'group_ids': groupIds,
+        'role': role,
+      },
+    );
+    return result as Map<String, dynamic>;
+  }
+
   @override
   Future<List<Map<String, dynamic>>> fetchGroups({
     int? ownerId,

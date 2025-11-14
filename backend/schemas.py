@@ -382,6 +382,13 @@ class CalendarMembershipCreate(CalendarMembershipBase):
     invited_by_user_id: Optional[int] = None
 
 
+class CalendarMembershipUpdate(BaseModel):
+    """Schema for updating a calendar membership (all fields optional)"""
+
+    role: Optional[str] = None
+    status: Optional[str] = None
+
+
 class CalendarMembershipResponse(CalendarMembershipBase):
     id: int
     calendar_id: int

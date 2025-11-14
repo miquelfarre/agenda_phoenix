@@ -317,6 +317,50 @@ class CalendarRepository implements ICalendarRepository {
     }
   }
 
+  /// Update calendar member role
+  Future<void> updateMemberRole(
+    int membershipId,
+    String role,  // "member" or "admin"
+  ) async {
+    try {
+      await _apiClient.patchCalendarMembership(membershipId, {'role': role});
+      await _fetchAndSync();
+    } catch (e, _) {
+      rethrow;
+    }
+  }
+
+  /// Remove calendar member
+  Future<void> removeMember(int membershipId) async {
+    try {
+      await _apiClient.deleteCalendarMembership(membershipId);
+      await _fetchAndSync();
+    } catch (e, _) {
+      rethrow;
+    }
+  }
+
+  /// Add multiple members to calendar (users + groups)
+  Future<Map<String, dynamic>> addMembersBulk({
+    required int calendarId,
+    List<int> userIds = const [],
+    List<int> groupIds = const [],
+    String role = 'member',
+  }) async {
+    try {
+      final result = await _apiClient.addCalendarMembersBulk(
+        calendarId: calendarId,
+        userIds: userIds,
+        groupIds: groupIds,
+        role: role,
+      );
+      await _fetchAndSync();
+      return result;
+    } catch (e, _) {
+      rethrow;
+    }
+  }
+
   // --- Local cache and realtime ---
 
   @override

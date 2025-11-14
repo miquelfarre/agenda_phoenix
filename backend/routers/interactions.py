@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from auth import get_current_user_id
 from crud import event, event_interaction, user
-from dependencies import check_user_not_public, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
+from dependencies import check_user_not_public, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade, is_event_owner_or_admin
 from models import EventInteraction
 from schemas import EventInteractionBase, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventInteractionWithEventResponse
 
@@ -135,10 +135,12 @@ async def create_interaction(interaction: EventInteractionCreate, db: Session = 
 @router.patch("/{interaction_id}", response_model=EventInteractionResponse)
 async def patch_interaction(interaction_id: int, interaction: EventInteractionUpdate, current_user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
-    Partially update an existing interaction (typically to change status) - PATCH alias for PUT.
+    Partially update an existing interaction (typically to change status or role).
 
     Requires JWT authentication - provide token in Authorization header.
-    Only the user of the interaction can patch it (to accept/reject invitations).
+
+    For status changes: Only the user of the interaction can update it (to accept/reject invitations).
+    For role changes: Only event owners or admins can change roles (attendee <-> admin).
 
     Special cascade behavior for recurring events:
     - If rejecting a base recurring event invitation (event_type='recurring' and status='rejected'),
@@ -148,15 +150,58 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     if not db_interaction:
         raise HTTPException(status_code=404, detail="Interaction not found")
 
-    # Check if user is the interaction user
-    if db_interaction.user_id != current_user_id:
-        raise HTTPException(status_code=403, detail="You don't have permission to update this interaction. Only the user themselves can accept/reject invitations.")
+    # Get update data
+    update_data = interaction.model_dump(exclude_unset=True)
+
+    # Special validation for role changes
+    if 'role' in update_data:
+        # Only joined interactions can have their role changed
+        if db_interaction.interaction_type != "joined":
+            raise HTTPException(
+                status_code=400,
+                detail="Can only change role for joined participants"
+            )
+
+        # Check permissions (owner or admin)
+        is_admin = is_event_owner_or_admin(
+            db_interaction.event_id,
+            current_user_id,
+            db
+        )
+        if not is_admin:
+            raise HTTPException(
+                status_code=403,
+                detail="Only event owners or admins can change roles"
+            )
+
+        # Cannot change your own role
+        if db_interaction.user_id == current_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot change your own role"
+            )
+
+        # Validate role
+        new_role = update_data['role']
+        if new_role not in ["attendee", "admin"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Role must be 'attendee' or 'admin'"
+            )
+
+        # Public users cannot be admins
+        if new_role == "admin":
+            check_user_not_public(db_interaction.user_id, db, "be promoted to admin")
+    else:
+        # For non-role changes, check if user is the interaction user
+        if db_interaction.user_id != current_user_id:
+            raise HTTPException(status_code=403, detail="You don't have permission to update this interaction. Only the user themselves can accept/reject invitations.")
 
     # Get the event to check if it's a recurring event
     db_event = event.get(db, id=db_interaction.event_id)
 
     # Only update fields that are explicitly provided (exclude None values)
-    for key, value in interaction.model_dump(exclude_unset=True).items():
+    for key, value in update_data.items():
         if value is not None:
             setattr(db_interaction, key, value)
 
