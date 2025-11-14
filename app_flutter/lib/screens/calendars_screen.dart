@@ -406,11 +406,9 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   Widget _buildCalendarTypeFilters(CalendarsData data) {
     final l10n = context.l10n;
 
-    return SizedBox(
-      height: 50,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
         children: [
           _buildFilterChip(
             label: l10n.allCalendars,
@@ -451,39 +449,33 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? CupertinoColors.systemBlue
-              : CupertinoColors.systemGrey6,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected
-                    ? CupertinoColors.white
-                    : CupertinoColors.black,
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? CupertinoColors.systemBlue
+                : CupertinoColors.systemGrey6,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? CupertinoColors.white
+                      : CupertinoColors.black,
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(width: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? CupertinoColors.white.withValues(alpha: 0.3)
-                    : CupertinoColors.systemGrey5,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
+              const SizedBox(height: 2),
+              Text(
                 count.toString(),
                 style: TextStyle(
                   color: isSelected
@@ -493,8 +485,8 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
