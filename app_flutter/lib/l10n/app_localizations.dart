@@ -5309,10 +5309,10 @@ abstract class AppLocalizations {
   /// **'My Calendars'**
   String get myCalendars;
 
-  /// Calendars the user is subscribed to
+  /// Filter chip: Calendars from other users I'm subscribed to
   ///
   /// In en, this message translates to:
-  /// **'Subscribed Calendars'**
+  /// **'Subscribed'**
   String get subscribedCalendars;
 
   /// Publicly available calendars
@@ -5338,18 +5338,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'My Public'**
   String get myPublicCalendars;
-
-  /// Filter chip: Calendars from private users I'm subscribed to
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribed (Private)'**
-  String get subscribedPrivateUsers;
-
-  /// Filter chip: Calendars from public users/creators I'm subscribed to
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribed (Public)'**
-  String get subscribedPublicUsers;
 
   /// Title of creation menu
   ///

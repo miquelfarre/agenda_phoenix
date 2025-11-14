@@ -1523,13 +1523,9 @@
   "@myPublicCalendars": {
     "description": "Chip de filtro: Mis calendarios públicos"
   },
-  "subscribedPrivateUsers": "Suscritos (Privados)",
-  "@subscribedPrivateUsers": {
-    "description": "Chip de filtro: Calendarios de usuarios privados a los que estoy suscrito"
-  },
-  "subscribedPublicUsers": "Suscritos (Públicos)",
-  "@subscribedPublicUsers": {
-    "description": "Chip de filtro: Calendarios de usuarios públicos/creadores a los que estoy suscrito"
+  "subscribedCalendars": "Suscritos",
+  "@subscribedCalendars": {
+    "description": "Chip de filtro: Calendarios de otros usuarios a los que estoy suscrito"
   },
   "createNew": "Crear Nuevo",
   "@createNew": {

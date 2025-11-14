@@ -1710,13 +1710,9 @@
   "@myPublicCalendars": {
     "description": "Filter chip: My public calendars"
   },
-  "subscribedPrivateUsers": "Subscribed (Private)",
-  "@subscribedPrivateUsers": {
-    "description": "Filter chip: Calendars from private users I'm subscribed to"
-  },
-  "subscribedPublicUsers": "Subscribed (Public)",
-  "@subscribedPublicUsers": {
-    "description": "Filter chip: Calendars from public users/creators I'm subscribed to"
+  "subscribedCalendars": "Subscribed",
+  "@subscribedCalendars": {
+    "description": "Filter chip: Calendars from other users I'm subscribed to"
   },
   "createNew": "Create New",
   "@createNew": {

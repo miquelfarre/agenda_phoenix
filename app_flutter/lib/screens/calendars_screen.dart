@@ -19,16 +19,14 @@ class CalendarsData {
   final List<Calendar> calendars;
   final int myPrivateCount;
   final int myPublicCount;
-  final int subscribedPrivateUsersCount;
-  final int subscribedPublicUsersCount;
+  final int subscribedCount;
   final int allCount;
 
   CalendarsData({
     required this.calendars,
     required this.myPrivateCount,
     required this.myPublicCount,
-    required this.subscribedPrivateUsersCount,
-    required this.subscribedPublicUsersCount,
+    required this.subscribedCount,
     required this.allCount,
   });
 }
@@ -46,7 +44,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   bool _loadingHashSearch = false;
   Calendar? _hashSearchResult;
   String? _hashSearchError;
-  String _currentFilter = 'all'; // 'all', 'my_private', 'my_public', 'subscribed_private', 'subscribed_public'
+  String _currentFilter = 'all'; // 'all', 'my_private', 'my_public', 'subscribed'
 
   @override
   void dispose() {
@@ -357,8 +355,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   CalendarsData _processCalendars(List<Calendar> calendars) {
     int myPrivateCount = 0;
     int myPublicCount = 0;
-    int subscribedPrivateUsersCount = 0;
-    int subscribedPublicUsersCount = 0;
+    int subscribedCount = 0;
 
     for (final calendar in calendars) {
       // My private calendars: owned + private
@@ -369,15 +366,9 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       else if (calendar.accessType == 'owned' && calendar.isPublic) {
         myPublicCount++;
       }
-      // Subscribed to private users' public calendars
-      else if (calendar.accessType == 'subscription' &&
-               calendar.ownerIsPublic == false) {
-        subscribedPrivateUsersCount++;
-      }
-      // Subscribed to public users' calendars
-      else if (calendar.accessType == 'subscription' &&
-               calendar.ownerIsPublic == true) {
-        subscribedPublicUsersCount++;
+      // Subscribed calendars (both private and public users)
+      else if (calendar.accessType == 'subscription') {
+        subscribedCount++;
       }
     }
 
@@ -385,8 +376,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
       calendars: calendars,
       myPrivateCount: myPrivateCount,
       myPublicCount: myPublicCount,
-      subscribedPrivateUsersCount: subscribedPrivateUsersCount,
-      subscribedPublicUsersCount: subscribedPublicUsersCount,
+      subscribedCount: subscribedCount,
       allCount: calendars.length,
     );
   }
@@ -402,17 +392,9 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
         return data.calendars
             .where((cal) => cal.accessType == 'owned' && cal.isPublic)
             .toList();
-      case 'subscribed_private':
+      case 'subscribed':
         return data.calendars
-            .where((cal) =>
-                cal.accessType == 'subscription' &&
-                cal.ownerIsPublic == false)
-            .toList();
-      case 'subscribed_public':
-        return data.calendars
-            .where((cal) =>
-                cal.accessType == 'subscription' &&
-                cal.ownerIsPublic == true)
+            .where((cal) => cal.accessType == 'subscription')
             .toList();
       case 'all':
       default:
@@ -452,17 +434,10 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
-            label: l10n.subscribedPrivateUsers,
-            count: data.subscribedPrivateUsersCount,
-            isSelected: _currentFilter == 'subscribed_private',
-            onTap: () => setState(() => _currentFilter = 'subscribed_private'),
-          ),
-          const SizedBox(width: 8),
-          _buildFilterChip(
-            label: l10n.subscribedPublicUsers,
-            count: data.subscribedPublicUsersCount,
-            isSelected: _currentFilter == 'subscribed_public',
-            onTap: () => setState(() => _currentFilter = 'subscribed_public'),
+            label: l10n.subscribedCalendars,
+            count: data.subscribedCount,
+            isSelected: _currentFilter == 'subscribed',
+            onTap: () => setState(() => _currentFilter = 'subscribed'),
           ),
         ],
       ),

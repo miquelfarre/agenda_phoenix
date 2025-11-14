@@ -2754,7 +2754,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get myCalendars => 'Mis Calendarios';
 
   @override
-  String get subscribedCalendars => 'Calendarios Suscritos';
+  String get subscribedCalendars => 'Suscritos';
 
   @override
   String get publicCalendars => 'Calendarios Públicos';
@@ -2767,12 +2767,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get myPublicCalendars => 'Mis Públicos';
-
-  @override
-  String get subscribedPrivateUsers => 'Suscritos (Privados)';
-
-  @override
-  String get subscribedPublicUsers => 'Suscritos (Públicos)';
 
   @override
   String get createNew => 'Crear Nuevo';
