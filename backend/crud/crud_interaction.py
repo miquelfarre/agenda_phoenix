@@ -329,31 +329,6 @@ class CRUDEventInteraction(CRUDBase[EventInteraction, EventInteractionCreate, Ev
             interactions = query.all()
             return interactions
 
-    def mark_as_read(self, db: Session, *, interaction_id: int) -> tuple[Optional[EventInteraction], Optional[str]]:
-        """
-        Mark an interaction as read by setting read_at to current timestamp.
-
-        Args:
-            db: Database session
-            interaction_id: Interaction ID
-
-        Returns:
-            (EventInteraction, None) if successful
-            (None, error_message) if failed
-        """
-        from datetime import datetime, timezone
-
-        interaction = self.get(db, id=interaction_id)
-        if not interaction:
-            return None, "Interaction not found"
-
-        # Set read_at to current timestamp
-        interaction.read_at = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(interaction)
-
-        return interaction, None
-
     def get_invitation_stats(self, db: Session, *, event_id: int) -> dict:
         """
         Get invitation statistics for an event.

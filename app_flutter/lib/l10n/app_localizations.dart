@@ -575,7 +575,7 @@ abstract class AppLocalizations {
   /// **'Syncing...'**
   String get syncing;
 
-  /// No description provided for @processing.
+  /// Processing status
   ///
   /// In en, this message translates to:
   /// **'Processing...'**
@@ -6232,6 +6232,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'✓ Action executed successfully'**
   String get actionExecutedSuccessfully;
+
+  /// Error loading configuration
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading configuration: {error}'**
+  String errorLoadingConfiguration(String error);
+
+  /// Confirmation message for deleting API key
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the Gemini API key? Voice commands will stop working.'**
+  String get confirmDeleteApiKey;
+
+  /// Generic error with message
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String errorWithMessage(String message);
+
+  /// About Google Gemini section title
+  ///
+  /// In en, this message translates to:
+  /// **'About Google Gemini'**
+  String get aboutGoogleGemini;
+
+  /// Description of Gemini API
+  ///
+  /// In en, this message translates to:
+  /// **'Google Gemini API allows interpreting voice commands and executing actions on your calendar intelligently.'**
+  String get geminiDescription;
+
+  /// Step to sign in
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your Google account'**
+  String get stepSignIn;
+
+  /// Step to click create
+  ///
+  /// In en, this message translates to:
+  /// **'Click \"Create API key\"'**
+  String get stepClickCreate;
+
+  /// Step to copy and paste
+  ///
+  /// In en, this message translates to:
+  /// **'Copy and paste the key below'**
+  String get stepCopyPaste;
+
+  /// Free tier information
+  ///
+  /// In en, this message translates to:
+  /// **'100% FREE - 1500 requests/day without credit card'**
+  String get geminiFreeTier;
+
+  /// Status when API key is configured
+  ///
+  /// In en, this message translates to:
+  /// **'Configured'**
+  String get configured;
+
+  /// Recording status
+  ///
+  /// In en, this message translates to:
+  /// **'SPEAK NOW... (stops after 3s of silence)'**
+  String get speakNow;
+
+  /// No voice detected error
+  ///
+  /// In en, this message translates to:
+  /// **'No voice command detected'**
+  String get noVoiceDetected;
+
+  /// Manage event participants button
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Participants'**
+  String get manageParticipants;
+
+  /// No participants message
+  ///
+  /// In en, this message translates to:
+  /// **'No participants'**
+  String get noParticipants;
+
+  /// No participants subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'No one has joined this event yet'**
+  String get noOneHasJoined;
+
+  /// Promote to admin action
+  ///
+  /// In en, this message translates to:
+  /// **'Promote to Admin'**
+  String get promoteToAdmin;
+
+  /// Demote to attendee action
+  ///
+  /// In en, this message translates to:
+  /// **'Demote to Attendee'**
+  String get demoteToAttendee;
+
+  /// Demote to member action
+  ///
+  /// In en, this message translates to:
+  /// **'Demote to Member'**
+  String get demoteToMember;
+
+  /// Remove from event action
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Event'**
+  String get removeFromEvent;
+
+  /// Remove from calendar action
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Calendar'**
+  String get removeFromCalendar;
+
+  /// Remove participant dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Participant'**
+  String get removeParticipant;
+
+  /// Remove member dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Member'**
+  String get removeMember;
+
+  /// Confirm remove participant message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove {name} from this event?'**
+  String confirmRemoveParticipant(String name);
+
+  /// Confirm remove member message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove {name} from this calendar?'**
+  String confirmRemoveMember(String name);
+
+  /// Attendee role label
+  ///
+  /// In en, this message translates to:
+  /// **'Attendee'**
+  String get attendee;
+
+  /// Failed to promote error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to promote {name}: {error}'**
+  String failedToPromote(String name, String error);
+
+  /// Failed to demote error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to demote {name}: {error}'**
+  String failedToDemote(String name, String error);
+
+  /// Failed to remove error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove {name}: {error}'**
+  String failedToRemove(String name, String error);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

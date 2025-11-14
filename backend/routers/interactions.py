@@ -218,22 +218,6 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
 # Removed unused DELETE /interactions/{interaction_id}
 
 
-@router.post("/{interaction_id}/mark-read", response_model=EventInteractionResponse)
-async def mark_interaction_as_read(interaction_id: int, db: Session = Depends(get_db)):
-    """
-    Mark an event interaction as read.
-
-    This sets the read_at timestamp and causes is_new to become False.
-    Useful for tracking which events/invitations the user has seen.
-    """
-    interaction, error = event_interaction.mark_as_read(db, interaction_id=interaction_id)
-
-    if error:
-        raise HTTPException(status_code=404, detail=error)
-
-    return interaction
-
-
 @router.post("/bulk", status_code=201)
 async def add_event_participants_bulk(
     event_id: int,

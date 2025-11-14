@@ -445,14 +445,6 @@ class ApiClient implements IApiClient {
     return result as Map<String, dynamic>;
   }
 
-  @override
-  Future<void> markInteractionRead(
-    int interactionId, {
-    int? currentUserId,
-  }) async {
-    await post('/interactions/$interactionId/mark-read');
-  }
-
   Future<void> deleteInteraction(int interactionId) async {
     await delete('/interactions/$interactionId');
   }

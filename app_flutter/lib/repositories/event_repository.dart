@@ -195,7 +195,9 @@ class EventRepository implements IEventRepository {
           message: 'Interaction not found',
         ),
       );
-      await _apiClient.markInteractionRead(interaction.id!);
+      await _apiClient.patchInteraction(interaction.id!, {
+        'read_at': DateTime.now().toUtc().toIso8601String(),
+      });
       await _fetchAndSync();
       _emitInteractions();
     } catch (e, _) {

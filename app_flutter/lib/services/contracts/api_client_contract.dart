@@ -113,8 +113,6 @@ abstract class IApiClient {
     bool force = false,
   });
 
-  Future<void> markInteractionRead(int interactionId, {int? currentUserId});
-
   // ============================================================================
   // Recurring Event Configurations
   // ============================================================================

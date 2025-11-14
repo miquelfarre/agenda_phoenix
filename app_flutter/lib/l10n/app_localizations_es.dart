@@ -3244,4 +3244,102 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get actionExecutedSuccessfully => '✓ Acción ejecutada exitosamente';
+
+  @override
+  String errorLoadingConfiguration(String error) {
+    return 'Error al cargar configuración: $error';
+  }
+
+  @override
+  String get confirmDeleteApiKey => '¿Estás seguro de que quieres eliminar la API key de Gemini? Los comandos de voz dejarán de funcionar.';
+
+  @override
+  String errorWithMessage(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get aboutGoogleGemini => 'Sobre Google Gemini';
+
+  @override
+  String get geminiDescription => 'Google Gemini API permite interpretar comandos de voz y ejecutar acciones en tu agenda de forma inteligente.';
+
+  @override
+  String get stepSignIn => 'Inicia sesión con tu cuenta de Google';
+
+  @override
+  String get stepClickCreate => 'Haz clic en \"Create API key\"';
+
+  @override
+  String get stepCopyPaste => 'Copia y pega la key aquí abajo';
+
+  @override
+  String get geminiFreeTier => '100% GRATIS - 1500 requests/día sin tarjeta de crédito';
+
+  @override
+  String get configured => 'Configurada';
+
+  @override
+  String get speakNow => 'HABLA AHORA... (para en 3s de silencio)';
+
+  @override
+  String get noVoiceDetected => 'No se detectó ningún comando de voz';
+
+  @override
+  String get manageParticipants => 'Administrar Participantes';
+
+  @override
+  String get noParticipants => 'Sin participantes';
+
+  @override
+  String get noOneHasJoined => 'Nadie se ha unido a este evento aún';
+
+  @override
+  String get promoteToAdmin => 'Promover a Administrador';
+
+  @override
+  String get demoteToAttendee => 'Degradar a Asistente';
+
+  @override
+  String get demoteToMember => 'Degradar a Miembro';
+
+  @override
+  String get removeFromEvent => 'Eliminar del Evento';
+
+  @override
+  String get removeFromCalendar => 'Eliminar del Calendario';
+
+  @override
+  String get removeParticipant => 'Eliminar Participante';
+
+  @override
+  String get removeMember => 'Eliminar Miembro';
+
+  @override
+  String confirmRemoveParticipant(String name) {
+    return '¿Estás seguro de que quieres eliminar a $name de este evento?';
+  }
+
+  @override
+  String confirmRemoveMember(String name) {
+    return '¿Estás seguro de que quieres eliminar a $name de este calendario?';
+  }
+
+  @override
+  String get attendee => 'Asistente';
+
+  @override
+  String failedToPromote(String name, String error) {
+    return 'Error al promover a $name: $error';
+  }
+
+  @override
+  String failedToDemote(String name, String error) {
+    return 'Error al degradar a $name: $error';
+  }
+
+  @override
+  String failedToRemove(String name, String error) {
+    return 'Error al eliminar a $name: $error';
+  }
 }
