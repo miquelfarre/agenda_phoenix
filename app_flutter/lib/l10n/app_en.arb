@@ -420,7 +420,9 @@
   "groupDeleted": "Group deleted successfully",
   "noGroups": "No groups available",
   "groupMembers": "Group Members",
+  "calendarMembers": "Calendar Members",
   "groupAdmin": "Group Admin",
+  "calendarAdmin": "Calendar Admin",
   "makeAdmin": "Make Admin",
   "removeAdmin": "Remove Admin",
   "confirmMakeAdmin": "Are you sure you want to make {displayName} an admin?",
@@ -443,6 +445,12 @@
   },
   "memberRemovedAdmin": "{displayName} removed admin",
   "@memberRemovedAdmin": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
+  "memberRemoved": "{displayName} removed",
+  "@memberRemoved": {
     "placeholders": {
       "displayName": { "type": "String" }
     }

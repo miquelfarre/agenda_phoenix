@@ -19,6 +19,7 @@ import '../utils/calendar_operations.dart';
 import '../utils/event_date_utils.dart';
 import '../utils/error_message_parser.dart';
 import '../widgets/event_date_section.dart';
+import '../services/config_service.dart';
 
 class CalendarDetailScreen extends ConsumerStatefulWidget {
   final int calendarId;
@@ -41,6 +42,10 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
   String? _ownerName;
   bool _isProcessingLeave = false;
   bool _isUpdatingDiscoverable = false;
+  List<Map<String, dynamic>> _members = [];
+  bool _isLoadingMembers = true;
+
+  int get currentUserId => ConfigService.instance.currentUserId;
 
   Calendar? get _calendar {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
@@ -92,6 +97,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
   void initState() {
     super.initState();
     _loadOwnerInfo();
+    _loadMembers();
   }
 
   Future<void> _loadOwnerInfo() async {
@@ -131,6 +137,33 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
           _ownerName = 'Usuario';
         });
       }
+    }
+  }
+
+  Future<void> _loadMembers() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingMembers = true;
+    });
+
+    try {
+      final repository = ref.read(calendarRepositoryProvider);
+      final memberships = await repository.fetchCalendarMemberships(
+        widget.calendarId,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _members = memberships;
+        _isLoadingMembers = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingMembers = false;
+      });
     }
   }
 
@@ -384,9 +417,9 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
 
-        // Manage Members Button (only for owner/admin)
-        if (_canManageMembers) ...[
-          SliverToBoxAdapter(child: _buildManageMembersButton()),
+        // Members Section
+        if (!_isLoadingMembers && _members.isNotEmpty) ...[
+          SliverToBoxAdapter(child: _buildMembersSection()),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
 
@@ -619,42 +652,231 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     );
   }
 
-  Widget _buildManageMembersButton() {
+  Widget _buildMembersSection() {
+    final l10n = context.l10n;
+    final canManage = _canManageMembers;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: CupertinoButton(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        color: CupertinoColors.systemGrey6,
-        borderRadius: BorderRadius.circular(12),
-        onPressed: _navigateToManageMembers,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              CupertinoIcons.person_2,
-              color: CupertinoColors.activeBlue,
-              size: 20,
+      decoration: AppStyles.cardDecoration,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(CupertinoIcons.person_2, size: 20, color: AppStyles.grey700),
+              const SizedBox(width: 8),
+              Text(
+                l10n.calendarMembers,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppStyles.grey700,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppStyles.blue600.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${_members.length}',
+                  style: TextStyle(
+                    color: AppStyles.blue600,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_members.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  l10n.noMembers,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppStyles.grey500,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+            )
+          else
+            ..._members.map(
+              (member) => _buildMemberTile(member, canManage),
             ),
-            const SizedBox(width: 8),
-            Text(
-              'Manage Members',
-              style: const TextStyle(
-                color: CupertinoColors.activeBlue,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+          if (canManage) ...[
+            const SizedBox(height: 12),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: _navigateToInviteMembers,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppStyles.blue600.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      CupertinoIcons.person_add,
+                      color: AppStyles.blue600,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.addMembers,
+                      style: TextStyle(
+                        color: AppStyles.blue600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  void _navigateToManageMembers() {
+  Widget _buildMemberTile(Map<String, dynamic> memberData, bool canManage) {
+    final user = memberData['user'] as Map<String, dynamic>?;
+    final role = memberData['role'] as String? ?? 'member';
+    final userId = memberData['user_id'] as int;
+
+    final isOwner = role == 'owner';
+    final isAdmin = role == 'admin';
+    final canModifyThisMember = canManage && !isOwner && userId != currentUserId;
+
+    final displayName = user?['display_name'] ??
+                       user?['instagram_username'] ??
+                       'Unknown';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppStyles.cardBackgroundColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppStyles.grey300.withValues(alpha: 0.5),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Simple avatar placeholder (can be replaced with UserAvatar widget)
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppStyles.blue600.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                displayName.substring(0, 1).toUpperCase(),
+                style: TextStyle(
+                  color: AppStyles.blue600,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                    color: AppStyles.black87,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                if (isOwner)
+                  Text(
+                    context.l10n.owner,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppStyles.purple600,
+                      decoration: TextDecoration.none,
+                    ),
+                  )
+                else if (isAdmin)
+                  Text(
+                    context.l10n.calendarAdmin,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppStyles.blue600,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (canModifyThisMember) ...[
+            // Toggle admin button
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onPressed: _isProcessingLeave
+                  ? null
+                  : () => isAdmin
+                        ? _removeAdmin(memberData)
+                        : _grantAdmin(memberData),
+              child: Icon(
+                isAdmin ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                color: _isProcessingLeave
+                    ? AppStyles.grey400
+                    : (isAdmin ? AppStyles.blue600 : AppStyles.grey600),
+                size: 20,
+              ),
+            ),
+            // Remove member button
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              onPressed: _isProcessingLeave
+                  ? null
+                  : () => _removeMember(memberData),
+              child: Icon(
+                CupertinoIcons.minus_circle,
+                color: _isProcessingLeave ? AppStyles.grey400 : AppStyles.red600,
+                size: 20,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _navigateToInviteMembers() async {
     final calendar = _calendar;
     if (calendar == null) return;
 
-    Navigator.of(context).push(
+    final result = await Navigator.of(context).push(
       CupertinoPageRoute(
         builder: (context) => CalendarMembersScreen(
           calendarId: widget.calendarId,
@@ -662,6 +884,180 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
         ),
       ),
     );
+
+    // Reload members if any were added
+    if (result == true || mounted) {
+      _loadMembers();
+    }
+  }
+
+  Future<void> _grantAdmin(Map<String, dynamic> memberData) async {
+    final l10n = context.l10n;
+    final user = memberData['user'] as Map<String, dynamic>?;
+    final displayName = user?['display_name'] ?? user?['instagram_username'] ?? 'Unknown';
+    final membershipId = memberData['id'] as int;
+
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(l10n.makeAdmin),
+        content: Text(l10n.confirmMakeAdmin(displayName)),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isProcessingLeave = true);
+
+      try {
+        final repo = ref.read(calendarRepositoryProvider);
+        await repo.updateMemberRole(membershipId, 'admin');
+
+        if (mounted) {
+          PlatformDialogHelpers.showSnackBar(
+            context: context,
+            message: l10n.memberMadeAdmin(displayName),
+          );
+          await _loadMembers(); // Reload to show updated role
+        }
+      } catch (e) {
+        if (mounted) {
+          final errorMessage = ErrorMessageParser.parse(e, context);
+          PlatformDialogHelpers.showSnackBar(
+            context: context,
+            message: errorMessage,
+            isError: true,
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isProcessingLeave = false);
+        }
+      }
+    }
+  }
+
+  Future<void> _removeAdmin(Map<String, dynamic> memberData) async {
+    final l10n = context.l10n;
+    final user = memberData['user'] as Map<String, dynamic>?;
+    final displayName = user?['display_name'] ?? user?['instagram_username'] ?? 'Unknown';
+    final membershipId = memberData['id'] as int;
+
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(l10n.removeAdmin),
+        content: Text(l10n.confirmRemoveAdmin(displayName)),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isProcessingLeave = true);
+
+      try {
+        final repo = ref.read(calendarRepositoryProvider);
+        await repo.updateMemberRole(membershipId, 'member');
+
+        if (mounted) {
+          PlatformDialogHelpers.showSnackBar(
+            context: context,
+            message: l10n.memberRemovedAdmin(displayName),
+          );
+          await _loadMembers(); // Reload to show updated role
+        }
+      } catch (e) {
+        if (mounted) {
+          final errorMessage = ErrorMessageParser.parse(e, context);
+          PlatformDialogHelpers.showSnackBar(
+            context: context,
+            message: errorMessage,
+            isError: true,
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isProcessingLeave = false);
+        }
+      }
+    }
+  }
+
+  Future<void> _removeMember(Map<String, dynamic> memberData) async {
+    final l10n = context.l10n;
+    final user = memberData['user'] as Map<String, dynamic>?;
+    final displayName = user?['display_name'] ?? user?['instagram_username'] ?? 'Unknown';
+    final membershipId = memberData['id'] as int;
+
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(l10n.removeMember),
+        content: Text(l10n.confirmRemoveMember(displayName)),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.remove),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isProcessingLeave = true);
+
+      try {
+        final repo = ref.read(calendarRepositoryProvider);
+        await repo.removeMember(membershipId);
+
+        if (mounted) {
+          PlatformDialogHelpers.showSnackBar(
+            context: context,
+            message: l10n.memberRemoved(displayName),
+          );
+          await _loadMembers(); // Reload to update list
+        }
+      } catch (e) {
+        if (mounted) {
+          final errorMessage = ErrorMessageParser.parse(e, context);
+          PlatformDialogHelpers.showSnackBar(
+            context: context,
+            message: errorMessage,
+            isError: true,
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isProcessingLeave = false);
+        }
+      }
+    }
   }
 
   Widget _buildCreateEventButton() {

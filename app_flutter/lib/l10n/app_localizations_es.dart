@@ -694,7 +694,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get groupMembers => 'Miembros del Grupo';
 
   @override
+  String get calendarMembers => 'Miembros del Calendario';
+
+  @override
   String get groupAdmin => 'Administrador del Grupo';
+
+  @override
+  String get calendarAdmin => 'Administrador del Calendario';
 
   @override
   String get makeAdmin => 'Hacer Administrador';
@@ -720,6 +726,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String memberRemovedAdmin(String displayName) {
     return '$displayName revocado como administrador';
+  }
+
+  @override
+  String memberRemoved(String displayName) {
+    return '$displayName eliminado';
   }
 
   @override

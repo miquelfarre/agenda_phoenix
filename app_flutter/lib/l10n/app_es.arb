@@ -875,12 +875,20 @@
       "displayName": { "type": "String" }
     }
   },
+  "memberRemoved": "{displayName} eliminado",
+  "@memberRemoved": {
+    "placeholders": {
+      "displayName": { "type": "String" }
+    }
+  },
   "groupCreated": "Grupo creado exitosamente",
   "groupDeleted": "Grupo eliminado exitosamente",
   "groupDescription": "Descripción del Grupo",
   "groupInfo": "Información del Grupo",
   "groupInvitations": "Invitaciones de Grupos",
   "groupMembers": "Miembros del Grupo",
+  "calendarMembers": "Miembros del Calendario",
+  "calendarAdmin": "Administrador del Calendario",
   "groupName": "Nombre del Grupo",
   "groupNamePlaceholder": "Ingresa el nombre del grupo",
   "groupDescriptionPlaceholder": "Ingresa la descripción del grupo (opcional)",

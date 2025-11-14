@@ -1445,11 +1445,23 @@ abstract class AppLocalizations {
   /// **'Group Members'**
   String get groupMembers;
 
+  /// No description provided for @calendarMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Members'**
+  String get calendarMembers;
+
   /// No description provided for @groupAdmin.
   ///
   /// In en, this message translates to:
   /// **'Group Admin'**
   String get groupAdmin;
+
+  /// No description provided for @calendarAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Admin'**
+  String get calendarAdmin;
 
   /// No description provided for @makeAdmin.
   ///
@@ -1486,6 +1498,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{displayName} removed admin'**
   String memberRemovedAdmin(String displayName);
+
+  /// No description provided for @memberRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{displayName} removed'**
+  String memberRemoved(String displayName);
 
   /// No description provided for @envDev.
   ///
