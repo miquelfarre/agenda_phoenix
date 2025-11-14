@@ -52,4 +52,16 @@ class CalendarPermissions {
   }) {
     return canEdit(calendar: calendar, repository: repository);
   }
+
+  /// Check if the current user can manage calendar members
+  ///
+  /// Returns true if user is:
+  /// - Calendar owner, OR
+  /// - Calendar admin (CalendarMembership with role='admin', status='accepted')
+  static Future<bool> canManageMembers({
+    required Calendar calendar,
+    required CalendarRepository repository,
+  }) {
+    return canEdit(calendar: calendar, repository: repository);
+  }
 }

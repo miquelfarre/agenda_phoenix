@@ -43,4 +43,13 @@ class EventPermissions {
   static bool canInvite(Event event) {
     return event.canInviteUsers;
   }
+
+  /// Check if the current user can manage event participants
+  ///
+  /// Returns true if user is:
+  /// - Event owner, OR
+  /// - Event admin (interaction_type='joined', role='admin')
+  static bool canManageParticipants({required Event event}) {
+    return canEdit(event: event);
+  }
 }
