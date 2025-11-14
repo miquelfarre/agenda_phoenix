@@ -4,6 +4,7 @@ import '../core/state/app_state.dart';
 import '../widgets/empty_state.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
+import 'invite_calendar_members_screen.dart';
 
 class CalendarMembersScreen extends ConsumerStatefulWidget {
   final int calendarId;
@@ -66,11 +67,32 @@ class _CalendarMembersScreenState extends ConsumerState<CalendarMembersScreen> {
       navigationBar: CupertinoNavigationBar(
         middle: Text(widget.calendarName),
         previousPageTitle: context.l10n.calendars,
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: _navigateToInvite,
+          child: const Icon(CupertinoIcons.person_add),
+        ),
       ),
       child: SafeArea(
         child: _buildBody(),
       ),
     );
+  }
+
+  void _navigateToInvite() async {
+    final result = await Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (context) => InviteCalendarMembersScreen(
+          calendarId: widget.calendarId,
+          calendarName: widget.calendarName,
+        ),
+      ),
+    );
+
+    // Reload members if any were added
+    if (result == true || mounted) {
+      _loadMembers();
+    }
   }
 
   Widget _buildBody() {
