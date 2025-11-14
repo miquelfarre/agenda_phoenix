@@ -14,8 +14,8 @@ def generate_share_hash(length: int = 8) -> str:
 
 
 def get_reference_date():
-    """Get reference date for all sample data"""
-    return datetime(2025, 12, 15, 12, 0, 0)
+    """Get reference date for all sample data - uses current date"""
+    return datetime.now().replace(hour=12, minute=0, second=0, microsecond=0)
 
 
 def get_dates():
