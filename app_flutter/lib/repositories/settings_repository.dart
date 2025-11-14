@@ -79,9 +79,10 @@ class SettingsRepository
       if (cityInfo != null &&
           (cityInfo.timezone != settings.defaultTimezone ||
               cityInfo.countryCode != settings.defaultCountryCode)) {
-        final correctedSettings = settings.copyWith(
+        final correctedSettings = AppSettings(
           defaultCountryCode: cityInfo.countryCode,
           defaultTimezone: cityInfo.timezone ?? settings.defaultTimezone,
+          defaultCity: settings.defaultCity,
         );
 
         await _saveLocalSettings(correctedSettings);

@@ -89,7 +89,30 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
           _isEditing = false;
         });
 
-        final updatedEvent = _event.copyWith(personalNote: note);
+        final updatedEvent = Event(
+          id: _event.id,
+          name: _event.name,
+          description: _event.description,
+          startDate: _event.startDate,
+          timezone: _event.timezone,
+          eventType: _event.eventType,
+          ownerId: _event.ownerId,
+          owner: _event.owner,
+          members: _event.members,
+          admins: _event.admins,
+          calendarId: _event.calendarId,
+          parentRecurringEventId: _event.parentRecurringEventId,
+          recurrenceEndDate: _event.recurrenceEndDate,
+          createdAt: _event.createdAt,
+          updatedAt: _event.updatedAt,
+          calendarName: _event.calendarName,
+          calendarColor: _event.calendarColor,
+          isBirthdayEvent: _event.isBirthdayEvent,
+          attendeesList: _event.attendeesList,
+          interactionData: _event.interactionData,
+          personalNote: note,
+          clientTempId: _event.clientTempId,
+        );
         _event = updatedEvent;
         widget.onEventUpdated(updatedEvent);
 
@@ -129,7 +152,30 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
       _currentNote = null;
       _controller.clear();
 
-      final updatedEvent = _event.copyWith(personalNote: null);
+      final updatedEvent = Event(
+        id: _event.id,
+        name: _event.name,
+        description: _event.description,
+        startDate: _event.startDate,
+        timezone: _event.timezone,
+        eventType: _event.eventType,
+        ownerId: _event.ownerId,
+        owner: _event.owner,
+        members: _event.members,
+        admins: _event.admins,
+        calendarId: _event.calendarId,
+        parentRecurringEventId: _event.parentRecurringEventId,
+        recurrenceEndDate: _event.recurrenceEndDate,
+        createdAt: _event.createdAt,
+        updatedAt: _event.updatedAt,
+        calendarName: _event.calendarName,
+        calendarColor: _event.calendarColor,
+        isBirthdayEvent: _event.isBirthdayEvent,
+        attendeesList: _event.attendeesList,
+        interactionData: _event.interactionData,
+        personalNote: null,
+        clientTempId: _event.clientTempId,
+      );
       _event = updatedEvent;
       widget.onEventUpdated(updatedEvent);
 
@@ -149,7 +195,30 @@ class _PersonalNoteWidgetState extends ConsumerState<PersonalNoteWidget> {
         _currentNote = null;
         _controller.clear();
 
-        final updatedEvent = _event.copyWith(personalNote: null);
+        final updatedEvent = Event(
+          id: _event.id,
+          name: _event.name,
+          description: _event.description,
+          startDate: _event.startDate,
+          timezone: _event.timezone,
+          eventType: _event.eventType,
+          ownerId: _event.ownerId,
+          owner: _event.owner,
+          members: _event.members,
+          admins: _event.admins,
+          calendarId: _event.calendarId,
+          parentRecurringEventId: _event.parentRecurringEventId,
+          recurrenceEndDate: _event.recurrenceEndDate,
+          createdAt: _event.createdAt,
+          updatedAt: _event.updatedAt,
+          calendarName: _event.calendarName,
+          calendarColor: _event.calendarColor,
+          isBirthdayEvent: _event.isBirthdayEvent,
+          attendeesList: _event.attendeesList,
+          interactionData: _event.interactionData,
+          personalNote: null,
+          clientTempId: _event.clientTempId,
+        );
         _event = updatedEvent;
         widget.onEventUpdated(updatedEvent);
 

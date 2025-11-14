@@ -164,56 +164,6 @@ class User {
     );
   }
 
-  User copyWith({
-    int? id,
-    String? displayName,
-    String? instagramUsername,
-    String? profilePictureUrl,
-    String? phone,
-    String? authProvider,
-    String? authId,
-    bool? isPublic,
-    bool? isAdmin,
-    DateTime? lastLogin,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    bool? isActive,
-    bool? isBanned,
-    DateTime? lastSeen,
-    bool? isOnline,
-    String? defaultTimezone,
-    String? defaultCountryCode,
-    String? defaultCity,
-    int? newEventsCount,
-    int? totalEventsCount,
-    int? subscribersCount,
-  }) {
-    return User(
-      id: id ?? this.id,
-      displayName: displayName ?? this.displayName,
-      instagramUsername: instagramUsername ?? this.instagramUsername,
-      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
-      phone: phone ?? this.phone,
-      authProvider: authProvider ?? this.authProvider,
-      authId: authId ?? this.authId,
-      isPublic: isPublic ?? this.isPublic,
-      isAdmin: isAdmin ?? this.isAdmin,
-      lastLogin: lastLogin ?? this.lastLogin,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isActive: isActive ?? this.isActive,
-      isBanned: isBanned ?? this.isBanned,
-      lastSeen: lastSeen ?? this.lastSeen,
-      isOnline: isOnline ?? this.isOnline,
-      defaultTimezone: defaultTimezone ?? this.defaultTimezone,
-      defaultCountryCode: defaultCountryCode ?? this.defaultCountryCode,
-      defaultCity: defaultCity ?? this.defaultCity,
-      newEventsCount: newEventsCount ?? this.newEventsCount,
-      totalEventsCount: totalEventsCount ?? this.totalEventsCount,
-      subscribersCount: subscribersCount ?? this.subscribersCount,
-    );
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

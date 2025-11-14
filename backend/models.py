@@ -107,6 +107,7 @@ class User(Base):
     owned_groups = relationship("Group", back_populates="owner", cascade="all, delete-orphan")
     group_memberships = relationship("GroupMembership", back_populates="user", cascade="all, delete-orphan")
     events = relationship("Event", foreign_keys="Event.owner_id", back_populates="owner", cascade="all, delete-orphan")
+    event_memberships = relationship("EventMembership", foreign_keys="EventMembership.user_id", back_populates="user", cascade="all, delete-orphan")
     interactions = relationship("EventInteraction", foreign_keys="EventInteraction.user_id", back_populates="user", cascade="all, delete-orphan")
     blocked_users = relationship("UserBlock", foreign_keys="UserBlock.blocker_user_id", back_populates="blocker", cascade="all, delete-orphan")
     blocked_by_users = relationship("UserBlock", foreign_keys="UserBlock.blocked_user_id", back_populates="blocked", cascade="all, delete-orphan")
@@ -368,6 +369,7 @@ class Event(Base):
     calendar = relationship("Calendar", foreign_keys=[calendar_id], back_populates="events")
     parent_recurring_event = relationship("Event", foreign_keys=[parent_recurring_event_id], remote_side="Event.id")
     interactions = relationship("EventInteraction", back_populates="event", cascade="all, delete-orphan")
+    memberships = relationship("EventMembership", back_populates="event", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Event(id={self.id}, name='{self.name}', owner_id={self.owner_id})>"
@@ -506,6 +508,49 @@ class UserBlock(Base):
             "id": self.id,
             "blocker_user_id": self.blocker_user_id,
             "blocked_user_id": self.blocked_user_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class EventMembership(Base):
+    """
+    EventMembership model - Membresías de usuarios en eventos.
+    Permite tener owners, admins y members de un event.
+    Esto es diferente de EventInteraction (asistencia/invitaciones).
+    EventMembership es para gestión del evento.
+    """
+
+    __tablename__ = "event_memberships"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    event_id = Column(Integer, ForeignKey("events.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    role = Column(String(50), nullable=False, default="member")  # 'owner', 'admin', 'member'
+    status = Column(String(50), nullable=False, default="pending")  # 'pending', 'accepted', 'rejected'
+    invited_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Unique constraint: un usuario solo puede tener una membresía por event
+    __table_args__ = (UniqueConstraint("event_id", "user_id", name="uq_event_user_membership"),)
+
+    # Relationships
+    event = relationship("Event", back_populates="memberships")
+    user = relationship("User", foreign_keys=[user_id], back_populates="event_memberships")
+    invited_by = relationship("User", foreign_keys=[invited_by_user_id])
+
+    def __repr__(self):
+        return f"<EventMembership(id={self.id}, event_id={self.event_id}, user_id={self.user_id}, role='{self.role}')>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "event_id": self.event_id,
+            "user_id": self.user_id,
+            "role": self.role,
+            "status": self.status,
+            "invited_by_user_id": self.invited_by_user_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

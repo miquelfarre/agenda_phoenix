@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/domain/event.dart';
 import '../models/domain/calendar.dart';
+import '../models/domain/user.dart';
 import '../core/state/app_state.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/searchable_list.dart';
@@ -39,11 +40,8 @@ class CalendarDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
-  String? _ownerName;
   bool _isProcessingLeave = false;
   bool _isUpdatingDiscoverable = false;
-  List<Map<String, dynamic>> _members = [];
-  bool _isLoadingMembers = true;
 
   int get currentUserId => ConfigService.instance.currentUserId;
 
@@ -87,84 +85,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
   bool get _canManageMembers {
     final calendar = _calendar;
     if (calendar == null) return false;
-
-    // Only owner can manage members for now
-    // TODO: Allow admins to manage members
-    return _isOwner;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadOwnerInfo();
-    _loadMembers();
-  }
-
-  Future<void> _loadOwnerInfo() async {
-    // Wait a bit for the calendar to be available from the stream
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    final calendar = _calendar;
-    if (calendar == null || calendar.ownerId == 0) {
-      // Retry once more after a delay
-      await Future.delayed(const Duration(milliseconds: 200));
-      final calendarRetry = _calendar;
-      if (calendarRetry == null || calendarRetry.ownerId == 0) {
-        if (mounted) {
-          setState(() {
-            _ownerName = null;
-          });
-        }
-        return;
-      }
-    }
-
-    final calendarToUse = _calendar!;
-
-    try {
-      final userRepo = ref.read(userRepositoryProvider);
-      final owner = await userRepo.getUserById(calendarToUse.ownerId);
-
-      if (mounted) {
-        setState(() {
-          _ownerName =
-              owner?.displayName ?? owner?.instagramUsername ?? 'Usuario';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _ownerName = 'Usuario';
-        });
-      }
-    }
-  }
-
-  Future<void> _loadMembers() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoadingMembers = true;
-    });
-
-    try {
-      final repository = ref.read(calendarRepositoryProvider);
-      final memberships = await repository.fetchCalendarMemberships(
-        widget.calendarId,
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        _members = memberships;
-        _isLoadingMembers = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoadingMembers = false;
-      });
-    }
+    return calendar.canManageCalendar(currentUserId);
   }
 
   Color _parseCalendarColor() {
@@ -310,6 +231,9 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     calendarEvents.sort((a, b) => a.startDate.compareTo(b.startDate));
 
     final calendarColor = _parseCalendarColor();
+    final calendar = _calendar;
+    final ownerName = calendar?.owner?.displayName ??
+                      calendar?.owner?.instagramUsername;
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
@@ -338,11 +262,11 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
                 ),
               ],
             ),
-            if (_ownerName != null)
+            if (ownerName != null)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  _ownerName!,
+                  ownerName,
                   style: TextStyle(
                     fontSize: 12,
                     color: CupertinoColors.systemGrey.resolveFrom(context),
@@ -418,8 +342,8 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
         ],
 
         // Members Section
-        if (!_isLoadingMembers && _members.isNotEmpty) ...[
-          SliverToBoxAdapter(child: _buildMembersSection()),
+        if (calendar != null && calendar.totalMemberCount > 0) ...[
+          SliverToBoxAdapter(child: _buildMembersSection(calendar)),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
 
@@ -652,9 +576,35 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     );
   }
 
-  Widget _buildMembersSection() {
+  Widget _buildMembersSection(Calendar calendar) {
     final l10n = context.l10n;
     final canManage = _canManageMembers;
+
+    // Combine owner, admins, and members
+    final allMembers = <User>[];
+    final addedIds = <int>{};
+
+    // Add owner first
+    if (calendar.owner != null && !addedIds.contains(calendar.owner!.id)) {
+      allMembers.add(calendar.owner!);
+      addedIds.add(calendar.owner!.id);
+    }
+
+    // Add admins
+    for (var admin in calendar.admins) {
+      if (!addedIds.contains(admin.id)) {
+        allMembers.add(admin);
+        addedIds.add(admin.id);
+      }
+    }
+
+    // Add regular members
+    for (var member in calendar.members) {
+      if (!addedIds.contains(member.id)) {
+        allMembers.add(member);
+        addedIds.add(member.id);
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -687,7 +637,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${_members.length}',
+                  '${allMembers.length}',
                   style: TextStyle(
                     color: AppStyles.blue600,
                     fontWeight: FontWeight.w600,
@@ -699,7 +649,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          if (_members.isEmpty)
+          if (allMembers.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -714,8 +664,8 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
               ),
             )
           else
-            ..._members.map(
-              (member) => _buildMemberTile(member, canManage),
+            ...allMembers.map(
+              (member) => _buildMemberTile(member, calendar, canManage),
             ),
           if (canManage) ...[
             const SizedBox(height: 12),
@@ -756,18 +706,12 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     );
   }
 
-  Widget _buildMemberTile(Map<String, dynamic> memberData, bool canManage) {
-    final user = memberData['user'] as Map<String, dynamic>?;
-    final role = memberData['role'] as String? ?? 'member';
-    final userId = memberData['user_id'] as int;
+  Widget _buildMemberTile(User member, Calendar calendar, bool canManage) {
+    final isOwner = calendar.isOwner(member.id);
+    final isAdmin = calendar.admins.any((a) => a.id == member.id);
+    final canModifyThisMember = canManage && !isOwner && member.id != currentUserId;
 
-    final isOwner = role == 'owner';
-    final isAdmin = role == 'admin';
-    final canModifyThisMember = canManage && !isOwner && userId != currentUserId;
-
-    final displayName = user?['display_name'] ??
-                       user?['instagram_username'] ??
-                       'Unknown';
+    final displayName = member.displayName ?? member.instagramUsername ?? 'Unknown';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -844,8 +788,8 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
               onPressed: _isProcessingLeave
                   ? null
                   : () => isAdmin
-                        ? _removeAdmin(memberData)
-                        : _grantAdmin(memberData),
+                        ? _removeAdmin(member)
+                        : _grantAdmin(member),
               child: Icon(
                 isAdmin ? CupertinoIcons.star_fill : CupertinoIcons.star,
                 color: _isProcessingLeave
@@ -859,7 +803,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               onPressed: _isProcessingLeave
                   ? null
-                  : () => _removeMember(memberData),
+                  : () => _removeMember(member),
               child: Icon(
                 CupertinoIcons.minus_circle,
                 color: _isProcessingLeave ? AppStyles.grey400 : AppStyles.red600,
@@ -885,17 +829,12 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
       ),
     );
 
-    // Reload members if any were added
-    if (result == true || mounted) {
-      _loadMembers();
-    }
+    // No need to reload - realtime will update automatically
   }
 
-  Future<void> _grantAdmin(Map<String, dynamic> memberData) async {
+  Future<void> _grantAdmin(User member) async {
     final l10n = context.l10n;
-    final user = memberData['user'] as Map<String, dynamic>?;
-    final displayName = user?['display_name'] ?? user?['instagram_username'] ?? 'Unknown';
-    final membershipId = memberData['id'] as int;
+    final displayName = member.displayName ?? member.instagramUsername ?? 'Unknown';
 
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
@@ -921,6 +860,15 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
 
       try {
         final repo = ref.read(calendarRepositoryProvider);
+
+        // Get membershipId from memberships
+        final memberships = await repo.fetchCalendarMemberships(widget.calendarId);
+        final membership = memberships.firstWhere(
+          (m) => m['user_id'] == member.id,
+          orElse: () => throw Exception('Membership not found'),
+        );
+        final membershipId = membership['id'] as int;
+
         await repo.updateMemberRole(membershipId, 'admin');
 
         if (mounted) {
@@ -928,7 +876,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
             context: context,
             message: l10n.memberMadeAdmin(displayName),
           );
-          await _loadMembers(); // Reload to show updated role
+          // No need to reload - realtime will update automatically
         }
       } catch (e) {
         if (mounted) {
@@ -947,11 +895,9 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     }
   }
 
-  Future<void> _removeAdmin(Map<String, dynamic> memberData) async {
+  Future<void> _removeAdmin(User member) async {
     final l10n = context.l10n;
-    final user = memberData['user'] as Map<String, dynamic>?;
-    final displayName = user?['display_name'] ?? user?['instagram_username'] ?? 'Unknown';
-    final membershipId = memberData['id'] as int;
+    final displayName = member.displayName ?? member.instagramUsername ?? 'Unknown';
 
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
@@ -977,6 +923,15 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
 
       try {
         final repo = ref.read(calendarRepositoryProvider);
+
+        // Get membershipId from memberships
+        final memberships = await repo.fetchCalendarMemberships(widget.calendarId);
+        final membership = memberships.firstWhere(
+          (m) => m['user_id'] == member.id,
+          orElse: () => throw Exception('Membership not found'),
+        );
+        final membershipId = membership['id'] as int;
+
         await repo.updateMemberRole(membershipId, 'member');
 
         if (mounted) {
@@ -984,7 +939,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
             context: context,
             message: l10n.memberRemovedAdmin(displayName),
           );
-          await _loadMembers(); // Reload to show updated role
+          // No need to reload - realtime will update automatically
         }
       } catch (e) {
         if (mounted) {
@@ -1003,11 +958,9 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     }
   }
 
-  Future<void> _removeMember(Map<String, dynamic> memberData) async {
+  Future<void> _removeMember(User member) async {
     final l10n = context.l10n;
-    final user = memberData['user'] as Map<String, dynamic>?;
-    final displayName = user?['display_name'] ?? user?['instagram_username'] ?? 'Unknown';
-    final membershipId = memberData['id'] as int;
+    final displayName = member.displayName ?? member.instagramUsername ?? 'Unknown';
 
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
@@ -1034,6 +987,15 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
 
       try {
         final repo = ref.read(calendarRepositoryProvider);
+
+        // Get membershipId from memberships
+        final memberships = await repo.fetchCalendarMemberships(widget.calendarId);
+        final membership = memberships.firstWhere(
+          (m) => m['user_id'] == member.id,
+          orElse: () => throw Exception('Membership not found'),
+        );
+        final membershipId = membership['id'] as int;
+
         await repo.removeMember(membershipId);
 
         if (mounted) {
@@ -1041,7 +1003,7 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
             context: context,
             message: l10n.memberRemoved(displayName),
           );
-          await _loadMembers(); // Reload to update list
+          // No need to reload - realtime will update automatically
         }
       } catch (e) {
         if (mounted) {

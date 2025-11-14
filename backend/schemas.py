@@ -210,16 +210,16 @@ class InvitationStats(BaseModel):
 class EventResponse(EventBase):
     id: int
     owner_id: int
+    owner: Optional["UserResponse"] = None
+    members: List["UserResponse"] = []
+    admins: List["UserResponse"] = []
     calendar_id: Optional[int]
     parent_recurring_event_id: Optional[int]
     created_at: datetime
     updated_at: datetime
     interaction: Optional[dict] = None  # User's interaction with this event (type, status, role) - only for /users/{id}/events
     interactions: Optional[List[dict]] = None  # All interactions for this event with enriched user data - only for /events/{id}
-    # Owner info
-    owner_name: Optional[str] = None  # Full name of event owner
-    owner_profile_picture: Optional[str] = None  # Profile picture URL of owner
-    is_owner_public: Optional[bool] = None  # True if event owner is a public user
+    # Public user subscription info
     can_subscribe_to_owner: Optional[bool] = None  # True if current user can subscribe to owner
     is_subscribed_to_owner: Optional[bool] = None  # True if current user is already subscribed to owner
     owner_upcoming_events: Optional[List[UpcomingEventSummary]] = None  # Next 10 events from public owner
@@ -326,6 +326,54 @@ class EventInteractionWithEventResponse(EventInteractionBase):
 
 
 # ============================================================================
+# EVENT MEMBERSHIP SCHEMAS
+# ============================================================================
+
+
+class EventMembershipBase(BaseModel):
+    role: str = "member"  # 'owner', 'admin', 'member'
+    status: str = "pending"  # 'pending', 'accepted', 'rejected'
+
+
+class EventMembershipCreate(EventMembershipBase):
+    event_id: int
+    user_id: int
+    invited_by_user_id: Optional[int] = None
+
+
+class EventMembershipUpdate(BaseModel):
+    """Schema for updating an event membership (all fields optional)"""
+
+    role: Optional[str] = None
+    status: Optional[str] = None
+
+
+class EventMembershipResponse(EventMembershipBase):
+    id: int
+    event_id: int
+    user_id: int
+    invited_by_user_id: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EventMembershipEnrichedResponse(EventMembershipBase):
+    """Event membership with enriched event information"""
+
+    id: int
+    event_id: int
+    user_id: int
+    invited_by_user_id: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+    # Event information
+    event_name: str
+    event_owner_id: int  # Event owner
+
+
+# ============================================================================
 # CALENDAR SCHEMAS
 # ============================================================================
 
@@ -345,6 +393,9 @@ class CalendarCreate(CalendarBase):
 class CalendarResponse(CalendarBase):
     id: int
     owner_id: int
+    owner: Optional["UserResponse"] = None
+    members: List["UserResponse"] = []
+    admins: List["UserResponse"] = []
     is_public: bool = False
     category: Optional[str] = None
     share_hash: Optional[str] = None

@@ -38,9 +38,6 @@ class EventHive extends HiveObject {
   @HiveField(10)
   DateTime? updatedAt;
 
-  @HiveField(11)
-  String? ownerName;
-
   @HiveField(12)
   String? calendarName;
 
@@ -59,7 +56,6 @@ class EventHive extends HiveObject {
     this.recurrenceEndDate,
     this.createdAt,
     this.updatedAt,
-    this.ownerName,
     this.calendarName,
     this.personalNote,
   });
@@ -77,7 +73,6 @@ class EventHive extends HiveObject {
       recurrenceEndDate: event.recurrenceEndDate,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
-      ownerName: event.ownerName,
       calendarName: event.calendarName,
       personalNote: event.personalNote,
     );
@@ -96,7 +91,6 @@ class EventHive extends HiveObject {
       recurrenceEndDate: recurrenceEndDate,
       createdAt: createdAt,
       updatedAt: updatedAt,
-      ownerName: ownerName,
       calendarName: calendarName,
       personalNote: personalNote,
     );

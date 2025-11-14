@@ -181,7 +181,7 @@ def reset_sequences(db):
     """
     logger.info("🔄 Resetting autoincrement sequences...")
 
-    tables_with_sequences = ["users", "events", "event_interactions", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "user_blocks", "event_cancellations", "event_cancellation_views", "user_contacts"]
+    tables_with_sequences = ["users", "events", "event_interactions", "event_memberships", "calendars", "calendar_memberships", "calendar_subscriptions", "groups", "group_memberships", "user_blocks", "event_cancellations", "event_cancellation_views", "user_contacts"]
 
     for table in tables_with_sequences:
         try:

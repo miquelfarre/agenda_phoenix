@@ -74,36 +74,6 @@ class CalendarMembership {
     if (inviter != null) 'inviter': inviter!.toJson(),
   };
 
-  CalendarMembership copyWith({
-    int? id,
-    int? calendarId,
-    int? userId,
-    String? role,
-    String? status,
-    int? invitedByUserId,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    String? calendarName,
-    int? calendarOwnerId,
-    User? user,
-    User? inviter,
-  }) {
-    return CalendarMembership(
-      id: id ?? this.id,
-      calendarId: calendarId ?? this.calendarId,
-      userId: userId ?? this.userId,
-      role: role ?? this.role,
-      status: status ?? this.status,
-      invitedByUserId: invitedByUserId ?? this.invitedByUserId,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      calendarName: calendarName ?? this.calendarName,
-      calendarOwnerId: calendarOwnerId ?? this.calendarOwnerId,
-      user: user ?? this.user,
-      inviter: inviter ?? this.inviter,
-    );
-  }
-
   // Helper getters
   bool get isPending => status == 'pending';
   bool get isAccepted => status == 'accepted';

@@ -331,10 +331,10 @@ class SettingsScreen extends ConsumerWidget {
           initialTimezone: settings.defaultTimezone,
           initialCity: settings.defaultCity,
           onChanged: (selectedCountry, timezone, city) {
-            final updatedSettings = settings.copyWith(
+            final updatedSettings = AppSettings(
               defaultCountryCode: selectedCountry.code,
               defaultTimezone: timezone,
-              defaultCity: city,
+              defaultCity: city ?? settings.defaultCity,
             );
             ref
                 .read(settingsNotifierProvider.notifier)

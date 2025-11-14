@@ -39,18 +39,6 @@ class AppSettings {
     };
   }
 
-  AppSettings copyWith({
-    String? defaultCountryCode,
-    String? defaultTimezone,
-    String? defaultCity,
-  }) {
-    return AppSettings(
-      defaultCountryCode: defaultCountryCode ?? this.defaultCountryCode,
-      defaultTimezone: defaultTimezone ?? this.defaultTimezone,
-      defaultCity: defaultCity ?? this.defaultCity,
-    );
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

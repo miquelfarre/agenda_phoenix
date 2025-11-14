@@ -11,13 +11,42 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session, noload
 
 from auth import get_current_user_id, get_current_user_id_optional
-from crud import calendar_membership, event, event_interaction, user
+from crud import calendar_membership, event, event_interaction, event_membership, group_membership, user
 from dependencies import check_event_permission, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade
 from models import Event, EventInteraction, User, UserBlock
-from schemas import AvailableInviteeResponse, EventCreate, EventDeleteRequest, EventResponse, EventUpdate, RecurringEventCreate
+from schemas import AvailableInviteeResponse, EventCreate, EventDeleteRequest, EventMembershipCreate, EventMembershipResponse, EventResponse, EventUpdate, RecurringEventCreate
 from utils import validate_pagination, handle_crud_error
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
+
+
+def _enrich_event_with_members(db: Session, db_event: Event) -> dict:
+    """
+    Enrich an event with owner, members, and admins from EventMembership table.
+    Returns a dict that can be merged into EventResponse data.
+    """
+    # Get all memberships
+    memberships = event_membership.get_by_event(db, event_id=db_event.id)
+
+    # Separate members and admins
+    members_list = []
+    admins_list = []
+
+    for membership in memberships:
+        if membership.user and membership.status == 'accepted':
+            if membership.role == "admin":
+                admins_list.append(membership.user)
+            else:
+                members_list.append(membership.user)
+
+    # Get owner
+    owner = db.query(User).filter(User.id == db_event.owner_id).first()
+
+    return {
+        "owner": owner,
+        "members": members_list,
+        "admins": admins_list,
+    }
 
 
 @router.get("", response_model=List[EventResponse])
@@ -68,7 +97,31 @@ async def get_events(owner_id: Optional[int] = None, calendar_id: Optional[int] 
 
         # Apply pagination
         events = query.offset(offset).limit(limit).all()
-        return events
+
+        # Enrich each event with owner, members, admins
+        enriched_events = []
+        for db_event in events:
+            enrichment_data = _enrich_event_with_members(db, db_event)
+
+            # Build response with enriched data
+            event_dict = {
+                "id": db_event.id,
+                "name": db_event.name,
+                "description": db_event.description,
+                "start_date": db_event.start_date,
+                "timezone": db_event.timezone,
+                "event_type": db_event.event_type,
+                "owner_id": db_event.owner_id,
+                "calendar_id": db_event.calendar_id,
+                "parent_recurring_event_id": db_event.parent_recurring_event_id,
+                "recurrence_end_date": db_event.recurrence_end_date,
+                "created_at": db_event.created_at,
+                "updated_at": db_event.updated_at,
+                **enrichment_data,  # Add owner, members, admins
+            }
+            enriched_events.append(EventResponse(**event_dict))
+
+        return enriched_events
 
     # If not authenticated, return empty list
     # (public events should be accessed via public discovery endpoints)
@@ -103,14 +156,8 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
         if not has_access:
             raise HTTPException(status_code=403, detail="You do not have permission to view this event")
 
-    # Get owner information
-    owner = user.get(db, id=db_event.owner_id)
-    if not owner:
-        raise HTTPException(status_code=404, detail="Event owner not found")
-
-    # Get owner info
-    owner_name = owner.display_name
-    owner_profile_picture_url = owner.profile_picture_url
+    # Get enrichment data (owner, members, admins)
+    enrichment_data = _enrich_event_with_members(db, db_event)
 
     # Build response dict from event
     response_data = {
@@ -126,13 +173,12 @@ async def get_event(event_id: int, current_user_id: Optional[int] = Depends(get_
         "recurrence_end_date": db_event.recurrence_end_date,
         "created_at": db_event.created_at,
         "updated_at": db_event.updated_at,
-        "owner_name": owner_name,
-        "owner_profile_picture": owner_profile_picture_url,
-        "is_owner_public": owner.is_public,
+        **enrichment_data,  # Add owner, members, admins
     }
 
     # If owner is public and current_user_id is provided, add subscription info
-    if owner.is_public and current_user_id is not None:
+    owner = enrichment_data.get("owner")
+    if owner and owner.is_public and current_user_id is not None:
         # Check if user is subscribed to owner (any event from this owner)
         # A subscription is an interaction of type "subscribed" to any event owned by the public user
         subscriptions = db.query(EventInteraction).join(event.model, EventInteraction.event_id == event.model.id).filter(event.model.owner_id == owner.id, EventInteraction.user_id == current_user_id, EventInteraction.interaction_type == "subscribed").first()
@@ -521,6 +567,124 @@ async def delete_current_user_interaction(event_id: int, current_user_id: int = 
     event_interaction.delete(db, id=db_interaction.id)
 
     return {"message": "Interaction deleted successfully", "id": db_interaction.id}
+
+
+@router.get("/{event_id}/memberships", response_model=List[EventMembershipResponse])
+async def get_event_members(event_id: int, db: Session = Depends(get_db)):
+    """Get all members of a specific event"""
+    # Check if event exists
+    db_event = event.get(db, id=event_id)
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    memberships = event_membership.get_by_event(db, event_id=event_id)
+    return memberships
+
+
+@router.post("/{event_id}/memberships", response_model=EventMembershipResponse, status_code=201)
+async def add_event_member(event_id: int, membership_data: EventMembershipCreate, db: Session = Depends(get_db)):
+    """Add a user to an event (creates membership)"""
+    # Override event_id from path
+    membership_data.event_id = event_id
+
+    # Create with validation (uses event_membership CRUD)
+    db_membership, error = event_membership.create_with_validation(db, obj_in=membership_data)
+
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+
+    return db_membership
+
+
+@router.post("/{event_id}/memberships/bulk", status_code=201)
+async def add_event_members_bulk(
+    event_id: int,
+    user_ids: List[int] = [],
+    group_ids: List[int] = [],
+    role: str = "member",
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Add multiple users or entire groups to an event.
+
+    Only event owners or admins can add members.
+    Returns summary of successful and failed additions.
+    """
+    # Check permissions
+    check_event_permission(event_id, current_user_id, db)
+
+    # Get event to verify it exists
+    db_event = event.get(db, id=event_id)
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    results = {
+        "successful": [],
+        "failed": [],
+        "total_invited": 0
+    }
+
+    # Add individual users
+    for user_id in user_ids:
+        try:
+            membership_data = EventMembershipCreate(
+                event_id=event_id,
+                user_id=user_id,
+                role=role,
+                status="accepted"  # Direct add, no invitation needed
+            )
+            db_membership, error = event_membership.create_with_validation(
+                db,
+                obj_in=membership_data
+            )
+            if error:
+                results["failed"].append({
+                    "user_id": user_id,
+                    "error": error
+                })
+            else:
+                results["successful"].append(db_membership.id)
+                results["total_invited"] += 1
+        except Exception as e:
+            results["failed"].append({
+                "user_id": user_id,
+                "error": str(e)
+            })
+
+    # Add group members
+    for group_id in group_ids:
+        # Get all members of the group
+        group_members = group_membership.get_by_group(db, group_id=group_id)
+        for member in group_members:
+            try:
+                membership_data = EventMembershipCreate(
+                    event_id=event_id,
+                    user_id=member.user_id,
+                    role=role,
+                    status="accepted"
+                )
+                db_membership, error = event_membership.create_with_validation(
+                    db,
+                    obj_in=membership_data
+                )
+                if error:
+                    results["failed"].append({
+                        "user_id": member.user_id,
+                        "group_id": group_id,
+                        "error": error
+                    })
+                else:
+                    results["successful"].append(db_membership.id)
+                    results["total_invited"] += 1
+            except Exception as e:
+                results["failed"].append({
+                    "user_id": member.user_id,
+                    "group_id": group_id,
+                    "error": str(e)
+                })
+
+    return results
 
 
 # Removed unused event cancellations endpoints (/events/cancellations and /events/cancellations/{id}/view)

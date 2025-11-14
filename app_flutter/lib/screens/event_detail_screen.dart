@@ -310,7 +310,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             ],
 
             if ((_detailedEvent ?? currentEvent).owner?.isPublic == true &&
-                (_detailedEvent ?? currentEvent).ownerName != null) ...[
+                (_detailedEvent ?? currentEvent).owner?.displayName != null) ...[
               const SizedBox(height: 32),
               Consumer(
                 builder: (context, ref, child) {
@@ -336,7 +336,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (event.owner?.isPublic == true && event.ownerName != null) ...[
+          if (event.owner?.isPublic == true && event.owner?.displayName != null) ...[
             _buildOrganizerRow(),
             const SizedBox(height: 8),
           ],
@@ -387,7 +387,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        UserAvatar(user: owner.toUser(), radius: 28),
+        UserAvatar(user: owner, radius: 28),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -990,7 +990,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.upcomingEventsOf(event.ownerName ?? ''),
+              l10n.upcomingEventsOf(event.owner?.displayName ?? ''),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -1426,7 +1426,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       Navigator.of(context).push(
         CupertinoPageRoute<void>(
           builder: (context) =>
-              SubscriptionDetailScreen(publicUser: event.owner!.toUser()),
+              SubscriptionDetailScreen(publicUser: event.owner!),
         ),
       );
     }

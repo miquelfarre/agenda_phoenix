@@ -28,6 +28,48 @@ from utils import validate_pagination, handle_crud_error
 router = APIRouter(prefix="/api/v1/calendars", tags=["calendars"])
 
 
+def _enrich_calendar_with_members(db: Session, db_calendar, access_type: str = None, owner_is_public: bool = False):
+    """Enrich a calendar with owner, members, and admins"""
+    # Get all memberships
+    memberships = calendar_membership.get_by_calendar(db, calendar_id=db_calendar.id)
+
+    # Separate members and admins
+    members_list = []
+    admins_list = []
+
+    for membership in memberships:
+        if membership.user and membership.status == 'accepted':
+            if membership.role == "admin":
+                admins_list.append(membership.user)
+            else:
+                members_list.append(membership.user)
+
+    # Get owner
+    owner = db.query(User).filter(User.id == db_calendar.owner_id).first()
+
+    # Create response with all data
+    return CalendarResponse(
+        id=db_calendar.id,
+        owner_id=db_calendar.owner_id,
+        name=db_calendar.name,
+        description=db_calendar.description,
+        is_public=db_calendar.is_public,
+        is_discoverable=db_calendar.is_discoverable,
+        share_hash=db_calendar.share_hash,
+        category=db_calendar.category,
+        subscriber_count=db_calendar.subscriber_count,
+        start_date=db_calendar.start_date,
+        end_date=db_calendar.end_date,
+        created_at=db_calendar.created_at,
+        updated_at=db_calendar.updated_at,
+        access_type=access_type,
+        owner_is_public=owner_is_public,
+        owner=owner,
+        members=members_list,
+        admins=admins_list,
+    )
+
+
 @router.get("", response_model=List[CalendarResponse])
 async def get_calendars(current_user_id: int = Depends(get_current_user_id), limit: int = 50, offset: int = 0, db: Session = Depends(get_db)):
     """
@@ -49,7 +91,7 @@ async def get_calendars(current_user_id: int = Depends(get_current_user_id), lim
 
     calendars = calendar.get_all_user_calendars(db, user_id=current_user_id, skip=offset, limit=limit)
 
-    # Enrich each calendar with access_type and owner_is_public
+    # Enrich each calendar with members, access_type and owner_is_public
     enriched_calendars = []
     for cal in calendars:
         # Determine access_type
@@ -79,25 +121,14 @@ async def get_calendars(current_user_id: int = Depends(get_current_user_id), lim
         owner = db.query(User).filter(User.id == cal.owner_id).first()
         owner_is_public = owner.is_public if owner else False
 
-        # Convert to dict and add enrichment fields
-        cal_dict = {
-            'id': cal.id,
-            'owner_id': cal.owner_id,
-            'name': cal.name,
-            'description': cal.description,
-            'is_public': cal.is_public,
-            'is_discoverable': cal.is_discoverable,
-            'share_hash': cal.share_hash,
-            'category': cal.category,
-            'subscriber_count': cal.subscriber_count,
-            'start_date': cal.start_date,
-            'end_date': cal.end_date,
-            'created_at': cal.created_at,
-            'updated_at': cal.updated_at,
-            'access_type': access_type,
-            'owner_is_public': owner_is_public,
-        }
-        enriched_calendars.append(CalendarResponse(**cal_dict))
+        # Enrich with members and admins
+        enriched_cal = _enrich_calendar_with_members(
+            db,
+            cal,
+            access_type=access_type,
+            owner_is_public=owner_is_public
+        )
+        enriched_calendars.append(enriched_cal)
 
     return enriched_calendars
 

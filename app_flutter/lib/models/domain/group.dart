@@ -89,30 +89,6 @@ class Group {
     return count == 1 ? '1 miembro' : '$count miembros';
   }
 
-  Group copyWith({
-    int? id,
-    String? name,
-    String? description,
-    int? ownerId,
-    User? owner,
-    List<User>? members,
-    List<User>? admins,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return Group(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      ownerId: ownerId ?? this.ownerId,
-      owner: owner ?? this.owner,
-      members: members ?? this.members,
-      admins: admins ?? this.admins,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

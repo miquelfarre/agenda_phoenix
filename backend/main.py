@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse
 from init_db_2 import init_database
 
 # Import all routers
-from routers import calendar_memberships, calendars, events, group_memberships, groups, interactions, user_blocks, user_contacts, users
+from routers import calendar_memberships, calendars, event_memberships, events, group_memberships, groups, interactions, user_blocks, user_contacts, users
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +89,7 @@ app.add_middleware(
 # Register all routers
 app.include_router(users.router)
 app.include_router(events.router)
+app.include_router(event_memberships.router)
 app.include_router(interactions.router)
 app.include_router(calendars.router)
 app.include_router(calendar_memberships.router)

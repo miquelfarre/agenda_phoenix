@@ -2,29 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'user.dart';
 import '../../services/config_service.dart';
 
-class OwnerStub {
-  final int id;
-  final String displayName;
-  final bool isPublic;
-  final String? profilePictureUrl;
-
-  OwnerStub({
-    required this.id,
-    required this.displayName,
-    this.isPublic = false,
-    this.profilePictureUrl,
-  });
-
-  User toUser() {
-    return User(
-      id: id,
-      displayName: displayName,
-      isPublic: isPublic,
-      profilePictureUrl: profilePictureUrl,
-    );
-  }
-}
-
 @immutable
 class Event {
   final int? id;
@@ -34,22 +11,21 @@ class Event {
   final String timezone;
   final String eventType;
   final int ownerId;
+  final User? owner;
+  final List<User> members;
+  final List<User> admins;
   final int? calendarId;
   final int? parentRecurringEventId;
   final DateTime? recurrenceEndDate;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  final String? ownerName;
-  final String? ownerProfilePicture;
-  final bool? isOwnerPublic;
   final String? calendarName;
   final String? calendarColor;
   final bool? isBirthdayEvent;
   final List<dynamic>? attendeesList;
-  final Map<String, dynamic>? interactionData; // Interaction data from backend
-  final String?
-  personalNote; // Personal note (local, different from interaction note)
+  final Map<String, dynamic>? interactionData;
+  final String? personalNote;
   final String? clientTempId;
 
   const Event({
@@ -60,14 +36,14 @@ class Event {
     this.timezone = 'Europe/Madrid',
     this.eventType = 'regular',
     required this.ownerId,
+    this.owner,
+    this.members = const [],
+    this.admins = const [],
     this.calendarId,
     this.parentRecurringEventId,
     this.recurrenceEndDate,
     this.createdAt,
     this.updatedAt,
-    this.ownerName,
-    this.ownerProfilePicture,
-    this.isOwnerPublic,
     this.calendarName,
     this.calendarColor,
     this.isBirthdayEvent,
@@ -81,21 +57,13 @@ class Event {
   DateTime get date => startDate;
 
   bool get isRecurring => eventType == 'recurring';
-
   bool get isBirthday => isBirthdayEvent ?? false;
   bool get isRecurringEvent => isRecurring;
 
-  OwnerStub? get owner => OwnerStub(
-    id: ownerId,
-    displayName: ownerName ?? 'Usuario',
-    isPublic: isOwnerPublic ?? false,
-    profilePictureUrl: ownerProfilePicture,
-  );
-
   List<dynamic> get attendees => attendeesList ?? [];
+
   bool get canInviteUsers {
     final currentUserId = ConfigService.instance.currentUserId;
-    // Can invite if: owner OR admin
     return ownerId == currentUserId || interactionRole == 'admin';
   }
 
@@ -121,7 +89,6 @@ class Event {
   bool get isJoinedEvent => interactionType == 'joined';
 
   factory Event.fromJson(Map<String, dynamic> json) {
-    // Extract personal_note from interaction if available
     String? personalNote;
     final interactionData = json['interaction'] as Map<String, dynamic>?;
     if (interactionData != null) {
@@ -136,6 +103,13 @@ class Event {
       timezone: json['timezone'] as String? ?? 'Europe/Madrid',
       eventType: json['event_type'] as String? ?? 'regular',
       ownerId: json['owner_id'] as int,
+      owner: json['owner'] != null ? User.fromJson(json['owner']) : null,
+      members: json['members'] != null
+          ? (json['members'] as List).map((m) => User.fromJson(m)).toList()
+          : [],
+      admins: json['admins'] != null
+          ? (json['admins'] as List).map((a) => User.fromJson(a)).toList()
+          : [],
       calendarId: json['calendar_id'] as int?,
       parentRecurringEventId: json['parent_recurring_event_id'] as int?,
       recurrenceEndDate: json['recurrence_end_date'] != null
@@ -147,9 +121,6 @@ class Event {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : null,
-      ownerName: json['owner_name'] as String?,
-      ownerProfilePicture: json['owner_profile_picture'] as String?,
-      isOwnerPublic: json['is_owner_public'] as bool?,
       calendarName: json['calendar_name'] as String?,
       calendarColor: json['calendar_color'] as String?,
       isBirthdayEvent: json['is_birthday'] as bool?,
@@ -178,57 +149,6 @@ class Event {
     };
   }
 
-  Event copyWith({
-    int? id,
-    String? name,
-    String? description,
-    DateTime? startDate,
-    String? timezone,
-    String? eventType,
-    int? ownerId,
-    int? calendarId,
-    int? parentRecurringEventId,
-    DateTime? recurrenceEndDate,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    String? ownerName,
-    String? ownerProfilePicture,
-    bool? isOwnerPublic,
-    String? calendarName,
-    String? calendarColor,
-    bool? isBirthdayEvent,
-    List<dynamic>? attendeesList,
-    Map<String, dynamic>? interactionData,
-    String? personalNote,
-    String? clientTempId,
-  }) {
-    return Event(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      startDate: startDate ?? this.startDate,
-      timezone: timezone ?? this.timezone,
-      eventType: eventType ?? this.eventType,
-      ownerId: ownerId ?? this.ownerId,
-      calendarId: calendarId ?? this.calendarId,
-      parentRecurringEventId:
-          parentRecurringEventId ?? this.parentRecurringEventId,
-      recurrenceEndDate: recurrenceEndDate ?? this.recurrenceEndDate,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      ownerName: ownerName ?? this.ownerName,
-      ownerProfilePicture: ownerProfilePicture ?? this.ownerProfilePicture,
-      isOwnerPublic: isOwnerPublic ?? this.isOwnerPublic,
-      calendarName: calendarName ?? this.calendarName,
-      calendarColor: calendarColor ?? this.calendarColor,
-      isBirthdayEvent: isBirthdayEvent ?? this.isBirthdayEvent,
-      attendeesList: attendeesList ?? this.attendeesList,
-      interactionData: interactionData ?? this.interactionData,
-      personalNote: personalNote ?? this.personalNote,
-      clientTempId: clientTempId ?? this.clientTempId,
-    );
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -245,5 +165,32 @@ class Event {
   @override
   String toString() {
     return 'Event(id: $id, name: $name, startDate: $startDate, ownerId: $ownerId)';
+  }
+
+  // Membership helper methods
+  bool isOwner(int userId) => ownerId == userId;
+
+  bool isAdmin(int userId) {
+    return ownerId == userId || admins.any((admin) => admin.id == userId);
+  }
+
+  bool isMember(int userId) {
+    return members.any((member) => member.id == userId);
+  }
+
+  bool canManageEvent(int userId) {
+    return isAdmin(userId);
+  }
+
+  int get totalMemberCount {
+    final uniqueIds = <int>{};
+    if (owner != null) uniqueIds.add(owner!.id);
+    for (var admin in admins) {
+      uniqueIds.add(admin.id);
+    }
+    for (var member in members) {
+      uniqueIds.add(member.id);
+    }
+    return uniqueIds.length;
   }
 }

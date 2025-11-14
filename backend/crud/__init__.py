@@ -18,6 +18,7 @@ Usage example:
 from crud.crud_calendar import calendar, calendar_membership
 from crud.crud_event import event
 from crud.crud_event_cancellation import event_cancellation
+from crud.crud_event_membership import event_membership
 from crud.crud_group import group
 from crud.crud_group_membership import group_membership
 from crud.crud_interaction import event_interaction
@@ -28,6 +29,7 @@ from crud.crud_user_contact import user_contact
 __all__ = [
     "user",
     "event",
+    "event_membership",
     "calendar",
     "calendar_membership",
     "user_contact",

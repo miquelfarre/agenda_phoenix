@@ -23,24 +23,6 @@ class SelectorOption<T> {
   }) : assert(displayText != ''),
        assert(value != null);
 
-  SelectorOption<T> copyWith({
-    T? value,
-    String? displayText,
-    bool? isSelected,
-    Color? highlightColor,
-    bool? isEnabled,
-    String? subtitle,
-  }) {
-    return SelectorOption<T>(
-      value: value ?? this.value,
-      displayText: displayText ?? this.displayText,
-      isSelected: isSelected ?? this.isSelected,
-      highlightColor: highlightColor ?? this.highlightColor,
-      isEnabled: isEnabled ?? this.isEnabled,
-      subtitle: subtitle ?? this.subtitle,
-    );
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

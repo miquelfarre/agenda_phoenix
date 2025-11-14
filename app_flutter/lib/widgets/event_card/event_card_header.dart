@@ -34,10 +34,10 @@ class EventCardHeader extends ConsumerWidget {
     final hasOwner =
         config.showOwner &&
         event.owner?.isPublic == true &&
-        event.ownerName != null;
+        event.owner?.displayName != null;
 
     if (hasOwner) {
-      widgets.add(_buildOwnerInfo(ref));
+      widgets.add(_buildOwnerInfo(context, ref));
       widgets.add(const SizedBox(height: 6));
     }
 
@@ -86,7 +86,7 @@ class EventCardHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildOwnerInfo(WidgetRef ref) {
+  Widget _buildOwnerInfo(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -99,7 +99,7 @@ class EventCardHeader extends ConsumerWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              event.ownerName ?? 'Usuario',
+              event.owner?.displayName ?? context.l10n.user,
               style: AppStyles.cardSubtitle.copyWith(
                 color: AppStyles.blue600,
                 fontSize: 13,

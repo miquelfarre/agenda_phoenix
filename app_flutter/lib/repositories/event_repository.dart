@@ -452,6 +452,7 @@ class EventRepository implements IEventRepository {
         if (index != -1) {
           final currentEvent = _cachedEvents[index];
           if (payload.newRecord['user_id'] == userId) {
+            // Update only interaction data without refetching everything
             final updatedInteractionData = Map<String, dynamic>.from(
               currentEvent.interactionData ?? {},
             );
@@ -464,8 +465,29 @@ class EventRepository implements IEventRepository {
             updatedInteractionData['note'] = payload.newRecord['note'];
             updatedInteractionData['read_at'] = payload.newRecord['read_at'];
 
-            _cachedEvents[index] = currentEvent.copyWith(
+            _cachedEvents[index] = Event(
+              id: currentEvent.id,
+              name: currentEvent.name,
+              description: currentEvent.description,
+              startDate: currentEvent.startDate,
+              timezone: currentEvent.timezone,
+              eventType: currentEvent.eventType,
+              ownerId: currentEvent.ownerId,
+              owner: currentEvent.owner,
+              members: currentEvent.members,
+              admins: currentEvent.admins,
+              calendarId: currentEvent.calendarId,
+              parentRecurringEventId: currentEvent.parentRecurringEventId,
+              recurrenceEndDate: currentEvent.recurrenceEndDate,
+              createdAt: currentEvent.createdAt,
+              updatedAt: currentEvent.updatedAt,
+              calendarName: currentEvent.calendarName,
+              calendarColor: currentEvent.calendarColor,
+              isBirthdayEvent: currentEvent.isBirthdayEvent,
+              attendeesList: currentEvent.attendeesList,
               interactionData: updatedInteractionData,
+              personalNote: currentEvent.personalNote,
+              clientTempId: currentEvent.clientTempId,
             );
 
             _emitCurrentEvents();

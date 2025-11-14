@@ -70,36 +70,6 @@ class CalendarSubscription {
     if (subscriberCount != null) 'calendar_subscriber_count': subscriberCount,
   };
 
-  CalendarSubscription copyWith({
-    int? id,
-    int? calendarId,
-    int? userId,
-    String? status,
-    DateTime? subscribedAt,
-    DateTime? updatedAt,
-    String? calendarName,
-    String? calendarDescription,
-    String? calendarCategory,
-    int? calendarOwnerId,
-    String? calendarOwnerName,
-    int? subscriberCount,
-  }) {
-    return CalendarSubscription(
-      id: id ?? this.id,
-      calendarId: calendarId ?? this.calendarId,
-      userId: userId ?? this.userId,
-      status: status ?? this.status,
-      subscribedAt: subscribedAt ?? this.subscribedAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      calendarName: calendarName ?? this.calendarName,
-      calendarDescription: calendarDescription ?? this.calendarDescription,
-      calendarCategory: calendarCategory ?? this.calendarCategory,
-      calendarOwnerId: calendarOwnerId ?? this.calendarOwnerId,
-      calendarOwnerName: calendarOwnerName ?? this.calendarOwnerName,
-      subscriberCount: subscriberCount ?? this.subscriberCount,
-    );
-  }
-
   // Helper getters
   bool get isActive => status == 'active';
   bool get isPaused => status == 'paused';

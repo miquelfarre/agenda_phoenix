@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
 import '../../utils/datetime_utils.dart';
+import 'user.dart';
 
 @immutable
 class Calendar {
   final int id;
   final int ownerId;
+  final User? owner;
+  final List<User> members;
+  final List<User> admins;
   final String name;
   final String? description;
   final bool deleteAssociatedEvents;
@@ -24,6 +28,9 @@ class Calendar {
   const Calendar({
     required this.id,
     required this.ownerId,
+    this.owner,
+    this.members = const [],
+    this.admins = const [],
     required this.name,
     this.description,
     this.deleteAssociatedEvents = false,
@@ -44,6 +51,13 @@ class Calendar {
     return Calendar(
       id: json['id'] as int,
       ownerId: json['owner_id'] as int,
+      owner: json['owner'] != null ? User.fromJson(json['owner']) : null,
+      members: json['members'] != null
+          ? (json['members'] as List).map((m) => User.fromJson(m)).toList()
+          : [],
+      admins: json['admins'] != null
+          ? (json['admins'] as List).map((a) => User.fromJson(a)).toList()
+          : [],
       name: json['name'] ?? '',
       description: json['description'],
       deleteAssociatedEvents: json['delete_associated_events'] ?? false,
@@ -69,6 +83,9 @@ class Calendar {
     return {
       'id': id,
       'owner_id': ownerId,
+      'owner': owner?.toJson(),
+      'members': members.map((m) => m.toJson()).toList(),
+      'admins': admins.map((a) => a.toJson()).toList(),
       'name': name,
       'description': description,
       'delete_associated_events': deleteAssociatedEvents,
@@ -88,45 +105,6 @@ class Calendar {
     };
   }
 
-  Calendar copyWith({
-    int? id,
-    int? ownerId,
-    String? name,
-    String? description,
-    bool? deleteAssociatedEvents,
-    bool? isPublic,
-    bool? isDiscoverable,
-    String? shareHash,
-    String? category,
-    int? subscriberCount,
-    DateTime? startDate,
-    DateTime? endDate,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    String? accessType,
-    bool? ownerIsPublic,
-  }) {
-    return Calendar(
-      id: id ?? this.id,
-      ownerId: ownerId ?? this.ownerId,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      deleteAssociatedEvents:
-          deleteAssociatedEvents ?? this.deleteAssociatedEvents,
-      isPublic: isPublic ?? this.isPublic,
-      isDiscoverable: isDiscoverable ?? this.isDiscoverable,
-      shareHash: shareHash ?? this.shareHash,
-      category: category ?? this.category,
-      subscriberCount: subscriberCount ?? this.subscriberCount,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      accessType: accessType ?? this.accessType,
-      ownerIsPublic: ownerIsPublic ?? this.ownerIsPublic,
-    );
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -144,4 +122,32 @@ class Calendar {
   bool get isValidName => name.trim().isNotEmpty && name.length <= 100;
 
   bool isOwnedBy(int userId) => ownerId == userId;
+
+  bool isAdmin(int userId) {
+    return ownerId == userId || admins.any((admin) => admin.id == userId);
+  }
+
+  bool isMember(int userId) {
+    return members.any((member) => member.id == userId);
+  }
+
+  bool canManageCalendar(int userId) {
+    return isAdmin(userId);
+  }
+
+  bool isOwner(int userId) {
+    return ownerId == userId;
+  }
+
+  int get totalMemberCount {
+    final uniqueIds = <int>{};
+    if (owner != null) uniqueIds.add(owner!.id);
+    for (var admin in admins) {
+      uniqueIds.add(admin.id);
+    }
+    for (var member in members) {
+      uniqueIds.add(member.id);
+    }
+    return uniqueIds.length;
+  }
 }

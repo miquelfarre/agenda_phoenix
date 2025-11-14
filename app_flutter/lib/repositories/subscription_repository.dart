@@ -235,8 +235,29 @@ class SubscriptionRepository implements ISubscriptionRepository {
     final userIndex = _cachedUsers.indexWhere((u) => u.id == affectedUserId);
     if (userIndex == -1) return;
 
+    // Update only stats fields without refetching everything
+    // Stats are secondary data that don't need perfect realtime accuracy
     final user = _cachedUsers[userIndex];
-    _cachedUsers[userIndex] = user.copyWith(
+    _cachedUsers[userIndex] = models.User(
+      id: user.id,
+      displayName: user.displayName,
+      instagramUsername: user.instagramUsername,
+      profilePictureUrl: user.profilePictureUrl,
+      phone: user.phone,
+      authProvider: user.authProvider,
+      authId: user.authId,
+      isPublic: user.isPublic,
+      isAdmin: user.isAdmin,
+      lastLogin: user.lastLogin,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      isActive: user.isActive,
+      isBanned: user.isBanned,
+      lastSeen: user.lastSeen,
+      isOnline: user.isOnline,
+      defaultTimezone: user.defaultTimezone,
+      defaultCountryCode: user.defaultCountryCode,
+      defaultCity: user.defaultCity,
       newEventsCount:
           statsRecord['new_events_count'] as int? ?? user.newEventsCount,
       totalEventsCount:
