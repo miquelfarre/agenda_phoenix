@@ -1515,11 +1515,11 @@
   "@allCalendars": {
     "description": "Chip de filtro: Todos los calendarios"
   },
-  "myPrivateCalendars": "Mis Privados",
+  "myPrivateCalendars": "Privados",
   "@myPrivateCalendars": {
     "description": "Chip de filtro: Mis calendarios privados"
   },
-  "myPublicCalendars": "Mis Públicos",
+  "myPublicCalendars": "Públicos",
   "@myPublicCalendars": {
     "description": "Chip de filtro: Mis calendarios públicos"
   },

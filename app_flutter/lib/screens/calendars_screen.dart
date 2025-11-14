@@ -454,12 +454,12 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
               ? CupertinoColors.systemBlue
               : CupertinoColors.systemGrey6,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -470,18 +470,18 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
                 color: isSelected
                     ? CupertinoColors.white
                     : CupertinoColors.black,
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: isSelected
                     ? CupertinoColors.white.withValues(alpha: 0.3)
                     : CupertinoColors.systemGrey5,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 count.toString(),
@@ -489,7 +489,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
                   color: isSelected
                       ? CupertinoColors.white
                       : CupertinoColors.systemGrey,
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
               ),

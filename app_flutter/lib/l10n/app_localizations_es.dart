@@ -2763,10 +2763,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get allCalendars => 'Todos';
 
   @override
-  String get myPrivateCalendars => 'Mis Privados';
+  String get myPrivateCalendars => 'Privados';
 
   @override
-  String get myPublicCalendars => 'Mis Públicos';
+  String get myPublicCalendars => 'Públicos';
 
   @override
   String get createNew => 'Crear Nuevo';
