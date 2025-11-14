@@ -559,6 +559,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get attendees => 'Asistentes';
 
   @override
+  String get noAttendees => 'No hay asistentes en este evento';
+
+  @override
+  String get searchAttendees => 'Buscar asistentes';
+
+  @override
+  String get noAttendeesFoundWithSearch => 'No se encontraron asistentes con tu búsqueda';
+
+  @override
   String get viewCalendarEvents => 'Ver Eventos del Calendario';
 
   @override

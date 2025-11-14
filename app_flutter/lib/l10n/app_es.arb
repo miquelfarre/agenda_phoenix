@@ -308,6 +308,9 @@
   "eventInvitations": "Invitaciones de Eventos",
   "invitedUsers": "Usuarios Invitados",
   "attendees": "Asistentes",
+  "noAttendees": "No hay asistentes en este evento",
+  "searchAttendees": "Buscar asistentes",
+  "noAttendeesFoundWithSearch": "No se encontraron asistentes con tu búsqueda",
   "viewCalendarEvents": "Ver Eventos del Calendario",
 
   "startingAutomaticSync": "Iniciando sincronización automática...",

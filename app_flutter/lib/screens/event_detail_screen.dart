@@ -14,6 +14,7 @@ import 'create_edit_event_screen.dart';
 import 'create_edit_recurring_event_screen.dart';
 import 'create_edit_birthday_event_screen.dart';
 import 'invite_users_screen.dart';
+import 'event_attendees_screen.dart';
 import '../services/config_service.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_card/event_card_config.dart';
@@ -644,22 +645,22 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       return const SizedBox.shrink();
     }
 
-    return Container(
-      margin: EdgeInsets.zero,
-      decoration: AppStyles.cardDecoration,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              PlatformWidgets.platformIcon(
-                CupertinoIcons.person_3,
-                color: AppStyles.blue600,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
+    return GestureDetector(
+      onTap: () => _navigateToAttendeesList(event),
+      child: Container(
+        margin: EdgeInsets.zero,
+        decoration: AppStyles.cardDecoration,
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            PlatformWidgets.platformIcon(
+              CupertinoIcons.person_3,
+              color: AppStyles.blue600,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
                 l10n.attendees,
                 style: TextStyle(
                   fontSize: 16,
@@ -667,78 +668,30 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                   color: AppStyles.grey700,
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${otherAttendees.length}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppStyles.blue600,
-                  ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${otherAttendees.length}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppStyles.blue600,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: otherAttendees.map((user) {
-              final initials = user.displayName.trim().isNotEmpty
-                  ? user.displayName
-                        .trim()
-                        .split(RegExp(r"\s+"))
-                        .first[0]
-                        .toUpperCase()
-                  : '?';
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: AppStyles.blue600,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        initials,
-                        style: AppStyles.bodyText.copyWith(
-                          color: AppStyles.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  SizedBox(
-                    width: 60,
-                    child: Text(
-                      user.displayName.split(' ').first,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppStyles.grey600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        ],
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              CupertinoIcons.chevron_right,
+              size: 18,
+              color: AppStyles.grey400,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -761,6 +714,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       CupertinoPageRoute(
         builder: (context) {
           return InviteUsersScreen(event: event);
+        },
+      ),
+    );
+  }
+
+  void _navigateToAttendeesList(Event event) {
+    Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (context) {
+          return EventAttendeesScreen(event: event);
         },
       ),
     );

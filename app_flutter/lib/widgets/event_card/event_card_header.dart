@@ -240,6 +240,12 @@ class EventCardAttendeesRow extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Icon(
+            CupertinoIcons.person_3,
+            color: AppStyles.blue600,
+            size: 16,
+          ),
+          const SizedBox(width: 6),
           Text(
             context.l10n.attendees,
             style: AppStyles.cardSubtitle.copyWith(
@@ -248,35 +254,20 @@ class EventCardAttendeesRow extends ConsumerWidget {
               color: AppStyles.grey700,
             ),
           ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: otherAttendees.take(6).map((a) {
-                final name = (a['display_name'] as String?) ?? '';
-                final initials = name.trim().isNotEmpty
-                    ? name.trim().split(RegExp(r"\s+")).first[0].toUpperCase()
-                    : '?';
-                return Container(
-                  width: 26,
-                  height: 26,
-                  decoration: const BoxDecoration(
-                    color: AppStyles.blue600,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      initials,
-                      style: AppStyles.bodyText.copyWith(
-                        color: AppStyles.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppStyles.colorWithOpacity(AppStyles.blue600, 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '${otherAttendees.length}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppStyles.blue600,
+              ),
             ),
           ),
         ],

@@ -1187,6 +1187,24 @@ abstract class AppLocalizations {
   /// **'Attendees'**
   String get attendees;
 
+  /// No description provided for @noAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'No attendees in this event'**
+  String get noAttendees;
+
+  /// No description provided for @searchAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Search attendees'**
+  String get searchAttendees;
+
+  /// No description provided for @noAttendeesFoundWithSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No attendees found with your search'**
+  String get noAttendeesFoundWithSearch;
+
   /// Button to view all calendar events
   ///
   /// In en, this message translates to:

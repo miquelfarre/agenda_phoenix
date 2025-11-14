@@ -350,6 +350,9 @@
     "description": "List of users invited to event"
   },
   "attendees": "Attendees",
+  "noAttendees": "No attendees in this event",
+  "searchAttendees": "Search attendees",
+  "noAttendeesFoundWithSearch": "No attendees found with your search",
   "viewCalendarEvents": "View Calendar Events",
   "@viewCalendarEvents": {
     "description": "Button to view all calendar events"
