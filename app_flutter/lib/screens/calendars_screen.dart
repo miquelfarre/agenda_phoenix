@@ -470,7 +470,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
                 color: isSelected
                     ? CupertinoColors.white
                     : CupertinoColors.black,
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -489,7 +489,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
                   color: isSelected
                       ? CupertinoColors.white
                       : CupertinoColors.systemGrey,
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
