@@ -268,6 +268,27 @@ class EventRepository implements IEventRepository {
     }
   }
 
+  Future<Map<String, dynamic>> addParticipantsBulk({
+    required int eventId,
+    List<int> userIds = const [],
+    List<int> groupIds = const [],
+    String role = 'attendee',
+  }) async {
+    try {
+      final result = await _apiClient.addEventParticipantsBulk(
+        eventId: eventId,
+        userIds: userIds,
+        groupIds: groupIds,
+        role: role,
+      );
+      await _fetchAndSync();
+      _emitInteractions();
+      return result;
+    } catch (e, _) {
+      rethrow;
+    }
+  }
+
   // --- Helper Methods ---
 
   List<EventInteraction> _extractInteractionsFromEvents() {

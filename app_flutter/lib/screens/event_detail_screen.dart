@@ -16,6 +16,7 @@ import 'create_edit_birthday_event_screen.dart';
 import 'invite_users_screen.dart';
 import 'event_attendees_screen.dart';
 import 'event_participants_screen.dart';
+import 'invite_event_participants_screen.dart';
 import '../services/config_service.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/empty_state.dart';
@@ -273,6 +274,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
             const SizedBox(height: 24),
 
             _buildManageParticipantsButton(),
+            _buildAddParticipantsButton(),
 
             if (isEventOwner) _buildInvitedUsersList(),
 
@@ -752,6 +754,25 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
 
     // Reload event data when coming back
     await _loadDetailData();
+  }
+
+  Future<void> _navigateToAddParticipants() async {
+    final event = _detailedEvent ?? currentEvent;
+    if (event.id == null) return;
+
+    final result = await Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (context) => InviteEventParticipantsScreen(
+          eventId: event.id!,
+          eventName: event.name,
+        ),
+      ),
+    );
+
+    // Reload if participants were added
+    if (result == true && mounted) {
+      await _loadDetailData();
+    }
   }
 
   Future<void> _editEvent(BuildContext context) async {
@@ -1481,14 +1502,33 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
         width: double.infinity,
         child: AdaptiveButton(
           config: AdaptiveButtonConfig.secondary(),
-          text: 'Manage Participants',
+          text: 'Administrar Participantes',
           icon: CupertinoIcons.person_2,
           onPressed: _navigateToManageParticipants,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddParticipantsButton() {
+    if (!_canManageParticipants) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: SizedBox(
+        width: double.infinity,
+        child: AdaptiveButton(
+          config: AdaptiveButtonConfig.primary(),
+          text: 'Agregar Participantes',
+          icon: CupertinoIcons.person_add,
+          onPressed: _navigateToAddParticipants,
         ),
       ),
     );

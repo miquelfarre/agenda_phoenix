@@ -457,6 +457,24 @@ class ApiClient implements IApiClient {
     await delete('/interactions/$interactionId');
   }
 
+  Future<Map<String, dynamic>> addEventParticipantsBulk({
+    required int eventId,
+    List<int> userIds = const [],
+    List<int> groupIds = const [],
+    String role = 'attendee',
+  }) async {
+    final result = await post(
+      '/interactions/bulk',
+      body: {
+        'event_id': eventId,
+        'user_ids': userIds,
+        'group_ids': groupIds,
+        'role': role,
+      },
+    );
+    return result as Map<String, dynamic>;
+  }
+
   @override
   Future<List<Map<String, dynamic>>> fetchCalendars({
     int? ownerId,

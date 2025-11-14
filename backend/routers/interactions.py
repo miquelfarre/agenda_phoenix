@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from auth import get_current_user_id
-from crud import event, event_interaction, user
+from crud import event, event_interaction, group_membership, user
 from dependencies import check_user_not_public, check_users_not_blocked, get_db, handle_recurring_event_rejection_cascade, is_event_owner_or_admin
 from models import EventInteraction
 from schemas import EventInteractionBase, EventInteractionCreate, EventInteractionResponse, EventInteractionUpdate, EventInteractionWithEventResponse
@@ -232,3 +232,180 @@ async def mark_interaction_as_read(interaction_id: int, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail=error)
 
     return interaction
+
+
+@router.post("/bulk", status_code=201)
+async def add_event_participants_bulk(
+    event_id: int,
+    user_ids: List[int] = [],
+    group_ids: List[int] = [],
+    role: str = "attendee",
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Add multiple users or entire groups to an event as participants.
+
+    Only event owners or admins can add participants.
+    Participants are added directly with 'joined' status (no invitation needed).
+    Returns summary of successful and failed additions.
+    """
+    # Verify event exists
+    db_event = event.get(db, id=event_id)
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    # Check permissions (owner or admin)
+    is_admin = is_event_owner_or_admin(event_id, current_user_id, db)
+    if not is_admin:
+        raise HTTPException(status_code=403, detail="Only event owners or admins can add participants")
+
+    results = {
+        "successful": [],
+        "failed": [],
+        "total_added": 0
+    }
+
+    # Add individual users
+    for user_id in user_ids:
+        try:
+            interaction_data = EventInteractionCreate(
+                event_id=event_id,
+                user_id=user_id,
+                interaction_type="joined",
+                role=role,
+                invited_by_user_id=current_user_id
+            )
+
+            # Verify user exists
+            db_user = user.get(db, id=user_id)
+            if not db_user:
+                results["failed"].append({
+                    "user_id": user_id,
+                    "error": "User not found"
+                })
+                continue
+
+            # Public users cannot be participants
+            if db_user.is_public:
+                results["failed"].append({
+                    "user_id": user_id,
+                    "error": "Public users cannot be added to events"
+                })
+                continue
+
+            # Public users cannot be admins
+            if role == "admin":
+                check_user_not_public(user_id, db, "be added as admin to events")
+
+            # Check if interaction already exists
+            existing = event_interaction.get_interaction(db, event_id=event_id, user_id=user_id)
+            if existing:
+                results["failed"].append({
+                    "user_id": user_id,
+                    "error": "User already has an interaction with this event"
+                })
+                continue
+
+            # Check for blocks
+            try:
+                check_users_not_blocked(current_user_id, user_id, db)
+                check_users_not_blocked(db_event.owner_id, user_id, db)
+            except HTTPException as e:
+                results["failed"].append({
+                    "user_id": user_id,
+                    "error": e.detail
+                })
+                continue
+
+            # Create interaction
+            db_interaction = event_interaction.create(db, obj_in=interaction_data)
+            results["successful"].append(db_interaction.id)
+            results["total_added"] += 1
+
+        except Exception as e:
+            results["failed"].append({
+                "user_id": user_id,
+                "error": str(e)
+            })
+
+    # Add group members
+    for group_id in group_ids:
+        # Get all members of the group
+        group_members = group_membership.get_by_group(db, group_id=group_id)
+        for member in group_members:
+            try:
+                interaction_data = EventInteractionCreate(
+                    event_id=event_id,
+                    user_id=member.user_id,
+                    interaction_type="joined",
+                    role=role,
+                    invited_by_user_id=current_user_id
+                )
+
+                # Verify user exists
+                db_user = user.get(db, id=member.user_id)
+                if not db_user:
+                    results["failed"].append({
+                        "user_id": member.user_id,
+                        "group_id": group_id,
+                        "error": "User not found"
+                    })
+                    continue
+
+                # Public users cannot be participants
+                if db_user.is_public:
+                    results["failed"].append({
+                        "user_id": member.user_id,
+                        "group_id": group_id,
+                        "error": "Public users cannot be added to events"
+                    })
+                    continue
+
+                # Public users cannot be admins
+                if role == "admin":
+                    try:
+                        check_user_not_public(member.user_id, db, "be added as admin to events")
+                    except HTTPException as e:
+                        results["failed"].append({
+                            "user_id": member.user_id,
+                            "group_id": group_id,
+                            "error": e.detail
+                        })
+                        continue
+
+                # Check if interaction already exists
+                existing = event_interaction.get_interaction(db, event_id=event_id, user_id=member.user_id)
+                if existing:
+                    results["failed"].append({
+                        "user_id": member.user_id,
+                        "group_id": group_id,
+                        "error": "User already has an interaction with this event"
+                    })
+                    continue
+
+                # Check for blocks
+                try:
+                    check_users_not_blocked(current_user_id, member.user_id, db)
+                    check_users_not_blocked(db_event.owner_id, member.user_id, db)
+                except HTTPException as e:
+                    results["failed"].append({
+                        "user_id": member.user_id,
+                        "group_id": group_id,
+                        "error": e.detail
+                    })
+                    continue
+
+                # Create interaction
+                db_interaction = event_interaction.create(db, obj_in=interaction_data)
+                results["successful"].append(db_interaction.id)
+                results["total_added"] += 1
+
+            except Exception as e:
+                results["failed"].append({
+                    "user_id": member.user_id,
+                    "group_id": group_id,
+                    "error": str(e)
+                })
+
+    return results
