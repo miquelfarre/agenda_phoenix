@@ -27,7 +27,6 @@ class CreateEditBirthdayEventScreenState
   final _startDateKey = GlobalKey();
 
   String _selectedTimezone = 'Europe/Madrid';
-  String _defaultCity = 'Madrid';
 
   DateTime get _selectedDate =>
       getFieldValue<DateTime>('startDate') ?? _getDateOnly(DateTime.now());
@@ -50,7 +49,6 @@ class CreateEditBirthdayEventScreenState
     settingsAsync.whenData((settings) {
       setState(() {
         _selectedTimezone = settings.defaultTimezone;
-        _defaultCity = settings.defaultCity;
       });
     });
   }

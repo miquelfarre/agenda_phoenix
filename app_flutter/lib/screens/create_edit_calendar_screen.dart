@@ -256,20 +256,6 @@ class _CreateEditCalendarScreenState
 
     return AdaptivePageScaffold(
       title: _isEditMode ? l10n.editCalendar : l10n.createCalendar,
-      leading: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: () => context.pop(),
-        child: Text(l10n.cancel),
-      ),
-      actions: [
-        CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _isLoading ? null : _saveCalendar,
-          child: _isLoading
-              ? const CupertinoActivityIndicator()
-              : Text(_isEditMode ? l10n.save : l10n.create),
-        ),
-      ],
       body: _isEditMode ? _buildEditContent() : _buildCreateContent(),
     );
   }
@@ -277,56 +263,107 @@ class _CreateEditCalendarScreenState
   Widget _buildCreateContent() {
     final l10n = context.l10n;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        CupertinoTextField(
-          controller: _nameController,
-          placeholder: l10n.calendarName,
-          maxLength: 100,
-          enabled: !_isLoading,
-        ),
-        const SizedBox(height: 16),
-        CupertinoTextField(
-          controller: _descriptionController,
-          placeholder: l10n.calendarDescription,
-          maxLines: 3,
-          maxLength: 500,
-          enabled: !_isLoading,
-        ),
-        const SizedBox(height: 24),
-        CupertinoListTile(
-          title: Text(l10n.publicCalendar),
-          subtitle: Text(l10n.othersCanSearchAndSubscribe),
-          trailing: CupertinoSwitch(
-            value: _isPublic,
-            onChanged: _isLoading
-                ? null
-                : (value) {
-                    setState(() => _isPublic = value);
-                  },
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CupertinoTextField(
+                    controller: _nameController,
+                    placeholder: l10n.calendarName,
+                    maxLength: 100,
+                    enabled: !_isLoading,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppStyles.grey300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                  ),
+                  const SizedBox(height: 16),
+                  CupertinoTextField(
+                    controller: _descriptionController,
+                    placeholder: l10n.calendarDescription,
+                    maxLines: 3,
+                    maxLength: 500,
+                    enabled: !_isLoading,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppStyles.grey300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                  ),
+                  const SizedBox(height: 24),
+                  CupertinoListTile(
+                    title: Text(l10n.publicCalendar),
+                    subtitle: Text(l10n.othersCanSearchAndSubscribe),
+                    trailing: CupertinoSwitch(
+                      value: _isPublic,
+                      onChanged: _isLoading
+                          ? null
+                          : (value) {
+                              setState(() => _isPublic = value);
+                            },
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: CupertinoButton.filled(
+                      onPressed: _isLoading ? null : _saveCalendar,
+                      child: _isLoading
+                          ? const CupertinoActivityIndicator(
+                              color: CupertinoColors.white)
+                          : Text(l10n.create),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildEditContent() {
+    final l10n = context.l10n;
+
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildBasicInfoSection(),
-            const SizedBox(height: 16),
-            if (_calendar!.isPublic) ...[
-              _buildVisibilitySection(),
-              const SizedBox(height: 16),
-            ],
-            _buildDeleteSection(),
-          ],
-        ),
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildBasicInfoSection(),
+                  const SizedBox(height: 16),
+                  if (_calendar!.isPublic) ...[
+                    _buildVisibilitySection(),
+                    const SizedBox(height: 16),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: CupertinoButton.filled(
+                      onPressed: _isLoading ? null : _saveCalendar,
+                      child: _isLoading
+                          ? const CupertinoActivityIndicator(
+                              color: CupertinoColors.white)
+                          : Text(l10n.save),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildDeleteSection(),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

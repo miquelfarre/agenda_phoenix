@@ -359,7 +359,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
     );
   }
 
-  void _hideEvent(Event event) {
+  Future<void> _hideEvent(Event event) async {
     if (event.id != null) {
       setState(() {
         _hiddenEventIds.add(event.id!);

@@ -169,91 +169,99 @@ class _VoiceCommandConfirmationScreenState
 
     return AdaptivePageScaffold(
       title: 'Confirmar Comando',
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Confianza
-            _buildConfidenceIndicator(confidence),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Confianza
+                    _buildConfidenceIndicator(confidence),
 
-            const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-            // Lo que dijiste
-            _buildSectionCard(
-              icon: Icons.mic,
-              title: 'Lo que dijiste',
-              color: Colors.blue,
-              child: Text(
-                '"${widget.transcribedText}"',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Título de objetos a crear
-            Text(
-              'Se crearán ${actions.length} ${actions.length == 1 ? 'objeto' : 'objetos'}:',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Tarjetas de cada acción/objeto
-            ...actions.asMap().entries.map((entry) {
-              final index = entry.key;
-              final action = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _buildActionCard(action, index + 1),
-              );
-            }),
-
-            // Sugerencias de la IA
-            if (_getSuggestions().isNotEmpty) ...[
-              const SizedBox(height: 24),
-              _buildSuggestionsSection(),
-            ],
-
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 16),
-              _buildErrorMessage(),
-            ],
-
-            const SizedBox(height: 24),
-
-            // Nota informativa
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(
-                  AppConstants.defaultBorderRadius,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Si quieres cambiar algo, dilo por voz después de confirmar',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    // Lo que dijiste
+                    _buildSectionCard(
+                      icon: Icons.mic,
+                      title: 'Lo que dijiste',
+                      color: Colors.blue,
+                      child: Text(
+                        '"${widget.transcribedText}"',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 24),
+
+                    // Título de objetos a crear
+                    Text(
+                      'Se crearán ${actions.length} ${actions.length == 1 ? 'objeto' : 'objetos'}:',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Tarjetas de cada acción/objeto
+                    ...actions.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final action = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildActionCard(action, index + 1),
+                      );
+                    }),
+
+                    // Sugerencias de la IA
+                    if (_getSuggestions().isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      _buildSuggestionsSection(),
+                    ],
+
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      _buildErrorMessage(),
+                    ],
+
+                    const SizedBox(height: 24),
+
+                    // Nota informativa
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.defaultBorderRadius,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Si quieres cambiar algo, dilo por voz después de confirmar',
+                              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Botones de acción
+                    _buildActionButtons(),
+                  ],
+                ),
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // Botones de acción
-            _buildActionButtons(),
           ],
         ),
       ),

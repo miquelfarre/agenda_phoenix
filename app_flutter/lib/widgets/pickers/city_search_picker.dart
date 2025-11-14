@@ -95,6 +95,11 @@ class _CitySearchPickerModalState extends State<CitySearchPickerModal> {
                     padding: const EdgeInsets.only(left: 8.0),
                     child: PlatformWidgets.platformIcon(CupertinoIcons.search),
                   ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppStyles.grey300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 ),
               ),
               Expanded(

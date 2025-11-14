@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/domain/event.dart';
@@ -7,12 +8,15 @@ import '../core/state/app_state.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/searchable_list.dart';
 import 'event_detail_screen.dart';
+import 'create_edit_event_screen.dart';
 import '../ui/styles/app_styles.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
+import '../ui/helpers/platform/dialog_helpers.dart';
 import '../utils/calendar_permissions.dart';
 import '../utils/event_operations.dart';
 import '../utils/calendar_operations.dart';
 import '../utils/event_date_utils.dart';
+import '../utils/error_message_parser.dart';
 import '../widgets/event_date_section.dart';
 
 class CalendarDetailScreen extends ConsumerStatefulWidget {
@@ -35,6 +39,7 @@ class CalendarDetailScreen extends ConsumerStatefulWidget {
 class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
   String? _ownerName;
   bool _isProcessingLeave = false;
+  bool _isUpdatingDiscoverable = false;
 
   Calendar? get _calendar {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
@@ -58,6 +63,19 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     final calendar = _calendar;
     if (calendar == null) return false;
     return CalendarPermissions.isOwner(calendar);
+  }
+
+  bool get _canAddEvents {
+    final calendar = _calendar;
+    if (calendar == null) return false;
+
+    // Owner can always add events
+    if (_isOwner) return true;
+
+    // Check if user is admin via membership
+    // Note: This is a simplified check - actual implementation would need
+    // to check CalendarMembership for this user
+    return false;
   }
 
   @override
@@ -187,6 +205,52 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     }
   }
 
+  Future<void> _updateDiscoverable(bool value) async {
+    if (_isUpdatingDiscoverable) return;
+
+    setState(() => _isUpdatingDiscoverable = true);
+
+    try {
+      final calendar = _calendar;
+      if (calendar == null) return;
+
+      await ref.read(calendarRepositoryProvider).updateCalendar(
+        calendar.id,
+        {'is_discoverable': value},
+      );
+
+      if (!mounted) return;
+
+      final message = value
+          ? 'Calendario ahora es discoverable'
+          : 'Calendario ahora es privado (link only)';
+
+      PlatformDialogHelpers.showSnackBar(
+        context: context,
+        message: message,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      final errorMessage = ErrorMessageParser.parse(e, context);
+      DialogHelpers.showErrorDialogWithIcon(context, errorMessage);
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingDiscoverable = false);
+      }
+    }
+  }
+
+  void _createEvent() {
+    Navigator.of(context).push(
+      CupertinoPageRoute<void>(
+        builder: (_) => CreateEditEventScreen(
+          preselectedCalendarId: widget.calendarId,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final allEventsAsync = ref.watch(eventsStreamProvider);
@@ -285,10 +349,32 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
 
   Widget _buildContent(BuildContext context, List<Event> eventsToShow) {
     final groupedEvents = EventDateUtils.groupEventsByDate(eventsToShow);
+    final calendar = _calendar;
 
     return CustomScrollView(
       physics: const ClampingScrollPhysics(),
       slivers: [
+        // Share Hash Section (only for public calendars)
+        if (calendar != null &&
+            calendar.isPublic &&
+            calendar.shareHash != null) ...[
+          SliverToBoxAdapter(child: _buildShareHashSection()),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        ],
+
+        // Discoverable Toggle (only for public calendars owned by current user)
+        if (calendar != null && calendar.isPublic && _isOwner) ...[
+          SliverToBoxAdapter(child: _buildDiscoverableToggle()),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        ],
+
+        // Create Event Button (only if user has permissions)
+        if (_canAddEvents) ...[
+          SliverToBoxAdapter(child: _buildCreateEventButton()),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+        ],
+
+        // Event count
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -371,5 +457,182 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
       showSuccessMessage: true,
     );
     // EventRepository handles updates via Realtime
+  }
+
+  Widget _buildShareHashSection() {
+    final calendar = _calendar;
+    if (calendar == null || calendar.shareHash == null) {
+      return const SizedBox.shrink();
+    }
+
+    final hashCode = '#${calendar.shareHash}';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppStyles.grey50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppStyles.grey200,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                CupertinoIcons.square_arrow_up,
+                color: AppStyles.primary600,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Compartir calendario',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppStyles.grey700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hashCode,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'monospace',
+                        letterSpacing: 1.2,
+                        color: AppStyles.primary600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Comparte este código para que otros puedan suscribirse a tu calendario',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppStyles.grey600,
+                      ),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              CupertinoButton(
+                padding: const EdgeInsets.all(8),
+                minimumSize: Size.zero,
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: hashCode));
+                  PlatformDialogHelpers.showSnackBar(
+                    context: context,
+                    message: 'Código copiado: $hashCode',
+                  );
+                },
+                child: Icon(
+                  CupertinoIcons.doc_on_clipboard,
+                  color: AppStyles.primary600,
+                  size: 24,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiscoverableToggle() {
+    final calendar = _calendar;
+    if (calendar == null) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: CupertinoColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppStyles.grey200,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Discoverable',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppStyles.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  calendar.isDiscoverable
+                      ? context.l10n.appearsInSearch
+                      : context.l10n.onlyViaShareLink,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppStyles.grey600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          CupertinoSwitch(
+            value: calendar.isDiscoverable,
+            onChanged: _isUpdatingDiscoverable ? null : _updateDiscoverable,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCreateEventButton() {
+    final l10n = context.l10n;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: CupertinoButton(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        color: AppStyles.primaryColor,
+        borderRadius: BorderRadius.circular(12),
+        onPressed: _createEvent,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              CupertinoIcons.add_circled_solid,
+              color: CupertinoColors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l10n.createEvent,
+              style: const TextStyle(
+                color: CupertinoColors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

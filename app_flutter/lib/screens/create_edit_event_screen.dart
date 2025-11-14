@@ -24,8 +24,13 @@ import 'create_edit_birthday_event_screen.dart';
 
 class CreateEditEventScreen extends BaseFormScreen {
   final Event? eventToEdit;
+  final int? preselectedCalendarId;
 
-  const CreateEditEventScreen({super.key, this.eventToEdit});
+  const CreateEditEventScreen({
+    super.key,
+    this.eventToEdit,
+    this.preselectedCalendarId,
+  });
 
   @override
   CreateEditEventScreenState createState() => CreateEditEventScreenState();
@@ -101,7 +106,14 @@ class CreateEditEventScreenState
       }
     } else {
       setFieldValue('startDate', _normalizeToFiveMinutes(DateTime.now()));
-      setFieldValue('calendarId', null);
+
+      // If calendar was preselected (from calendar detail screen), use it
+      if (widget.preselectedCalendarId != null) {
+        setFieldValue('calendarId', widget.preselectedCalendarId);
+        _useCustomCalendar = true;
+      } else {
+        setFieldValue('calendarId', null);
+      }
     }
   }
 

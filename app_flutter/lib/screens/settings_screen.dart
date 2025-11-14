@@ -51,41 +51,47 @@ class SettingsScreen extends ConsumerWidget {
   }) {
     final settingsAsync = ref.watch(settingsNotifierProvider);
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const LanguageSelector(),
-            const SizedBox(height: 24),
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const LanguageSelector(),
+                  const SizedBox(height: 24),
 
-            _buildSectionHeader(
-              context: context,
-              icon: CupertinoIcons.globe,
-              title: l10n.countryAndTimezone,
-              subtitle: l10n.defaultSettingsForNewEvents,
+                  _buildSectionHeader(
+                    context: context,
+                    icon: CupertinoIcons.globe,
+                    title: l10n.countryAndTimezone,
+                    subtitle: l10n.defaultSettingsForNewEvents,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  _buildTimezoneSelector(context, settingsAsync, ref, l10n),
+                  const SizedBox(height: 24),
+
+                  _buildBlockedUsersSection(context, l10n),
+
+                  const SizedBox(height: 24),
+
+                  _buildPermissionsSection(context, l10n),
+
+                  const SizedBox(height: 24),
+
+                  _buildAISettingsSection(context, l10n),
+
+                  const SizedBox(height: 24),
+
+                  _buildInfoCard(context, l10n),
+                ],
+              ),
             ),
-
-            const SizedBox(height: 24),
-
-            _buildTimezoneSelector(context, settingsAsync, ref, l10n),
-            const SizedBox(height: 24),
-
-            _buildBlockedUsersSection(context, l10n),
-
-            const SizedBox(height: 24),
-
-            _buildPermissionsSection(context, l10n),
-
-            const SizedBox(height: 24),
-
-            _buildAISettingsSection(context, l10n),
-
-            const SizedBox(height: 24),
-
-            _buildInfoCard(context, l10n),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

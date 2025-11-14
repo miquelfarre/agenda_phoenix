@@ -445,7 +445,7 @@ class CreateEditRecurringEventScreenState
                         const Icon(CupertinoIcons.calendar, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          l10n.endDate ?? 'Fecha fin',
+                          l10n.endDate,
                           style: AppStyles.bodyText.copyWith(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,

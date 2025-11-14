@@ -4,7 +4,6 @@ import '../models/domain/event.dart';
 import '../models/domain/user.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
-import '../widgets/searchable_list.dart';
 import '../widgets/user_avatar.dart';
 import '../ui/styles/app_styles.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
