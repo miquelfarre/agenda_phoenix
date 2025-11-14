@@ -199,7 +199,7 @@ class CreateEditEventScreenState
   }
 
   void _onOptionSelected(CreateOptionType option) {
-    Navigator.of(context).pushReplacement(
+    Navigator.of(context).push(
       CupertinoPageRoute(
         builder: (context) {
           switch (option) {

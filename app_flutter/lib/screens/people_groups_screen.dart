@@ -347,7 +347,7 @@ class _PeopleGroupsScreenState extends ConsumerState<PeopleGroupsScreen>
         return ContactCard(
           contact: contact,
           onTap: () {
-            context.go('/people/contacts/${contact.id}', extra: contact);
+            context.push('/people/contacts/${contact.id}', extra: contact);
           },
         );
       },
