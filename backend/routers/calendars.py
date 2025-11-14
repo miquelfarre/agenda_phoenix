@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from auth import get_current_user_id
-from crud import calendar, calendar_membership, event
+from crud import calendar, calendar_membership, event, group_membership
 from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import check_calendar_permission, get_db
 from schemas import (
@@ -163,6 +163,97 @@ async def add_calendar_member(calendar_id: int, membership_data: CalendarMembers
         handle_crud_error(error)
 
     return db_membership
+
+
+@router.post("/{calendar_id}/memberships/bulk", status_code=201)
+async def add_calendar_members_bulk(
+    calendar_id: int,
+    user_ids: List[int] = [],
+    group_ids: List[int] = [],
+    role: str = "member",
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Add multiple users or entire groups to a calendar.
+
+    Only calendar owners or admins can add members.
+    Returns summary of successful and failed additions.
+    """
+    # Check permissions
+    check_calendar_permission(calendar_id, current_user_id, db)
+
+    # Get calendar to verify it exists
+    db_calendar = calendar.get(db, id=calendar_id)
+    if not db_calendar:
+        raise HTTPException(status_code=404, detail="Calendar not found")
+
+    results = {
+        "successful": [],
+        "failed": [],
+        "total_invited": 0
+    }
+
+    # Add individual users
+    for user_id in user_ids:
+        try:
+            membership_data = CalendarMembershipCreate(
+                calendar_id=calendar_id,
+                user_id=user_id,
+                role=role,
+                status="accepted"  # Direct add, no invitation needed
+            )
+            db_membership, error = calendar_membership.create_with_validation(
+                db,
+                obj_in=membership_data
+            )
+            if error:
+                results["failed"].append({
+                    "user_id": user_id,
+                    "error": error
+                })
+            else:
+                results["successful"].append(db_membership.id)
+                results["total_invited"] += 1
+        except Exception as e:
+            results["failed"].append({
+                "user_id": user_id,
+                "error": str(e)
+            })
+
+    # Add group members
+    for group_id in group_ids:
+        # Get all members of the group
+        group_members = group_membership.get_by_group(db, group_id=group_id)
+        for member in group_members:
+            try:
+                membership_data = CalendarMembershipCreate(
+                    calendar_id=calendar_id,
+                    user_id=member.user_id,
+                    role=role,
+                    status="accepted"
+                )
+                db_membership, error = calendar_membership.create_with_validation(
+                    db,
+                    obj_in=membership_data
+                )
+                if error:
+                    results["failed"].append({
+                        "user_id": member.user_id,
+                        "group_id": group_id,
+                        "error": error
+                    })
+                else:
+                    results["successful"].append(db_membership.id)
+                    results["total_invited"] += 1
+            except Exception as e:
+                results["failed"].append({
+                    "user_id": member.user_id,
+                    "group_id": group_id,
+                    "error": str(e)
+                })
+
+    return results
 
 
 @router.post("/{share_hash}/subscribe", response_model=CalendarSubscriptionResponse, status_code=201)
