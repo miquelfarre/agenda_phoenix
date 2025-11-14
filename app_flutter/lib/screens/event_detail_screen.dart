@@ -15,6 +15,7 @@ import 'create_edit_recurring_event_screen.dart';
 import 'create_edit_birthday_event_screen.dart';
 import 'invite_users_screen.dart';
 import 'event_attendees_screen.dart';
+import 'event_participants_screen.dart';
 import '../services/config_service.dart';
 import '../widgets/event_list_item.dart';
 import '../widgets/empty_state.dart';
@@ -45,6 +46,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
   int get currentUserId => ConfigService.instance.currentUserId;
 
   bool get isEventOwner => currentEvent.ownerId == currentUserId;
+
+  bool get _canManageParticipants {
+    // Only owner can manage participants for now
+    // TODO: Allow admins to manage participants
+    return isEventOwner;
+  }
 
   bool _sendCancellationNotification = false;
   final TextEditingController _cancellationNotificationController =
@@ -264,6 +271,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               },
             ),
             const SizedBox(height: 24),
+
+            _buildManageParticipantsButton(),
 
             if (isEventOwner) _buildInvitedUsersList(),
 
@@ -726,6 +735,23 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         },
       ),
     );
+  }
+
+  Future<void> _navigateToManageParticipants() async {
+    final event = _detailedEvent ?? currentEvent;
+    if (event.id == null) return;
+
+    await Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (context) => EventParticipantsScreen(
+          eventId: event.id!,
+          eventName: event.name,
+        ),
+      ),
+    );
+
+    // Reload event data when coming back
+    await _loadDetailData();
   }
 
   Future<void> _editEvent(BuildContext context) async {
@@ -1447,6 +1473,25 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         );
       }
     }
+  }
+
+  Widget _buildManageParticipantsButton() {
+    if (!_canManageParticipants) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: SizedBox(
+        width: double.infinity,
+        child: AdaptiveButton(
+          config: AdaptiveButtonConfig.secondary(),
+          text: 'Manage Participants',
+          icon: CupertinoIcons.person_2,
+          onPressed: _navigateToManageParticipants,
+        ),
+      ),
+    );
   }
 
   Widget _buildInvitedUsersList() {
