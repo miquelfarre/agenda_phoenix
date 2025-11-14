@@ -182,12 +182,10 @@ class EventCardActions extends ConsumerWidget {
           tooltip: context.l10n.decline,
           onTap: () async {
             if (config.onDelete != null) {
-              try {
-                await config.onDelete!(
-                  event,
-                  shouldNavigate: config.navigateAfterDelete,
-                );
-              } catch (_) {}
+              await config.onDelete!(
+                event,
+                shouldNavigate: config.navigateAfterDelete,
+              );
             }
           },
         ),
