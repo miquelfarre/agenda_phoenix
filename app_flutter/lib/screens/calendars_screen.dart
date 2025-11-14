@@ -14,6 +14,25 @@ import '../utils/error_message_parser.dart';
 import '../utils/calendar_operations.dart';
 import '../utils/calendar_permissions.dart';
 
+// Helper class to store calendar data with filter counts
+class CalendarsData {
+  final List<Calendar> calendars;
+  final int myPrivateCount;
+  final int myPublicCount;
+  final int subscribedPrivateUsersCount;
+  final int subscribedPublicUsersCount;
+  final int allCount;
+
+  CalendarsData({
+    required this.calendars,
+    required this.myPrivateCount,
+    required this.myPublicCount,
+    required this.subscribedPrivateUsersCount,
+    required this.subscribedPublicUsersCount,
+    required this.allCount,
+  });
+}
+
 class CalendarsScreen extends ConsumerStatefulWidget {
   const CalendarsScreen({super.key});
 
@@ -27,6 +46,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   bool _loadingHashSearch = false;
   Calendar? _hashSearchResult;
   String? _hashSearchError;
+  String _currentFilter = 'all'; // 'all', 'my_private', 'my_public', 'subscribed_private', 'subscribed_public'
 
   @override
   void dispose() {
@@ -333,19 +353,184 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
     );
   }
 
+  // Process calendars and calculate filter counts
+  CalendarsData _processCalendars(List<Calendar> calendars) {
+    int myPrivateCount = 0;
+    int myPublicCount = 0;
+    int subscribedPrivateUsersCount = 0;
+    int subscribedPublicUsersCount = 0;
+
+    for (final calendar in calendars) {
+      // My private calendars: owned + private
+      if (calendar.accessType == 'owned' && !calendar.isPublic) {
+        myPrivateCount++;
+      }
+      // My public calendars: owned + public
+      else if (calendar.accessType == 'owned' && calendar.isPublic) {
+        myPublicCount++;
+      }
+      // Subscribed to private users' public calendars
+      else if (calendar.accessType == 'subscription' &&
+               calendar.ownerIsPublic == false) {
+        subscribedPrivateUsersCount++;
+      }
+      // Subscribed to public users' calendars
+      else if (calendar.accessType == 'subscription' &&
+               calendar.ownerIsPublic == true) {
+        subscribedPublicUsersCount++;
+      }
+    }
+
+    return CalendarsData(
+      calendars: calendars,
+      myPrivateCount: myPrivateCount,
+      myPublicCount: myPublicCount,
+      subscribedPrivateUsersCount: subscribedPrivateUsersCount,
+      subscribedPublicUsersCount: subscribedPublicUsersCount,
+      allCount: calendars.length,
+    );
+  }
+
+  // Apply calendar type filter
+  List<Calendar> _applyCalendarTypeFilter(CalendarsData data) {
+    switch (_currentFilter) {
+      case 'my_private':
+        return data.calendars
+            .where((cal) => cal.accessType == 'owned' && !cal.isPublic)
+            .toList();
+      case 'my_public':
+        return data.calendars
+            .where((cal) => cal.accessType == 'owned' && cal.isPublic)
+            .toList();
+      case 'subscribed_private':
+        return data.calendars
+            .where((cal) =>
+                cal.accessType == 'subscription' &&
+                cal.ownerIsPublic == false)
+            .toList();
+      case 'subscribed_public':
+        return data.calendars
+            .where((cal) =>
+                cal.accessType == 'subscription' &&
+                cal.ownerIsPublic == true)
+            .toList();
+      case 'all':
+      default:
+        return data.calendars;
+    }
+  }
+
+  // Build filter chips widget
+  Widget _buildCalendarTypeFilters(CalendarsData data) {
+    final l10n = context.l10n;
+
+    return SizedBox(
+      height: 50,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _buildFilterChip(
+            label: l10n.allCalendars,
+            count: data.allCount,
+            isSelected: _currentFilter == 'all',
+            onTap: () => setState(() => _currentFilter = 'all'),
+          ),
+          const SizedBox(width: 8),
+          _buildFilterChip(
+            label: l10n.myPrivateCalendars,
+            count: data.myPrivateCount,
+            isSelected: _currentFilter == 'my_private',
+            onTap: () => setState(() => _currentFilter = 'my_private'),
+          ),
+          const SizedBox(width: 8),
+          _buildFilterChip(
+            label: l10n.myPublicCalendars,
+            count: data.myPublicCount,
+            isSelected: _currentFilter == 'my_public',
+            onTap: () => setState(() => _currentFilter = 'my_public'),
+          ),
+          const SizedBox(width: 8),
+          _buildFilterChip(
+            label: l10n.subscribedPrivateUsers,
+            count: data.subscribedPrivateUsersCount,
+            isSelected: _currentFilter == 'subscribed_private',
+            onTap: () => setState(() => _currentFilter = 'subscribed_private'),
+          ),
+          const SizedBox(width: 8),
+          _buildFilterChip(
+            label: l10n.subscribedPublicUsers,
+            count: data.subscribedPublicUsersCount,
+            isSelected: _currentFilter == 'subscribed_public',
+            onTap: () => setState(() => _currentFilter = 'subscribed_public'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build individual filter chip
+  Widget _buildFilterChip({
+    required String label,
+    required int count,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? CupertinoColors.systemBlue
+              : CupertinoColors.systemGrey6,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? CupertinoColors.white
+                    : CupertinoColors.black,
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? CupertinoColors.white.withValues(alpha: 0.3)
+                    : CupertinoColors.systemGrey5,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  color: isSelected
+                      ? CupertinoColors.white
+                      : CupertinoColors.systemGrey,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   List<Widget> _buildMyCalendarsList() {
     final calendarsAsync = ref.watch(calendarsStreamProvider);
     final searchQuery = _searchController.text.toLowerCase();
 
     return calendarsAsync.when(
       data: (calendars) {
-        // Filtrar calendarios por nombre si hay búsqueda
-        final filteredCalendars = searchQuery.isEmpty
-            ? calendars
-            : calendars
-                  .where((cal) => cal.name.toLowerCase().contains(searchQuery))
-                  .toList();
-
         if (calendars.isEmpty) {
           return [
             SliverFillRemaining(
@@ -361,32 +546,54 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
           ];
         }
 
-        if (filteredCalendars.isEmpty && searchQuery.isNotEmpty) {
-          return [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: EmptyState(
-                icon: CupertinoIcons.search,
-                message: context.l10n.noCalendarsFound,
-              ),
-            ),
-          ];
+        // Process calendars to calculate counts
+        final calendarsData = _processCalendars(calendars);
+
+        // Apply calendar type filter
+        var filteredCalendars = _applyCalendarTypeFilter(calendarsData);
+
+        // Apply search filter if present
+        if (searchQuery.isNotEmpty) {
+          filteredCalendars = filteredCalendars
+              .where((cal) => cal.name.toLowerCase().contains(searchQuery))
+              .toList();
         }
 
         return [
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final calendarIndex = index ~/ 2;
-              if (index.isOdd) {
-                return Container(
-                  height: 0.5,
-                  margin: const EdgeInsets.only(left: 72),
-                  color: CupertinoColors.separator,
-                );
-              }
-              return _buildCalendarItem(filteredCalendars[calendarIndex]);
-            }, childCount: filteredCalendars.length * 2 - 1),
+          // Filter chips
+          SliverToBoxAdapter(
+            child: _buildCalendarTypeFilters(calendarsData),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+          // Empty state if no results after filtering
+          if (filteredCalendars.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyState(
+                icon: searchQuery.isNotEmpty
+                    ? CupertinoIcons.search
+                    : CupertinoIcons.calendar,
+                message: searchQuery.isNotEmpty
+                    ? context.l10n.noCalendarsFound
+                    : context.l10n.noCalendarsYet,
+              ),
+            )
+          else
+            // Calendar list
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final calendarIndex = index ~/ 2;
+                if (index.isOdd) {
+                  return Container(
+                    height: 0.5,
+                    margin: const EdgeInsets.only(left: 72),
+                    color: CupertinoColors.separator,
+                  );
+                }
+                return _buildCalendarItem(filteredCalendars[calendarIndex]);
+              }, childCount: filteredCalendars.length * 2 - 1),
+            ),
         ];
       },
       loading: () => [

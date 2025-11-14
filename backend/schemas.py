@@ -353,6 +353,9 @@ class CalendarResponse(CalendarBase):
     end_date: Optional[datetime] = None  # For temporal calendars
     created_at: datetime
     updated_at: datetime
+    # Access info (for filtering in frontend)
+    access_type: Optional[str] = None  # 'owned', 'membership', 'subscription'
+    owner_is_public: Optional[bool] = None  # True if owner is a public user
 
     model_config = ConfigDict(from_attributes=True)
 

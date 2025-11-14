@@ -13,6 +13,7 @@ from auth import get_current_user_id
 from crud import calendar, calendar_membership, event, group_membership
 from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import check_calendar_permission, get_db
+from models import User
 from schemas import (
     CalendarBase,
     CalendarCreate,
@@ -38,11 +39,67 @@ async def get_calendars(current_user_id: int = Depends(get_current_user_id), lim
     - Calendars owned by the user
     - Calendars where the user is a member (excluding calendars from public users)
     - Public calendars the user is subscribed to (excluding calendars from public users)
+
+    Each calendar includes:
+    - access_type: 'owned', 'membership', or 'subscription'
+    - owner_is_public: True if calendar owner is a public user
     """
     # Validate pagination
     limit, offset = validate_pagination(limit, offset)
 
-    return calendar.get_all_user_calendars(db, user_id=current_user_id, skip=offset, limit=limit)
+    calendars = calendar.get_all_user_calendars(db, user_id=current_user_id, skip=offset, limit=limit)
+
+    # Enrich each calendar with access_type and owner_is_public
+    enriched_calendars = []
+    for cal in calendars:
+        # Determine access_type
+        access_type = 'owned' if cal.owner_id == current_user_id else None
+
+        if not access_type:
+            # Check if user has membership
+            membership = calendar_membership.get_by_calendar_and_user(
+                db,
+                calendar_id=cal.id,
+                user_id=current_user_id
+            )
+            if membership and membership.status == 'accepted':
+                access_type = 'membership'
+
+        if not access_type:
+            # Check if user has subscription
+            subscription = calendar_subscription.get_subscription(
+                db,
+                calendar_id=cal.id,
+                user_id=current_user_id
+            )
+            if subscription and subscription.status == 'active':
+                access_type = 'subscription'
+
+        # Get owner's is_public status
+        owner = db.query(User).filter(User.id == cal.owner_id).first()
+        owner_is_public = owner.is_public if owner else False
+
+        # Convert to dict and add enrichment fields
+        cal_dict = {
+            'id': cal.id,
+            'owner_id': cal.owner_id,
+            'name': cal.name,
+            'description': cal.description,
+            'is_public': cal.is_public,
+            'is_discoverable': cal.is_discoverable,
+            'share_hash': cal.share_hash,
+            'category': cal.category,
+            'subscriber_count': cal.subscriber_count,
+            'start_date': cal.start_date,
+            'end_date': cal.end_date,
+            'created_at': cal.created_at,
+            'updated_at': cal.updated_at,
+            'access_type': access_type,
+            'owner_is_public': owner_is_public,
+        }
+        enriched_calendars.append(CalendarResponse(**cal_dict))
+
+    return enriched_calendars
 
 
 @router.get("/share/{share_hash}", response_model=CalendarResponse)

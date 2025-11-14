@@ -5321,6 +5321,36 @@ abstract class AppLocalizations {
   /// **'Public Calendars'**
   String get publicCalendars;
 
+  /// Filter chip: All calendars
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allCalendars;
+
+  /// Filter chip: My private calendars
+  ///
+  /// In en, this message translates to:
+  /// **'My Private'**
+  String get myPrivateCalendars;
+
+  /// Filter chip: My public calendars
+  ///
+  /// In en, this message translates to:
+  /// **'My Public'**
+  String get myPublicCalendars;
+
+  /// Filter chip: Calendars from private users I'm subscribed to
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed (Private)'**
+  String get subscribedPrivateUsers;
+
+  /// Filter chip: Calendars from public users/creators I'm subscribed to
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed (Public)'**
+  String get subscribedPublicUsers;
+
   /// Title of creation menu
   ///
   /// In en, this message translates to:

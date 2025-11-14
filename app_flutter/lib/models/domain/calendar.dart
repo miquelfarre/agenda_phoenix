@@ -17,6 +17,9 @@ class Calendar {
   final DateTime? endDate; // For temporal calendars
   final DateTime createdAt;
   final DateTime updatedAt;
+  // Access info for filtering
+  final String? accessType; // 'owned', 'membership', 'subscription'
+  final bool? ownerIsPublic; // True if owner is a public user
 
   const Calendar({
     required this.id,
@@ -33,6 +36,8 @@ class Calendar {
     this.endDate,
     required this.createdAt,
     required this.updatedAt,
+    this.accessType,
+    this.ownerIsPublic,
   });
 
   factory Calendar.fromJson(Map<String, dynamic> json) {
@@ -55,6 +60,8 @@ class Calendar {
           : null,
       createdAt: DateTimeUtils.parseAndNormalize(json['created_at']),
       updatedAt: DateTimeUtils.parseAndNormalize(json['updated_at']),
+      accessType: json['access_type'],
+      ownerIsPublic: json['owner_is_public'],
     );
   }
 
@@ -76,6 +83,8 @@ class Calendar {
         'end_date': DateTimeUtils.toNormalizedIso8601String(endDate!),
       'created_at': DateTimeUtils.toNormalizedIso8601String(createdAt),
       'updated_at': DateTimeUtils.toNormalizedIso8601String(updatedAt),
+      if (accessType != null) 'access_type': accessType,
+      if (ownerIsPublic != null) 'owner_is_public': ownerIsPublic,
     };
   }
 
@@ -94,6 +103,8 @@ class Calendar {
     DateTime? endDate,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? accessType,
+    bool? ownerIsPublic,
   }) {
     return Calendar(
       id: id ?? this.id,
@@ -111,6 +122,8 @@ class Calendar {
       endDate: endDate ?? this.endDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      accessType: accessType ?? this.accessType,
+      ownerIsPublic: ownerIsPublic ?? this.ownerIsPublic,
     );
   }
 

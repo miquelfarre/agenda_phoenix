@@ -2760,6 +2760,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publicCalendars => 'Public Calendars';
 
   @override
+  String get allCalendars => 'All';
+
+  @override
+  String get myPrivateCalendars => 'My Private';
+
+  @override
+  String get myPublicCalendars => 'My Public';
+
+  @override
+  String get subscribedPrivateUsers => 'Subscribed (Private)';
+
+  @override
+  String get subscribedPublicUsers => 'Subscribed (Public)';
+
+  @override
   String get createNew => 'Create New';
 
   @override

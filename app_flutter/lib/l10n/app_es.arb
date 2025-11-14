@@ -1511,6 +1511,26 @@
   "@publicCalendars": {
     "description": "Calendarios disponibles públicamente"
   },
+  "allCalendars": "Todos",
+  "@allCalendars": {
+    "description": "Chip de filtro: Todos los calendarios"
+  },
+  "myPrivateCalendars": "Mis Privados",
+  "@myPrivateCalendars": {
+    "description": "Chip de filtro: Mis calendarios privados"
+  },
+  "myPublicCalendars": "Mis Públicos",
+  "@myPublicCalendars": {
+    "description": "Chip de filtro: Mis calendarios públicos"
+  },
+  "subscribedPrivateUsers": "Suscritos (Privados)",
+  "@subscribedPrivateUsers": {
+    "description": "Chip de filtro: Calendarios de usuarios privados a los que estoy suscrito"
+  },
+  "subscribedPublicUsers": "Suscritos (Públicos)",
+  "@subscribedPublicUsers": {
+    "description": "Chip de filtro: Calendarios de usuarios públicos/creadores a los que estoy suscrito"
+  },
   "createNew": "Crear Nuevo",
   "@createNew": {
     "description": "Título del menú de creación"
