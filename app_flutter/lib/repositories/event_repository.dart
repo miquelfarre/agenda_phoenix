@@ -240,6 +240,34 @@ class EventRepository implements IEventRepository {
     }
   }
 
+  Future<List<Map<String, dynamic>>> fetchEventInteractions(int eventId) async {
+    try {
+      return await _apiClient.fetchInteractions(eventId: eventId, enriched: true);
+    } catch (e, _) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateParticipantRole(int interactionId, String role) async {
+    try {
+      await _apiClient.patchInteraction(interactionId, {'role': role});
+      await _fetchAndSync();
+      _emitInteractions();
+    } catch (e, _) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteInteraction(int interactionId) async {
+    try {
+      await _apiClient.deleteInteraction(interactionId);
+      await _fetchAndSync();
+      _emitInteractions();
+    } catch (e, _) {
+      rethrow;
+    }
+  }
+
   // --- Helper Methods ---
 
   List<EventInteraction> _extractInteractionsFromEvents() {

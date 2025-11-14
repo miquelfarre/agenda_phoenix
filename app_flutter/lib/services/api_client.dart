@@ -453,6 +453,10 @@ class ApiClient implements IApiClient {
     await post('/interactions/$interactionId/mark-read');
   }
 
+  Future<void> deleteInteraction(int interactionId) async {
+    await delete('/interactions/$interactionId');
+  }
+
   @override
   Future<List<Map<String, dynamic>>> fetchCalendars({
     int? ownerId,
