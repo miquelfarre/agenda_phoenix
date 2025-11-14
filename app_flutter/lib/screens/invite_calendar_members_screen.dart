@@ -6,7 +6,6 @@ import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
-import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 class InviteCalendarMembersScreen extends ConsumerStatefulWidget {
   final int calendarId;
@@ -47,18 +46,17 @@ class _InviteCalendarMembersScreenState
     });
 
     try {
-      final userRepo = ref.read(userRepositoryProvider);
-      final groupRepo = ref.read(groupRepositoryProvider);
+      final apiClient = ref.read(apiClientProvider);
 
-      // Fetch all users (except current user and existing members)
-      final users = await userRepo.fetchUsers();
-      final groups = await groupRepo.fetchGroups();
+      // Fetch all users and groups
+      final usersData = await apiClient.fetchUsers();
+      final groupsData = await apiClient.fetchGroups();
 
       if (!mounted) return;
 
       setState(() {
-        _availableUsers = users;
-        _groups = groups;
+        _availableUsers = usersData.map((data) => User.fromJson(data)).toList();
+        _groups = groupsData.map((data) => Group.fromJson(data)).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -187,7 +185,10 @@ class _InviteCalendarMembersScreenState
                 ],
               ),
             ),
-            const Divider(height: 1),
+            Container(
+              height: 1,
+              color: CupertinoColors.separator,
+            ),
             // List
             Expanded(
               child: _buildBody(),
@@ -233,34 +234,15 @@ class _InviteCalendarMembersScreenState
           ..._availableUsers.map((user) {
             final isSelected = selectedUserIds.contains(user.id);
             return SelectableCard(
-              isSelected: isSelected,
-              onTap: () => _toggleUser(user.id!),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: CupertinoColors.systemGrey4,
-                    child: Text(
-                      user.displayName.isNotEmpty
-                          ? user.displayName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      user.displayName,
-                      style: AppStyles.bodyText,
-                    ),
-                  ),
-                ],
-              ),
+              title: user.displayName,
+              subtitle: user.instagramUsername ?? user.phone,
+              icon: CupertinoIcons.person,
+              color: AppStyles.blue600,
+              selected: isSelected,
+              onTap: () => _toggleUser(user.id),
+              onChanged: (_) => _toggleUser(user.id),
             );
-          }).toList(),
+          }),
         ],
         if (_groups.isNotEmpty) ...[
           const SizedBox(height: 24),
@@ -272,26 +254,15 @@ class _InviteCalendarMembersScreenState
           ..._groups.map((group) {
             final isSelected = selectedGroupIds.contains(group.id);
             return SelectableCard(
-              isSelected: isSelected,
-              onTap: () => _toggleGroup(group.id!),
-              child: Row(
-                children: [
-                  const Icon(
-                    CupertinoIcons.group,
-                    size: 24,
-                    color: CupertinoColors.systemGrey,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      group.name,
-                      style: AppStyles.bodyText,
-                    ),
-                  ),
-                ],
-              ),
+              title: group.name,
+              subtitle: null,
+              icon: CupertinoIcons.group,
+              color: AppStyles.green600,
+              selected: isSelected,
+              onTap: () => _toggleGroup(group.id),
+              onChanged: (_) => _toggleGroup(group.id),
             );
-          }).toList(),
+          }),
         ],
       ],
     );
