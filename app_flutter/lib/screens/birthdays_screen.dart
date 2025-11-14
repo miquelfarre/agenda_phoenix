@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../models/domain/event.dart';
 import '../core/state/app_state.dart';
-import '../widgets/event_card.dart';
-import '../widgets/event_card/event_card_config.dart';
+import '../widgets/event_list_item.dart';
 import '../widgets/searchable_list.dart';
 import 'event_detail_screen.dart';
 import '../ui/styles/app_styles.dart';
@@ -210,20 +209,19 @@ class _BirthdaysScreenState extends ConsumerState<BirthdaysScreen> {
                       ),
                     ),
 
-                    EventCard(
+                    EventListItem(
                       event: event,
-                      onTap: () {
+                      onTap: (event) {
                         Navigator.of(context).push(
                           CupertinoPageRoute<void>(
                             builder: (_) => EventDetailScreen(event: event),
                           ),
                         );
                       },
-                      config: EventCardConfig.readOnly().copyWith(
-                        customStatus: DateTimeUtils.formatBirthdayDate(
-                          event.startDate,
-                          Localizations.localeOf(context).languageCode,
-                        ),
+                      readOnly: true,
+                      customStatus: DateTimeUtils.formatBirthdayDate(
+                        event.startDate,
+                        Localizations.localeOf(context).languageCode,
                       ),
                     ),
                   ],

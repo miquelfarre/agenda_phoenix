@@ -10,8 +10,7 @@ import '../core/state/app_state.dart';
 import '../services/config_service.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/user_avatar.dart';
-import '../widgets/event_card.dart';
-import '../widgets/event_card/event_card_config.dart';
+import '../widgets/event_list_item.dart';
 import '../widgets/empty_state.dart';
 import 'event_detail_screen.dart';
 import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
@@ -342,13 +341,12 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen>
                         }
 
                         final event = availableEvents[index];
-                        return EventCard(
+                        return EventListItem(
                           event: event,
-                          onTap: () => _navigateToEventDetail(event),
-                          config: EventCardConfig(
-                            onDelete: (event, {bool shouldNavigate = false}) =>
-                                _hideEvent(event),
-                          ),
+                          onTap: _navigateToEventDetail,
+                          onDelete: (event, {bool shouldNavigate = false}) =>
+                              _hideEvent(event),
+                          navigateAfterDelete: false,
                         );
                       }, childCount: availableEvents.length + 1),
                     ),

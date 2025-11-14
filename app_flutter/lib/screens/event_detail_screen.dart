@@ -16,8 +16,7 @@ import 'create_edit_birthday_event_screen.dart';
 import 'invite_users_screen.dart';
 import 'event_attendees_screen.dart';
 import '../services/config_service.dart';
-import '../widgets/event_card.dart';
-import '../widgets/event_card/event_card_config.dart';
+import '../widgets/event_list_item.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/event_detail_actions.dart';
@@ -966,19 +965,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                 separatorBuilder: (context, index) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final futureEvent = limitedEvents[index];
-                  return EventCard(
+                  return EventListItem(
                     event: futureEvent,
-                    onTap: () {
+                    onTap: (event) {
                       Navigator.of(context).pushScreen(
                         context,
-                        EventDetailScreen(event: futureEvent),
+                        EventDetailScreen(event: event),
                       );
                     },
-                    config: EventCardConfig(
-                      navigateAfterDelete: false,
-                      onDelete: _deleteEvent,
-                      onEdit: null,
-                    ),
+                    onDelete: _deleteEvent,
+                    navigateAfterDelete: false,
                   );
                 },
               ),
