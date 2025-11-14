@@ -9,6 +9,7 @@ import '../widgets/event_list_item.dart';
 import '../widgets/searchable_list.dart';
 import 'event_detail_screen.dart';
 import 'create_edit_event_screen.dart';
+import 'calendar_members_screen.dart';
 import '../ui/styles/app_styles.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
 import '../ui/helpers/platform/dialog_helpers.dart';
@@ -76,6 +77,15 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
     // Note: This is a simplified check - actual implementation would need
     // to check CalendarMembership for this user
     return false;
+  }
+
+  bool get _canManageMembers {
+    final calendar = _calendar;
+    if (calendar == null) return false;
+
+    // Only owner can manage members for now
+    // TODO: Allow admins to manage members
+    return _isOwner;
   }
 
   @override
@@ -374,6 +384,12 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
 
+        // Manage Members Button (only for owner/admin)
+        if (_canManageMembers) ...[
+          SliverToBoxAdapter(child: _buildManageMembersButton()),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+        ],
+
         // Event count
         SliverToBoxAdapter(
           child: Padding(
@@ -599,6 +615,51 @@ class _CalendarDetailScreenState extends ConsumerState<CalendarDetailScreen> {
             onChanged: _isUpdatingDiscoverable ? null : _updateDiscoverable,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildManageMembersButton() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: CupertinoButton(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        color: CupertinoColors.systemGrey6,
+        borderRadius: BorderRadius.circular(12),
+        onPressed: _navigateToManageMembers,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              CupertinoIcons.person_2,
+              color: CupertinoColors.activeBlue,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Manage Members',
+              style: const TextStyle(
+                color: CupertinoColors.activeBlue,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToManageMembers() {
+    final calendar = _calendar;
+    if (calendar == null) return;
+
+    Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (context) => CalendarMembersScreen(
+          calendarId: widget.calendarId,
+          calendarName: calendar.name,
+        ),
       ),
     );
   }
