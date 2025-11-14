@@ -95,10 +95,10 @@ class _EventParticipantsScreenState
     }
 
     if (_participants.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: CupertinoIcons.person_2,
-        message: 'No participants',
-        subtitle: 'No one has joined this event yet',
+        message: context.l10n.noParticipants,
+        subtitle: context.l10n.noOneHasJoined,
       );
     }
 
@@ -126,7 +126,7 @@ class _EventParticipantsScreenState
               style: AppStyles.bodyText,
             ),
             subtitle: Text(
-              _getRoleLabel(role),
+              _getRoleLabel(role, context),
               style: AppStyles.cardSubtitle.copyWith(
                 color: _getRoleColor(role),
               ),
@@ -143,14 +143,14 @@ class _EventParticipantsScreenState
     );
   }
 
-  String _getRoleLabel(String role) {
+  String _getRoleLabel(String role, BuildContext context) {
     switch (role) {
       case 'owner':
-        return 'Owner';
+        return context.l10n.owner;
       case 'admin':
-        return 'Admin';
+        return context.l10n.admin;
       default:
-        return 'Attendee';
+        return context.l10n.attendee;
     }
   }
 
@@ -178,39 +178,39 @@ class _EventParticipantsScreenState
 
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (BuildContext context) => CupertinoActionSheet(
+      builder: (BuildContext actionContext) => CupertinoActionSheet(
         title: Text(userName),
         actions: <CupertinoActionSheetAction>[
           if (role == 'attendee')
             CupertinoActionSheetAction(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(actionContext);
                 _promoteToAdmin(interactionId, userName);
               },
-              child: const Text('Promote to Admin'),
+              child: Text(context.l10n.promoteToAdmin),
             ),
           if (role == 'admin')
             CupertinoActionSheetAction(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(actionContext);
                 _demoteToAttendee(interactionId, userName);
               },
-              child: const Text('Demote to Attendee'),
+              child: Text(context.l10n.demoteToAttendee),
             ),
           CupertinoActionSheetAction(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(actionContext);
               _confirmRemoveParticipant(interactionId, userName);
             },
             isDestructiveAction: true,
-            child: const Text('Remove from Event'),
+            child: Text(context.l10n.removeFromEvent),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(actionContext);
           },
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -229,13 +229,13 @@ class _EventParticipantsScreenState
       if (!mounted) return;
       showCupertinoDialog(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Error'),
-          content: Text('Failed to promote $userName: ${e.toString()}'),
+        builder: (dialogContext) => CupertinoAlertDialog(
+          title: Text(context.l10n.error),
+          content: Text(context.l10n.failedToPromote(userName, e.toString())),
           actions: [
             CupertinoDialogAction(
               child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
             ),
           ],
         ),
@@ -256,13 +256,13 @@ class _EventParticipantsScreenState
       if (!mounted) return;
       showCupertinoDialog(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Error'),
-          content: Text('Failed to demote $userName: ${e.toString()}'),
+        builder: (dialogContext) => CupertinoAlertDialog(
+          title: Text(context.l10n.error),
+          content: Text(context.l10n.failedToDemote(userName, e.toString())),
           actions: [
             CupertinoDialogAction(
               child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
             ),
           ],
         ),
@@ -273,22 +273,21 @@ class _EventParticipantsScreenState
   void _confirmRemoveParticipant(int interactionId, String userName) {
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('Remove Participant'),
-        content:
-            Text('Are you sure you want to remove $userName from this event?'),
+      builder: (dialogContext) => CupertinoAlertDialog(
+        title: Text(context.l10n.removeParticipant),
+        content: Text(context.l10n.confirmRemoveParticipant(userName)),
         actions: [
           CupertinoDialogAction(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+            onPressed: () => Navigator.pop(dialogContext),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               _removeParticipant(interactionId, userName);
             },
-            child: const Text('Remove'),
+            child: Text(context.l10n.remove),
           ),
         ],
       ),
@@ -308,13 +307,13 @@ class _EventParticipantsScreenState
       if (!mounted) return;
       showCupertinoDialog(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Error'),
-          content: Text('Failed to remove $userName: ${e.toString()}'),
+        builder: (dialogContext) => CupertinoAlertDialog(
+          title: Text(context.l10n.error),
+          content: Text(context.l10n.failedToRemove(userName, e.toString())),
           actions: [
             CupertinoDialogAction(
               child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
             ),
           ],
         ),

@@ -2505,5 +2505,87 @@
   "processing": "Processing...",
   "@processing": {
     "description": "Processing status"
+  },
+  "manageParticipants": "Manage Participants",
+  "@manageParticipants": {
+    "description": "Manage event participants button"
+  },
+  "noParticipants": "No participants",
+  "@noParticipants": {
+    "description": "No participants message"
+  },
+  "noOneHasJoined": "No one has joined this event yet",
+  "@noOneHasJoined": {
+    "description": "No participants subtitle"
+  },
+  "promoteToAdmin": "Promote to Admin",
+  "@promoteToAdmin": {
+    "description": "Promote to admin action"
+  },
+  "demoteToAttendee": "Demote to Attendee",
+  "@demoteToAttendee": {
+    "description": "Demote to attendee action"
+  },
+  "demoteToMember": "Demote to Member",
+  "@demoteToMember": {
+    "description": "Demote to member action"
+  },
+  "removeFromEvent": "Remove from Event",
+  "@removeFromEvent": {
+    "description": "Remove from event action"
+  },
+  "removeFromCalendar": "Remove from Calendar",
+  "@removeFromCalendar": {
+    "description": "Remove from calendar action"
+  },
+  "removeParticipant": "Remove Participant",
+  "@removeParticipant": {
+    "description": "Remove participant dialog title"
+  },
+  "removeMember": "Remove Member",
+  "@removeMember": {
+    "description": "Remove member dialog title"
+  },
+  "confirmRemoveParticipant": "Are you sure you want to remove {name} from this event?",
+  "@confirmRemoveParticipant": {
+    "description": "Confirm remove participant message",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "confirmRemoveMember": "Are you sure you want to remove {name} from this calendar?",
+  "@confirmRemoveMember": {
+    "description": "Confirm remove member message",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "attendee": "Attendee",
+  "@attendee": {
+    "description": "Attendee role label"
+  },
+  "failedToPromote": "Failed to promote {name}: {error}",
+  "@failedToPromote": {
+    "description": "Failed to promote error message",
+    "placeholders": {
+      "name": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+  "failedToDemote": "Failed to demote {name}: {error}",
+  "@failedToDemote": {
+    "description": "Failed to demote error message",
+    "placeholders": {
+      "name": { "type": "String" },
+      "error": { "type": "String" }
+    }
+  },
+  "failedToRemove": "Failed to remove {name}: {error}",
+  "@failedToRemove": {
+    "description": "Failed to remove error message",
+    "placeholders": {
+      "name": { "type": "String" },
+      "error": { "type": "String" }
+    }
   }
 }
