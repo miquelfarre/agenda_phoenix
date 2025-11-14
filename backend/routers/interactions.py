@@ -215,7 +215,45 @@ async def patch_interaction(interaction_id: int, interaction: EventInteractionUp
     return db_interaction
 
 
-# Removed unused DELETE /interactions/{interaction_id}
+@router.delete("/{interaction_id}", status_code=204)
+async def delete_interaction(
+    interaction_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete an event interaction (remove participant from event).
+
+    Only event owners or admins can delete interactions.
+    Cannot delete the owner's interaction.
+    """
+    db_interaction = event_interaction.get(db, id=interaction_id)
+    if not db_interaction:
+        raise HTTPException(status_code=404, detail="Interaction not found")
+
+    # Check if user is event owner or admin
+    is_admin = is_event_owner_or_admin(
+        db_interaction.event_id,
+        current_user_id,
+        db
+    )
+    if not is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Only event owners or admins can remove participants"
+        )
+
+    # Get event to check if this is the owner
+    db_event = event.get(db, id=db_interaction.event_id)
+    if db_event and db_event.owner_id == db_interaction.user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Cannot remove event owner"
+        )
+
+    # Delete the interaction
+    event_interaction.delete(db, id=interaction_id)
+    return None
 
 
 @router.post("/bulk", status_code=201)
