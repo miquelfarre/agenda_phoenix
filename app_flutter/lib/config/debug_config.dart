@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import '../services/config_service.dart';
+import '../services/api_logger.dart';
 
 class DebugConfig {
   DebugConfig._();
@@ -14,6 +15,17 @@ class DebugConfig {
   static bool sync = true;
   static bool offlineOps = true;
   static bool invitations = true;
+
+  // API logging to file - controlled by API_LOGGING environment variable
+  static bool apiLogging = const bool.fromEnvironment('API_LOGGING', defaultValue: false);
+
+  /// Initialize API logger if API_LOGGING is enabled
+  static void initApiLogger() {
+    if (apiLogging) {
+      ApiLogger.instance.enabled = true;
+      info('API logging enabled - logs will be saved to file', tag: 'DebugConfig');
+    }
+  }
 
   static bool samplingEnabled = false;
 

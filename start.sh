@@ -367,6 +367,10 @@ start_flutter() {
         info "Using OLLAMA_MODEL: $OLLAMA_MODEL"
         DART_DEFINES+=("--dart-define=OLLAMA_MODEL=$OLLAMA_MODEL")
     fi
+    if [[ "${API_LOGGING:-false}" == "true" ]]; then
+        info "🔍 API logging ENABLED - all API calls will be logged to api_calls.log"
+        DART_DEFINES+=("--dart-define=API_LOGGING=true")
+    fi
 
     if [[ -n "$flutter_device_id" ]]; then
         info "Running Flutter on device: $flutter_device_id"
@@ -478,6 +482,7 @@ Options:
 Environment variables:
   USER_ID        User ID to use (default: 1)
   DB_SCRIPT      Database script to run (default: init_db_2.py)
+  API_LOGGING    Enable API request/response logging to file (default: false)
 
 Examples:
     ./start.sh                    # Start backend and iOS app (default)
@@ -490,6 +495,7 @@ Examples:
     ./start.sh status             # Check status of backend
     ./start.sh -u 42              # USER_ID=42
     ./start.sh backend -s custom_db.py   # Custom database script
+    API_LOGGING=true ./start.sh   # Enable API logging to file
 
 Web Services URLs:
     Backoffice:   http://localhost:3001  (Admin panel with Shadcn/ui)

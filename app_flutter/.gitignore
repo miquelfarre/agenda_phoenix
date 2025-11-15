@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# API logging files (generated when API_LOGGING=true)
+api_calls.log
+api_calls.log.old

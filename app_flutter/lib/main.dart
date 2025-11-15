@@ -10,6 +10,7 @@ import 'package:eventypop/services/timezone_service.dart';
 import 'package:eventypop/services/supabase_service.dart';
 import 'package:eventypop/services/app_config.dart';
 import 'package:eventypop/services/permissions_service.dart';
+import 'package:eventypop/config/debug_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,6 +44,9 @@ void main() async {
     await TimezoneService.initialize();
 
     await ConfigService.instance.initialize();
+
+    // Initialize API logger if API_LOGGING is enabled
+    DebugConfig.initApiLogger();
 
     await _validateTestModeConfiguration();
 

@@ -7,6 +7,7 @@ import 'supabase_service.dart';
 import 'config_service.dart';
 import '../utils/app_exceptions.dart' as app_exceptions;
 import 'contracts/api_client_contract.dart';
+import 'api_logger.dart';
 
 class ApiClient implements IApiClient {
   final http.Client _client = http.Client();
@@ -162,14 +163,29 @@ class ApiClient implements IApiClient {
     final caller = _getCallerInfo();
     DebugConfig.info('GET: $uri $caller', tag: 'API');
 
+    // Log request if API logging is enabled
+    final stopwatch = Stopwatch()..start();
+    ApiLogger.instance.logRequest('GET', uri, headers, null, caller);
+
     try {
       final response = await _client.get(uri, headers: headers);
+      stopwatch.stop();
+
+      // Log response
+      ApiLogger.instance.logResponse(response, stopwatch.elapsedMilliseconds);
+
       return _handleResponse(response);
-    } on SocketException {
+    } on SocketException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw const app_exceptions.NetworkException();
-    } on HttpException {
+    } on HttpException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Could not find the server');
-    } on FormatException {
+    } on FormatException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Bad response format');
     }
   }
@@ -182,18 +198,33 @@ class ApiClient implements IApiClient {
     final caller = _getCallerInfo();
     DebugConfig.info('POST: $uri $caller', tag: 'API');
 
+    // Log request if API logging is enabled
+    final stopwatch = Stopwatch()..start();
+    ApiLogger.instance.logRequest('POST', uri, headers, body, caller);
+
     try {
       final response = await _client.post(
         uri,
         headers: headers,
         body: body != null ? jsonEncode(body) : null,
       );
+      stopwatch.stop();
+
+      // Log response
+      ApiLogger.instance.logResponse(response, stopwatch.elapsedMilliseconds);
+
       return _handleResponse(response);
-    } on SocketException {
+    } on SocketException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw const app_exceptions.NetworkException();
-    } on HttpException {
+    } on HttpException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Could not find the server');
-    } on FormatException {
+    } on FormatException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Bad response format');
     }
   }
@@ -206,18 +237,33 @@ class ApiClient implements IApiClient {
     final caller = _getCallerInfo();
     DebugConfig.info('PUT: $uri $caller', tag: 'API');
 
+    // Log request if API logging is enabled
+    final stopwatch = Stopwatch()..start();
+    ApiLogger.instance.logRequest('PUT', uri, headers, body, caller);
+
     try {
       final response = await _client.put(
         uri,
         headers: headers,
         body: body != null ? jsonEncode(body) : null,
       );
+      stopwatch.stop();
+
+      // Log response
+      ApiLogger.instance.logResponse(response, stopwatch.elapsedMilliseconds);
+
       return _handleResponse(response);
-    } on SocketException {
+    } on SocketException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw const app_exceptions.NetworkException();
-    } on HttpException {
+    } on HttpException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Could not find the server');
-    } on FormatException {
+    } on FormatException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Bad response format');
     }
   }
@@ -233,14 +279,29 @@ class ApiClient implements IApiClient {
     final caller = _getCallerInfo();
     DebugConfig.info('DELETE: $uri $caller', tag: 'API');
 
+    // Log request if API logging is enabled
+    final stopwatch = Stopwatch()..start();
+    ApiLogger.instance.logRequest('DELETE', uri, headers, null, caller);
+
     try {
       final response = await _client.delete(uri, headers: headers);
+      stopwatch.stop();
+
+      // Log response
+      ApiLogger.instance.logResponse(response, stopwatch.elapsedMilliseconds);
+
       return _handleResponse(response);
-    } on SocketException {
+    } on SocketException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw const app_exceptions.NetworkException();
-    } on HttpException {
+    } on HttpException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Could not find the server');
-    } on FormatException {
+    } on FormatException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Bad response format');
     }
   }
@@ -253,18 +314,33 @@ class ApiClient implements IApiClient {
     final caller = _getCallerInfo();
     DebugConfig.info('PATCH: $uri $caller', tag: 'API');
 
+    // Log request if API logging is enabled
+    final stopwatch = Stopwatch()..start();
+    ApiLogger.instance.logRequest('PATCH', uri, headers, body, caller);
+
     try {
       final response = await _client.patch(
         uri,
         headers: headers,
         body: body != null ? jsonEncode(body) : null,
       );
+      stopwatch.stop();
+
+      // Log response
+      ApiLogger.instance.logResponse(response, stopwatch.elapsedMilliseconds);
+
       return _handleResponse(response);
-    } on SocketException {
+    } on SocketException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw const app_exceptions.NetworkException();
-    } on HttpException {
+    } on HttpException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Could not find the server');
-    } on FormatException {
+    } on FormatException catch (e) {
+      stopwatch.stop();
+      ApiLogger.instance.logError(e, stopwatch.elapsedMilliseconds);
       throw app_exceptions.ApiException('Bad response format');
     }
   }
