@@ -10,6 +10,7 @@ import '../services/config_service.dart';
 import '../services/api_client.dart';
 import '../utils/app_exceptions.dart' as exceptions;
 import '../utils/realtime_filter.dart';
+import '../config/debug_config.dart';
 import 'contracts/event_repository_contract.dart';
 
 class EventRepository implements IEventRepository {
@@ -107,9 +108,10 @@ class EventRepository implements IEventRepository {
         }
       }
       _emitCurrentEvents();
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore realtime errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _fetchAndSync: $e', tag: 'EventRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'EventRepository');
+      rethrow;
     }
   }
 
@@ -308,9 +310,10 @@ class EventRepository implements IEventRepository {
 
           final interaction = EventInteraction.fromJson(interactionJson);
           interactions.add(interaction);
-          // ignore: empty_catches
-        } catch (e) {
-          // Intentionally ignore malformed interaction data
+        } catch (e, stackTrace) {
+          DebugConfig.error('Error parsing interaction data: $e', tag: 'EventRepository');
+          DebugConfig.error('Stack trace: $stackTrace', tag: 'EventRepository');
+          rethrow;
         }
       }
     }
@@ -497,9 +500,10 @@ class EventRepository implements IEventRepository {
           _refreshEventFull(eventId);
         }
       }
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore realtime handler errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _handleInteractionChange: $e', tag: 'EventRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'EventRepository');
+      rethrow;
     }
   }
 
@@ -518,9 +522,10 @@ class EventRepository implements IEventRepository {
       final eventHive = EventHive.fromEvent(event);
       _box?.put(event.id, eventHive);
       _emitCurrentEvents();
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore cache update errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _refreshEventFull: $e', tag: 'EventRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'EventRepository');
+      rethrow;
     }
   }
 
@@ -543,9 +548,10 @@ class EventRepository implements IEventRepository {
         default:
           break;
       }
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore realtime event handler errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _handleRealtimeEvent: $e', tag: 'EventRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'EventRepository');
+      rethrow;
     }
   }
 

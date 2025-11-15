@@ -67,6 +67,30 @@ class UserSubscriptionResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserMinimal(BaseModel):
+    """Minimal user data for list views - only essential fields"""
+
+    id: int
+    display_name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserSubscriptionListResponse(BaseModel):
+    """Optimized user subscription response for list views - minimal data transfer"""
+
+    id: int
+    display_name: str
+    instagram_username: Optional[str] = None
+    profile_picture_url: Optional[str] = None
+    phone: Optional[str] = None
+    new_events_count: int  # Events created in last 7 days
+    total_events_count: int  # Total events owned by this user
+    subscribers_count: int  # Total unique subscribers to this user's events
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class EventStats(BaseModel):
     """Statistics for a single event of a public user"""
 
@@ -232,6 +256,33 @@ class EventResponse(EventBase):
     attendees: Optional[List[dict]] = None  # List of attendee user objects
     # Invitation stats (only when current user is owner/admin)
     invitation_stats: Optional[InvitationStats] = None  # Statistics about invitations to this event
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class EventListResponse(EventBase):
+    """Optimized event response for list views - minimal data transfer"""
+
+    id: int
+    owner_id: int
+    owner_name: Optional[str] = None  # Just the name, not the full object
+    calendar_id: Optional[int]
+    parent_recurring_event_id: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+    interaction: Optional[dict] = None  # User's interaction with this event
+    # Public user subscription info
+    can_subscribe_to_owner: Optional[bool] = None
+    is_subscribed_to_owner: Optional[bool] = None
+    # Calendar info
+    calendar_name: Optional[str] = None
+    calendar_color: Optional[str] = None
+    # Event characteristics
+    is_birthday: Optional[bool] = None
+    # Attendees count instead of full list
+    attendees_count: int = 0  # Count instead of full attendee objects
+    # Invitation stats
+    invitation_stats: Optional[InvitationStats] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -407,6 +458,28 @@ class CalendarResponse(CalendarBase):
     # Access info (for filtering in frontend)
     access_type: Optional[str] = None  # 'owned', 'membership', 'subscription'
     owner_is_public: Optional[bool] = None  # True if owner is a public user
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CalendarListResponse(CalendarBase):
+    """Optimized calendar response for list views - minimal data transfer"""
+
+    id: int
+    owner_id: int
+    owner_name: str  # Just the name, not the full object
+    member_count: int  # Count instead of full array
+    admin_count: int  # Count instead of full array
+    is_public: bool = False
+    category: Optional[str] = None
+    share_hash: Optional[str] = None
+    subscriber_count: int = 0
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    access_type: Optional[str] = None  # 'owned', 'membership', 'subscription'
+    owner_is_public: Optional[bool] = None
 
     model_config = ConfigDict(from_attributes=True)
 

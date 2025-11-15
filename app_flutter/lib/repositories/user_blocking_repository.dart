@@ -7,6 +7,7 @@ import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
 import '../utils/realtime_filter.dart';
+import '../config/debug_config.dart';
 import 'contracts/user_blocking_repository_contract.dart';
 
 class UserBlockingRepository implements IUserBlockingRepository {
@@ -107,9 +108,10 @@ class UserBlockingRepository implements IUserBlockingRepository {
       _rt.setServerSyncTs(DateTime.now().toUtc());
 
       _emitBlockedUsers();
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore fetch errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _fetchAndSync: $e', tag: 'UserBlockingRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'UserBlockingRepository');
+      rethrow;
     }
   }
 
@@ -121,9 +123,10 @@ class UserBlockingRepository implements IUserBlockingRepository {
           .map((user) => user.id)
           .toList();
       await _box!.put('blocked_user_ids', blockedUserIds);
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore cache update errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _updateLocalCache: $e', tag: 'UserBlockingRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'UserBlockingRepository');
+      rethrow;
     }
   }
 

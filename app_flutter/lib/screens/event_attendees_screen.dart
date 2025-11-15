@@ -7,6 +7,7 @@ import '../widgets/empty_state.dart';
 import '../widgets/user_avatar.dart';
 import '../ui/styles/app_styles.dart';
 import '../ui/helpers/l10n/l10n_helpers.dart';
+import '../config/debug_config.dart';
 import 'contact_detail_screen.dart';
 import 'subscription_detail_screen.dart';
 
@@ -33,8 +34,10 @@ class _EventAttendeesScreenState extends ConsumerState<EventAttendeesScreen> {
         try {
           final user = User.fromJson(a);
           users.add(user);
-        } catch (e) {
-          // Intentionally ignore malformed user data
+        } catch (e, stackTrace) {
+          DebugConfig.error('Error parsing user data: $e', tag: 'EventAttendeesScreen');
+          DebugConfig.error('Stack trace: $stackTrace', tag: 'EventAttendeesScreen');
+          rethrow;
         }
       }
     }

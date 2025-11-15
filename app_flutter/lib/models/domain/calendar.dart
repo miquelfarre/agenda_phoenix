@@ -48,16 +48,48 @@ class Calendar {
   });
 
   factory Calendar.fromJson(Map<String, dynamic> json) {
+    // Support both optimized response (with owner_name, member_count, admin_count)
+    // and full response (with owner, members, admins objects)
+    User? ownerObject;
+    List<User> membersList = [];
+    List<User> adminsList = [];
+
+    // Parse owner - prefer full object if available, otherwise create minimal from owner_name
+    if (json['owner'] != null) {
+      ownerObject = User.fromJson(json['owner']);
+    } else if (json['owner_name'] != null) {
+      // Optimized response - create minimal owner object with just name
+      ownerObject = User(
+        id: json['owner_id'] as int,
+        displayName: json['owner_name'] as String,
+        authProvider: '',
+        authId: '',
+        isPublic: json['owner_is_public'] ?? false,
+      );
+    }
+
+    // Parse members - prefer full list if available, otherwise empty list
+    if (json['members'] != null && json['members'] is List) {
+      membersList = (json['members'] as List)
+          .map((m) => User.fromJson(m))
+          .toList();
+    }
+    // Note: member_count is available but we don't use it for the members list
+
+    // Parse admins - prefer full list if available, otherwise empty list
+    if (json['admins'] != null && json['admins'] is List) {
+      adminsList = (json['admins'] as List)
+          .map((a) => User.fromJson(a))
+          .toList();
+    }
+    // Note: admin_count is available but we don't use it for the admins list
+
     return Calendar(
       id: json['id'] as int,
       ownerId: json['owner_id'] as int,
-      owner: json['owner'] != null ? User.fromJson(json['owner']) : null,
-      members: json['members'] != null
-          ? (json['members'] as List).map((m) => User.fromJson(m)).toList()
-          : [],
-      admins: json['admins'] != null
-          ? (json['admins'] as List).map((a) => User.fromJson(a)).toList()
-          : [],
+      owner: ownerObject,
+      members: membersList,
+      admins: adminsList,
       name: json['name'] ?? '',
       description: json['description'],
       deleteAssociatedEvents: json['delete_associated_events'] ?? false,

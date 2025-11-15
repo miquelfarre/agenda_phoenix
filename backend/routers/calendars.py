@@ -17,6 +17,7 @@ from models import User
 from schemas import (
     CalendarBase,
     CalendarCreate,
+    CalendarListResponse,
     CalendarMembershipCreate,
     CalendarMembershipResponse,
     CalendarResponse,
@@ -70,7 +71,41 @@ def _enrich_calendar_with_members(db: Session, db_calendar, access_type: str = N
     )
 
 
-@router.get("", response_model=List[CalendarResponse])
+def _build_calendar_list_response(db: Session, db_calendar, access_type: str = None, owner_is_public: bool = False):
+    """Build optimized calendar response for list views - only counts, no full arrays"""
+    # Get owner name
+    owner = db.query(User).filter(User.id == db_calendar.owner_id).first()
+    owner_name = owner.display_name if owner else "Unknown"
+
+    # Get counts only, not full objects
+    memberships = calendar_membership.get_by_calendar(db, calendar_id=db_calendar.id, status='accepted')
+
+    member_count = sum(1 for m in memberships if m.role != "admin")
+    admin_count = sum(1 for m in memberships if m.role == "admin")
+
+    return CalendarListResponse(
+        id=db_calendar.id,
+        owner_id=db_calendar.owner_id,
+        owner_name=owner_name,
+        name=db_calendar.name,
+        description=db_calendar.description,
+        is_public=db_calendar.is_public,
+        is_discoverable=db_calendar.is_discoverable,
+        share_hash=db_calendar.share_hash,
+        category=db_calendar.category,
+        subscriber_count=db_calendar.subscriber_count,
+        start_date=db_calendar.start_date,
+        end_date=db_calendar.end_date,
+        created_at=db_calendar.created_at,
+        updated_at=db_calendar.updated_at,
+        access_type=access_type,
+        owner_is_public=owner_is_public,
+        member_count=member_count,
+        admin_count=admin_count,
+    )
+
+
+@router.get("", response_model=List[CalendarListResponse])
 async def get_calendars(current_user_id: int = Depends(get_current_user_id), limit: int = 50, offset: int = 0, db: Session = Depends(get_db)):
     """
     Get all calendars accessible to the authenticated user.
@@ -99,7 +134,7 @@ async def get_calendars(current_user_id: int = Depends(get_current_user_id), lim
 
         if not access_type:
             # Check if user has membership
-            membership = calendar_membership.get_by_calendar_and_user(
+            membership = calendar_membership.get_membership(
                 db,
                 calendar_id=cal.id,
                 user_id=current_user_id
@@ -121,14 +156,14 @@ async def get_calendars(current_user_id: int = Depends(get_current_user_id), lim
         owner = db.query(User).filter(User.id == cal.owner_id).first()
         owner_is_public = owner.is_public if owner else False
 
-        # Enrich with members and admins
-        enriched_cal = _enrich_calendar_with_members(
+        # Build optimized response with counts instead of full arrays
+        calendar_response = _build_calendar_list_response(
             db,
             cal,
             access_type=access_type,
             owner_is_public=owner_is_public
         )
-        enriched_calendars.append(enriched_cal)
+        enriched_calendars.append(calendar_response)
 
     return enriched_calendars
 

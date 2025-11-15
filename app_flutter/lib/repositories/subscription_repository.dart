@@ -7,6 +7,7 @@ import '../models/domain/event.dart';
 import '../services/api_client.dart';
 import '../services/supabase_service.dart';
 import '../services/config_service.dart';
+import '../config/debug_config.dart';
 import '../core/realtime_sync.dart';
 import '../utils/realtime_filter.dart';
 import 'contracts/subscription_repository_contract.dart';
@@ -98,10 +99,16 @@ class SubscriptionRepository implements ISubscriptionRepository {
 
       _emitCurrentSubscriptions();
       print('🟢 [SYNC] Emitted current subscriptions to stream');
-      // ignore: empty_catches
-    } catch (e) {
-      print('🟢 [SYNC] ERROR: $e');
-      // Intentionally ignore realtime errors
+    } catch (e, stackTrace) {
+      DebugConfig.error(
+        '🔴 [SYNC] ERROR fetching subscriptions: $e',
+        tag: 'SubscriptionRepository',
+      );
+      DebugConfig.error(
+        'Stack trace: $stackTrace',
+        tag: 'SubscriptionRepository',
+      );
+      rethrow;  // Re-throw to ensure errors are visible
     }
   }
 

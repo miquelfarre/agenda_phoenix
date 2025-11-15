@@ -10,6 +10,7 @@ import '../models/domain/event_interaction.dart';
 import '../models/domain/user.dart';
 import '../repositories/event_repository.dart';
 import '../core/state/app_state.dart';
+import '../config/debug_config.dart';
 import 'create_edit_event_screen.dart';
 import 'create_edit_recurring_event_screen.dart';
 import 'create_edit_birthday_event_screen.dart';
@@ -178,9 +179,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           _loadDetailData();
         }
       });
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore realtime subscription errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _initializeRealtimeListener: $e', tag: 'EventDetailScreen');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'EventDetailScreen');
+      rethrow;
     }
   }
 
@@ -641,8 +643,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         try {
           final user = User.fromJson(a);
           attendeeUsers.add(user);
-        } catch (e) {
-          // Intentionally ignore malformed user data
+        } catch (e, stackTrace) {
+          DebugConfig.error(
+            'Error parsing attendee user data: $e',
+            tag: 'EventDetailScreen',
+          );
+          DebugConfig.error(
+            'Stack trace: $stackTrace',
+            tag: 'EventDetailScreen',
+          );
+          // Skip malformed user data but log the error
         }
       }
     }

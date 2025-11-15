@@ -1,0 +1,14 @@
+
+Contexto: mira .claude, ahi esta todo el contexto del proyecto.
+
+arranco el aplicativo con :
+API_LOGGING=true ./start.sh
+
+Estamos en el proceso de optimizar las llamadas a la api para que devuelvan los datos que tocan. 
+Mira git diff para ver los puntos en los que guardamos los logs y el fichero donde se genera.
+
+Cuando termines tu analisis, mira el fichero de logs y mira las rest endpoints llamadas 
+
+mira lo que necesita la pantalla de eventos en la carga inicial en flutter_app 
+y dime si las respuestas de las llamadas a la api que tienes en los logs tienen los 
+minimos datos que toca leer en la app, si los endpoints estan optimizados y si los datos son los minimos que la app_flutter necesita en la primera carga. 

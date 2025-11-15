@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config_service.dart';
+import '../config/debug_config.dart';
 
 class SupabaseService {
   static SupabaseService? _instance;
@@ -56,10 +57,16 @@ class SupabaseService {
 
       // Also update the token for HTTP requests
       client.auth.headers['Authorization'] = 'Bearer $token';
-
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore errors when applying test auth
+    } catch (e, stackTrace) {
+      DebugConfig.error(
+        'Error applying test auth token: $e',
+        tag: 'SupabaseService',
+      );
+      DebugConfig.error(
+        'Stack trace: $stackTrace',
+        tag: 'SupabaseService',
+      );
+      rethrow;
     }
   }
 

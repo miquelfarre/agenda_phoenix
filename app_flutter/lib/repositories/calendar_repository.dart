@@ -10,6 +10,7 @@ import '../services/config_service.dart';
 import '../core/realtime_sync.dart';
 import '../utils/app_exceptions.dart' as exceptions;
 import '../utils/realtime_filter.dart';
+import '../config/debug_config.dart';
 import 'contracts/calendar_repository_contract.dart';
 
 class CalendarRepository implements ICalendarRepository {
@@ -144,8 +145,10 @@ class CalendarRepository implements ICalendarRepository {
       }
 
       _emitCurrentCalendars();
-    } catch (e) {
-      // Intentionally ignore realtime errors but log them
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _fetchAndSync: $e', tag: 'CalendarRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'CalendarRepository');
+      rethrow;
     }
   }
 

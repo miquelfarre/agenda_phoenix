@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy import func, distinct, and_, select
+from sqlalchemy.orm import Session, aliased
 
 from auth import get_current_user_id, get_current_user_id_optional
 from crud import calendar_membership, event, event_interaction, user, user_block
@@ -17,7 +18,7 @@ from crud.crud_calendar_subscription import calendar_subscription
 from dependencies import get_db
 import models
 from models import EventInteraction
-from schemas import EventResponse, UserCreate, UserEnrichedResponse, UserResponse, UserSubscriptionResponse
+from schemas import EventResponse, EventListResponse, UserCreate, UserEnrichedResponse, UserResponse, UserSubscriptionResponse, UserSubscriptionListResponse
 from utils import round_to_5min
 
 logger = logging.getLogger(__name__)
@@ -97,7 +98,7 @@ async def update_user(user_id: int, user_data: UserCreate, current_user_id: int 
 # Removed unused DELETE /users/{user_id} endpoint
 
 
-@router.get("/{user_id}/events", response_model=List[EventResponse])
+@router.get("/{user_id}/events", response_model=List[EventListResponse])
 async def get_user_events(
     user_id: int,
     include_past: bool = False,
@@ -421,8 +422,8 @@ async def get_user_events(
             "calendar_color": calendar.get("color"),
             # Event characteristics
             "is_birthday": is_birthday,
-            # Attendees
-            "attendees": attendees_map.get(ev.id, []),
+            # Attendees count instead of full list
+            "attendees_count": len(attendees_map.get(ev.id, [])),
         }
         result.append(event_dict)
 
@@ -558,31 +559,71 @@ async def unsubscribe_from_user(target_user_id: int, current_user_id: int = Depe
     return {"message": f"Unsubscribed from {unsubscribed_count} events", "unsubscribed_count": unsubscribed_count}
 
 
-@router.get("/{user_id}/subscriptions", response_model=List[UserSubscriptionResponse])
+@router.get("/{user_id}/subscriptions", response_model=List[UserSubscriptionListResponse])
 async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
     """
     Get all public users that the given user is subscribed to with statistics.
 
-    This endpoint is optimized to avoid N+1 queries by using JOINs and aggregations.
-    It returns a list of unique public users with:
+    Optimized to use a single query with subqueries to avoid N+1 problem.
+    Returns a list of unique public users with:
     - new_events_count: Events created in the last 7 days
     - total_events_count: Total events owned by this user
     - subscribers_count: Total unique subscribers to this user's events
 
     Returns:
-    - List of UserSubscriptionResponse objects for each public user
+    - List of UserSubscriptionListResponse objects (optimized DTO with minimal fields)
     """
-    from datetime import timedelta
-    from sqlalchemy import func, distinct
-
     # Verify user exists
     db_user = user.get(db, id=user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Query to get unique public users from subscribed events
-    subscribed_users = (
-        db.query(models.User)
+    seven_days_ago = datetime.now() - timedelta(days=7)
+
+    # Create aliases for subqueries
+    Event1 = aliased(models.Event)
+    Event2 = aliased(models.Event)
+    Event3 = aliased(models.Event)
+    Interaction1 = aliased(models.EventInteraction)
+
+    # Subquery for total events count
+    total_events_subq = (
+        select(func.count(Event1.id))
+        .where(Event1.owner_id == models.User.id)
+        .correlate(models.User)
+        .scalar_subquery()
+    )
+
+    # Subquery for new events count (last 7 days)
+    new_events_subq = (
+        select(func.count(Event2.id))
+        .where(and_(Event2.owner_id == models.User.id, Event2.created_at >= seven_days_ago))
+        .correlate(models.User)
+        .scalar_subquery()
+    )
+
+    # Subquery for subscribers count
+    subscribers_subq = (
+        select(func.count(distinct(Interaction1.user_id)))
+        .select_from(Interaction1)
+        .join(Event3, Event3.id == Interaction1.event_id)
+        .where(and_(Event3.owner_id == models.User.id, Interaction1.interaction_type == "subscribed"))
+        .correlate(models.User)
+        .scalar_subquery()
+    )
+
+    # Single optimized query with all statistics
+    results = (
+        db.query(
+            models.User.id,
+            models.User.display_name,
+            models.User.instagram_username,
+            models.User.phone,
+            models.User.profile_picture_url,
+            total_events_subq.label("total_events_count"),
+            new_events_subq.label("new_events_count"),
+            subscribers_subq.label("subscribers_count"),
+        )
         .join(models.Event, models.Event.owner_id == models.User.id)
         .join(models.EventInteraction, models.EventInteraction.event_id == models.Event.id)
         .filter(models.EventInteraction.user_id == user_id, models.EventInteraction.interaction_type == "subscribed", models.User.is_public == True)
@@ -590,39 +631,17 @@ async def get_user_subscriptions(user_id: int, db: Session = Depends(get_db)):
         .all()
     )
 
-    # Calculate statistics for each user
-    result = []
-    seven_days_ago = datetime.now() - timedelta(days=7)
-
-    for public_user in subscribed_users:
-        # Count total events
-        total_events = db.query(func.count(models.Event.id)).filter(models.Event.owner_id == public_user.id).scalar()
-
-        # Count new events (created in last 7 days)
-        new_events = db.query(func.count(models.Event.id)).filter(models.Event.owner_id == public_user.id, models.Event.created_at >= seven_days_ago).scalar()
-
-        # Count unique subscribers (distinct users subscribed to any event of this owner)
-        subscribers = db.query(func.count(distinct(models.EventInteraction.user_id))).join(models.Event, models.Event.id == models.EventInteraction.event_id).filter(models.Event.owner_id == public_user.id, models.EventInteraction.interaction_type == "subscribed").scalar()
-
-        # Build response
-        result.append(
-            UserSubscriptionResponse(
-                id=public_user.id,
-                display_name=public_user.display_name,
-                instagram_username=public_user.instagram_username,
-                phone=public_user.phone,
-                profile_picture_url=public_user.profile_picture_url,
-                auth_provider=public_user.auth_provider,
-                auth_id=public_user.auth_id,
-                is_public=public_user.is_public,
-                is_admin=public_user.is_admin,
-                last_login=public_user.last_login,
-                created_at=public_user.created_at,
-                updated_at=public_user.updated_at,
-                new_events_count=new_events or 0,
-                total_events_count=total_events or 0,
-                subscribers_count=subscribers or 0,
-            )
+    # Build response with optimized DTO (no unnecessary fields)
+    return [
+        UserSubscriptionListResponse(
+            id=row.id,
+            display_name=row.display_name,
+            instagram_username=row.instagram_username,
+            phone=row.phone,
+            profile_picture_url=row.profile_picture_url,
+            new_events_count=row.new_events_count or 0,
+            total_events_count=row.total_events_count or 0,
+            subscribers_count=row.subscribers_count or 0,
         )
-
-    return result
+        for row in results
+    ]

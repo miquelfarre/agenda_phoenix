@@ -10,6 +10,7 @@ import '../services/config_service.dart';
 import '../services/supabase_auth_service.dart';
 import '../utils/app_exceptions.dart' as exceptions;
 import '../utils/realtime_filter.dart';
+import '../config/debug_config.dart';
 import 'contracts/user_repository_contract.dart';
 
 class UserRepository implements IUserRepository {
@@ -122,9 +123,10 @@ class UserRepository implements IUserRepository {
       _box?.put(updatedUser.id, userHive);
 
       _emitCurrentUser();
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore realtime handler errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _handleUserChange: $e', tag: 'UserRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'UserRepository');
+      rethrow;
     }
   }
 
@@ -179,9 +181,10 @@ class UserRepository implements IUserRepository {
     try {
       final userHive = UserHive.fromUser(user);
       await _box!.put(user.id, userHive);
-      // ignore: empty_catches
-    } catch (e) {
-      // Intentionally ignore cache update errors
+    } catch (e, stackTrace) {
+      DebugConfig.error('Error in _updateLocalCache: $e', tag: 'UserRepository');
+      DebugConfig.error('Stack trace: $stackTrace', tag: 'UserRepository');
+      rethrow;
     }
   }
 

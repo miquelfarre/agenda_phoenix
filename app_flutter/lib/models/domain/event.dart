@@ -95,6 +95,21 @@ class Event {
       personalNote = interactionData['personal_note'] as String?;
     }
 
+    // Support both optimized response (with owner_name) and full response (with owner object)
+    User? ownerObject;
+    if (json['owner'] != null) {
+      ownerObject = User.fromJson(json['owner']);
+    } else if (json['owner_name'] != null) {
+      // Optimized response - create minimal owner object with just name
+      ownerObject = User(
+        id: json['owner_id'] as int,
+        displayName: json['owner_name'] as String,
+        authProvider: '',
+        authId: '',
+        isPublic: json['is_owner_public'] ?? false,
+      );
+    }
+
     return Event(
       id: json['id'] as int?,
       name: json['name'] as String,
@@ -103,7 +118,7 @@ class Event {
       timezone: json['timezone'] as String? ?? 'Europe/Madrid',
       eventType: json['event_type'] as String? ?? 'regular',
       ownerId: json['owner_id'] as int,
-      owner: json['owner'] != null ? User.fromJson(json['owner']) : null,
+      owner: ownerObject,
       members: json['members'] != null
           ? (json['members'] as List).map((m) => User.fromJson(m)).toList()
           : [],
