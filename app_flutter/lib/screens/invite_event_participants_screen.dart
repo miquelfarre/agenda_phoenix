@@ -6,6 +6,7 @@ import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 class InviteEventParticipantsScreen extends ConsumerStatefulWidget {
   final int eventId;
@@ -115,14 +116,15 @@ class _InviteEventParticipantsScreenState
       });
 
       // Show error
+      final l10n = context.l10n;
       showCupertinoDialog(
         context: context,
         builder: (context) => CupertinoAlertDialog(
-          title: const Text('Error'),
-          content: Text('Failed to add participants: ${e.toString()}'),
+          title: Text(l10n.error),
+          content: Text('${l10n.failedToAddParticipants}: ${e.toString()}'),
           actions: [
             CupertinoDialogAction(
-              child: const Text('OK'),
+              child: Text(l10n.ok),
               onPressed: () => Navigator.pop(context),
             ),
           ],
@@ -133,19 +135,19 @@ class _InviteEventParticipantsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final hasSelection = selectedUserIds.isNotEmpty || selectedGroupIds.isNotEmpty;
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Agregar Participantes'),
-        previousPageTitle: widget.eventName,
+        middle: Text(l10n.addParticipants),
         trailing: hasSelection
             ? CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: _isSending ? null : _addParticipants,
                 child: _isSending
                     ? const CupertinoActivityIndicator()
-                    : const Text('Agregar'),
+                    : Text(l10n.add),
               )
             : null,
       ),
@@ -160,7 +162,7 @@ class _InviteEventParticipantsScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Rol',
+                    l10n.role,
                     style: AppStyles.cardTitle,
                   ),
                   const SizedBox(height: 8),
@@ -171,14 +173,14 @@ class _InviteEventParticipantsScreenState
                         _selectedRole = value;
                       });
                     },
-                    children: const {
+                    children: {
                       'attendee': Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: Text('Asistente'),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(l10n.attendee),
                       ),
                       'admin': Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: Text('Administrador'),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(l10n.admin),
                       ),
                     },
                   ),
@@ -200,6 +202,8 @@ class _InviteEventParticipantsScreenState
   }
 
   Widget _buildBody() {
+    final l10n = context.l10n;
+
     if (_isLoading) {
       return const Center(
         child: CupertinoActivityIndicator(),
@@ -209,16 +213,16 @@ class _InviteEventParticipantsScreenState
     if (_error != null) {
       return EmptyState(
         icon: CupertinoIcons.exclamationmark_triangle,
-        message: 'Error',
+        message: l10n.error,
         subtitle: _error!,
       );
     }
 
     if (_availableUsers.isEmpty && _groups.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: CupertinoIcons.person_2,
-        message: 'No hay usuarios disponibles',
-        subtitle: 'Todos los usuarios ya participan en el evento',
+        message: l10n.noUsersAvailable,
+        subtitle: l10n.allUsersAlreadyParticipating,
       );
     }
 
@@ -227,7 +231,7 @@ class _InviteEventParticipantsScreenState
       children: [
         if (_availableUsers.isNotEmpty) ...[
           Text(
-            'Usuarios',
+            l10n.users,
             style: AppStyles.cardTitle,
           ),
           const SizedBox(height: 8),
@@ -247,7 +251,7 @@ class _InviteEventParticipantsScreenState
         if (_groups.isNotEmpty) ...[
           const SizedBox(height: 24),
           Text(
-            'Grupos',
+            l10n.groups,
             style: AppStyles.cardTitle,
           ),
           const SizedBox(height: 8),

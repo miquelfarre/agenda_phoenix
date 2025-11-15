@@ -2361,6 +2361,37 @@
       "name": { "type": "String" },
       "error": { "type": "String" }
     }
+  },
+  "inviteMembers": "Invitar Miembros",
+  "@inviteMembers": {
+    "description": "Invite members screen title"
+  },
+  "failedToAddMembers": "Error al agregar miembros",
+  "@failedToAddMembers": {
+    "description": "Failed to add members error message"
+  },
+  "role": "Rol",
+  "@role": {
+    "description": "Role label"
+  },
+  "noUsersAvailable": "No hay usuarios disponibles",
+  "@noUsersAvailable": {
+    "description": "No users available message"
+  },
+  "allUsersAlreadyMembers": "Todos los usuarios ya son miembros",
+  "@allUsersAlreadyMembers": {
+    "description": "All users already members message"
+  },
+  "addParticipants": "Agregar Participantes",
+  "@addParticipants": {
+    "description": "Add participants button/title"
+  },
+  "failedToAddParticipants": "Error al agregar participantes",
+  "@failedToAddParticipants": {
+    "description": "Failed to add participants error message"
+  },
+  "allUsersAlreadyParticipating": "Todos los usuarios ya participan en el evento",
+  "@allUsersAlreadyParticipating": {
+    "description": "All users already participating message"
   }
 }
-

@@ -6436,6 +6436,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to remove {name}: {error}'**
   String failedToRemove(String name, String error);
+
+  /// Invite members screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Members'**
+  String get inviteMembers;
+
+  /// Failed to add members error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add members'**
+  String get failedToAddMembers;
+
+  /// Role label
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get role;
+
+  /// No users available message
+  ///
+  /// In en, this message translates to:
+  /// **'No users available'**
+  String get noUsersAvailable;
+
+  /// All users already members message
+  ///
+  /// In en, this message translates to:
+  /// **'All users are already members'**
+  String get allUsersAlreadyMembers;
+
+  /// Add participants button/title
+  ///
+  /// In en, this message translates to:
+  /// **'Add Participants'**
+  String get addParticipants;
+
+  /// Failed to add participants error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add participants'**
+  String get failedToAddParticipants;
+
+  /// All users already participating message
+  ///
+  /// In en, this message translates to:
+  /// **'All users are already participating in this event'**
+  String get allUsersAlreadyParticipating;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

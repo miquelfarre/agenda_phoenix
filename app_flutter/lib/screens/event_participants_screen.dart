@@ -234,7 +234,7 @@ class _EventParticipantsScreenState
           content: Text(context.l10n.failedToPromote(userName, e.toString())),
           actions: [
             CupertinoDialogAction(
-              child: const Text('OK'),
+              child: Text(context.l10n.ok),
               onPressed: () => Navigator.pop(dialogContext),
             ),
           ],
@@ -261,7 +261,7 @@ class _EventParticipantsScreenState
           content: Text(context.l10n.failedToDemote(userName, e.toString())),
           actions: [
             CupertinoDialogAction(
-              child: const Text('OK'),
+              child: Text(context.l10n.ok),
               onPressed: () => Navigator.pop(dialogContext),
             ),
           ],
@@ -312,7 +312,7 @@ class _EventParticipantsScreenState
           content: Text(context.l10n.failedToRemove(userName, e.toString())),
           actions: [
             CupertinoDialogAction(
-              child: const Text('OK'),
+              child: Text(context.l10n.ok),
               onPressed: () => Navigator.pop(dialogContext),
             ),
           ],

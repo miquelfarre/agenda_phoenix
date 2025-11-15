@@ -6,6 +6,7 @@ import '../core/state/app_state.dart';
 import '../widgets/selectable_card.dart';
 import '../widgets/empty_state.dart';
 import 'package:eventypop/ui/styles/app_styles.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 class InviteCalendarMembersScreen extends ConsumerStatefulWidget {
   final int calendarId;
@@ -115,14 +116,15 @@ class _InviteCalendarMembersScreenState
       });
 
       // Show error
+      final l10n = context.l10n;
       showCupertinoDialog(
         context: context,
         builder: (context) => CupertinoAlertDialog(
-          title: const Text('Error'),
-          content: Text('Failed to add members: ${e.toString()}'),
+          title: Text(l10n.error),
+          content: Text('${l10n.failedToAddMembers}: ${e.toString()}'),
           actions: [
             CupertinoDialogAction(
-              child: const Text('OK'),
+              child: Text(l10n.ok),
               onPressed: () => Navigator.pop(context),
             ),
           ],
@@ -133,19 +135,19 @@ class _InviteCalendarMembersScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final hasSelection = selectedUserIds.isNotEmpty || selectedGroupIds.isNotEmpty;
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Invite Members'),
-        previousPageTitle: widget.calendarName,
+        middle: Text(l10n.inviteMembers),
         trailing: hasSelection
             ? CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: _isSending ? null : _sendInvites,
                 child: _isSending
                     ? const CupertinoActivityIndicator()
-                    : const Text('Invite'),
+                    : Text(l10n.invite),
               )
             : null,
       ),
@@ -160,7 +162,7 @@ class _InviteCalendarMembersScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Role',
+                    l10n.role,
                     style: AppStyles.cardTitle,
                   ),
                   const SizedBox(height: 8),
@@ -171,14 +173,14 @@ class _InviteCalendarMembersScreenState
                         _selectedRole = value;
                       });
                     },
-                    children: const {
+                    children: {
                       'member': Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: Text('Member'),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(l10n.member),
                       ),
                       'admin': Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: Text('Admin'),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(l10n.admin),
                       ),
                     },
                   ),
@@ -200,6 +202,8 @@ class _InviteCalendarMembersScreenState
   }
 
   Widget _buildBody() {
+    final l10n = context.l10n;
+
     if (_isLoading) {
       return const Center(
         child: CupertinoActivityIndicator(),
@@ -209,16 +213,16 @@ class _InviteCalendarMembersScreenState
     if (_error != null) {
       return EmptyState(
         icon: CupertinoIcons.exclamationmark_triangle,
-        message: 'Error',
+        message: l10n.error,
         subtitle: _error!,
       );
     }
 
     if (_availableUsers.isEmpty && _groups.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: CupertinoIcons.person_2,
-        message: 'No users available',
-        subtitle: 'All users are already members',
+        message: l10n.noUsersAvailable,
+        subtitle: l10n.allUsersAlreadyMembers,
       );
     }
 
@@ -227,7 +231,7 @@ class _InviteCalendarMembersScreenState
       children: [
         if (_availableUsers.isNotEmpty) ...[
           Text(
-            'Users',
+            l10n.users,
             style: AppStyles.cardTitle,
           ),
           const SizedBox(height: 8),
@@ -247,7 +251,7 @@ class _InviteCalendarMembersScreenState
         if (_groups.isNotEmpty) ...[
           const SizedBox(height: 24),
           Text(
-            'Groups',
+            l10n.groups,
             style: AppStyles.cardTitle,
           ),
           const SizedBox(height: 8),

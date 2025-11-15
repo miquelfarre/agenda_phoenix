@@ -3362,4 +3362,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String failedToRemove(String name, String error) {
     return 'Failed to remove $name: $error';
   }
+
+  @override
+  String get inviteMembers => 'Invite Members';
+
+  @override
+  String get failedToAddMembers => 'Failed to add members';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String get noUsersAvailable => 'No users available';
+
+  @override
+  String get allUsersAlreadyMembers => 'All users are already members';
+
+  @override
+  String get addParticipants => 'Add Participants';
+
+  @override
+  String get failedToAddParticipants => 'Failed to add participants';
+
+  @override
+  String get allUsersAlreadyParticipating => 'All users are already participating in this event';
 }

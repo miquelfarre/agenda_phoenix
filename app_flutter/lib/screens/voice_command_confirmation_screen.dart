@@ -5,6 +5,7 @@ import '../widgets/adaptive_scaffold.dart';
 import '../widgets/adaptive/adaptive_button.dart';
 import '../widgets/voice_recording_dialog.dart';
 import '../config/app_constants.dart';
+import 'package:eventypop/ui/helpers/l10n/l10n_helpers.dart';
 
 /// Pantalla de confirmación de comandos de voz
 /// Muestra los objetos que se van a crear de forma clara y no editable
@@ -86,11 +87,12 @@ class _VoiceCommandConfirmationScreenState
       if (!mounted) return;
 
       // Mostrar resultado y volver
+      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✓ Acción ejecutada exitosamente'),
+        SnackBar(
+          content: Text(l10n.actionExecutedSuccessfully),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -592,7 +594,8 @@ class _VoiceCommandConfirmationScreenState
 
   Widget _buildGenericDetails(Map<String, dynamic> params) {
     if (params.isEmpty) {
-      return const Text('Sin parámetros adicionales');
+      final l10n = context.l10n;
+      return Text(l10n.noAdditionalParameters);
     }
 
     // Filtrar parámetros que contienen placeholders o son IDs técnicos
