@@ -7,6 +7,7 @@ import '../ui/helpers/platform/dialog_helpers.dart';
 import '../widgets/adaptive_scaffold.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/adaptive/adaptive_button.dart';
+import '../widgets/calendar_card.dart';
 import '../core/state/app_state.dart';
 import '../models/domain/calendar.dart';
 import 'calendar_detail_screen.dart';
@@ -531,7 +532,7 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
           SliverToBoxAdapter(
             child: _buildCalendarTypeFilters(calendarsData),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
           // Empty state if no results after filtering
           if (filteredCalendars.isEmpty)
@@ -548,18 +549,14 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
             )
           else
             // Calendar list
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final calendarIndex = index ~/ 2;
-                if (index.isOdd) {
-                  return Container(
-                    height: 0.5,
-                    margin: const EdgeInsets.only(left: 72),
-                    color: CupertinoColors.separator,
-                  );
-                }
-                return _buildCalendarItem(filteredCalendars[calendarIndex]);
-              }, childCount: filteredCalendars.length * 2 - 1),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _buildCalendarItem(filteredCalendars[index]),
+                  childCount: filteredCalendars.length,
+                ),
+              ),
             ),
         ];
       },
@@ -584,62 +581,23 @@ class _CalendarsScreenState extends ConsumerState<CalendarsScreen> {
   }
 
   Widget _buildCalendarItem(Calendar calendar) {
-    final l10n = context.l10n;
-    final isOwner = CalendarPermissions.isOwner(calendar);
-
-    return CupertinoListTile(
-      onTap: () {
-        Navigator.of(context).push(
-          CupertinoPageRoute(
-            builder: (context) => CalendarDetailScreen(
-              calendarId: calendar.id,
-              calendarName: calendar.name,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: CalendarCard(
+        calendar: calendar,
+        onTap: (calendar) {
+          Navigator.of(context).push(
+            CupertinoPageRoute(
+              builder: (context) => CalendarDetailScreen(
+                calendarId: calendar.id,
+                calendarName: calendar.name,
+              ),
             ),
-          ),
-        );
-      },
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          color: CupertinoColors.systemBlue,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          calendar.isPublic ? CupertinoIcons.globe : CupertinoIcons.lock,
-          color: CupertinoColors.white,
-          size: 20,
-        ),
-      ),
-      title: Text(calendar.name),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (calendar.description != null)
-            Text(
-              calendar.description!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          Text(
-            isOwner
-                ? l10n.owner
-                : (calendar.shareHash != null ? l10n.subscriber : l10n.member),
-            style: const TextStyle(
-              fontSize: 12,
-              color: CupertinoColors.systemGrey,
-            ),
-          ),
-        ],
-      ),
-      trailing: CupertinoButton(
-        padding: EdgeInsets.zero,
-        child: const Icon(
-          CupertinoIcons.trash,
-          color: CupertinoColors.systemRed,
-          size: 20,
-        ),
-        onPressed: () => _deleteOrLeaveCalendar(calendar),
+          );
+        },
+        onDelete: (calendar) async {
+          await _deleteOrLeaveCalendar(calendar);
+        },
       ),
     );
   }

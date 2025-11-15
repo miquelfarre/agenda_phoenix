@@ -2,7 +2,7 @@
 Calendars - Calendarios privados y públicos con share_hash
 """
 
-from models import Calendar, CalendarMembership
+from models import Calendar, CalendarMembership, CalendarSubscription
 from .helpers import generate_share_hash
 from datetime import datetime
 
@@ -11,6 +11,7 @@ def create_calendars(db, private_users, public_users):
     """Create calendars (private, public, shared)"""
     calendars = []
     memberships = []
+    subscriptions = []
 
     sonia = private_users["sonia"]
     miquel = private_users["miquel"]
@@ -40,6 +41,11 @@ def create_calendars(db, private_users, public_users):
     # Añadir compañeros de trabajo (ID 11-15)
     for user in all_users[10:15]:
         memberships.append(CalendarMembership(calendar_id=cal_trabajo.id, user_id=user.id, role="member", status="accepted"))
+
+    # Calendar Cumpleaños (público, de Sonia)
+    cal_cumpleanos = Calendar(id=4, name="Cumpleaños", description="Calendario para cumpleaños", owner_id=sonia.id, is_public=True, share_hash="cumple24", subscriber_count=50)
+    calendars.append(cal_cumpleanos)
+    memberships.append(CalendarMembership(calendar_id=cal_cumpleanos.id, user_id=sonia.id, role="owner", status="accepted"))
 
     # === CALENDARIOS PÚBLICOS CON SHARE_HASH (de usuarios PRIVADOS) ===
     # Los usuarios PRIVADOS pueden crear calendarios públicos con share_hash para compartirlos
@@ -73,27 +79,29 @@ def create_calendars(db, private_users, public_users):
     memberships.append(CalendarMembership(calendar_id=cal_yoga.id, user_id=user_12.id, role="owner", status="accepted"))
 
     # === SUSCRIPCIONES DE USUARIOS A CALENDARIOS PÚBLICOS ===
+    # Usar CalendarSubscription (no CalendarMembership) para calendarios públicos
 
     # Sonia suscrita a calendarios públicos
     for cal in [cal_fcb, cal_ps, cal_merce, cal_fitzone, cal_yoga]:
-        memberships.append(CalendarMembership(calendar_id=cal.id, user_id=sonia.id, role="subscriber", status="active"))
+        subscriptions.append(CalendarSubscription(calendar_id=cal.id, user_id=sonia.id, status="active"))
 
     # Miquel suscrito a algunos
     for cal in [cal_fcb, cal_fitzone]:
-        memberships.append(CalendarMembership(calendar_id=cal.id, user_id=miquel.id, role="subscriber", status="active"))
+        subscriptions.append(CalendarSubscription(calendar_id=cal.id, user_id=miquel.id, status="active"))
 
     # Ada suscrita a varios
     for cal in [cal_fcb, cal_ps, cal_yoga]:
-        memberships.append(CalendarMembership(calendar_id=cal.id, user_id=ada.id, role="subscriber", status="active"))
+        subscriptions.append(CalendarSubscription(calendar_id=cal.id, user_id=ada.id, status="active"))
 
     # Otros usuarios suscritos a calendarios públicos
     # 30 usuarios (ID 11-40) suscritos a FC Barcelona
     for user in all_users[10:40]:
-        memberships.append(CalendarMembership(calendar_id=cal_fcb.id, user_id=user.id, role="subscriber", status="active"))
+        subscriptions.append(CalendarSubscription(calendar_id=cal_fcb.id, user_id=user.id, status="active"))
 
     # Add all to database
     db.add_all(calendars)
     db.add_all(memberships)
+    db.add_all(subscriptions)
     db.flush()
 
-    return {"cal_personal": cal_personal, "cal_familia": cal_familia, "cal_trabajo": cal_trabajo, "cal_fcb": cal_fcb, "cal_ps": cal_ps, "cal_merce": cal_merce, "cal_fitzone": cal_fitzone, "cal_yoga": cal_yoga, "all_calendars": calendars}
+    return {"cal_personal": cal_personal, "cal_familia": cal_familia, "cal_trabajo": cal_trabajo, "cal_cumpleanos": cal_cumpleanos, "cal_fcb": cal_fcb, "cal_ps": cal_ps, "cal_merce": cal_merce, "cal_fitzone": cal_fitzone, "cal_yoga": cal_yoga, "all_calendars": calendars, "all_subscriptions": subscriptions}
